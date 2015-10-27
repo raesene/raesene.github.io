@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
+    20th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/10/20/creating-a-simp/">Creating a Simple Vulnerability Database  - Part 1</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the main tools that I've found useful in pen. testing is the <a href="http://www.dradisframework.org">Dradis Framework</a>, it's a good way of keeping track of findings and notes during a test and I've also found it's template feature is good for keeping a list of things to remember during a test.<br />
+One of the features available in Dradis is import plugins.  This lets you create a link to an external information source, such as a OSVDB or a database of vulnerabilities.<br />
+Having a database of vulnerabilities or findings can be pretty useful in cutting down the time required for reporting on a test as you can keep standard wordings in place (who really wants to write the same section about preventing XSS more than once!).<br />
+So recently I knocked up a simple vulnerability database to link in to Dradis and I thought it might be of use, so here's the process.<br />
+<u><strong><big>Creating the App</big></strong></u><br />
+We're going to use <a href="http://rubyonrails.org/">Ruby on Rails</a> for this as it's nice and easy to develop for (as you'll see) and also that's what Dradis is based on, so makes sense to keep all the coding in the same underlying language.  Also rails apps are very portable, they're basically contained within a single directory structure, so it's relatively easy to move them from place to place.<br />
+Before starting the application, there's the usual pre-req's.  I'm using Ruby 1.9.2 and Rails 3 so having those installed is a good thing.  If you're using Linux then it's helpful to have <a href="http://rvm.beginrescueend.com/">RVM</a> working as some distros don't have ruby 1.9.2 packaged up as yet.<br />
+once you've got the pre-req's working, we can start by creating a rails app</p>
+<pre>rails new vulnlist</pre>
+<p>This creates a new application called <i>vulnlist</i> and adds all the standard rails files in.<br />
+<u><strong><big>Creating the Scaffold</big></strong></u><br />
+Once we've got the app created, we can use rails scaffolding to quickly create the basic structure for our app.  The web pages that scaffolding creates aren't the most pretty, but they'll do for now.<br />
+With the scaffold we can specify what fields we want to create in the database and also what data types those fields are.</p>
+<pre>rails generate scaffold Vulnerability title:string test_type:string description:text remediation:text technical_notes:text severity:string owasp_reference:string</pre>
+<p>Once we've completed this we can look at the basic app by setting up the database with</p>
+<pre>rake db:migrate</pre>
+<p>Ensuring that all our gems are installed ok with</p>
+<pre>bundle install</pre>
+<p>and launching the app</p>
+<pre>rails server</pre>
+<p>At this point browsing to http://127.0.0.1:3000/vulnerabilities  should show a blank page with our fields in it.  From this page we can create new vulnerabilities and edit or delete existing ones.<br />
+Now that we've got this basic structure setup it's worth using git to keep a handle on the source code.  On Linux the procedure for this is pretty easy<br />
+If you've not already got it installed</p>
+<pre>sudo apt-get install git-core</pre>
+<p>then in the root of the application</p>
+<pre>git init
+git add .
+git commit -m "Initial Commit with Scaffold"
+</pre>
+<p>Having git running on the app will make it pretty easy to revert any mistakes made along the way, as long as we've done regular commits.<br />
+<u><strong><big>Setting up the Searches</big></strong></u><br />
+So far we've got a basic structure in place and can do the basic Create, Read, Update, Delete cycle on our data.  However for the dradis integration, what'd be useful is if we could search for vulnerabilities using various criteria and have the results returned to Dradis.<br />
+This turns out to be relatively straightforward.  First what we need is a new action in our controller.  Opening vulnlist/app/controllers/vulnerabilities_controller.rb we can see the existing actions that we've got for the application.<br />
+What we need to do now is add a new action to allow for vulnerability searches.</p>
+<pre>def vuln_search
+case params[:search_type]
+when "description"
+@vulnerabilities = Vulnerability.where("description like ?", "%"+params[:query]+"%")
+when "owasp"
+@vulnerabilities = Vulnerability.where("owasp_reference like ?",params[:query]+"%")
+when "severity"
+@vulnerabilities = Vulnerability.find_all_by_severity(params[:query])
+when "test_type"
+@vulnerabilities = Vulnerability.find_all_by_test_type(params[:query])
+end
+respond_to do |format|
+format.xml {render :xml =&gt; @vulnerabilities}
+format.json {render :json =&gt; @vulnerabilities}
+end
+end
+</pre>
+<p>This defines a new method called "vuln_search" which takes two parameters, search_type and query.  The search type parameter lets us pick from different finders.  Rails provides access into the application database via ActiveRecord and this just uses a couple of the finder types for different parameters.  Where the query is going to be one of a number of fixed values like "severity" which will be something like high, medium or low, we can just use a standard find_all_by_ approach, but where it's a more free text style search, we use Vulnerability.where and pass in the query parameter that way.<br />
+The respond_to block is a really nice feature of rails.  By adding in the two lines for :xml and :json rails wires up responses so that we can get the data out in those format, no additional code required.<br />
+Now that we've got the basic code in place, we just need to modify the rails routes so that the application knows how to access our new method.<br />
+This is done by modifying the vulnlist/config/routes.rb file, and adding the following code</p>
+<pre>controller :vulnerabilities do
+get 'vuln_search' =&gt; :vuln_search
+end
+</pre>
+<p>At this point, we've got the application basically working.  If you put in a couple of test findings, then you should be able to go to http://127.0.0.1:3000/vuln_search.xml?search_type=Severity&amp;Query=High for example and get some XML data back.<br />
+<u><strong><big>Tidying up</big></strong></u><br />
+Now that we've got the basics working, there's a couple of additional steps that it's worth looking at to tidy some things up.<br />
+<strong><big>Selectors</big></strong><br />
+First off, we'd like some of our fields (OWASP Reference, Severity and test type) to be one of a number of defined values. The "proper" way to do this would be to create additional models for these and link them in to the main vulnerabilities controller, but there's a quicker way which is probably going to work well enough for our purposes.<br />
+Opening up vulnlist/app/models/vulnerability.rb we can specify some Constant values for these settings</p>
+<pre>
+TEST_TYPES = ["Web Application","Windows Server","Unix Server","Wireless","Web Server","Oracle","MS SQL","MySQL","DB2"]
+SEVERITY_LEVELS = ["Critical","High","Medium","Low","No Impact"]
+OWASP_TOP_10 = ["A1 - Injection","A2 - Cross Site Scripting (XSS)","A3 - Broken Authentication and Session Management","A4 - Insecure Direct Object Reference","A5 - Cross-Site Request Forgery (CSRF)","A6 - Security Misconfiguration","A7 - Insecure Cryptographic Storage","A8 - Failure to Restrict URL Access","A9 - Insufficient Transport Layer Protection","A10 - Unvalidated Redirects and Forwards"]
+</pre>
+<p>Then we can modify the form that the scaffolding process created to use these arrays as a select list.  The form is found in vulnlist/app/views/vulnerabilities/_form.html.erb.  In that file we just need to replace the "text_field" lines for those three fields with the following select lines</p>
+<pre>
+ "Select the test type" %&gt;
+ "Select the severity level" %&gt;
+ "Select the appropriate OWASP top 10 reference" %&gt;
+</pre>
+<p>This picks up the Constants from our model and helps keep the data consistent.<br />
+<strong><big>Localhost Only</big></strong><br />
+As you'll have noticed with this application, there's pretty much no security whatsoever.  At the moment it's setup as a personal database only and isn't suitable to be on any kind of network. Adding that security isn't too difficult with rails, however it's not really a problem for the basic use case that we have here.  Both the vulnerability list and the dradis installation only need to listen on the localhost.<br />
+Configuring rails to only listen on the localhost (as opposed to specifying it on the command line) is a bit hacky, but here's a way to do it based on <a href="http://www.nearinfinity.com/blogs/chris_rohr/configuring_webrick_to_use_ssl.html">this post</a> and <a href="http://dradis.svn.sourceforge.net/viewvc/dradis/server/trunk/script/rails?revision=2057&amp;view=markup">this dradis change</a> .  We need to modify the vulnlist/script/rails file and add the following lines</p>
+<pre>
+require 'rubygems'
+require 'rails/commands/server'
+require 'rack'
+require 'webrick'
+module Rails
+class Server  3003,
+:Host =&gt; "127.0.0.1",
+:environment =&gt; (ENV['RAILS_ENV'] || "development").dup,
+:daemonize =&gt; false,
+:debugger =&gt; false,
+:pid =&gt; File.expand_path("tmp/pids/server.pid"),
+:config =&gt; File.expand_path("config.ru")
+})
+end
+end
+end
+</pre>
+<p>This also moves the application off the default port of 3000, to a new one of 3003 which hopefully shouldn't clash with other services.<br />
+<big><strong>Default Routes</strong></big><br />
+At the moment if we visit the root page of our application, now at http://127.0.0.1:3003 we get the default rails welcome page.  What'd be nicer is if we were re-directed to the vulnerability listing automatically.<br />
+That's easily done with two steps.  First edit the vulnlist/config/routes.rb file and add the line</p>
+<pre>
+root :to =&gt; "vulnerabilities#index"
+</pre>
+<p>then delete the file vulnlist/public/index.html file.<br />
+<u><strong><big>Summary</big></strong></u><br />
+So at the end of this first part we've created a basic vulnerability database which we can search easily on a number of parameters.<br />
+The next step is to create the dradis plugin to hook the two together, which as I'll cover next time is a reasonably easy thing to do.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    21st,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/09/21/new-role-new-bl/">New Role, New Blog</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I've just started a new role as a director at <a href="http:///www.7elements.co.uk"> 7 Elements</a>.  We're providing technical security consultancy and penetration testing services, focusing on the scottish market.<br />
+As part of that we've started up a blog <a href="http://blog.7elements.co.uk">here</a> to talk through some of the ideas we've got for approaching security and testing in a pragmatic way.<br />
+I'm planning to keep this blog running for now (not that you could tell from the level of posts!), but more of my security/testing stuff will probably pop up on the 7 Elements blog...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    17th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/07/17/wireless-scanni/">Wireless Scanning and a new tool</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I had some cause to do some wireless work recently, which got me interested in doing some more war-walking (and hey, the weathers actually been nice enough to make it pleasant recently).<br />
+It was interesting to see the density of wireless networks in the suburban area near where I live, a quick 30 minute walk can easily pick up several hundred APs.  Also some of the stats on encryption were interesting with about 25% of networks either using WEP or having no encryption at all, so still rich pickings there for anyone who wants free access or to attack some home networks directly.<br />
+I also did a bit of scanning with my N900 in Glasgow, near the apple store and noticed they've got an awful lot of clients connected to their unencrypted wireless networks there (~ 260 client spread over 3 APs), hope everyone is using VPNs or SSL only sites ;op<br />
+Also couldn't find something to do the analysis the way I was looking for it, so I knocked up a quick script in ruby to analyse the .netxml output files from kismet.<br />
+It's available <a href="http://www.mccune.org.uk/code/kis_analysis.rb"> here </a> .  It needs ruby, rubygems and nokogiri to work.  worth noting that on linux installs you'll need some xml parsing libraries installed before installing nokogiri (libxslt libxml2 libxml2-dev)<br />
+Basic syntax is very straightforward.<br />
+./kis_analysis.rb -f [netxml file] -r [report name]<br />
+you can add -g if you've got GPS data to add links from each network to a google maps point and -m to draw a map of all the networks seen.<br />
+Any feedback/comments welcome either on the blog or to rorym@nmrconsult.net</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    19th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/05/19/interesting-exa/">Interesting Example of Cloud Computing Risks</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the aspects of the move to cloud computing I find most interesting is the new and emergent risks that come with the move of services from a traditional networked IT environment, to being hosted "out in the open" of the cloud.<br />
+Whilst attention gets paid to some of the technical risks, I don't think there's been a lot of focus on some of the more procedural/human aspects of it.<br />
+One example is the visibility/effect of configuration mistakes.  In a traditional IT environment, mistakes can be partially contained by the network perimeter (albeit that containment is usually weaker than it used to be).<br />
+If someone makes an access control change which allows anonymous access to data, that mistake is likely only to be exploitable and visible to a limited group of people.<br />
+With the move to Cloud computing though, that same mistake could be instantly visible to the whole world and all it's attacker communities.<br />
+A really good example of this comes up in a vulnerability found by Jonathan Siegel (background story <a href="http://www.readwriteweb.com/cloud/2010/03/user-ignorance-causes-cloud-security-leak-accounts-passwords-revealed.php">here</a> and <a href="http://www.itworldcanada.com/news/cloud-consultant-wants-amazon-web-services-revamp/140391">here</a>).<br />
+In essence the problem seems to be that users of Amazon Web Services have made access control errors which set disk snapshots to be publicly available to everyone in a given region, and in the examples Jonathan gives this has included a database of user accounts for a web service and a full copy of a news services' web site.<br />
+So what would have likely been a relatively minor access control issue in an Internal network setup, becomes a situation where all the data in question should be considered compromised.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    1st,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/04/01/scottish-ruby-c-2/">Scottish Ruby Conference follow-up - 2 - Securing your app.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Most of the questions I got after my talk were around how people can look to secure their application.  I mentioned a couple of sites and it's probably worth expanding on the points made.<br />
+<b> Web Application Security</b><br />
+For people looking to understand how to secure their web applications, in my opinion the best source of free information is the <a href="http://www.owasp.org">OWASP project</a> .  It's an umbrella for a number of web application security efforts.<br />
+They've got a wide variety of projects which target management, security testers and developers, but some of the best places to start for developers are the <a href="http://www.owasp.org/index.php/Guide_Table_of_Contents">Owasp developers Guide</a> which covers a wide range of topics about secure development in a fairly generic way, and there's also the Ruby on Rails Security Guide <a href="http://www.owasp.org/index.php/Category:OWASP_Ruby_on_Rails_Security_Guide_V2"> here </a> or <a href="http://guides.rubyonrails.org/security.html">here</a> which covers rails specific topics.<br />
+Both of those documents are relatively large but well worth delving into.  For a quick few of the "most serious" web application security issues, OWASP also has the <a href="http://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project">Top Ten project</a>.  The latest version, current in <a href="http://www.owasp.org/index.php/File:OWASP_T10_-_2010_rc1.pdf">RC1</a> has some good summaries of the top risks, and is a good place to start getting an idea of the areas to be addressed...<br />
+There's also a newish book dedicated to the topic of <a href="http://www.pragprog.com/titles/fr_secure/security-on-rails">security on rails</a>.  I picked up a copy at the conference (I'm a sucker for the O'Reilly stand!), so I've not had time to get all the way through it, but first impressions are that it'll be very good, with concrete examples of broken rails applications and how to fix them.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    26th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/03/26/scottish-ruby-c-1/">Scottish Ruby Conference & Breaking things with Ruby</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Just had the first day of the <a href="http://www.scottishrubyconference.com">Scottish Ruby Conference</a>.  The venue was awesome, there'll doubtless be lots of good pictures up on places like flickr in due course, but here's a couple I snapped with my Nokia n900. The three track rooms were the <a href="http://www.mccune.org.uk/presentations/src_conference_hall.png">Conference Hall</a>, the <a href="http://www.mccune.org.uk/presentations/src_great_hall.png">Great Hall</a> and my personal favourite <a href="http://www.mccune.org.uk/presentations/src_new_library"> the "new" library</a>.<br />
+The talks were interesting as always, personal highlight for me had to be Jim Weirich managing to go from particle physics to functional programming seamlessly in a single talk!<br />
+my talk was on breaking things with ruby and was a pretty quick look at the world of penetration testing and some of the cool projects (primarily Metasploit) which use ruby in this area. My slides can be found <a href="http://www.mccune.org.uk/presentations/breaking-things-with-ruby.pdf">here</a> and if people are interested in more information on the topics I covered here's some good linkage to start with.<br />
+<strong><big>Metasploit</big></strong><br />
+<a href="http://www.metasploit.com">The Main Metasploit Website</a> . This is the best place to start.  There's also a wiki and source code repository on their redmine site <a href="http://www.metasploit.com/redmine/projects/framework/">here</a><br />
+<a href="http://www.offensive-security.com/metasploit-unleashed/">Metasploit Unleashed</a>. This is a free training course from Offensive Security which offers a good place to start with Metasploit, and covers a lot more ground than I could today.<br />
+Blog-wise there's a couple of places I consistently find good information on Metasploit.  <a href="http://carnal0wnage.attackresearch.com/">Carnal0wnage's blog</a> and the <a href="http://www.darkoperator.com/">Dark Operator</a> blogs have lots of posts on what can be done with Metasploit, as well as the <a href="http://blog.metasploit.com/">Official Metasploit Blog</a> of course.<br />
+Also on twitter following <a href="http://twitter.com/hdmoore">@hdmoore</a>, <a href="http://twitter.com/carnal0wnage">@carnal0wnage</a> and <a href="http://twitter.com/egyp7">@egyp7</a> is a good place to start.<br />
+Lastly if anyone's looking for videos demonstrating Metasploit, there's quite a few on <a href="http://www.securitytube.net">Security Tube</a> amongst other places.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    February
+    15th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/02/15/scottish-ruby-c/">Scottish Ruby Conference</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>If you've not already heard about it, the <a href="http://scottishrubyconference.com/posts"> Scottish Ruby Conference </a> is coming up in March in Edinburgh.  There's a really interesting set of presentations lined up for this years conference, and the hardest thing, I reckon, will be picking between the three tracks!<br />
+I've been very lucky to get my talk accepted for this years conference, so I'll be talking about "Breaking things with ruby".  It sits very nicely for me at the corner of two of my main computing interests.  Using ruby and ... well breaking stuff!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    4th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/01/04/ruby-ssl-checke/">Ruby SSL Checker</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>After reading a post by Gursev Kalra <a href="http://gursevkalra.blogspot.com/2009/09/ruby-and-openssl-based-ssl-cipher.html">here</a>, I decided to have a shot at putting together a slightly expanded version of his ssl Cipher suite checking code in ruby.<br />
+I've got it working reasonably well in my tests and it can chuck out reports in text and XML .  The code for the main script and a Metasploit module which does the same is <a href="http://wiki.mccune.org.uk/index.php/RubySSLChecker"> here</a>.  Any feedback/suggestions welcome :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    4th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/01/04/tools-i-use-b/">Tools I use - Burp</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I've been meaning to do a post on <a href="http://portswigger.net/">burp</a> for a while, and courtesy of my new years resolution to stop procrastinating, here it is :)<br />
+I was thinking of a way to sum up burp, so far the best I've got is "If you're doing web application testing and not using Burp, you're missing out !", it is that useful...<br />
+Burp has been around for a while now as one of a group of handy web application proxy tools along with the likes of <a href="http://www.owasp.org/index.php/Category:OWASP_WebScarab_Project">Web Scarab</a> and <a href="http://www.parosproxy.org/download.shtml">Paros</a>.  Over time it's developed a huge range of handy features, which make web app. testing a lot more productive.<br />
+There's the basics, in terms of intercepting and modifying requests, which all the tools in this category tend to do quite well, but on top of that there's just loads of other things that Burp does.<br />
+The Web app scanner is a good targetable way to test for several types of common web app vulnerabilities.  As an add-on in the latest beta, there's a wizard which lets you reduce the number of requests that Burps going to make, by removing duplicates and similar requests.  If you've used many commercial web app. scanners you'll know that volume of requests generated can be a real problem, so anything that can help bring down the load is useful.<br />
+Another stand-out feature of Burp for me, is intruder which lets you pick a specific parameter or set of parameters from a request and easily modify them.  As an example pretty much every time I see a URL that looks like <b>request.asp?id=123</b> , it's going to be worth running burp Intruder over that parameter to see what pops up when you change that value.<br />
+One of the things I have found about burp is that it's easy to miss functions that are available and not get the best out of it.  Luckily there's a <a href="blog.portswigger.net">blog</a> which covers a lot of the new features as they come out.  Also I need to mention the Burp Tip of the Day series of posts on <a href="http://cktricky.blogspot.com/search?q=BTOD">Cktricky's blog</a> which has loads of good tips on getting more out of Burp.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/12/31/and-were-back/">... And we're back</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So, we're back from a bit of an unscheduled break for my web server.  The hosting company had a bit of a problem with disks, so my VM has been out of action for a week or so.<br />
+Luckily, my backups worked pretty well so minimal content lost.  I'm using the rather unorthodox backup over SMTP, which seems to work pretty well for smaller files.  I knocked up a ruby class called <a href="http://wiki.mccune.org.uk/index.php/Ruby_Backup_Class">Rbackup</a> and just have a script running in cron nightly...<br />
+Actually had a trio of hardware failures over the festive period (2 hard disks and a graphics card), which just goes to show that checking backups (and restores!) is very important and not to be put off...</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page4">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 5 of 47</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page6">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

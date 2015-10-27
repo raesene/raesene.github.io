@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    21st,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/21/cachedump/">cachedump</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="CacheDump: recovering cached password hashes on Windows" href="http://www.cr0.net:8040/misc/cachedump.html">CacheDump: recovering cached password hashes on Windows</a><br />
+Handy pen testing tool. Can be used to dump the hashes for cached passwords which windows holds so that you can logon to your local machine if the domain controllers not available or you're not on the network (eg, laptops)<br />
+One attack using this I've seen suggested is to persuade a network admin to log onto a machine you control then you can use this to get their password (of course you could just use something like <a href="http://www.keylogger.com/hkstandalone.htm"> this </a> instead.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    20th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/20/wheres-the-beef/">Interesting examples of XSS attacsk</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Where's the Beef - xss / bankofamerica.com.html /" href="http://wheresthebeef.co.uk/show.php/xss/bankofamerica.com.html">Where's the Beef - xss / bankofamerica.com.html /</a><br />
+There's an interesting list at this site of XSS vulnerabilities that the authors found...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    20th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/20/sql-injection-r/">sql injection resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>ok recently I've been using SQL injection in some Penetration testing work I've been doing, so I thought it would be worth getting together all the links/White Papers I've been using/found useful.<br />
+Start off with two papers, which are more advanced but which have been the most useful one's I've found in the sense of having techniques I've used...<br />
+<a href="http://www.nextgenss.com/papers/advanced_sql_injection.pdf"> Advanced SQL Injection </a> and <a href="http://www.nextgenss.com/papers/more_advanced_sql_injection.pdf"> More Advanced SQL Injection </a> from NGS.  Both good papers and in the 1st there's a really handy methodology that you can follow through to iterate over the columns in a database table and then insert data into that table, amongst other things.<br />
+There's a good introduction to SQL injection <a href="http://www.securiteam.com/securityreviews/5DP0N1P76E.html"> here at securiteam </a> and another one <a href="http://www.unixwiz.net/techtips/sql-injection.html"> here at unixwiz </a><br />
+Some point that I've noticed from the testing I've done.<br />
+- If you get SQL error messages out of the database you're half way there.  Without them you're stuck trying to guess whether the data you've chucked at the system has caused it to barf in the right way or not...  (There are some techniques for this in the paper above, but I've not had much joy with them so far)<br />
+- If the web application you're looking at does intelligent escaping of quotes, you're probably only going to be able to attack numeric fields ('cause they don't typically put quotes round the input, thus no need to put one to inject your own SQL statements)<br />
+- understanding what the likely accounts and system tables are for a given DBMS is darned handy to expand the vulnerability.<br />
+Other Papers I've found handy<br />
+<a title="SQL Injection Signatures Evasion" href="http://www.imperva.com/application_defense_center/white_papers/sql_injection_signatures_evasion.html">SQL Injection Signatures Evasion</a><br />
+<a href="http://www.spidynamics.com/support/whitepapers/Blind_SQLInjection.pdf"> Blind SQL Injection </a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    18th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/18/real-interestin/">Real Interesting Post: Microsoft in trouble?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="christopher baus dot net" href="http://www.baus.net/microsofttrouble">christopher baus dot net</a><br />
+This is a really interesting post covering why the author thinks microsoft is in trouble.  There's a lot in it I agree with.  Definately Microsoft's current attitude to parts of the developer community (VB6 in particular) seems likely to drive people to the competition...<br />
+However I see Microsofts problem, from a security standpoint one the of their major problems is having to maintain backwards compatibility, for example Windows Server 2003 has many improvements to security, which are partially neutralised if you have to run it in backwards compatibility mode (eg, using LM/NTLM for NT4 compatibility).<br />
+That said Microsoft doesn't always help themselves from a security point of view... as is mentioned in the article they deploy a MEDIA PLAYER and a POP3 Client by default on their SERVER OS!!! That's just crazy, especially when those components start having <a href="http://www.microsoft.com/technet/security/Bulletin/MS05-009.mspx"> critical vulnerabilities </a>. Can you imagine a large enterprise having to deploy a patch to thousands of servers because the media player which will probably never run on any of them needs a patch!<br />
+ok this is turning into a bit of a rant, but that is a pet hate of mine... onto one other thought I have about this, which is.. how Microsoft may intend to save themselves (not saying I have some prescient knowledge of their strategy, but this does seem to fit current facts)<br />
+It's easy, force people to run your products because all your documents songs movies etc, will only play on those products and use DRM technology so that the content is encrypted such that there's no way for competitors to, legally, access it...  Simple and if Microsoft pulls it off, I'm not actually sure how you'd stop them.  If the majority of the media out there gets into encrpyted DRM protected Microsoft proprietary formats, it will really stuff the competition...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/14/professional-se/">More Pen Test Resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Professional Security Testers resources warehouse" href="http://www.professionalsecuritytesters.org/index.php">Professional Security Testers resources warehouse</a><br />
+More info on Pen testing.  Especially on this site, there's a good link section.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/14/white-papers-we/">Handy list of Security Whitepapers</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="White Papers - Web Application Security Consortium" href="http://www.webappsec.org/whitepapers.shtml">White Papers - Web Application Security Consortium</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    10th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/10/post/">Gmail File System</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="" href="http://filebunker.sourceforge.net/">Gmail Filesystem</a><br />
+Not that I'd ever want to rely on this for any data I cared about, but it's a really interesting idea and at current rates with the ~150 invites I've got access to I could create a 300GB filesystem all stored in gmail.......</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    8th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/08/mac-osx-securit/">Mac OSX security site</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="[ hardening your macintosh ]" href="http://members.lycos.co.uk/hardapple/">[ hardening your macintosh ]</a><br />
+Looks like this site has loads of good information on Mac OSX security including stuff regarding Pen testing OSX machines...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    7th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/07/unicornscan-fas/">unicornscan - fast port scanner...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Unicornscan" href="http://www.unicornscan.org/">Unicornscan</a><br />
+Interesting sounding port scanner to try out.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    5th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/05/alternate-data-1/">Alternate data streams</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SecurityFocus HOME Infocus: Windows NTFS Alternate Data Streams" href="http://www.securityfocus.com/infocus/1822">SecurityFocus HOME Infocus: Windows NTFS Alternate Data Streams</a><br />
+A good security article at securityfocus.com covering Alternate data streams in windows.  There are 2 tools mentioned in the article which I think are well worth using, either on a periodic basis as a audit tool, or on a machine which you think may have been compromised.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page30">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 31 of 47</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page32">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

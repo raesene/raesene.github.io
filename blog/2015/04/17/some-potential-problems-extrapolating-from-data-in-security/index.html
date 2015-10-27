@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Some potential problems extrapolating from data in security</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Some potential problems extrapolating from data in security </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   April 
+	   17th,
+	   
+	   2015
+	 </span>
+	  <div class="article_body">
+	  <p>One of the perennial problems in security is the lack of hard data, so it’s been good to see over the last couple of years a growing number of reports coming out which seek to shed a bit more light on what’s happening in InfoSec.  One of the more prominent of these reports is the <a href="http://www.verizonenterprise.com/DBIR/2015/">Verizon Data Breach Investigation report</a> and I always read it as it has some interesting insights into what’s happening in areas that I don’t get too much exposure too.</p>
+
+<p>However when I read this years report I noticed a section which looked .. well odd.  It’s on page 16 of the report and talks about the top 10 “exploited” vulnerabilities in 2014.  What struck me as very odd is the number of very old vulnerabilities in the list.  Eight of the ten issues listed are from 2002 or before.  Now I know IT security patching can be a bit slow, but this seems excessive!</p>
+
+<p>So I had a look at the CVE references provided and what I found did not ehance my confidence that this data was an accurate reflection of exploited issues.  In a number of cases the referenced CVEs are for old and or obscure products that would surprise me if they’re in wide deployment.</p>
+
+<p>The best example of this problem is <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1931">CVE-2002-1931</a> which gets listed at number nine.  This is a Cross-Site Scripting issue in version 2.1.1 and 1.1.3 of a product called PHP Arena and specifically the pafileDB area of that product.  Now I struggled to find out too much about that product because the site that used to host it www.phparena.net is now a gambling site (I presume that the domain name lapsed and was picked up as it got decent traffic).  Searching via google for information, most of the results seemed to be from vulnerability databases(!) and using a google dork of <a href="https://www.google.co.uk/?gws_rd=ssl#q=inurl:pafiledb.php&amp;start=170">inurl:pafiledb</a> shows a total of 156 results, which seems low for one of the most exploited issues on the Internet.</p>
+
+<p>Also looking at <a href="http://www.securityfocus.com/bid/6021">this securityfocus page</a> we can see that PHP Arena pafileDB 3.0 isn’t vulnerable to this issue and from <a href="http://www.cvedetails.com/product/2451/Php-Arena-Pafiledb.html?vendor_id=1413">this cvedetails page</a> we can see that pafileDB 3.0 came out in 2002.</p>
+
+<p>So for this issue to be in the top 10 most exploited issues on the Internet, we need a large number of people to not have updated a very exploitable, discontinued PHP forum product for 13 years…</p>
+
+<p>When I saw this initially, I thought “ahh must be a problem with the publishing”, so I contacted Verizon by e-mail and then <a href="https://twitter.com/raesene/status/589022276252782592">over twitter</a>, however apparently not, this is the real data!  They were very nice and provided some additional detail (although it’s hard to be specific in 140 chars) which indicates that this data came from IDS sensors correlated to vulnerabilities, but I can’t really see how that could possibly be the case.</p>
+
+<p>If it were just raw network IDS sensor data it’s possible if it were just looking at network traffic and alerting on vulnerability scanners testing for things, but a) that’s not exploitation of an issue, just scaning for its presence and b) even then things like the PHP arena one don’t make sense unless the IDS sensor is just mistakenly putting all XSS attempts into that bucket.  Either way I’m afraid this looks like mistaken interpretation of the available data and an extrapolation based on that interpretation</p>
+
+<p>So why do I care enough to write this?  Well unfortunately what a lot of people in the industry will do here is take the headline “97% of exploited issues came from these 10 issues” and use this to drive spending and other decisions, and that’s unfortunate as without looking at the detail you don’t realise that there are problems with that interpretation of it.</p>
+
+<p>For completeness here’s some notes on the other issues.  The first two are generic SNMPv1 issues from 2002 which from their descriptions <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0012">CVE−2002−0012</a> and <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0013">CVE−2002−0013 </a> look kind of like the same thing and also are not very specific as it’s multiple vendors.</p>
+
+<p>Number three is default SNMP community strings <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1999-0517">CVE-1999-0517</a> which is kind of believable as you do see a fair bit of SNMP out there, although in my recent experience default community strings on the Internet are rarer.</p>
+
+<p>Number four is a memory leak DoS in Windows NT 4 and 2000 <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0540">CVE-2001-0540</a> RDP requests. Now both these products have been out of support for some years and are less seen these days, also with a DoS issue whilst it’s possible to detect someone attacking it with network IDS, I don’t see how you’d easily detect actual exploitation without something running on the target server to note the service crashing.</p>
+
+<p>Number five is a newer one, <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-3566">POODLE</a>.  This being in the top 10 exploited issues would be very interesting as traditionally SSL issues which require an active Man-In-The-Middle attack are considered less exploited (usually ‘cause if the person has a privileged position on the network like that, they can do far worse things that exploit SSL issues!).  Now I’d believe it was one of the top “scanned for “ issues but not exploited.</p>
+
+<p>Number six is <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0152">another RDP DoS</a> .  This one is more modern, but the problem of accurately detecting DoS exploitation remains..</p>
+
+<p>Number seven is a pretty obscure one <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0680">Directory traversal vulnerability in ftpd in QPC QVT/Net 4.0 and AVT/Term 5.0</a>.  As with the PHP Arena, there’s not a lot of information on the Internet about this product.  the host company still exists but no download/version information seems easily available.  That said from <a href="http://www.securityfocus.com/bid/2618">Securityfocus</a> the latest affected OS is Windows 2000 SP2, which hasn’t been in support for a long time and has other critical exploitable issues, so I’d have guessed that if someone was going to exploit it they wouldn’t have targeted this issue…</p>
+
+<p>Number eight is a directory traversal issue in <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1054">Pablo FTP v1.0 build 9</a> . From a quick search the product was up to <a href="http://www.pablosoftwaresolutions.com/html/quick__n_easy_ftp_server.html">version 3.2</a> when it was last released and that version supports up to Windows vista, so it’s a fair guess that version 1 hasn’t been in use/supported for a while.</p>
+
+<p>Number nine is the PHP Arena issue mentioned previously.</p>
+
+<p>Number ten is a bug in <a href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1932">windows 2000 and XP</a> where administrators aren’t notified if logs fill up. If a system isn’t patched for this they also have all the canonical remote code execution bugs like MS06-040 and MS08-067.  So for this to be more exploited, we have to have large numbers of attackers who want to fill up logs with impunity, instead of taking over the system.</p>
+
+	  </div>
+
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Some potential problems extrapolating from data in security&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2015/03/01/software-library-repositories-and-security/" title="Software Library Repositories and Security">&larr; Previous</a></li>
+		  
+		  
+		  <li class="next"><a href="/blog/2015/05/23/so-youre-giving-a-conference-talk/" title="So you're giving a conference talk">Next &rarr;</a></li>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+    
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = 'raesene';
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

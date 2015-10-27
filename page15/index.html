@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    28th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/28/security-blogge/">Security Bloggers Network</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Came across this handy feedburner security blog network <a href="http://networks.feedburner.com/Security-Bloggers-Network">here </a><br />
+Some of the blogs I've seen before, but there's a fair quantity of new interesting ones as well which I've been busily adding to <a href="http://www.searchinfosec.com">seachinfosec</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    25th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/25/cisco-code-exec/">Cisco code execution Vulnerability</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>This advisory on <a href="http://www.cisco.com/en/US/products/products_security_advisory09186a00807cb157.shtml"> Cisco's site </a> could be very nasty.<br />
+It appears that there's a vulnerability in IOS that can be exploited by sending crafted packets, and can result in DoS or remote code execution.<br />
+If an exploit for this becomes available then expect a lot of problems...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    8th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/08/software-securi-1/">Software security and Vulnerability Pimps</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="ryanlrussell: Vulnerability Pimps" href="http://ryanlrussell.blogspot.com/2007/01/vulnerability-pimps.html">ryanlrussell: Vulnerability Pimps</a><br />
+Some very interesting commentary which follows on from a posting on Marcus Ranums site <a href="http://www.ranum.com/security/computer_security/editorials/codetools/index.html"> here </a> which is in itself very interesting..<br />
+All good stuff if your interested in Software security but the piece that caught my eye is right at the end of the comments section<br />
+<i><br />
+I'm hearing from the vulnerability pimps that, yes, code security is improving. They are reporting that it's much harder to find a remote hole in the current operating systems.<br />
+</i><br />
+So security on operating systems is getting better... not really a surprise given the battering they've had and the level of resource that people like Microsoft are putting into it.<br />
+But... reckon that the hackers will go home now ?  Of course not, they'll move on and I reckon that the place they'll go is all those other software applications that people install on their systems that come from vendors who maybe haven't woken up to the necessity of secure coding.<br />
+Sure it'll be harder for hackers to get coverage on as many systems 'cause there aren't all that many software monopolies out there, but I'm sure that's where they'll go.<br />
+So a good time to be asking the suppliers of all your applications what they do about software security.  Do they do security code audits? what tools to they use for those audits?  Have all their developers had secure development training?</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    1st,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/01/perils-of-persi/">Perils of persistent Logins...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Interesting post from Nitesh dhanjani <a href="http://www.dhanjani.com/archives/2007/01/your_gmail_contact_list_is_han.html">here</a> pointing out a problem with Gmail contact lists being available to malicious website owners.<br />
+Now this only works if you're logged into gmail, but if you've used it recently and not explicitly logged out... then it'll keep you logged in...<br />
+Now google should obviously fix this problem, but I think that there is a wider point here.  Don't leave yourself logged in to websites and be very wary about what you let your browser manage for you security-wise as it's not very security wise (oh I crack myself up ;o)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    1st,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/01/new-free-databa/">New Free Database scanner... a Windows only Java program!</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a new freeware database security scanner available called <a href="http://www.imperva.com/application_defense_center/scuba/">scuba </a> from Imperva.<br />
+The front page looks quite interesting so I'll be sure to have a look at it.  However not today, as I'm not in fromt of a windows machine.<br />
+And here's the really weird bit.  When I heard about it I noted that it's a Java program..... "great" I thought it'll run nicely on Linux (which I use almost exclusively at home, apart from the odd game) but.. it's a java program that requires windows!!<br />
+What the heck is the point of that!<br />
+"No problem" I thought "I'll just download the archive and there'll be a JAR file there that I can run manually"....<br />
+no<br />
+when you download the program it extracts one .exe file!<br />
+Why bother programming something in Java if you're going to tie it to windows!!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    7th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/07/the-wonders-of/">The wonders of modern (open source) technology...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I was just thinking that there's lots of little advances in technology that you don't really think about but that add up to make a real difference to what you can do..<br />
+This time it's a combo of SSL VPN's and free broadband Internet in hotels that's letting me sit here and listen to any music from my home music collection without having to tote around player with me (that I always forget to charge!)<br />
+And the great thing is... it's all free.<br />
+The SSL VPN is courtesy of the excellent <a href="http://www.3sp.com/showSslExplorerCommunity.do">sslexplorer</a>.  the community edition is stored on my <a href="www.centos.org">CentOS</a> server at home which has a port forward from my little <a href="http://www.ipcop.org/">ipcop</a> firewall..<br />
+The next piece of the puzzle is <a href="http://www.slimdevices.com/su_downloads.html">slimserver</a> which is designed to support Slim devices squeeze boxes , but which they release as a free download whether you use their product or not...  This lets me set up a stream over HTTP of any music I like, that I can connect to with any media player (windows media etc)<br />
+Actually what occurs to me is that the common piece of all this is Open source software.  Without that all this would cost me a fortune and very likely I wouldn't have it at all...!  Yay open source.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    6th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/06/cool-netstat-an/">Cool netstat and wmic stuff</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System" href="http://isc.sans.org/diary.php?storyid=1911&amp;isc=6113ddcc651a8e9b3c8de550deb0fd3f">SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System</a><br />
+This post on the sans handlers log has some really useful information about the use of netstat to detect connection information on windows boxes, with some features that I wasn't aware of.<br />
+Also put me on to something else that I've been woefully ignorant of . <a href="http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/wmic.mspx?mfr=true"> wmic</a><br />
+This looks like a really handy command-line tool for getting information out of windows boxes.  from what I can see so far, there's a load of interesting information that you can get from it.  To get started just type <i>"wmic"</i> from a command prompt then type /? for a list of "aliases" that wmic uses for information retrieval.<br />
+Some of the commands I've found so far which seem handy "process list brief" and nicconfig list brief" but you can use the <i>/?</i> switch after anything to get some useful help about options...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    3rd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/03/the-cats-allude/">The cats alluded to in by blog title</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>It occurs to me that I promised the odd cat when I set up this blog, and I've not really had any... so without further ado, here's some picture of our two that Marion captioned...<br />
+<img src="http://www.mccune.org.uk/funny_cats/camoflaged.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/cleanedyourwindscreen.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/firstclass.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/giftwrappedthismyself.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/gofindyourownpillow.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/preciousismine.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/stealinursheets.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/stealinursupplies.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/wheresmypresent.jpg" /></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    1st,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/01/finally-a-sensi/">Finally ! A sensible view on AJAX Security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>A post over on <a href="http://www.whitehatsec.com/home/resources/articles/files/myth_busting_ajax_insecurity.html">White Hat Security</a> makes a great run at bursting the bubble of all the people saying that AJAX is some kind of terrible security risk.<br />
+I won't reiterate the arguments in the article, 'cause they do a pretty good job of laying out what the problems and non-problems of AJAX security are.  I'd just say that I agree this has been a really overhyped area of security.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    29th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/29/more-on-windows/">More on windows cached password recovery</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="" href="http://www.off-by-one.net/misc/cachedump.html"></a><br />
+hmm looks like it's not quite as bad as I thought it was.  After a bit more reading on the subject, the windows cached password is not just an NTLM hash, it's actually a salted hash, with the salt being the username.<br />
+So rainbow tables aren't really a practical attack for this, although it's interesting to note that there's a John the ripper plug-in for cachedump now which enables you to do dictionary based/brute-force attacks on retrieved credentials</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page14">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 15 of 47</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page16">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

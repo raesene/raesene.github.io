@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title></title>
+		<description>Things that occur to me</description>
+		<link>/</link>
+		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+		
+			<item>
+				<title>Set-up a Complete Security Test Environment with One Command and Docker Compose</title>
+				<description>&lt;p&gt;Following on from my last post on &lt;a href=&quot;http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/&quot;&gt;Using Docker for Security Testing&lt;/a&gt;, I thought it would be interesting to see if we can set-up an even more automated environment by using &lt;a href=&quot;https://www.docker.com/docker-compose&quot;&gt;Docker Compose&lt;/a&gt;.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.&lt;/p&gt;
+
+&lt;p&gt;For the use case of Security Testing I was thinking it would be nice to have containers which provide a service that you connect to over a network port, for example &lt;a href=&quot;http://dradisframework.org/&quot;&gt;Dradis&lt;/a&gt; or &lt;a href=&quot;http://www.openvas.org/&quot;&gt;OpenVAS&lt;/a&gt;, alongside your main command line driven container which has tools that you’re more likely to use interactively on a test, for example &lt;a href=&quot;https://nmap.org/&quot;&gt;Nmap&lt;/a&gt; or &lt;a href=&quot;https://github.com/rapid7/metasploit-framework&quot;&gt;Metasploit&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;It turns out this is relatively straightforward using Docker Compose.  You can set-up a yml file with information on the containers you want to instantiate (the default name is docker-compose.yml) and then just spin that up with a single command.&lt;/p&gt;
+
+&lt;p&gt;So for this setup the Docker Compose file looks like this&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sectest:
+  image: raesene/sectest
+  command: /bin/bash
+  links:
+     - dradis
+     - openvas
+dradis: 
+  image: raesene/auto-docker-dradis
+  ports: 
+      - &quot;3000:3000&quot;
+  command: bundle exec rails server
+openvas:
+  image: mikesplain/openvas
+  ports:
+      - &quot;443:443&quot;
+      - &quot;9390:9390&quot;
+      - &quot;9391:9391&quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.&lt;/p&gt;
+
+&lt;p&gt;In the next section we start up the dradis container and here it’s worth noting two points.  The first is the “ports” command.  This sets up port mappings so that the service will be visible on the docker host, which is where we’ll be connecting to it from.  The second thing to note is the “command” directive which just specifies what should be run when the container comes up.&lt;/p&gt;
+
+&lt;p&gt;In the third section we specify the openvas container and set-up some port mappings to expose the relevant ports to the host.&lt;/p&gt;
+
+&lt;p&gt;Now we’ve got this file created we just need to start things up.  The command I’ve used for this is&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;docker-compose run --service-ports sectest /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.&lt;/p&gt;
+
+&lt;p&gt;If all goes well this should download and start-up all three containers and you should have a command prompt in the sectest container, along with started accessible services for the other two containers.&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 15 Aug 2015 20:06:39 +0100</pubDate>
+				<link>/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</link>
+				<guid isPermaLink="true">/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</guid>
+			</item>
+		
+			<item>
+				<title>Using Docker for Security Testing</title>
+				<description>&lt;p&gt;Following on from my &lt;a href=&quot;http://raesene.github.io/blog/2015/07/05/some-notes-on-docker/&quot;&gt;previous post&lt;/a&gt; about Docker, I’ve been giving some thoughts to how I could make use of this in my day-to-day work of security testing.&lt;/p&gt;
+
+&lt;p&gt;There’s a couple of areas where I can see Docker being quite useful, mainly due to the ease of maintaining and installing applications and also the reduced resource utilization over “tradtional” virtual machines.&lt;/p&gt;
+
+&lt;p&gt;The first one is in isolating security testing applications which require a bit of setup or a particular environment to operate in.  Some very useful security testing tools are slightly more complex to setup and run than just doing a  &lt;code&gt;git clone&lt;/code&gt; of the repo and running a script and there can always be conflicts in the version of underlying tools and libraries required for them to run. These tools can benefit from the isolation that using a containerized version brings.&lt;/p&gt;
+
+&lt;p&gt;Already on &lt;a href=&quot;https://hub.docker.com&quot;&gt;Docker Hub&lt;/a&gt; you can see a number of containers avaiable which do this for you.  An example is &lt;a href=&quot;http://www.openvas.org/&quot;&gt;OpenVAS&lt;/a&gt; for which there are a number of containers available, for example &lt;a href=&quot;https://registry.hub.docker.com/u/mikesplain/openvas/&quot;&gt;this one&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;One of the nice things about containers built using the automated build approach is that Docker Hub will show you the dockerfile used to build the container, which provides some level of transparancy over what you’re downloading (and the syntax is relatively basic, so easy to see what’s going on).  You still obviously have to trust Docker Hub and the sources of data used to build the container, which may not be applicable to some environments, and there a better option might be an internal docker repository with internally validated builds.  Even there, the Docker Hub examples are useful to base your Dockerfiles on.&lt;/p&gt;
+
+&lt;p&gt;Another way in which containers can be handy is in creating new, consistent, security test environments for each piece of work done.  A common problem in security testing is ensuring that your testing environment is clear of any data from previous reviews, to avoid inadvertant contamination and also ensuring that your tools are regularly updated.&lt;/p&gt;
+
+&lt;p&gt;Using a containerized image as your base here is quite straightforward as you just get an image, and then create a new container based on that image for each review.  I’ve started a sample one &lt;a href=&quot;https://registry.hub.docker.com/u/raesene/sectest/&quot;&gt;here&lt;/a&gt; which shows some of the basic tools.  The Dockerfile is on github &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;, and could be useful as a starting point for others.&lt;/p&gt;
+
+&lt;p&gt;Now you could replicate this with virtual machines, but the downside there is that the disk space requirements for a new VM per test would be pretty hefty and cloning/starting a new VM can be a bit slow, when compared to containers.  Depending on the type of testing you do, you may need the more complete environemnt that a VM provides, but I reckon for a lot of  testing a container should work just fine.&lt;/p&gt;
+
+&lt;p&gt;Another potential advantage of this approach is that you could archive off the container at the end of the test which could make reproducing findings at a later date simpler (less risk of tools updates changing the results of a test)&lt;/p&gt;
+
+&lt;h2 id=&quot;some-other-security-testing-containers&quot;&gt;Some Other Security Testing Containers&lt;/h2&gt;
+
+&lt;p&gt;As I mentioned before there are quite a few containers turning up on Docker Hub which could be useful, here’s some of the ones I’ve seen so far&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/raesene/auto-docker-dradis/&quot;&gt;Dradis community&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/owasp/zap2docker-stable/&quot;&gt;OWASP ZAP&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/kalilinux/kali-linux-docker/&quot;&gt;Kali Linux&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/wpscanteam/wpscan/&quot;&gt;WPScan&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Thu, 23 Jul 2015 20:56:47 +0100</pubDate>
+				<link>/blog/2015/07/23/using-docker-for-security-testing/</link>
+				<guid isPermaLink="true">/blog/2015/07/23/using-docker-for-security-testing/</guid>
+			</item>
+		
+			<item>
+				<title>Some notes on docker</title>
+				<description>&lt;p&gt;I’ve been spending some time this weekend looking more at docker and where I think it could be useful for my workflows, and along the way I’ve learned a couple of things which I didn’t know, so I thought it would be worth recording them, in case they’re useful to others.  None of this is particularly earth shattering but hey could save someone some time :)&lt;/p&gt;
+
+&lt;h2 id=&quot;images-and-containers&quot;&gt;Images and Containers&lt;/h2&gt;
+
+&lt;p&gt;First was the distinction between images and containers.  Images are what you build from (e.g. a template) containers are running instances of those images.&lt;/p&gt;
+
+&lt;h2 id=&quot;container-persistence&quot;&gt;Container Persistence&lt;/h2&gt;
+
+&lt;p&gt;If you do one of the canonical examples that’s provided in many tutorials&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;docker run -t -i ubuntu:latest /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.&lt;/p&gt;
+
+&lt;p&gt;From that you might get the impression that docker container filesystems are not persistent (i.e. when the exit all the data is lost), but that’s not the case from what I can see.&lt;/p&gt;
+
+&lt;p&gt;To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;docker ps -a
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;which will list all the container instances you’ve ever run on that system and it’ll look something like&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
+39c1e5cf8319        raesene/auto-docker-dradis   &quot;bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&amp;gt;3000/tcp   cranky_kilby
+e529903a3183        raesene/auto-docker-dradis   &quot;bundle exec rails s   55 minutes ago                                                           compassionate_yonath
+f084aaca32ee        raesene/dradisframework      &quot;bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
+8a8f7b95082a        2bfb337a0aa8                 &quot;bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
+8a2a0046b769        ruby:latest                  &quot;/bin/bash&quot;            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;docker start compassionate_goodall
+docker attach compassionate_goodall
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&quot;docker-hub-build-options&quot;&gt;docker hub build options&lt;/h2&gt;
+
+&lt;p&gt;There’s two options for getting your builds onto docker hub.  The first is to get a container, make modifications to it on your own docker engine and then commit the changes back to your own repository on docker hub.  This works fine but is rather lacking in transparancy as to what went into the build and also doesn’t really lend to others participating.&lt;/p&gt;
+
+&lt;p&gt;The other option is using Docker Hub automated builds, where a github/bitbucket repository is created with the Dockerfile present and then Docker Hub handles the build in an automated fashion from that Dockerfile. &lt;a href=&quot;https://docs.docker.com/docker-hub/builds/&quot;&gt;docker automated build docs&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;exposing-docker-ports&quot;&gt;Exposing docker ports&lt;/h2&gt;
+
+&lt;p&gt;By default containers have no ports exposed the the host network and many containers do not have things like SSHD installed, so remote access isn’t there by default.  The best way to map a port from the host to the guest is when the docker run command is used with the &lt;code&gt;-p&lt;/code&gt; option.&lt;/p&gt;
+
+</description>
+				<pubDate>Sun, 05 Jul 2015 20:10:15 +0100</pubDate>
+				<link>/blog/2015/07/05/some-notes-on-docker/</link>
+				<guid isPermaLink="true">/blog/2015/07/05/some-notes-on-docker/</guid>
+			</item>
+		
+			<item>
+				<title>So you're giving a conference talk</title>
+				<description>&lt;p&gt;I realised the other day that I’ve been doing public speaking for quite a while now (started with doing internal training courses back in the 90’s, and graduated on to doing external speaking at seminars and conferences about 10 years back).&lt;/p&gt;
+
+&lt;p&gt;Over that time, I’ve inevitably made some mis-steps and also seen a number of others from speakers at conferences I’ve attended, so I thought it would be worth putting together some hints and tips for prospective speakers.  Hopefully some of these will be useful!&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Treat your presentation like a story.&lt;/strong&gt; It should have a start, middle and an end. I find it helps to think of presentations in this way, as you can imagine the story your trying to tell and think about whether a particular slide fits into that part of the narrative or not. Think about “what am I trying to say, why should the audience care and what can they do about it”, and make sure your conclusion has some clear points or advice for next steps.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Don’t sweat presentation tool choice too much.&lt;/strong&gt;  A lot of people get very hung up on liking/disliking specific presentation tools (e.g. PowerPoint, Prezi, Keynote).  The simple fact is that I’ve seen good and bad presentations with every tool.  The important part is that you find one that suits your style and learn how to use it well.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Avoid walls of text in your presentation.&lt;/strong&gt;  This one is very common.  If you put a lot of dense text on your slides, people will naturally start reading that and not paying attention to what you’re saying.  There’s a natural desire to provide information for people after the talk but that can easily go in speaker notes, or a white paper, or a blog post.  It doesn’t need to go into the body of the slide.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Practice, Practice, Practice.&lt;/strong&gt; Timing a talk is really tricky to do.  The best way to address this is practice your talk.  Talk to yourself, your dog/cat, your partner, your friends, basically anyone who’ll listen.  I find that once I’ve delivered a talk a couple of times in this way, it’s easier to remember queues and the flow of the talk.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Speaker Note cards.&lt;/strong&gt;  Again this one gets a lot of pro/con feeling.  My advice is, if you feel you need prompt cards, use them.  But try to avoid just reading them one at a time.  Keep themes or key points on there, don’t put the exact words you want to say.  If you just read from cards, you won’t be able to engage your audience.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Engage your audience.&lt;/strong&gt;  So this is hard, especially if you’re not used to public speaking.  But it’s important to look up at your audience while you speak.  Try to look around, not just at one person.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Demos (and the dark god).&lt;/strong&gt;  Live demos can help bring a topic to life and, when done right, can really help drive a point across.  With that said, they often fail, which can be pretty stressful in the middle of a presentation! I’ve had things which literally worked 30 minutes earlier, fail for no obvious reason. This happens so often that many presenters will refer to “The dark god of demos”!.  My recommendation for speakers who are starting out is to avoid them unless really necessary and always have a back-up option like a pre-recorded video.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Fonts and colours.&lt;/strong&gt;  Watch out for this when presenting things like live coding or other demos.  Fonts and colour schemes which look good on your laptop may be totally unintelligible when up on a big screen.  In particular avoid dark backgrounds with coloured text, these rarely look good.  Also make sure you’re au-fait with the keyboard shortcuts for making text larger and smaller in your editor/IDE, as you will likely need to use them on the day…&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Always develop your own material.&lt;/strong&gt;  It’s very hard to deliver someone else’s slide deck well.  I’ve seen a number of times where the presenter didn’t write their presentation, and sometimes didn’t seem to have read it either! This results in a rather disjointed delivery and inability to answer questions, which rarely ends well…  If you absolutely have to do this, make sure to read/understand the whole thing before delivery.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Lastly Enjoy yourself :).&lt;/strong&gt;  Public speaking can seem like a stressful thing to do, and everyone gets nervous when then present (well I do anyway) but it can be fun to explain your ideas to a group of people and in a lot of cases you’ll get some good feedback/ideas about what you could do next.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 23 May 2015 13:16:12 +0100</pubDate>
+				<link>/blog/2015/05/23/so-youre-giving-a-conference-talk/</link>
+				<guid isPermaLink="true">/blog/2015/05/23/so-youre-giving-a-conference-talk/</guid>
+			</item>
+		
+			<item>
+				<title>Some potential problems extrapolating from data in security</title>
+				<description>&lt;p&gt;One of the perennial problems in security is the lack of hard data, so it’s been good to see over the last couple of years a growing number of reports coming out which seek to shed a bit more light on what’s happening in InfoSec.  One of the more prominent of these reports is the &lt;a href=&quot;http://www.verizonenterprise.com/DBIR/2015/&quot;&gt;Verizon Data Breach Investigation report&lt;/a&gt; and I always read it as it has some interesting insights into what’s happening in areas that I don’t get too much exposure too.&lt;/p&gt;
+
+&lt;p&gt;However when I read this years report I noticed a section which looked .. well odd.  It’s on page 16 of the report and talks about the top 10 “exploited” vulnerabilities in 2014.  What struck me as very odd is the number of very old vulnerabilities in the list.  Eight of the ten issues listed are from 2002 or before.  Now I know IT security patching can be a bit slow, but this seems excessive!&lt;/p&gt;
+
+&lt;p&gt;So I had a look at the CVE references provided and what I found did not ehance my confidence that this data was an accurate reflection of exploited issues.  In a number of cases the referenced CVEs are for old and or obscure products that would surprise me if they’re in wide deployment.&lt;/p&gt;
+
+&lt;p&gt;The best example of this problem is &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1931&quot;&gt;CVE-2002-1931&lt;/a&gt; which gets listed at number nine.  This is a Cross-Site Scripting issue in version 2.1.1 and 1.1.3 of a product called PHP Arena and specifically the pafileDB area of that product.  Now I struggled to find out too much about that product because the site that used to host it www.phparena.net is now a gambling site (I presume that the domain name lapsed and was picked up as it got decent traffic).  Searching via google for information, most of the results seemed to be from vulnerability databases(!) and using a google dork of &lt;a href=&quot;https://www.google.co.uk/?gws_rd=ssl#q=inurl:pafiledb.php&amp;amp;start=170&quot;&gt;inurl:pafiledb&lt;/a&gt; shows a total of 156 results, which seems low for one of the most exploited issues on the Internet.&lt;/p&gt;
+
+&lt;p&gt;Also looking at &lt;a href=&quot;http://www.securityfocus.com/bid/6021&quot;&gt;this securityfocus page&lt;/a&gt; we can see that PHP Arena pafileDB 3.0 isn’t vulnerable to this issue and from &lt;a href=&quot;http://www.cvedetails.com/product/2451/Php-Arena-Pafiledb.html?vendor_id=1413&quot;&gt;this cvedetails page&lt;/a&gt; we can see that pafileDB 3.0 came out in 2002.&lt;/p&gt;
+
+&lt;p&gt;So for this issue to be in the top 10 most exploited issues on the Internet, we need a large number of people to not have updated a very exploitable, discontinued PHP forum product for 13 years…&lt;/p&gt;
+
+&lt;p&gt;When I saw this initially, I thought “ahh must be a problem with the publishing”, so I contacted Verizon by e-mail and then &lt;a href=&quot;https://twitter.com/raesene/status/589022276252782592&quot;&gt;over twitter&lt;/a&gt;, however apparently not, this is the real data!  They were very nice and provided some additional detail (although it’s hard to be specific in 140 chars) which indicates that this data came from IDS sensors correlated to vulnerabilities, but I can’t really see how that could possibly be the case.&lt;/p&gt;
+
+&lt;p&gt;If it were just raw network IDS sensor data it’s possible if it were just looking at network traffic and alerting on vulnerability scanners testing for things, but a) that’s not exploitation of an issue, just scaning for its presence and b) even then things like the PHP arena one don’t make sense unless the IDS sensor is just mistakenly putting all XSS attempts into that bucket.  Either way I’m afraid this looks like mistaken interpretation of the available data and an extrapolation based on that interpretation&lt;/p&gt;
+
+&lt;p&gt;So why do I care enough to write this?  Well unfortunately what a lot of people in the industry will do here is take the headline “97% of exploited issues came from these 10 issues” and use this to drive spending and other decisions, and that’s unfortunate as without looking at the detail you don’t realise that there are problems with that interpretation of it.&lt;/p&gt;
+
+&lt;p&gt;For completeness here’s some notes on the other issues.  The first two are generic SNMPv1 issues from 2002 which from their descriptions &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0012&quot;&gt;CVE−2002−0012&lt;/a&gt; and &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0013&quot;&gt;CVE−2002−0013 &lt;/a&gt; look kind of like the same thing and also are not very specific as it’s multiple vendors.&lt;/p&gt;
+
+&lt;p&gt;Number three is default SNMP community strings &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1999-0517&quot;&gt;CVE-1999-0517&lt;/a&gt; which is kind of believable as you do see a fair bit of SNMP out there, although in my recent experience default community strings on the Internet are rarer.&lt;/p&gt;
+
+&lt;p&gt;Number four is a memory leak DoS in Windows NT 4 and 2000 &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0540&quot;&gt;CVE-2001-0540&lt;/a&gt; RDP requests. Now both these products have been out of support for some years and are less seen these days, also with a DoS issue whilst it’s possible to detect someone attacking it with network IDS, I don’t see how you’d easily detect actual exploitation without something running on the target server to note the service crashing.&lt;/p&gt;
+
+&lt;p&gt;Number five is a newer one, &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-3566&quot;&gt;POODLE&lt;/a&gt;.  This being in the top 10 exploited issues would be very interesting as traditionally SSL issues which require an active Man-In-The-Middle attack are considered less exploited (usually ‘cause if the person has a privileged position on the network like that, they can do far worse things that exploit SSL issues!).  Now I’d believe it was one of the top “scanned for “ issues but not exploited.&lt;/p&gt;
+
+&lt;p&gt;Number six is &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0152&quot;&gt;another RDP DoS&lt;/a&gt; .  This one is more modern, but the problem of accurately detecting DoS exploitation remains..&lt;/p&gt;
+
+&lt;p&gt;Number seven is a pretty obscure one &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0680&quot;&gt;Directory traversal vulnerability in ftpd in QPC QVT/Net 4.0 and AVT/Term 5.0&lt;/a&gt;.  As with the PHP Arena, there’s not a lot of information on the Internet about this product.  the host company still exists but no download/version information seems easily available.  That said from &lt;a href=&quot;http://www.securityfocus.com/bid/2618&quot;&gt;Securityfocus&lt;/a&gt; the latest affected OS is Windows 2000 SP2, which hasn’t been in support for a long time and has other critical exploitable issues, so I’d have guessed that if someone was going to exploit it they wouldn’t have targeted this issue…&lt;/p&gt;
+
+&lt;p&gt;Number eight is a directory traversal issue in &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1054&quot;&gt;Pablo FTP v1.0 build 9&lt;/a&gt; . From a quick search the product was up to &lt;a href=&quot;http://www.pablosoftwaresolutions.com/html/quick__n_easy_ftp_server.html&quot;&gt;version 3.2&lt;/a&gt; when it was last released and that version supports up to Windows vista, so it’s a fair guess that version 1 hasn’t been in use/supported for a while.&lt;/p&gt;
+
+&lt;p&gt;Number nine is the PHP Arena issue mentioned previously.&lt;/p&gt;
+
+&lt;p&gt;Number ten is a bug in &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1932&quot;&gt;windows 2000 and XP&lt;/a&gt; where administrators aren’t notified if logs fill up. If a system isn’t patched for this they also have all the canonical remote code execution bugs like MS06-040 and MS08-067.  So for this to be more exploited, we have to have large numbers of attackers who want to fill up logs with impunity, instead of taking over the system.&lt;/p&gt;
+</description>
+				<pubDate>Fri, 17 Apr 2015 18:08:34 +0100</pubDate>
+				<link>/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</link>
+				<guid isPermaLink="true">/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</guid>
+			</item>
+		
+			<item>
+				<title>Software Library Repositories and Security</title>
+				<description>&lt;p&gt;Last week I did a presentation for the &lt;a href=&quot;http://www.securi-tay.co.uk&quot;&gt;Securi-Tay Conference&lt;/a&gt;.  The title of the talk was “Security and ‘modern’ software development”, and the main theme of the talk was looking at library repositories like &lt;a href=&quot;http://www.rubygems.org&quot;&gt;Rubygems&lt;/a&gt;, &lt;a href=&quot;http://www.npmjs.org&quot;&gt;npm&lt;/a&gt; and &lt;a href=&quot;http://www.nuget.org&quot;&gt;NuGet&lt;/a&gt; and how an attacker could try and place malicous content into those locations.&lt;/p&gt;
+
+&lt;p&gt;Now nothing in this talk is particularly new as people have been talking about malicious library installs in &lt;a href=&quot;http://lanyrd.com/2013/rulu/scgxzr/&quot;&gt;Ruby&lt;/a&gt; and &lt;a href=&quot;http://webinos.org/2013/06/17/reflections-on-nodejs-malware/&quot;&gt;npm&lt;/a&gt; amongst others for some time, however I do think that it’s still not a widely recognized problem and particularly as these repositories grow in size and use, we’re going to see more malicious content on them.&lt;/p&gt;
+
+&lt;p&gt;An example of a fairly basic typo-squatting approach on PyPi was actually seen recently &lt;a href=&quot;https://www.reddit.com/r/Python/comments/2wr93b/this_one_looks_odd_doesnt_it/&quot;&gt;as noted on /r/python&lt;/a&gt;, which lasted for a while before it was noted.&lt;/p&gt;
+
+&lt;p&gt;My initial reviews looked at areas like how package maintainers are authenticated to the repos, whether digital signing is supported and/or widely used, whether there is any curation on the repositories and some other associated areas.&lt;/p&gt;
+
+&lt;p&gt;In most cases the picture at the moment isn’t particularly bright from a security standpoint, although initiatives like &lt;a href=&quot;http://theupdateframework.com/&quot;&gt;The Update Framework&lt;/a&gt; are trying to improve the situation, progress appears pretty difficult to make.  This isn’t particularly surprising as adding security is going to make development/publishing more awkward and at the moment I don’t think many developers see this trade-off as worth the added security benefits.&lt;/p&gt;
+
+&lt;p&gt;Anyway I have an expanded version of this talk planned for &lt;a href=&quot;http://2015.appsec.eu/&quot;&gt;OWASP AppSec EU&lt;/a&gt; in May, so I’ve got some experiments to try out between now and then to look at other aspects of Repository security.&lt;/p&gt;
+
+&lt;p&gt;I mention this specifically as I’m going to put a reference to this post into the description of various test libraries that I’m planning to write and if you’ve installed one and are wondering what the heck I’m up to, this will hopefully provide some information :)&lt;/p&gt;
+</description>
+				<pubDate>Sun, 01 Mar 2015 21:05:43 +0000</pubDate>
+				<link>/blog/2015/03/01/software-library-repositories-and-security/</link>
+				<guid isPermaLink="true">/blog/2015/03/01/software-library-repositories-and-security/</guid>
+			</item>
+		
+			<item>
+				<title>Burp Passive Scanner Plugins with JRuby</title>
+				<description>&lt;p&gt;Like most web application testers, I’m a fan of using &lt;a href=&quot;http://www.portswigger.net&quot;&gt;Burp Suite&lt;/a&gt; for automation and generally making the process of completing a test a whole lot easier.&lt;/p&gt;
+
+&lt;p&gt;In recent versions the Portswigger team have opened up the Burp API and we’ve started to see more 3rd party plugins coming along which is awesome as it lets Burp users contribute, whilst making their own testing lives easier.  Plugins can be written in Java, Jython, or JRuby.  Looking at the &lt;a href=&quot;https://pro.portswigger.net/bappstore&quot;&gt;BApp store&lt;/a&gt; most of the entries at the moment are either in Java or Jython, so I thought it was worth documenting a basic passive scanner check in JRuby as there are definitely a couple of gotchas to getting everything working, including one that had me stumped (thanks to Timur and Ryan for pointing me in the right direction!)&lt;/p&gt;
+
+&lt;p&gt;First up to use JRuby you need to point Burp at your JRuby jar file in the extender–&amp;gt; options tab, and after that you should be able to load an appropriately configured ruby file in the main Extensions window.&lt;/p&gt;
+
+&lt;p&gt;The code for this basic check is on &lt;a href=&quot;https://github.com/raesene/burp_sample_plugins&quot;&gt;github&lt;/a&gt; so here are a couple of points to note.&lt;/p&gt;
+
+&lt;p&gt;First up there’s a load of information on the topic of Burp plugins on the &lt;a href=&quot;http://blog.portswigger.net/search?updated-min=2012-01-01T00:00:00Z&amp;amp;updated-max=2013-01-01T00:00:00Z&amp;amp;max-results=16&quot;&gt;Portswigger blog&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;In general structure the basic plugin is a ruby class called BurpExtender, with a method which implements the callback (registerExtenderCallback) and for the passive scan we need a doPassiveScan method as well.&lt;/p&gt;
+
+&lt;p&gt;The main meat of the check happens in doPassiveScan.  This method is called whenever Burp encounters a URL that it’s set to passively scan (either just URLs in scope or all URLs depending on the configuration you’ve set).&lt;/p&gt;
+
+&lt;p&gt;Within that you can extract information about the request that triggered the call and analyze that information to see if an issue is present.&lt;/p&gt;
+
+&lt;p&gt;So in the sample check we’re looking for an HTTP header, which if it’s not found, will add a low severity issue to the burp scanner.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+  def doPassiveScan(baseRequestResponse)
+    service_info = baseRequestResponse.getHttpService()
+    host_name = service_info.getHost()
+    response_info = @helpers.analyzeResponse(baseRequestResponse.getResponse)
+    headers = response_info.getHeaders()
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+  header_found = false
+
+    headers.each do |header|
+      if header.downcase =~ /your_value_here/
+          header_found = true
+      end
+    end
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the next section of code is really the only analysis that we’re doing in this basic example.  The headers variable is an array, so we can iterate over it and check each element to see if it’s found. In this case our header is called ‘your_value_here’ which is pretty unlikely to show up, but in a real check this could be replaced with something like ‘Strict-Transport-Security’ or ‘Public-Key-Pins’ to check for the presence of security related HTTP headers.&lt;/p&gt;
+
+&lt;p&gt;Once we’ve got our finding of course the next step is to add it to the scanner results, so we’ll need to create a Scan Issue and pass it back to Burp.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+   findings = Java::JavaUtil::ArrayList.new
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This line was one of the places I tripped up initially.  Burp expects an array of results back and not a single Scan issue so creating an array to hold the findings is handy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+    finding_message = CustomHttpRequestResponse.new
+    finding_message.setResponse(baseRequestResponse.getResponse())
+    finding_message.setRequest(baseRequestResponse.getRequest())
+    finding_message.setHttpService(baseRequestResponse.getHttpService())
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This section is necessary if you want to return the request/response information into the scanner and is another place where I had some issues. The key point is that you need to implement a class that conforms to the interface for the IHttpRequestResponse class that the Burp API describes.  In the file on github there’s a class that seems to work for me.  It looks a bit boilerplate heavy, but at the moment the more rubyish setup with attr_accessor helpers for the class properties doesn’t seem to fly for me, so manual getter/setter methods it is.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+    unless header_found
+      finding = CustomScanIssue.new
+      finding.httpMessages=finding_message
+      finding.httpService=baseRequestResponse.getHttpService()
+      finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
+      finding.name = &quot;Header Not Set&quot;
+      finding.detail = &quot;A header that should be set isn&#39;t&quot;
+      finding.severity = &quot;Low&quot;
+      finding.confidence = &quot;Certain&quot;
+      finding.remediation_detail = &quot;Lorem Ipsum&quot;
+      finding.issue_background = &quot;Sit Dolor Amet&quot;
+      findings.add finding
+    end
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This code just populates another class which you need to implement which is the Scan Issue.  In general that class is pretty straight forward like the RequestResponse class but a key point is that Burp expects an array of RequestResponse issues to be returned in the messages property of the scan issue.&lt;/p&gt;
+
+&lt;p&gt;Last bit in this basic example is a brief method to do some basic handling of duplicate instances of the same issue (saves the scanner repeatedly finding the same issue for a URL)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
+  def consolidateDuplicateIssues(existing_issue, new_issue)
+    if existing_issue.getIssueName == new_issue.getIssueName
+      return -1
+    else
+      return 0
+    end
+  end
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is obviously quite a basic example but hopefully shows that once you know the structure of the code, implementing scanner checks in Burp should be a relatively straightforward task, and can have some cool benefits in terms of automating the testing process.&lt;/p&gt;
+</description>
+				<pubDate>Thu, 15 Jan 2015 20:45:28 +0000</pubDate>
+				<link>/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</link>
+				<guid isPermaLink="true">/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</guid>
+			</item>
+		
+			<item>
+				<title>Want to improve your security? Just turn off SSL!</title>
+				<description>&lt;p&gt;I’ve had cause to work with some of the more common Vulnerability Assessment scanners recently, and I couldn’t help but notice that a lot of the findings related to incorrect configuration of, or bugs with, SSL implementations.&lt;/p&gt;
+
+&lt;p&gt;A lot of network services use SSL to provide encryption and authentication of the server these days and default configurations a generally not ideal, with things like Self-Signed certificates being common.  In addition to that the quite large number of SSL bugs means that there can be quite a few findings relating to each SSL endpoint on a given host.&lt;/p&gt;
+
+&lt;p&gt;So far, so expected.  Vulnerability Assessment scanners are meant to flag up this kind of issue.  However what struck me about this is that mis-configured encryption seems to be a lot worse (from a findings point of view) than no encryption at all, which doesn’t seem right at all.&lt;/p&gt;
+
+&lt;p&gt;Lets take the example of telnet.  In Nessus this seems to be a Low with a CVSS base score of &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=42263&quot;&gt;2.6&lt;/a&gt;, Nexpose has this issue as a CVSS &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/telnet-open-port&quot;&gt;4&lt;/a&gt;. (BTW I’m not particularly focusing on these scanners for any reason other than they’re the ones I’m most familiar with).&lt;/p&gt;
+
+&lt;p&gt;In comparison to this having a self-signed certificate in Nessus is a &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=57582&quot;&gt;6.4&lt;/a&gt; and in Nexpose is &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/ssl-self-signed-certificate&quot;&gt;4&lt;/a&gt;, or supporting SSLv2 which is a &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=20007&quot;&gt;5&lt;/a&gt; or &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/sslv2-and-up-enabled&quot;&gt;6&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;So on the one hand we have a completely unencrypted service which transmits credentials and data in the clear and is vulnerable to passive traffic sniffing and active MITM attacks. On the other hand we have vulnerabilities which may allow for an active MITM and wouldn’t allow for passive sniffing, and yet the encrypted solution is rated as a more severe issue in Nessus and equally as bad or worse in Nexpose.&lt;/p&gt;
+
+&lt;p&gt;The only good argument I’ve heard in favour of this situation is that the encrypted services give a false sense of security.  That could be true, but in this case it’s not relevant as CVSS base score don’t account for that…&lt;/p&gt;
+
+&lt;p&gt;So why does this matter, surely any compentant tester will look at these scores, chuckle, and rate the findings appropraitely?  Sure, but in situations like PCI DSS ASV scanning, the CVSS base score is law, unless the customer wants to fight it point by point, so it’s kind of important these things are logical.&lt;/p&gt;
+
+&lt;p&gt;What could be done about it?  Well for me, any weakness in SSL or other encrypted protocol should automatically be lower rated than a completely unencrypted protocol, for kind of obvious reasons.&lt;/p&gt;
+
+</description>
+				<pubDate>Mon, 17 Nov 2014 18:48:16 +0000</pubDate>
+				<link>/blog/2014/11/17/want-to-improve-your-security-just-turn-off-ssl/</link>
+				<guid isPermaLink="true">/blog/2014/11/17/want-to-improve-your-security-just-turn-off-ssl/</guid>
+			</item>
+		
+			<item>
+				<title>Changing Times - End of SMS Auth?</title>
+				<description>&lt;p&gt;So like most things in security, decisions are made based on a set of assumptions, and it’s when these assumptions prove to be faulty that security can go quite badly wrong.&lt;/p&gt;
+
+&lt;p&gt;I was thinking about a fairly common assumption recently in light of Apple’s new &lt;a href=&quot;http://support.apple.com/en-us/HT6337&quot;&gt;continuity&lt;/a&gt; feature.  Over the last couple of years as the weaknesses in password based authentication models become ever more apparent, there’s obviously been a drive to improve authentication, and one method of doing this is through the use of different channels to send authentication tokens “out of band”.&lt;/p&gt;
+
+&lt;p&gt;One of the more common methods of doing this is to send authentication tokens over SMS messages.  The theory is that this is a separate channel from the PC or tablet that is the primary device being used, so it should be harder for an attacker to compromise both channels, thereby improving security.&lt;/p&gt;
+
+&lt;p&gt;For example if we have an attacker who has access to a users PC (for example having placed malware on it which steals passwords and other data entered there), the idea goes, by adding in SMS, we make it harder for the attacker to compromise the whole authentication mechanism.&lt;/p&gt;
+
+&lt;p&gt;You can probably see, based on the starting paragraph, where this assumption is starting to fall down… With features like Continuity or, SMS to email applications or phone carriers who provide websites which allow for viewing and sending SMS messages, the barrier between these two channels is effectively pierced and SMS becomes much less useful as a second factor for authentication.&lt;/p&gt;
+
+&lt;p&gt;Now if an attacker can compromise the PC, it’s quite likely that they’ll get access to the users SMS messages at the same time, with all that entails.&lt;/p&gt;
+
+&lt;p&gt;Hopefully this line of thinking will penetrate with service operators and they’ll realise that if 2-factor/channel authentication is needed for their service, they’ll need to offer something more robustly separate.&lt;/p&gt;
+
+&lt;p&gt;The other thing I thought this was an interesting illustration of, is that this to me is a good example of differing incentives in the security world.  Online service provides have the incentive for SMS messaging to be a good 2nd channel for authentication data as it’s something that almost all their subscribers already have access to, and it’s very cheap to use.&lt;/p&gt;
+
+&lt;p&gt;On the other hand, mobile operators and mobile ecosystem providers have no such incentive.  Instead they’re working to make it easier for users to access all their information in a single place….&lt;/p&gt;
+</description>
+				<pubDate>Sun, 02 Nov 2014 21:10:58 +0000</pubDate>
+				<link>/blog/2014/11/02/changing-times-end-of-sms-auth/</link>
+				<guid isPermaLink="true">/blog/2014/11/02/changing-times-end-of-sms-auth/</guid>
+			</item>
+		
+			<item>
+				<title>Finding security</title>
+				<description>&lt;p&gt;So how do we know that the sites we use are secure?  It’s an obvious question with no brilliant answer but here’s an example of how we don’t.&lt;/p&gt;
+
+&lt;p&gt;What’s below might well come off as getting at Kickstarter, but really it’s not that different from a wide number of other sites that would like us to entrust them with personal information or credit card details.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;I’m a fan of &lt;a href=&quot;http://www.kickstarter.com&quot;&gt;Kickstarter&lt;/a&gt; projects, I’ve backed quite a few and they’ve gone pretty well for the most part.  Until recently whenever I went to contribute to a Kickstarter I felt reasonably happy paying, as they used Amazon payments, which meant I just logged in to Amazon and authorised the payment, all good.&lt;/p&gt;
+
+&lt;p&gt;I’m not a fan of giving sites my credit card details these days, so if I don’t know you and you don’t offer Amazon Payments/Paypal I probably won’t buy from you, sorry but having my card re-issued is a right pain.&lt;/p&gt;
+
+&lt;p&gt;So when I went to Kickstarter to support the &lt;a href=&quot;https://www.kickstarter.com/projects/1438393276/scandinavia-and-the-world-animated&quot;&gt;Scandanavia and the World webcomic&lt;/a&gt; that I rather like, I was a bit put out to find that now the site has a form asking me to enter my card details or use a stored card.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://imgur.com/a6lLh80.png&quot; alt=&quot;screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Yeuch&lt;/strong&gt; they’re asking for my card number and CVV, what’s more there’s a little graphic secure padlock which has no actual effect, always makes me nervous when I see those.&lt;/p&gt;
+
+&lt;p&gt;So I thought “well I’m going to do a bit of looking about to see if I can get a good feeling about their security before I entrust them with my card”&lt;/p&gt;
+
+&lt;p&gt;I looked at the source of the page to see if they perhaps POST to a payment processor, it’s not great practice but hey it’s better than nothing if it’s one who I think will be ok.&lt;/p&gt;
+
+&lt;p&gt;From what I could see nope is the answer looks like they POST locally.  Now they may be doing something fancy in JavaScript before posting (like stripe does) but looking at the JavaScript on the page, there’s reams of minified code that I’m not going to try understanding and I don’t fancy starting putting Proxies in-line and entering dummy numbers to see exactly what’s happening.&lt;/p&gt;
+
+&lt;p&gt;OK so maybe they have a security policy with some good content on how they secure my data .. well if they do I couldn’t find it, there’s a privacy policy that doesn’t mention the word security at all.&lt;/p&gt;
+
+&lt;p&gt;Then I looked through the support section and did find this under payments &amp;gt; Security&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;All transactions made through Kickstarter on our secure server are safe. A software protocol called Secure Sockets Layer Secure (SSL) is used for all pledges. It encrypts all of your personal information–including credit card number, name and address- as it travels over the internet. SSL is the industry standard and among the best software available today for secure commerce transactions. All of the credit card information is stored on a secure, dedicated database.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;What does this tell me.  Well not a lot really apart from that they use SSL and that everything is fine…&lt;/p&gt;
+
+&lt;p&gt;Actually the closest thing I found to good information on the topic was in the blog posting about their &lt;a href=&quot;https://www.kickstarter.com/blog/important-kickstarter-security-notice&quot;&gt;February 2014 breach&lt;/a&gt; which mentions that they use bcrypt for password hashing, which is a good thing.  Apart from that it’s the same vague positive stuff with no actual details as is in the support site.&lt;/p&gt;
+
+&lt;p&gt;Failing to find anything directly related to security, I thought I’d have a quick look for some other signs that a company take these things seriously&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Dedicated e-mail address for security displayed prominently on the contact details - &lt;strong&gt;Nope&lt;/strong&gt; (there is one on the blog posting but it’s not really clear if that’s just for questions on the breach or more general security stuff)&lt;/li&gt;
+  &lt;li&gt;Mentions of specific staff members with responsibility for security on the team page - &lt;strong&gt;Nope&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Bug bounty program to let security researchers responsibly disclose issues with the site - &lt;strong&gt;Nope&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Where does all this leave me.  Well in this case I’ll probably go and dust off one of the virtual credit cards I’ve used in the past and use that for Kickstarters in the future, but it is a shame that in 2014 this is still standard practice with an awful lot of companies.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 08 Jun 2014 19:11:23 +0100</pubDate>
+				<link>/blog/2014/06/08/finding-security/</link>
+				<guid isPermaLink="true">/blog/2014/06/08/finding-security/</guid>
+			</item>
+		
+	</channel>
+</rss>

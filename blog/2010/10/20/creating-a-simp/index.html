@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Creating a Simple Vulnerability Database  - Part 1</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="http://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories.html">Categories</a></li>
+				<li><a href="/tags.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Creating a Simple Vulnerability Database  - Part 1 </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   20th,
+	   
+	   2010
+	 </span>
+	  <div class="article_body">
+	  <p>One of the main tools that I've found useful in pen. testing is the <a href="http://www.dradisframework.org">Dradis Framework</a>, it's a good way of keeping track of findings and notes during a test and I've also found it's template feature is good for keeping a list of things to remember during a test.<br />
+One of the features available in Dradis is import plugins.  This lets you create a link to an external information source, such as a OSVDB or a database of vulnerabilities.<br />
+Having a database of vulnerabilities or findings can be pretty useful in cutting down the time required for reporting on a test as you can keep standard wordings in place (who really wants to write the same section about preventing XSS more than once!).<br />
+So recently I knocked up a simple vulnerability database to link in to Dradis and I thought it might be of use, so here's the process.<br />
+<u><strong><big>Creating the App</big></strong></u><br />
+We're going to use <a href="http://rubyonrails.org/">Ruby on Rails</a> for this as it's nice and easy to develop for (as you'll see) and also that's what Dradis is based on, so makes sense to keep all the coding in the same underlying language.  Also rails apps are very portable, they're basically contained within a single directory structure, so it's relatively easy to move them from place to place.<br />
+Before starting the application, there's the usual pre-req's.  I'm using Ruby 1.9.2 and Rails 3 so having those installed is a good thing.  If you're using Linux then it's helpful to have <a href="http://rvm.beginrescueend.com/">RVM</a> working as some distros don't have ruby 1.9.2 packaged up as yet.<br />
+once you've got the pre-req's working, we can start by creating a rails app</p>
+<pre>rails new vulnlist</pre>
+<p>This creates a new application called <i>vulnlist</i> and adds all the standard rails files in.<br />
+<u><strong><big>Creating the Scaffold</big></strong></u><br />
+Once we've got the app created, we can use rails scaffolding to quickly create the basic structure for our app.  The web pages that scaffolding creates aren't the most pretty, but they'll do for now.<br />
+With the scaffold we can specify what fields we want to create in the database and also what data types those fields are.</p>
+<pre>rails generate scaffold Vulnerability title:string test_type:string description:text remediation:text technical_notes:text severity:string owasp_reference:string</pre>
+<p>Once we've completed this we can look at the basic app by setting up the database with</p>
+<pre>rake db:migrate</pre>
+<p>Ensuring that all our gems are installed ok with</p>
+<pre>bundle install</pre>
+<p>and launching the app</p>
+<pre>rails server</pre>
+<p>At this point browsing to http://127.0.0.1:3000/vulnerabilities  should show a blank page with our fields in it.  From this page we can create new vulnerabilities and edit or delete existing ones.<br />
+Now that we've got this basic structure setup it's worth using git to keep a handle on the source code.  On Linux the procedure for this is pretty easy<br />
+If you've not already got it installed</p>
+<pre>sudo apt-get install git-core</pre>
+<p>then in the root of the application</p>
+<pre>git init
+git add .
+git commit -m "Initial Commit with Scaffold"
+</pre>
+<p>Having git running on the app will make it pretty easy to revert any mistakes made along the way, as long as we've done regular commits.<br />
+<u><strong><big>Setting up the Searches</big></strong></u><br />
+So far we've got a basic structure in place and can do the basic Create, Read, Update, Delete cycle on our data.  However for the dradis integration, what'd be useful is if we could search for vulnerabilities using various criteria and have the results returned to Dradis.<br />
+This turns out to be relatively straightforward.  First what we need is a new action in our controller.  Opening vulnlist/app/controllers/vulnerabilities_controller.rb we can see the existing actions that we've got for the application.<br />
+What we need to do now is add a new action to allow for vulnerability searches.</p>
+<pre>def vuln_search
+case params[:search_type]
+when "description"
+@vulnerabilities = Vulnerability.where("description like ?", "%"+params[:query]+"%")
+when "owasp"
+@vulnerabilities = Vulnerability.where("owasp_reference like ?",params[:query]+"%")
+when "severity"
+@vulnerabilities = Vulnerability.find_all_by_severity(params[:query])
+when "test_type"
+@vulnerabilities = Vulnerability.find_all_by_test_type(params[:query])
+end
+respond_to do |format|
+format.xml {render :xml =&gt; @vulnerabilities}
+format.json {render :json =&gt; @vulnerabilities}
+end
+end
+</pre>
+<p>This defines a new method called "vuln_search" which takes two parameters, search_type and query.  The search type parameter lets us pick from different finders.  Rails provides access into the application database via ActiveRecord and this just uses a couple of the finder types for different parameters.  Where the query is going to be one of a number of fixed values like "severity" which will be something like high, medium or low, we can just use a standard find_all_by_ approach, but where it's a more free text style search, we use Vulnerability.where and pass in the query parameter that way.<br />
+The respond_to block is a really nice feature of rails.  By adding in the two lines for :xml and :json rails wires up responses so that we can get the data out in those format, no additional code required.<br />
+Now that we've got the basic code in place, we just need to modify the rails routes so that the application knows how to access our new method.<br />
+This is done by modifying the vulnlist/config/routes.rb file, and adding the following code</p>
+<pre>controller :vulnerabilities do
+get 'vuln_search' =&gt; :vuln_search
+end
+</pre>
+<p>At this point, we've got the application basically working.  If you put in a couple of test findings, then you should be able to go to http://127.0.0.1:3000/vuln_search.xml?search_type=Severity&amp;Query=High for example and get some XML data back.<br />
+<u><strong><big>Tidying up</big></strong></u><br />
+Now that we've got the basics working, there's a couple of additional steps that it's worth looking at to tidy some things up.<br />
+<strong><big>Selectors</big></strong><br />
+First off, we'd like some of our fields (OWASP Reference, Severity and test type) to be one of a number of defined values. The "proper" way to do this would be to create additional models for these and link them in to the main vulnerabilities controller, but there's a quicker way which is probably going to work well enough for our purposes.<br />
+Opening up vulnlist/app/models/vulnerability.rb we can specify some Constant values for these settings</p>
+<pre>
+TEST_TYPES = ["Web Application","Windows Server","Unix Server","Wireless","Web Server","Oracle","MS SQL","MySQL","DB2"]
+SEVERITY_LEVELS = ["Critical","High","Medium","Low","No Impact"]
+OWASP_TOP_10 = ["A1 - Injection","A2 - Cross Site Scripting (XSS)","A3 - Broken Authentication and Session Management","A4 - Insecure Direct Object Reference","A5 - Cross-Site Request Forgery (CSRF)","A6 - Security Misconfiguration","A7 - Insecure Cryptographic Storage","A8 - Failure to Restrict URL Access","A9 - Insufficient Transport Layer Protection","A10 - Unvalidated Redirects and Forwards"]
+</pre>
+<p>Then we can modify the form that the scaffolding process created to use these arrays as a select list.  The form is found in vulnlist/app/views/vulnerabilities/_form.html.erb.  In that file we just need to replace the "text_field" lines for those three fields with the following select lines</p>
+<pre>
+ "Select the test type" %&gt;
+ "Select the severity level" %&gt;
+ "Select the appropriate OWASP top 10 reference" %&gt;
+</pre>
+<p>This picks up the Constants from our model and helps keep the data consistent.<br />
+<strong><big>Localhost Only</big></strong><br />
+As you'll have noticed with this application, there's pretty much no security whatsoever.  At the moment it's setup as a personal database only and isn't suitable to be on any kind of network. Adding that security isn't too difficult with rails, however it's not really a problem for the basic use case that we have here.  Both the vulnerability list and the dradis installation only need to listen on the localhost.<br />
+Configuring rails to only listen on the localhost (as opposed to specifying it on the command line) is a bit hacky, but here's a way to do it based on <a href="http://www.nearinfinity.com/blogs/chris_rohr/configuring_webrick_to_use_ssl.html">this post</a> and <a href="http://dradis.svn.sourceforge.net/viewvc/dradis/server/trunk/script/rails?revision=2057&amp;view=markup">this dradis change</a> .  We need to modify the vulnlist/script/rails file and add the following lines</p>
+<pre>
+require 'rubygems'
+require 'rails/commands/server'
+require 'rack'
+require 'webrick'
+module Rails
+class Server  3003,
+:Host =&gt; "127.0.0.1",
+:environment =&gt; (ENV['RAILS_ENV'] || "development").dup,
+:daemonize =&gt; false,
+:debugger =&gt; false,
+:pid =&gt; File.expand_path("tmp/pids/server.pid"),
+:config =&gt; File.expand_path("config.ru")
+})
+end
+end
+end
+</pre>
+<p>This also moves the application off the default port of 3000, to a new one of 3003 which hopefully shouldn't clash with other services.<br />
+<big><strong>Default Routes</strong></big><br />
+At the moment if we visit the root page of our application, now at http://127.0.0.1:3003 we get the default rails welcome page.  What'd be nicer is if we were re-directed to the vulnerability listing automatically.<br />
+That's easily done with two steps.  First edit the vulnlist/config/routes.rb file and add the line</p>
+<pre>
+root :to =&gt; "vulnerabilities#index"
+</pre>
+<p>then delete the file vulnlist/public/index.html file.<br />
+<u><strong><big>Summary</big></strong></u><br />
+So at the end of this first part we've created a basic vulnerability database which we can search easily on a number of parameters.<br />
+The next step is to create the dradis plugin to hook the two together, which as I'll cover next time is a reasonably easy thing to do.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories.html#Penetration Testing-ref">
+					Penetration Testing <span>(56)</span>
+					,
+				</a></li>
+			 
+				<li><a href="/categories.html#Ruby On Rails-ref">
+					Ruby On Rails <span>(25)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Creating a Simple Vulnerability Database  - Part 1&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="http://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2010/09/21/new-role-new-bl/" title="New Role, New Blog">&larr; Previous</a></li>
+		  
+		  
+		  <li class="next"><a href="/blog/2010/10/25/creating-a-simp-1/" title="Creating a Simple Vulnerability Database  - Part 2">Next &rarr;</a></li>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+
