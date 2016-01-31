@@ -159,6 +159,36 @@
   <span class="post-date">
     
     April
+    23rd,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/23/very_nasty_unpa/">Very Nasty Unpatched Windows vuln.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="File Selection May Lead to Command Execution" href="http://www.greymagic.com/security/advisories/gm015-ie/">File Selection May Lead to Command Execution</a><br />
+This vulnerability doesn't look tooo bad at first.  If you can persuade someone to highlight a file in windows explorer then it executes some abitrary code, which it seems can do most things.  However you'd have to get people to download the file anyway for it to work as a virus/word, which isn't too likely (you'd hope, after years of that kind of thing doin the rounds on the 'net).<br />
+Then I got to thinking, what about a completely different attack scenario... Joe the disgruntled employee, could go through the corporate file store adding malicious author fields to word files or the like, then as soon as one of his co-workers clicks the file, the javascript runs and actions are taken looking like the person clicking the file has carried them out. (and if joe's got any sense the first one would be change the author field removing any evidence of his modification...)<br />
+Hard to catch, unless things like A-V scanners get a signature for this (which might be tough), changes of document metadata don't usually show up in things like security logs, and in many companies people have access to a lot of docs, so it might not be discovered for a long time...<br />
+Another interesting point in relation to this vuln. and the unpatched Jet engine  one is, how long will it take Microsoft to get a patch out, and will they release it outside the monthly schedule they usually use.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
     21st,
     
     2005
@@ -193,7 +223,7 @@ One attack using this I've seen suggested is to persuade a network admin to log 
   </span>
 
   <h2>
-    <a href="/blog/2005/04/20/wheres-the-beef/">Interesting examples of XSS attacsk</a>
+    <a href="/blog/2005/04/20/wheres_the_beef/">Interesting examples of XSS attacsk</a>
   </h2>
 
   <div>
@@ -220,7 +250,7 @@ There's an interesting list at this site of XSS vulnerabilities that the authors
   </span>
 
   <h2>
-    <a href="/blog/2005/04/20/sql-injection-r/">sql injection resources</a>
+    <a href="/blog/2005/04/20/sql_injection_r/">sql injection resources</a>
   </h2>
 
   <div>
@@ -256,7 +286,7 @@ Other Papers I've found handy<br />
   </span>
 
   <h2>
-    <a href="/blog/2005/04/18/real-interestin/">Real Interesting Post: Microsoft in trouble?</a>
+    <a href="/blog/2005/04/18/real_interestin/">Real Interesting Post: Microsoft in trouble?</a>
   </h2>
 
   <div>
@@ -287,7 +317,7 @@ It's easy, force people to run your products because all your documents songs mo
   </span>
 
   <h2>
-    <a href="/blog/2005/04/14/professional-se/">More Pen Test Resources</a>
+    <a href="/blog/2005/04/14/professional_se/">More Pen Test Resources</a>
   </h2>
 
   <div>
@@ -314,7 +344,7 @@ More info on Pen testing.  Especially on this site, there's a good link section.
   </span>
 
   <h2>
-    <a href="/blog/2005/04/14/white-papers-we/">Handy list of Security Whitepapers</a>
+    <a href="/blog/2005/04/14/white_papers_we/">Handy list of Security Whitepapers</a>
   </h2>
 
   <div>
@@ -367,7 +397,7 @@ Not that I'd ever want to rely on this for any data I cared about, but it's a re
   </span>
 
   <h2>
-    <a href="/blog/2005/04/08/mac-osx-securit/">Mac OSX security site</a>
+    <a href="/blog/2005/04/08/mac_osx_securit/">Mac OSX security site</a>
   </h2>
 
   <div>
@@ -394,7 +424,7 @@ Looks like this site has loads of good information on Mac OSX security including
   </span>
 
   <h2>
-    <a href="/blog/2005/04/07/unicornscan-fas/">unicornscan - fast port scanner...</a>
+    <a href="/blog/2005/04/07/unicornscan_fas/">unicornscan - fast port scanner...</a>
   </h2>
 
   <div>
@@ -402,33 +432,6 @@ Looks like this site has loads of good information on Mac OSX security including
     
     <p><a title="Unicornscan" href="http://www.unicornscan.org/">Unicornscan</a><br />
 Interesting sounding port scanner to try out.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    5th,
-    
-    2005
-  </span>
-
-  <h2>
-    <a href="/blog/2005/04/05/alternate-data-1/">Alternate data streams</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="SecurityFocus HOME Infocus: Windows NTFS Alternate Data Streams" href="http://www.securityfocus.com/infocus/1822">SecurityFocus HOME Infocus: Windows NTFS Alternate Data Streams</a><br />
-A good security article at securityfocus.com covering Alternate data streams in windows.  There are 2 tools mentioned in the article which I think are well worth using, either on a periodic basis as a audit tool, or on a machine which you think may have been compromised.....</p>
 
     
     
@@ -466,7 +469,7 @@ A good security article at securityfocus.com covering Alternate data streams in 
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

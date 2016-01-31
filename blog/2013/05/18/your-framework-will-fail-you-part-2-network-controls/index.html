@@ -166,7 +166,7 @@
 	  <p>This post is part of a series based on a presentation I did for the Scottish Ruby Conference in May 2013 (part 1 <a title="Scottish Ruby Conference Talk – Your Framework Will Fail You" href="http://blog.scotsts.com/?p=630">here</a>) which was around defense in depth and some of the controls companies should be looking at to help protect them when something goes wrong.</p>
 <p>The first segment to cover is Firewalling. Network firewalls get quite a bit of flack in the security world, mainly because people tend to rely too heavily on them for protection without really understanding where they are and are not useful.</p>
 <p>The "low-risk" setup option that I covered is around the use of egress filtering on firewalls.</p>
-<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet) to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
+<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet), to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
 <p>Setting a default deny on connections from trusted--&gt;untrusted networks can be a really useful control in making an attackers life more difficult for them and hindering their post exploitation activities. So in an e-commerce environment it might be possible to have rules on the firewall that restrict all servers from initiating any connections to the Internet except for a couple of hosts for package updates. This means that someone who has access to the server and who trys to connect to any other system on the Internet will get blocked.</p>
 <p>If you consider an attack on a web application, once the attacker has compromised a server (e.g. via SQL Injection or command injection) one of the first things they might try to do is make a connection back to a system under their control to download more tools and also to make a shell connection to the compromised system. So with egress filtering this could be considerably trickier to pull off.</p>
 <p>One thing if you do intend to do this is, I would recommend putting it in place when you're designing the network. Retro-fitting more restrictive firewall rules can be quite difficult as things like periodic connections that only happen once a month might not be noticed, leading to unexpected failures after the firewall rules have been put in place.</p>
@@ -238,7 +238,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

@@ -159,6 +159,53 @@
   <span class="post-date">
     
     January
+    20th,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="/blog/2013/01/20/windows-boot-times/">O/S Boot Times</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>We got a new Lenovo T430U yesterday and with its new SSD we discovered it boots from the BIOS to Windows 8 in three seconds.</p>
+<p>I remember corporate machines back in the 90s taking 20 minutes to boot - so I got to thinking - is the improvement the modern hardware or the modern OS - or a combination of the two.</p>
+<p>So in the interests of scientific enquiry I gave it a go and got the following results - all using VMware workstation on a Intel Core -5 CPU with 16G RAM.  I deliberately did not use VMware tools for any of them because they are not available for the older operating systems and do tend to speed things up.  I also compared this with Windows RT on my little Surface with its ARM processor and 2GB RAM, and also with the iPad, the Xbox and two different phones.</p>
+<p>&nbsp;</p>
+<p>Windows 7 Professional - 20 seconds</p>
+<p>Windows NT 4 Workstation - 18 seconds</p>
+<p>Windows Server 2000 - 22 seconds</p>
+<p>Windows 8 Enterprise - 6 seconds for a full restart or 4 seconds from the 'shutdown' state which is really a sort of suspend to disk.</p>
+<p>Ubuntu Linux was very slightly longer than Windows 8 at about 7 seconds - also way faster than it used to be.</p>
+<p>Mac Book Air 13" 2012 - 9 seconds - not bad either.</p>
+<p>&nbsp;</p>
+<p>I then had a look at our other leisure type devices which are largely ARM based and noted that on the whole they were a lot slower than the Intel based stuff - though of course they don't tend to be stuff you shut down that often in the normal run of things.</p>
+<p>Surface RT - 23 seconds</p>
+<p>IPad 3 - 31 seconds</p>
+<p>Nexus 7 - 46 seconds</p>
+<p>HTC 8X (Windows Phone 8) - 37 seconds</p>
+<p>iPhone 4S (iOS 6) - 29 seconds</p>
+<p>Xbox 360 (IBM Xenon Power PC processor) - 41 seconds</p>
+<p>Trouble with these devices it that it is impossible to known how much of it is the OS and how much the hardware.  For example on my 8X the Windows Phone boot screen only showed for one second - the rest was all the HTC logo.  I don't have my old Nokia 800 WP7 to hand - but I seem to remember that booted way quicker.</p>
+<p>There has obviously been a huge improvement between Windows 7 and 8 and between old and new versions of Linux, but also modern hardware boots old operating systems greatly faster than you would imagine.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
     17th,
     
     2013
@@ -435,7 +482,7 @@
   </span>
 
   <h2>
-    <a href="/blog/2011/01/20/just-the-facts/">Just the Facts Ma'am</a>
+    <a href="/blog/2011/01/20/just_the_facts/">Just the Facts Ma'am</a>
   </h2>
 
   <div>
@@ -448,38 +495,6 @@ Having set expectations about the quality of this code :)  Here's a couple of sc
 <a href="http://www.mccune.org.uk/code/nmapautoanalyzer.rb">NMAP Auto Analyzer</a> can parse a single nmap xml file or a directory of nmap xml files and provide a concise report on ports open across them.<br />
 <a href="http://www.mccune.org.uk/code/nessusautoanalyzer.rb">Nessus Auto Analyzer</a> somewhat unsurprisingly, does the same job for .nessus report files (v2 only at the moment)<br />
 Both have reasonable help files, so should be fairly straightforward to use, any questions/queries welcome either in comments or in e-mail (rorym at mccune dot org dot uk)</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    25th,
-    
-    2010
-  </span>
-
-  <h2>
-    <a href="/blog/2010/10/25/creating-a-simp-1/">Creating a Simple Vulnerability Database  - Part 2</a>
-  </h2>
-
-  <div>
-    
-    
-    #{note_data[&#039;technical_notes&#039;]}
-eos
-end
-</pre>
-<p>This just puts together the body of the note description for each finding, as one long string.<br />
-There's obviously a lot more that could be done with this (like better error handling and writing tests) but with those files complete, the module should work ok and you should be able to import vulns from your database directly into Dradis using the "import note" feature.<br />
-I've put a copy of the code for the plugin up <a href="http://www.mccune.org.uk/code/simple_vulndb_import.tar.bz2">here</a>, in case it's helpful :)</p>
 
     
     
@@ -517,7 +532,7 @@ I've put a copy of the code for the plugin up <a href="http://www.mccune.org.uk/
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

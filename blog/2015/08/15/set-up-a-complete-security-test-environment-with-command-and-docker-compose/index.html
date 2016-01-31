@@ -171,7 +171,8 @@
 
 <p>So for this setup the Docker Compose file looks like this</p>
 
-<pre><code>sectest:
+<p><code class="highlighter-rouge">
+sectest:
   image: raesene/sectest
   command: /bin/bash
   links:
@@ -188,7 +189,7 @@ openvas:
       - "443:443"
       - "9390:9390"
       - "9391:9391"
-</code></pre>
+</code></p>
 
 <p>This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created <a href="https://github.com/raesene/sectest">here</a>.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.</p>
 
@@ -198,8 +199,9 @@ openvas:
 
 <p>Now we’ve got this file created we just need to start things up.  The command I’ve used for this is</p>
 
-<pre><code>docker-compose run --service-ports sectest /bin/bash
-</code></pre>
+<p><code class="highlighter-rouge">
+docker-compose run --service-ports sectest /bin/bash
+</code></p>
 
 <p>What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.</p>
 
@@ -248,7 +250,7 @@ openvas:
 		  <li class="previous"><a href="/blog/2015/07/23/using-docker-for-security-testing/" title="Using Docker for Security Testing">&larr; Previous</a></li>
 		  
 		  
-			<li class="next disabled"><a>Next &rarr;</a>
+		  <li class="next"><a href="/blog/2016/01/31/is-this-thing-on/" title="Is This Thing on ">Next &rarr;</a></li>
 		  
 		</ul>
 
@@ -285,7 +287,7 @@ openvas:
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

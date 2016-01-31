@@ -7,6 +7,17 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Is This Thing on </title>
+				<description>&lt;p&gt;One of the perenial problems of being an infrequent blogger is of course, you forget exactly how you used to do things…&lt;/p&gt;
+
+&lt;p&gt;So this post is just to make sure I’ve actually remembered how this is all set-up before I write something more substantive :)&lt;/p&gt;
+</description>
+				<pubDate>Sun, 31 Jan 2016 19:36:39 +0000</pubDate>
+				<link>/blog/2016/01/31/is-this-thing-on/</link>
+				<guid isPermaLink="true">/blog/2016/01/31/is-this-thing-on/</guid>
+			</item>
+		
+			<item>
 				<title>Set-up a Complete Security Test Environment with One Command and Docker Compose</title>
 				<description>&lt;p&gt;Following on from my last post on &lt;a href=&quot;http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/&quot;&gt;Using Docker for Security Testing&lt;/a&gt;, I thought it would be interesting to see if we can set-up an even more automated environment by using &lt;a href=&quot;https://www.docker.com/docker-compose&quot;&gt;Docker Compose&lt;/a&gt;.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.&lt;/p&gt;
 
@@ -16,7 +27,8 @@
 
 &lt;p&gt;So for this setup the Docker Compose file looks like this&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;sectest:
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+sectest:
   image: raesene/sectest
   command: /bin/bash
   links:
@@ -33,7 +45,7 @@ openvas:
       - &quot;443:443&quot;
       - &quot;9390:9390&quot;
       - &quot;9391:9391&quot;
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.&lt;/p&gt;
 
@@ -43,8 +55,9 @@ openvas:
 
 &lt;p&gt;Now we’ve got this file created we just need to start things up.  The command I’ve used for this is&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;docker-compose run --service-ports sectest /bin/bash
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+docker-compose run --service-ports sectest /bin/bash
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.&lt;/p&gt;
 
@@ -62,7 +75,7 @@ openvas:
 
 &lt;p&gt;There’s a couple of areas where I can see Docker being quite useful, mainly due to the ease of maintaining and installing applications and also the reduced resource utilization over “tradtional” virtual machines.&lt;/p&gt;
 
-&lt;p&gt;The first one is in isolating security testing applications which require a bit of setup or a particular environment to operate in.  Some very useful security testing tools are slightly more complex to setup and run than just doing a  &lt;code&gt;git clone&lt;/code&gt; of the repo and running a script and there can always be conflicts in the version of underlying tools and libraries required for them to run. These tools can benefit from the isolation that using a containerized version brings.&lt;/p&gt;
+&lt;p&gt;The first one is in isolating security testing applications which require a bit of setup or a particular environment to operate in.  Some very useful security testing tools are slightly more complex to setup and run than just doing a  &lt;code class=&quot;highlighter-rouge&quot;&gt;git clone&lt;/code&gt; of the repo and running a script and there can always be conflicts in the version of underlying tools and libraries required for them to run. These tools can benefit from the isolation that using a containerized version brings.&lt;/p&gt;
 
 &lt;p&gt;Already on &lt;a href=&quot;https://hub.docker.com&quot;&gt;Docker Hub&lt;/a&gt; you can see a number of containers avaiable which do this for you.  An example is &lt;a href=&quot;http://www.openvas.org/&quot;&gt;OpenVAS&lt;/a&gt; for which there are a number of containers available, for example &lt;a href=&quot;https://registry.hub.docker.com/u/mikesplain/openvas/&quot;&gt;this one&lt;/a&gt;.&lt;/p&gt;
 
@@ -104,8 +117,9 @@ openvas:
 
 &lt;p&gt;If you do one of the canonical examples that’s provided in many tutorials&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;docker run -t -i ubuntu:latest /bin/bash
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+docker run -t -i ubuntu:latest /bin/bash
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.&lt;/p&gt;
 
@@ -113,24 +127,27 @@ openvas:
 
 &lt;p&gt;To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;docker ps -a
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+docker ps -a
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;which will list all the container instances you’ve ever run on that system and it’ll look something like&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
 39c1e5cf8319        raesene/auto-docker-dradis   &quot;bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&amp;gt;3000/tcp   cranky_kilby
 e529903a3183        raesene/auto-docker-dradis   &quot;bundle exec rails s   55 minutes ago                                                           compassionate_yonath
 f084aaca32ee        raesene/dradisframework      &quot;bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
 8a8f7b95082a        2bfb337a0aa8                 &quot;bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
 8a2a0046b769        ruby:latest                  &quot;/bin/bash&quot;            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;docker start compassionate_goodall
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
+docker start compassionate_goodall
 docker attach compassionate_goodall
-&lt;/code&gt;&lt;/pre&gt;
+&lt;/code&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;docker-hub-build-options&quot;&gt;docker hub build options&lt;/h2&gt;
 
@@ -140,7 +157,7 @@ docker attach compassionate_goodall
 
 &lt;h2 id=&quot;exposing-docker-ports&quot;&gt;Exposing docker ports&lt;/h2&gt;
 
-&lt;p&gt;By default containers have no ports exposed the the host network and many containers do not have things like SSHD installed, so remote access isn’t there by default.  The best way to map a port from the host to the guest is when the docker run command is used with the &lt;code&gt;-p&lt;/code&gt; option.&lt;/p&gt;
+&lt;p&gt;By default containers have no ports exposed the the host network and many containers do not have things like SSHD installed, so remote access isn’t there by default.  The best way to map a port from the host to the guest is when the docker run command is used with the &lt;code class=&quot;highlighter-rouge&quot;&gt;-p&lt;/code&gt; option.&lt;/p&gt;
 
 </description>
 				<pubDate>Sun, 05 Jul 2015 20:10:15 +0100</pubDate>
@@ -276,80 +293,92 @@ docker attach compassionate_goodall
 
 &lt;p&gt;So in the sample check we’re looking for an HTTP header, which if it’s not found, will add a low severity issue to the burp scanner.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-  def doPassiveScan(baseRequestResponse)
+&lt;p&gt;``` ruby&lt;/p&gt;
+
+&lt;p&gt;def doPassiveScan(baseRequestResponse)
     service_info = baseRequestResponse.getHttpService()
     host_name = service_info.getHost()
     response_info = @helpers.analyzeResponse(baseRequestResponse.getResponse)
-    headers = response_info.getHeaders()
+    headers = response_info.getHeaders()&lt;/p&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-  header_found = false
+&lt;p&gt;``` ruby&lt;/p&gt;
 
-    headers.each do |header|
-      if header.downcase =~ /your_value_here/
-          header_found = true
-      end
-    end
+&lt;p&gt;header_found = false&lt;/p&gt;
 
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;headers.each do |header|
+  if header.downcase =~ /your_value_here/
+      header_found = true
+  end
+end
 &lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;the next section of code is really the only analysis that we’re doing in this basic example.  The headers variable is an array, so we can iterate over it and check each element to see if it’s found. In this case our header is called ‘your_value_here’ which is pretty unlikely to show up, but in a real check this could be replaced with something like ‘Strict-Transport-Security’ or ‘Public-Key-Pins’ to check for the presence of security related HTTP headers.&lt;/p&gt;
 
 &lt;p&gt;Once we’ve got our finding of course the next step is to add it to the scanner results, so we’ll need to create a Scan Issue and pass it back to Burp.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-   findings = Java::JavaUtil::ArrayList.new
+&lt;p&gt;``` ruby&lt;/p&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;findings = Java::JavaUtil::ArrayList.new&lt;/p&gt;
+
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;This line was one of the places I tripped up initially.  Burp expects an array of results back and not a single Scan issue so creating an array to hold the findings is handy.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-    finding_message = CustomHttpRequestResponse.new
-    finding_message.setResponse(baseRequestResponse.getResponse())
-    finding_message.setRequest(baseRequestResponse.getRequest())
-    finding_message.setHttpService(baseRequestResponse.getHttpService())
+&lt;p&gt;``` ruby&lt;/p&gt;
 
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;finding_message = CustomHttpRequestResponse.new
+finding_message.setResponse(baseRequestResponse.getResponse())
+finding_message.setRequest(baseRequestResponse.getRequest())
+finding_message.setHttpService(baseRequestResponse.getHttpService())
 &lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;This section is necessary if you want to return the request/response information into the scanner and is another place where I had some issues. The key point is that you need to implement a class that conforms to the interface for the IHttpRequestResponse class that the Burp API describes.  In the file on github there’s a class that seems to work for me.  It looks a bit boilerplate heavy, but at the moment the more rubyish setup with attr_accessor helpers for the class properties doesn’t seem to fly for me, so manual getter/setter methods it is.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-    unless header_found
-      finding = CustomScanIssue.new
-      finding.httpMessages=finding_message
-      finding.httpService=baseRequestResponse.getHttpService()
-      finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
-      finding.name = &quot;Header Not Set&quot;
-      finding.detail = &quot;A header that should be set isn&#39;t&quot;
-      finding.severity = &quot;Low&quot;
-      finding.confidence = &quot;Certain&quot;
-      finding.remediation_detail = &quot;Lorem Ipsum&quot;
-      finding.issue_background = &quot;Sit Dolor Amet&quot;
-      findings.add finding
-    end
+&lt;p&gt;``` ruby&lt;/p&gt;
 
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unless header_found
+  finding = CustomScanIssue.new
+  finding.httpMessages=finding_message
+  finding.httpService=baseRequestResponse.getHttpService()
+  finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
+  finding.name = &quot;Header Not Set&quot;
+  finding.detail = &quot;A header that should be set isn&#39;t&quot;
+  finding.severity = &quot;Low&quot;
+  finding.confidence = &quot;Certain&quot;
+  finding.remediation_detail = &quot;Lorem Ipsum&quot;
+  finding.issue_background = &quot;Sit Dolor Amet&quot;
+  findings.add finding
+end
 &lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;This code just populates another class which you need to implement which is the Scan Issue.  In general that class is pretty straight forward like the RequestResponse class but a key point is that Burp expects an array of RequestResponse issues to be returned in the messages property of the scan issue.&lt;/p&gt;
 
 &lt;p&gt;Last bit in this basic example is a brief method to do some basic handling of duplicate instances of the same issue (saves the scanner repeatedly finding the same issue for a URL)&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-ruby&quot;&gt;
-  def consolidateDuplicateIssues(existing_issue, new_issue)
+&lt;p&gt;``` ruby&lt;/p&gt;
+
+&lt;p&gt;def consolidateDuplicateIssues(existing_issue, new_issue)
     if existing_issue.getIssueName == new_issue.getIssueName
       return -1
     else
       return 0
     end
-  end
+  end&lt;/p&gt;
 
-&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;```&lt;/p&gt;
 
 &lt;p&gt;This is obviously quite a basic example but hopefully shows that once you know the structure of the code, implementing scanner checks in Burp should be a relatively straightforward task, and can have some cool benefits in terms of automating the testing process.&lt;/p&gt;
 </description>
@@ -407,57 +436,6 @@ docker attach compassionate_goodall
 				<pubDate>Sun, 02 Nov 2014 21:10:58 +0000</pubDate>
 				<link>/blog/2014/11/02/changing-times-end-of-sms-auth/</link>
 				<guid isPermaLink="true">/blog/2014/11/02/changing-times-end-of-sms-auth/</guid>
-			</item>
-		
-			<item>
-				<title>Finding security</title>
-				<description>&lt;p&gt;So how do we know that the sites we use are secure?  It’s an obvious question with no brilliant answer but here’s an example of how we don’t.&lt;/p&gt;
-
-&lt;p&gt;What’s below might well come off as getting at Kickstarter, but really it’s not that different from a wide number of other sites that would like us to entrust them with personal information or credit card details.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;I’m a fan of &lt;a href=&quot;http://www.kickstarter.com&quot;&gt;Kickstarter&lt;/a&gt; projects, I’ve backed quite a few and they’ve gone pretty well for the most part.  Until recently whenever I went to contribute to a Kickstarter I felt reasonably happy paying, as they used Amazon payments, which meant I just logged in to Amazon and authorised the payment, all good.&lt;/p&gt;
-
-&lt;p&gt;I’m not a fan of giving sites my credit card details these days, so if I don’t know you and you don’t offer Amazon Payments/Paypal I probably won’t buy from you, sorry but having my card re-issued is a right pain.&lt;/p&gt;
-
-&lt;p&gt;So when I went to Kickstarter to support the &lt;a href=&quot;https://www.kickstarter.com/projects/1438393276/scandinavia-and-the-world-animated&quot;&gt;Scandanavia and the World webcomic&lt;/a&gt; that I rather like, I was a bit put out to find that now the site has a form asking me to enter my card details or use a stored card.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://imgur.com/a6lLh80.png&quot; alt=&quot;screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Yeuch&lt;/strong&gt; they’re asking for my card number and CVV, what’s more there’s a little graphic secure padlock which has no actual effect, always makes me nervous when I see those.&lt;/p&gt;
-
-&lt;p&gt;So I thought “well I’m going to do a bit of looking about to see if I can get a good feeling about their security before I entrust them with my card”&lt;/p&gt;
-
-&lt;p&gt;I looked at the source of the page to see if they perhaps POST to a payment processor, it’s not great practice but hey it’s better than nothing if it’s one who I think will be ok.&lt;/p&gt;
-
-&lt;p&gt;From what I could see nope is the answer looks like they POST locally.  Now they may be doing something fancy in JavaScript before posting (like stripe does) but looking at the JavaScript on the page, there’s reams of minified code that I’m not going to try understanding and I don’t fancy starting putting Proxies in-line and entering dummy numbers to see exactly what’s happening.&lt;/p&gt;
-
-&lt;p&gt;OK so maybe they have a security policy with some good content on how they secure my data .. well if they do I couldn’t find it, there’s a privacy policy that doesn’t mention the word security at all.&lt;/p&gt;
-
-&lt;p&gt;Then I looked through the support section and did find this under payments &amp;gt; Security&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;All transactions made through Kickstarter on our secure server are safe. A software protocol called Secure Sockets Layer Secure (SSL) is used for all pledges. It encrypts all of your personal information–including credit card number, name and address- as it travels over the internet. SSL is the industry standard and among the best software available today for secure commerce transactions. All of the credit card information is stored on a secure, dedicated database.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;What does this tell me.  Well not a lot really apart from that they use SSL and that everything is fine…&lt;/p&gt;
-
-&lt;p&gt;Actually the closest thing I found to good information on the topic was in the blog posting about their &lt;a href=&quot;https://www.kickstarter.com/blog/important-kickstarter-security-notice&quot;&gt;February 2014 breach&lt;/a&gt; which mentions that they use bcrypt for password hashing, which is a good thing.  Apart from that it’s the same vague positive stuff with no actual details as is in the support site.&lt;/p&gt;
-
-&lt;p&gt;Failing to find anything directly related to security, I thought I’d have a quick look for some other signs that a company take these things seriously&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Dedicated e-mail address for security displayed prominently on the contact details - &lt;strong&gt;Nope&lt;/strong&gt; (there is one on the blog posting but it’s not really clear if that’s just for questions on the breach or more general security stuff)&lt;/li&gt;
-  &lt;li&gt;Mentions of specific staff members with responsibility for security on the team page - &lt;strong&gt;Nope&lt;/strong&gt;&lt;/li&gt;
-  &lt;li&gt;Bug bounty program to let security researchers responsibly disclose issues with the site - &lt;strong&gt;Nope&lt;/strong&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Where does all this leave me.  Well in this case I’ll probably go and dust off one of the virtual credit cards I’ve used in the past and use that for Kickstarters in the future, but it is a shame that in 2014 this is still standard practice with an awful lot of companies.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 08 Jun 2014 19:11:23 +0100</pubDate>
-				<link>/blog/2014/06/08/finding-security/</link>
-				<guid isPermaLink="true">/blog/2014/06/08/finding-security/</guid>
 			</item>
 		
 	</channel>

@@ -165,7 +165,36 @@
   </span>
 
   <h2>
-    <a href="/blog/2004/05/19/microsft-securi/">Microsft Security Policy Compliance...</a>
+    <a href="/blog/2004/05/19/story_on_the_ci/">Story on the Cisco code theft</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a href="http://www.nwfusion.com/news/2004/0518moredetai.html?fsrc=rss-security">New evidence points to Cisco network hack</a><br />
+An article providing some more info on the Cisco code theft, over at Network World.  One point mentioned in it that I would disagree with though is the comment that<br />
+"Unlike open source software products, the security of Cisco's systems, like those of other proprietary software vendors, depends on the source code being kept out of public view, he said"<br />
+This is a bit on the sweeping side really...  Although it is a salutory lesson that companies shouldn't rely on the secrecy of their code to provide security.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    19th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/05/19/microsft_securi/">Microsft Security Policy Compliance...</a>
   </h2>
 
   <div>
@@ -194,7 +223,7 @@ The reason being is that even if a PC can't log onto a windows domain it can sti
   </span>
 
   <h2>
-    <a href="/blog/2004/05/19/career-path-to/">Career path to Network Security</a>
+    <a href="/blog/2004/05/19/career_path_to/">Career path to Network Security</a>
   </h2>
 
   <div>
@@ -222,7 +251,7 @@ There's another reference to this story over at <a href="http://users.757.org/~j
   </span>
 
   <h2>
-    <a href="/blog/2004/05/19/microsoft-secur-1/">Microsoft Security Management column</a>
+    <a href="/blog/2004/05/19/microsoft_secur_1/">Microsoft Security Management column</a>
   </h2>
 
   <div>
@@ -248,7 +277,7 @@ There's another reference to this story over at <a href="http://users.757.org/~j
   </span>
 
   <h2>
-    <a href="/blog/2004/05/17/good-example-of/">Good example of Social Engineering</a>
+    <a href="/blog/2004/05/17/good_example_of/">Good example of Social Engineering</a>
   </h2>
 
   <div>
@@ -274,7 +303,7 @@ There's another reference to this story over at <a href="http://users.757.org/~j
   </span>
 
   <h2>
-    <a href="/blog/2004/05/12/us-falls-for-ph/">US falls for Phishing...</a>
+    <a href="/blog/2004/05/12/us_falls_for_ph/">US falls for Phishing...</a>
   </h2>
 
   <div>
@@ -300,7 +329,7 @@ There's another reference to this story over at <a href="http://users.757.org/~j
   </span>
 
   <h2>
-    <a href="/blog/2004/05/12/diceware-passph/">Diceware Passphrase Generator</a>
+    <a href="/blog/2004/05/12/diceware_passph/">Diceware Passphrase Generator</a>
   </h2>
 
   <div>
@@ -327,7 +356,7 @@ A link to an ... interesting ... method of generating passphrases</p>
   </span>
 
   <h2>
-    <a href="/blog/2004/05/09/client-security/">Client Security, It's important!</a>
+    <a href="/blog/2004/05/09/client_security/">Client Security, It's important!</a>
   </h2>
 
   <div>
@@ -364,7 +393,7 @@ Another option (only applicable to this particular attack) would be to specify d
   </span>
 
   <h2>
-    <a href="/blog/2004/05/09/sasser-worm-aut/">Sasser worm Author caught</a>
+    <a href="/blog/2004/05/09/sasser_worm_aut/">Sasser worm Author caught</a>
   </h2>
 
   <div>
@@ -391,7 +420,7 @@ Given that, what level of damage could be done by an organised, well funded grou
   </span>
 
   <h2>
-    <a href="/blog/2004/05/06/detecting-rogue/">Detecting Rogue machines on client subnets</a>
+    <a href="/blog/2004/05/06/detecting_rogue/">Detecting Rogue machines on client subnets</a>
   </h2>
 
   <div>
@@ -401,34 +430,6 @@ Given that, what level of damage could be done by an organised, well funded grou
 The risk, briefly, is that if someone can get their rogue DHCP server to hand out an address faster than the real one, then they can control things like the default gateway and DNS server of client PC's.  Once they've set that up they can sniff any and all traffic that goes by and also modify traffic if required.<br />
 One of the standard technological controls for stopping people putting rogue devices on a network, static MAC address assignments on the switch ports, isn't likely to be effective here as it would be very onerous to maintain  that on client subnets...  Likewise other ones like an IDS system aren't likely to be deployed in what is perceived generally as "low risk" segments of the network...<br />
 So, an idea which might work (and it may already exist, I'd be interested to hear if it does) would be to have something like NMAP scanning round the subnets on a regular basis looking for new services coming online...  all that would be needed is an interface for admins to define what to look for (eg, there should be only ports 137-139 and 445 on this subnet) and an alerting system...  Would also help for detecting unauthorised web servers and the like in large corps...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    6th,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="/blog/2004/05/06/security-threat/">Security threats to open/closed source software</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Over at <a href="http://davidcartwright.com/ipw-web/b2/index.php?p=185&amp;c=1">David Cartwright's Home Page</a> there's some comments on a debate about the relative security of open and close source software.  It pretty much sums up how I feel about it.<br />
-There are potentially going to be security flaws, either malicious or accidental, in any software much more compicated than "Hello World", be it open or close source.  My personal opinion is that at least with open source software if it's sufficiently important to you to mitigate that risk you *can* get the source code reviewed.  This cannot be the case with closed source software as even if you are given a copy of the code to review (for example with Microsoft through their shared source initiative) you have no guarantee that the code you reviewed is the code that was compiled to create the software you get on the CD.....<br />
-Leads me on to another thought actually which is, I wonder if any of the shared source licensees have been able to comile something like Win2003 server from the source they've been given to create a running OS.....?</p>
 
     
     
@@ -466,7 +467,7 @@ Leads me on to another thought actually which is, I wonder if any of the shared 
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

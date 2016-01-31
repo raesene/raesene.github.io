@@ -159,13 +159,50 @@
   <span class="post-date">
     
     April
+    24th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/04/24/pci_66_clarific/">PCI 6.6 clarification - Am I missing something?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Recently there have been some clarifications around a couple of sections of the PCI-DSS, in particular one on <a href="https://www.pcisecuritystandards.org/pdfs/infosupp_6_6_applicationfirewalls_codereviews.pdf">section 6.6 </a>.<br />
+This update has created some comment and articles but none of the ones I've read has focused on the main point, as far as I can see...<br />
+<b>Previously there were two options for satisfying Section 6.6</b></p>
+<ul>
+<li> A Code Review (either manual or tool assisted) of in-scope web applications, or</li>
+<li>Placement of an appropriately configured Web Application Firewall to protect the application</li>
+</ul>
+<p><b>Now (unless I'm reading this incorrectly) there's an additional one</b><br />
+Completion of a manual or assisted web application vulnerability review...<br />
+The confusing part is that this third option isn't split out but is listed under the "application code review" section.<br />
+My feeling is that this'll affect a lot of merchants (and vendors) if they were planning on either spending money on WAFs or Code reviews and will now use a standard web application review (which they may already be undertaking as part of other security work....)<br />
+Another interesting point which I don't know the answer to is whether a single review which covered both penetration testing techniques and web application assessment techniques could be used to satisfy 6.6 and 11.3...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
     8th,
     
     2008
   </span>
 
   <h2>
-    <a href="/blog/2008/04/08/security-shorth/">Security Shorthand problems</a>
+    <a href="/blog/2008/04/08/security_shorth/">Security Shorthand problems</a>
   </h2>
 
   <div>
@@ -198,7 +235,7 @@ Personally I run Linux at home and I don't use A-V as there's no credible threat
   </span>
 
   <h2>
-    <a href="/blog/2008/04/07/some-more-uk-da/">Some More UK Data Loss</a>
+    <a href="/blog/2008/04/07/some_more_uk_da/">Some More UK Data Loss</a>
   </h2>
 
   <div>
@@ -227,7 +264,7 @@ How do you password protect something without encrypting it ?!  Any software I'm
   </span>
 
   <h2>
-    <a href="/blog/2008/03/13/database-expert/">Database expert: Oracle behind Microsoft on patch management - Network World</a>
+    <a href="/blog/2008/03/13/database_expert/">Database expert: Oracle behind Microsoft on patch management - Network World</a>
   </h2>
 
   <div>
@@ -255,7 +292,7 @@ Assuming that nothing turns up soon it actually looks like SQL Server 2005 will 
   </span>
 
   <h2>
-    <a href="/blog/2008/03/08/infosec-scotlan/">Infosec Scotland</a>
+    <a href="/blog/2008/03/08/infosec_scotlan/">Infosec Scotland</a>
   </h2>
 
   <div>
@@ -282,7 +319,7 @@ If you've got any events you'd like to get added to the calendar, just send an e
   </span>
 
   <h2>
-    <a href="/blog/2008/03/08/february-owasp/">February OWASP meeting</a>
+    <a href="/blog/2008/03/08/february_owasp/">February OWASP meeting</a>
   </h2>
 
   <div>
@@ -312,7 +349,7 @@ It's something I was talking to a WAF vendor about recently, as I was asking the
   </span>
 
   <h2>
-    <a href="/blog/2008/02/21/upcoming-securi/">Upcoming Security Events in Scotland</a>
+    <a href="/blog/2008/02/21/upcoming_securi/">Upcoming Security Events in Scotland</a>
   </h2>
 
   <div>
@@ -340,7 +377,7 @@ Next up on the 27th of March is the latest <a href="http://www.securetest.com/">
   </span>
 
   <h2>
-    <a href="/blog/2008/02/01/interesting-new/">Interesting new site?</a>
+    <a href="/blog/2008/02/01/interesting_new/">Interesting new site?</a>
   </h2>
 
   <div>
@@ -369,7 +406,7 @@ I understand that Microsoft are keen to get people looking at some of their new 
   </span>
 
   <h2>
-    <a href="/blog/2008/01/09/new-years-resol/">New Years Resolution - Ask your Software vendors about security</a>
+    <a href="/blog/2008/01/09/new_years_resol/">New Years Resolution - Ask your Software vendors about security</a>
   </h2>
 
   <div>
@@ -401,7 +438,7 @@ Above that another option would be getting your suppliers to submit their softwa
   </span>
 
   <h2>
-    <a href="/blog/2007/12/25/warning-googles/">Practical use of CSRF attacks in the wild</a>
+    <a href="/blog/2007/12/25/warning_googles/">Practical use of CSRF attacks in the wild</a>
   </h2>
 
   <div>
@@ -410,39 +447,6 @@ Above that another option would be getting your suppliers to submit their softwa
     <p>http://www.davidairey.co.uk/google-gmail-security-hijack/<br />
 Here's an example of bad-guys using CSRF attacks try and extort money from domain name holders.  Interestingly it's the first example of practical use of this kind of attack I've seen.<br />
 Although the vulnerability in GMail that seems to have been exploited is now fixed, I bet this won't be the last time we see this form of attack in use, and it does give an example of the kind of damage that a CSRF attack can cause...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    8th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/12/08/what-2008-may-b/">What 2008 may bring...</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Well as is kinda traditional in December various security bloggers have started predicting what 2008 will bring (there's some interesting thoughts and and links to more predictions <a href="http://securosis.com/2007/12/06/predicting-security-markets/"> here</a>).<br />
-For my 0.02 of your local currency, I think that next years big topic will be Software Security.  A lot of the things we're seeing happen in the security market around exploding vulnerability metrics and malware all come ultimately down to poor software design and development.<br />
-Now the industries reaction to this so far seems to be "here's another device for your network to help deal with this".  Not surprisingly this isn't a tenable long term strategy as you can't just keep layering on boxes before things start breaking.<br />
-Also if you look at the Jericho concepts a key message is that systems have to be able to survive on their own without relying on an ever decreasing "perimeter".  Well in order to survive you've got to be well designed/written.  The model of hiding all your extremely vulnerable applications behind a big set of perimeter security devices won't work in the future.<br />
-So what does this software security trend going to look like in terms of markets...?  Well I'd say that companies like <a href="http://www.veracode.com/"> Veracode</a>, <a href="http://www.fortifysoftware.com/"> Fortify</a> and <a href="http://www.ouncelabs.com/"> Ounce Labs</a> will do well over the coming year although perhaps for different reasons.<br />
-Veracodes service sounds like it could be really useful in starting to answer the hard question "How do I know this software I'm buying is secure?".  Traditionally the most that was done was a black-box pen test of such software, and as people know black-box penetration testing is a lousy way to assure the security of anything.<br />
-Fortify and Ounce make products which can help companies integrate security focused source code analysis into companies development processes.  I don't think that many companies have the business model that allows for the cost of a complete manual review of their codebases, so tools are necessary here to help the process scale.<br />
-Of course no product is going to solve this sort of problem alone, so I'd hope to see more output along the lines of some of the OWASP projects, giving guidance on the design side aspect of producing secure software...</p>
 
     
     
@@ -480,7 +484,7 @@ Of course no product is going to solve this sort of problem alone, so I'd hope t
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

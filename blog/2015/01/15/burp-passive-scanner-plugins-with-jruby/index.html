@@ -181,80 +181,92 @@
 
 <p>So in the sample check we’re looking for an HTTP header, which if it’s not found, will add a low severity issue to the burp scanner.</p>
 
-<pre><code class="language-ruby">
-  def doPassiveScan(baseRequestResponse)
+<p>``` ruby</p>
+
+<p>def doPassiveScan(baseRequestResponse)
     service_info = baseRequestResponse.getHttpService()
     host_name = service_info.getHost()
     response_info = @helpers.analyzeResponse(baseRequestResponse.getResponse)
-    headers = response_info.getHeaders()
+    headers = response_info.getHeaders()</p>
 
-</code></pre>
+<p>```</p>
 
 <p>This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.</p>
 
-<pre><code class="language-ruby">
-  header_found = false
+<p>``` ruby</p>
 
-    headers.each do |header|
-      if header.downcase =~ /your_value_here/
-          header_found = true
-      end
-    end
+<p>header_found = false</p>
 
+<div class="highlighter-rouge"><pre class="highlight"><code>headers.each do |header|
+  if header.downcase =~ /your_value_here/
+      header_found = true
+  end
+end
 </code></pre>
+</div>
+
+<p>```</p>
 
 <p>the next section of code is really the only analysis that we’re doing in this basic example.  The headers variable is an array, so we can iterate over it and check each element to see if it’s found. In this case our header is called ‘your_value_here’ which is pretty unlikely to show up, but in a real check this could be replaced with something like ‘Strict-Transport-Security’ or ‘Public-Key-Pins’ to check for the presence of security related HTTP headers.</p>
 
 <p>Once we’ve got our finding of course the next step is to add it to the scanner results, so we’ll need to create a Scan Issue and pass it back to Burp.</p>
 
-<pre><code class="language-ruby">
-   findings = Java::JavaUtil::ArrayList.new
+<p>``` ruby</p>
 
-</code></pre>
+<p>findings = Java::JavaUtil::ArrayList.new</p>
+
+<p>```</p>
 
 <p>This line was one of the places I tripped up initially.  Burp expects an array of results back and not a single Scan issue so creating an array to hold the findings is handy.</p>
 
-<pre><code class="language-ruby">
-    finding_message = CustomHttpRequestResponse.new
-    finding_message.setResponse(baseRequestResponse.getResponse())
-    finding_message.setRequest(baseRequestResponse.getRequest())
-    finding_message.setHttpService(baseRequestResponse.getHttpService())
+<p>``` ruby</p>
 
+<div class="highlighter-rouge"><pre class="highlight"><code>finding_message = CustomHttpRequestResponse.new
+finding_message.setResponse(baseRequestResponse.getResponse())
+finding_message.setRequest(baseRequestResponse.getRequest())
+finding_message.setHttpService(baseRequestResponse.getHttpService())
 </code></pre>
+</div>
+
+<p>```</p>
 
 <p>This section is necessary if you want to return the request/response information into the scanner and is another place where I had some issues. The key point is that you need to implement a class that conforms to the interface for the IHttpRequestResponse class that the Burp API describes.  In the file on github there’s a class that seems to work for me.  It looks a bit boilerplate heavy, but at the moment the more rubyish setup with attr_accessor helpers for the class properties doesn’t seem to fly for me, so manual getter/setter methods it is.</p>
 
-<pre><code class="language-ruby">
-    unless header_found
-      finding = CustomScanIssue.new
-      finding.httpMessages=finding_message
-      finding.httpService=baseRequestResponse.getHttpService()
-      finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
-      finding.name = "Header Not Set"
-      finding.detail = "A header that should be set isn't"
-      finding.severity = "Low"
-      finding.confidence = "Certain"
-      finding.remediation_detail = "Lorem Ipsum"
-      finding.issue_background = "Sit Dolor Amet"
-      findings.add finding
-    end
+<p>``` ruby</p>
 
+<div class="highlighter-rouge"><pre class="highlight"><code>unless header_found
+  finding = CustomScanIssue.new
+  finding.httpMessages=finding_message
+  finding.httpService=baseRequestResponse.getHttpService()
+  finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
+  finding.name = "Header Not Set"
+  finding.detail = "A header that should be set isn't"
+  finding.severity = "Low"
+  finding.confidence = "Certain"
+  finding.remediation_detail = "Lorem Ipsum"
+  finding.issue_background = "Sit Dolor Amet"
+  findings.add finding
+end
 </code></pre>
+</div>
+
+<p>```</p>
 
 <p>This code just populates another class which you need to implement which is the Scan Issue.  In general that class is pretty straight forward like the RequestResponse class but a key point is that Burp expects an array of RequestResponse issues to be returned in the messages property of the scan issue.</p>
 
 <p>Last bit in this basic example is a brief method to do some basic handling of duplicate instances of the same issue (saves the scanner repeatedly finding the same issue for a URL)</p>
 
-<pre><code class="language-ruby">
-  def consolidateDuplicateIssues(existing_issue, new_issue)
+<p>``` ruby</p>
+
+<p>def consolidateDuplicateIssues(existing_issue, new_issue)
     if existing_issue.getIssueName == new_issue.getIssueName
       return -1
     else
       return 0
     end
-  end
+  end</p>
 
-</code></pre>
+<p>```</p>
 
 <p>This is obviously quite a basic example but hopefully shows that once you know the structure of the code, implementing scanner checks in Burp should be a relatively straightforward task, and can have some cool benefits in terms of automating the testing process.</p>
 
@@ -337,7 +349,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

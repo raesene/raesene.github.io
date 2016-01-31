@@ -158,6 +158,33 @@
 
   <span class="post-date">
     
+    June
+    8th,
+    
+    2014
+  </span>
+
+  <h2>
+    <a href="/blog/2014/06/08/finding-security/">Finding security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So how do we know that the sites we use are secure?  It’s an obvious question with no brilliant answer but here’s an example of how we don’t.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     May
     10th,
     
@@ -416,7 +443,7 @@
     <p>This post is part of a series based on a presentation I did for the Scottish Ruby Conference in May 2013 (part 1 <a title="Scottish Ruby Conference Talk – Your Framework Will Fail You" href="http://blog.scotsts.com/?p=630">here</a>) which was around defense in depth and some of the controls companies should be looking at to help protect them when something goes wrong.</p>
 <p>The first segment to cover is Firewalling. Network firewalls get quite a bit of flack in the security world, mainly because people tend to rely too heavily on them for protection without really understanding where they are and are not useful.</p>
 <p>The "low-risk" setup option that I covered is around the use of egress filtering on firewalls.</p>
-<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet) to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
+<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet), to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
 <p>Setting a default deny on connections from trusted--&gt;untrusted networks can be a really useful control in making an attackers life more difficult for them and hindering their post exploitation activities. So in an e-commerce environment it might be possible to have rules on the firewall that restrict all servers from initiating any connections to the Internet except for a couple of hosts for package updates. This means that someone who has access to the server and who trys to connect to any other system on the Internet will get blocked.</p>
 <p>If you consider an attack on a web application, once the attacker has compromised a server (e.g. via SQL Injection or command injection) one of the first things they might try to do is make a connection back to a system under their control to download more tools and also to make a shell connection to the compromised system. So with egress filtering this could be considerably trickier to pull off.</p>
 <p>One thing if you do intend to do this is, I would recommend putting it in place when you're designing the network. Retro-fitting more restrictive firewall rules can be quite difficult as things like periodic connections that only happen once a month might not be noticed, leading to unexpected failures after the firewall rules have been put in place.</p>
@@ -425,36 +452,6 @@
 <p>Addressing this isn't cheap or easy but effective network segmentation can make attackers lives much more difficult.</p>
 <p>There are a variety of approaches that can be used for network segmentation. One is to segment individual Internet facing applications so that they are in their own DMZ, this can reduce the risk of onwards compromise, although it does depend on the firewall ruleset being suitably restrictive.</p>
 <p>This approach obviously will increase management costs, for example requiring more management servers and potentially less automation of maintenance, so there is a trade-off between the desired level of security and the cost involved, but it's something that should be considered rather than just going for the default one firewall approach.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    13th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/05/13/scottish-ruby-conference-talk-your-framework-will-fail-you/">Scottish Ruby Conference Talk - Your Framework Will Fail You</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I was presenting yesterday at the <a title="Scottish Ruby Conference" href="http://2013.scottishrubyconference.com/">Scottish Ruby Conference</a>, and given that the talk is relatively high-level as it covers a lot of ground, I thought it would be a good idea to do a series of blog posts to provide some more details and resources (link to the presentation <a title="Prezi - Your framework will fail you" href="http://prezi.com/c3d2qpsxgcdv/your-framework-will-fail-you/">here</a>.)</p>
-<p>The title of my talk was "Your framework will fail you". I had the idea for it when reading about some of the security bugs in Rails came up earlier in the year and led my to think some more about defence in depth. Anyone in security will know this as one of those things that we think is a good idea but which can be a bit of a hard sell as when someone pays for a security control (e.g. Anti-Virus, Firewall) it can be tricky to say "yep that will fail sometimes so we need to buy some other things as well".</p>
-<p>However if anything has been proven by the increase in public vulnerabilities, exploits and compromises, it is that all security controls fail and you will be well served by having a fall-back control or detective control to notice when the main one has failed.</p>
-<p>The way I structured the presentation was in two halves. The first looks at the important topics of threat modelling (e.g. who's going to attack you) and a bit about why defence in depth is important. After that it looks at various layers of a solution and talk about controls for a low-risk/budget scenario and a high-risk/budget one. The focus on the low risk option was to look at controls which can be put in easily/cheaply. They may not be super-effective all the time, but they have their uses. On the high-risk end I looked at things which can provide more protection but will take more resource to manage, alternative in some cases it's the same control as the low-risk version but with more time dedicated to managing it (e.g. a lot of the detective controls are only really good if well managed).</p>
-<p>The blog posts will be coming out every other day or so looking at the solution layers and hopefully I'll get to the end of the series without interruption :)</p>
 
     
     
@@ -492,7 +489,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2015 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2016 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>
