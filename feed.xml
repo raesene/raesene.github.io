@@ -31,8 +31,9 @@
 
 &lt;p&gt;and then restart docker with&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl restart docker&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl restart docker&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.&lt;/p&gt;
 
