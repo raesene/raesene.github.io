@@ -10,12 +10,13 @@
 				<title>Docker 1.10 Notes - User Namespaces</title>
 				<description>&lt;p&gt;So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.&lt;/p&gt;
 
-&lt;p&gt;When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces doesn’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.&lt;/p&gt;
+&lt;p&gt;When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces don’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.&lt;/p&gt;
 
 &lt;p&gt;To get this working on Ubuntu 15.10, which uses systemd, I did this&lt;/p&gt;
 
-&lt;p&gt;copy the base systemd config file to /etc/systemd/system
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp /lib/systemd/system/docker.service /etc/systemd/system/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;copy the base systemd config file to /etc/systemd/system&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp /lib/systemd/system/docker.service /etc/systemd/system/&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.&lt;/p&gt;
 
