@@ -159,6 +159,33 @@
   <span class="post-date">
     
     May
+    21st,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/05/21/handy_list_of_l/">Handy list of Linux Live CD's</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>A Good <a title="List of Linux Live CDs" href="http://www.frozentech.com/content/livecd.php">List of Linux Live CDs</a>, there are quite a few useful ones from the Security point of view, including the very useful <a href="http://www.localareasecurity.com/"> Local Area Security distro </a>.<br />
+Anyone who's not had time to play with Linux LiveCD's, really should, as they are immensly useful tools for work like forensics and system administration....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     19th,
     
     2004
@@ -401,35 +428,6 @@ Another option (only applicable to this particular attack) would be to specify d
     
     <p>Over at the BBC they're carrying the story that "<a href="http://news.bbc.co.uk/1/hi/world/europe/3695857.stm"> Teen 'confesses' to Sasser worm</a>".  What worries me most about this, is if this guy turns out to be the author of the Sasser worms and the Netsky virii (which some other newswires are suggesting), he has managed to cause millions of pounds of damage on his own... one teenager.....<br />
 Given that, what level of damage could be done by an organised, well funded group of people, looking to maximise the damage done to the Internet...? Not a comforting thought really.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    6th,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="/blog/2004/05/06/detecting_rogue/">Detecting Rogue machines on client subnets</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>A little while back, I was giving some thought as to how to mitigate the risk of rogue DHCP servers on internal networks.<br />
-The risk, briefly, is that if someone can get their rogue DHCP server to hand out an address faster than the real one, then they can control things like the default gateway and DNS server of client PC's.  Once they've set that up they can sniff any and all traffic that goes by and also modify traffic if required.<br />
-One of the standard technological controls for stopping people putting rogue devices on a network, static MAC address assignments on the switch ports, isn't likely to be effective here as it would be very onerous to maintain  that on client subnets...  Likewise other ones like an IDS system aren't likely to be deployed in what is perceived generally as "low risk" segments of the network...<br />
-So, an idea which might work (and it may already exist, I'd be interested to hear if it does) would be to have something like NMAP scanning round the subnets on a regular basis looking for new services coming online...  all that would be needed is an interface for admins to define what to look for (eg, there should be only ports 137-139 and 445 on this subnet) and an alerting system...  Would also help for detecting unauthorised web servers and the like in large corps...</p>
 
     
     

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Is This Thing on </title>
+	<title>Docker 1.10 Notes - User Namespaces</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Is This Thing on  </h1>
+  <h1>Docker 1.10 Notes - User Namespaces </h1>
 </div>
 	
 <article>
@@ -157,15 +157,51 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   January 
-	   31st,
-	     
+	   February 
+	   4th,
+	   
 	   2016
 	 </span>
 	  <div class="article_body">
-	  <p>One of the perenial problems of being an infrequent blogger is of course, you forget exactly how you used to do things…</p>
+	  <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
 
-<p>So this post is just to make sure I’ve actually remembered how this is all set-up before I write something more substantive :)</p>
+<p>When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces doesn’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.</p>
+
+<p>To get this working on Ubuntu 15.10, which uses systemd, I did this</p>
+
+<p>copy the base systemd config file to /etc/systemd/system
+<code class="highlighter-rouge">sudo cp /lib/systemd/system/docker.service /etc/systemd/system/</code></p>
+
+<p>It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.</p>
+
+<p>Once you’ve done that you need to tell docker to remap the userns.  This can be done to an explicitly chosen uid:gid, but the basic default option will probably work fine for a lot of use-cases.</p>
+
+<p>So in /etc/systemd/system/docker you can edit</p>
+
+<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon -H fd://</code></p>
+
+<p>to</p>
+
+<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://</code></p>
+
+<p>and then restart docker with</p>
+
+<p><code class="highlighter-rouge">sudo systemctl daemon-reload</code>
+<code class="highlighter-rouge">sudo systemctl restart docker</code></p>
+
+<p>Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.</p>
+
+<p>So something like</p>
+
+<p><code class="highlighter-rouge">docker run -it ubuntu:14.04 top</code></p>
+
+<p>should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like</p>
+
+<p><code class="highlighter-rouge">165536     2347   2323  0 21:20 pts/0    00:00:00 top</code></p>
+
+<p>So, no longer running as root , yay!</p>
+
+<p>One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download.  Probably not a major issue unless you’ve got a lot of custom images lying around.  In that case it might be an idea to back them up with docker save before you enable UserNS</p>
 
 	  </div>
 
@@ -178,7 +214,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Is This Thing on &via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Docker 1.10 Notes - User Namespaces&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -206,10 +242,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/" title="Set-up a Complete Security Test Environment with One Command and Docker Compose">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2016/01/31/is-this-thing-on/" title="Is This Thing on ">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2016/02/04/Docker-User-Namespaces/" title="Docker 1.10 Notes - User Namespaces">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
