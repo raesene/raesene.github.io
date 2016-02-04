@@ -203,7 +203,13 @@
 
 <p>So, no longer running as root , yay!</p>
 
-<p>One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download.  Probably not a major issue unless you’ve got a lot of custom images lying around.  In that case it might be an idea to back them up with docker save before you enable UserNS</p>
+<p>One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download the one’s I had.  So it’s defintely worth trying this change out on test systems before rolling out to production!</p>
+
+<p>You can back up your existing images with something like</p>
+
+<p><code class="highlighter-rouge">docker save</code></p>
+
+<p>if needed and it’s also worth noting that if you disable userns again, your original images will be available.</p>
 
 	  </div>
 
