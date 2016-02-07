@@ -53,6 +53,8 @@
 &lt;p&gt;Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Edit:&lt;/strong&gt; I did find &lt;a href=&quot;https://github.com/gopher-net/macvlan-docker-plugin&quot;&gt;this project&lt;/a&gt; which looks to address the same problem, but at the moment it doesn’t seem to work for me…&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Edit2:&lt;/strong&gt; Well that was quick. The problems I had with teh macvlan docker plugin got fixed (thanks to @nerdalert), so for a faster/less manual solution to this problem I’d recommend having a look at the link in the first edit!&lt;/p&gt;
 </description>
 				<pubDate>Sun, 07 Feb 2016 14:45:39 +0000</pubDate>
 				<link>/blog/2016/02/07/Exploration-in-Docker-bridging/</link>
