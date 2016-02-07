@@ -158,6 +158,59 @@
 
   <span class="post-date">
     
+    May
+    4th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/05/04/are_we_secure_y/">Are we Secure yet? (Part 1)</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the questions that a Information Security person dreads most is someone from the business asking <strong>"Are we secure?"</strong>.<br />
+You can be torn between the urge to explain in detail why that question can't be easily answered and the details of the controls in place and residual risks (and sending them to sleep) or a flippant "yes" which may well come back to haunt you...<br />
+One of the reasons why the answer could be so long is the obvious question "Secure from what".  A set of controls which may be reasonable tight when faced with a non-targeted threat from malware may be totally inadequate against a motivated knowledgeable insider threat.<br />
+So, perhaps one way to help is to break down the "secure" question a bit in to categories of threat.<br />
+For example: -</p>
+<ul>
+<li> Non-Targeted Threats</li>
+<li> Internal Targeted Threats</li>
+<li> External Targeted Threats</li>
+</ul>
+<p>This way you can classify your controls as to how well they target each threat category, giving a better picture as to what level of risk your organisation is actually running.<br />
+<big>Non-Targeted Threats</big><br />
+First off is probably the easiest one, "Non-Targeted Threats".  This category includes a lot of the "traditional" threats to your security and is also probably the easiest one to mitigate, as the attacker isn't intelligently looking for a way to attack you they're just randomly interested in getting access to assets.<br />
+Examples of this category of threat are</p>
+<ul>
+<li> Malware - Most malware isn't targeted and is just looking to compromise a machine (any machine) for the purposes of using its resources or getting access to information held on it or entered into it (eg, users banking credentials).</li>
+<li> Laptop Thefts - The majority of laptop thefts are not targeted, they're just carried out by someone who sees the laptop as a portable asset that can be easily resold.</li>
+<li>Internet Attacks - A large portion of "script kiddy" style attacks again, aren't targeted at a particular company, they're just looking to compromise servers on the Internet for (mis)use.</li>
+</ul>
+<p>Looking at these sample threats, we can see that it's likely that more automated controls will be effective against them.  We don't need to be absolutely flawless in our execution of security to defeat them but we need to be "good enough" that the attack moves on to someone else.<br />
+So controls which are likely to be effective in this space could be :-</p>
+<ul>
+<li>A-V/Anti-Spyware - Whilst there's a diminishing return on these as attackers work harder to bypass them, signature based A-V still adds a lot of value in cutting out the "noise" of malware attacks</li>
+<li>Patching - Again we're not dealing with attackers who are likely to use a zero-day exploit here, so vendor patching will likely be an effective control to mitigate some of these threats.</li>
+<li>Laptop encryption - Whilst it could be argued that this isn't a perfect control (with the cold boot http://www.freedom-to-tinker.com/?p=1257 attacks that have emerged), it's likely to be an effective control for a random laptop theft.</li>
+<li>Network (and Web Application) Firewalls - Until recently you could have argued that non-targeted attacks rarely use application level techniques, the recent mass SQL Injection attack (doubtless the first of many) show that firewalling at the network and application level is necessary to keep you safe('ish) on the Internet.</li>
+</ul>
+<p>So far, so good.  Next up we'll look at the trickier area of Internal Targeted Threats.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     April
     30th,
     
@@ -415,38 +468,6 @@ Next up on the 27th of March is the latest <a href="http://www.securetest.com/">
 When I saw this I thought I'd go over to the site and take a look around, as Microsoft have released some great information about developer security in the past and it's an area of interest for me at the moment..<br />
 But then I ran into a complete roadblock getting to the site!  To view it you have to have the latest version of Silverlight installed!  Unfortunately I think that won't work for a lot of users, either due to corporate builds not having deployed silverlight yet (and hopefully decent security policies in place to stop users self-deploying software) or due to platforms issues (admittedly a small proportion of linux fans like myself), although that said it's likely to be an increasing problem for some content, as a lot of mobile devices run Opera which isn't supported by silverlight from <a href="http://www.microsoft.com/silverlight/system-requirements.aspx">what I can see...</a><br />
 I understand that Microsoft are keen to get people looking at some of their new technology, but it's a shame that this kind of resource is limited in such a way that a decent proportion of their target audience won't be able to use it....  Perhaps a limited HTML version could be made available so people without access to silverlight</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    9th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/01/09/new_years_resol/">New Years Resolution - Ask your Software vendors about security</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>It's the time of year for New resolutions, so I was thinking about what security people could do differently to help make 2008 better than 2007 for software security.<br />
-One thing I came up with.  Speak to your purchasing people (if you've got some) or anyone else who approves software purchases in your company and get a criteria added to your purchasing policy that requires software vendors to explain how they ensure the security of the software they're selling you.<br />
-After all, software companies are selling you products to help you run your business, and these days if they're selling you vulnerable products it's quite likely to have a negative effect on your company, either through security breaches which exploit the vulnerabilities or through the time you have to spend patching the software they provide.<br />
-Now I'm not suggesting that any software you buy will be perfect, but if you make software security a criteria in whether you purchase "package A" or "package B" you give the vendors an incentive to improve the security of their software.<br />
-Of course there's the problem of how you actually evaluate their claims...  At one level there's the obvious case of listening to what they tell you and asking some searching questions like<br />
-"how many vulnerabilities has your product had in the last year" and "what's your policy towards vulnerability researchers and disclosure".  Beware of companies who say that their sofware has no vulnerabilities.  It's very likely that their either lying or in denial!<br />
-Above that another option would be getting your suppliers to submit their software for an independent 3rd party assessment (like the ones <a href="http://www.veracode.com">Veracode</a> supply).  This probably works best for large companies buying critical applications, but I think it's a good idea, in principle anyway, as it helps validate a software suppliers claims of security.</p>
 
     
     

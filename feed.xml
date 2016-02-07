@@ -7,6 +7,57 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Exploration in Docker Bridging</title>
+				<description>&lt;p&gt;One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.&lt;/p&gt;
+
+&lt;p&gt;Docker does this by attaching the container to a bridge on the host and setting up iptables NAT rules to allow traffic to flow from this bridged network to the wider external network.  There’s a couple of downsides to this approach.  Firstly you need to explicitly specify inbound ports at container launch time if you want to have server services receive connections.  When you do this, docker sets up port-forwarding to allow that traffic into the container.&lt;/p&gt;
+
+&lt;p&gt;The problem with this approach is that if you’re running a service that sets ports up on the fly or which may change port during it’s runtime (e.g. metasploit) this is a bit on the inflexible side.&lt;/p&gt;
+
+&lt;p&gt;The other downside is the use of NAT, which can cause issues with some networking tools that make a large number of network connections (e.g. nmap).&lt;/p&gt;
+
+&lt;p&gt;One option to address this is to use the docker option &lt;code class=&quot;highlighter-rouge&quot;&gt;-net=host&lt;/code&gt; which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.&lt;/p&gt;
+
+&lt;p&gt;So ideally I’d like another option which provides no-NAT access to a container, ideally with an IP address on the host network subnet, with user namespaces enabled.  This is kind of similar to the VMWare Workstation/fusion setup with bridged networking.&lt;/p&gt;
+
+&lt;p&gt;I had quite a dig around in the official docker documentation to see if this kind of setup is possible using in-built functionality and I didn’t see a way of doing this, so a little manual work is required. However I did find some interesting references to working out this kind of problem notably this &lt;a href=&quot;https://stackoverflow.com/questions/25529386/how-can-i-set-a-static-ip-address-in-a-docker-container&quot;&gt;StackOverflow post&lt;/a&gt; and &lt;a href=&quot;http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/&quot;&gt;this&lt;/a&gt; slightly older post on Docker networking.&lt;/p&gt;
+
+&lt;p&gt;First in one shell we need to start our target container.  We use the option &lt;code class=&quot;highlighter-rouge&quot;&gt;--net=none&lt;/code&gt; to setup the container without having docker do it’s usual network setup routines.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run -it --net=none --name=nettest ubuntu:14.04 /bin/bash&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Next we need to create our virtual interface as below, I’ve called it &lt;code class=&quot;highlighter-rouge&quot;&gt;virtual0&lt;/code&gt; , in my case &lt;code class=&quot;highlighter-rouge&quot;&gt;eno16777736&lt;/code&gt; is the name of my host ethernet interface&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip link add virtual0 link eno16777736 type macvlan mode bridge&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect --format &#39;&#39; nettest&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir -p /var/run/netns&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ln -s /proc/3463/ns/net /var/run/netns/3463&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip link set virtual0 netns 3463&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the &lt;code class=&quot;highlighter-rouge&quot;&gt;ip netns exec&lt;/code&gt; command from the host&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip netns exec 3463 ip link set virtual0 up&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;and we can then assign a DHCP address from the host network DHCP server to the container&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip netns exec 3463 dhclient virtual0&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 07 Feb 2016 14:45:39 +0000</pubDate>
+				<link>/blog/2016/02/07/Exploration-in-Docker-bridging/</link>
+				<guid isPermaLink="true">/blog/2016/02/07/Exploration-in-Docker-bridging/</guid>
+			</item>
+		
+			<item>
 				<title>Docker 1.10 Notes - User Namespaces</title>
 				<description>&lt;p&gt;So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.&lt;/p&gt;
 
@@ -440,32 +491,6 @@ end
 				<pubDate>Thu, 15 Jan 2015 20:45:28 +0000</pubDate>
 				<link>/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</link>
 				<guid isPermaLink="true">/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</guid>
-			</item>
-		
-			<item>
-				<title>Want to improve your security? Just turn off SSL!</title>
-				<description>&lt;p&gt;I’ve had cause to work with some of the more common Vulnerability Assessment scanners recently, and I couldn’t help but notice that a lot of the findings related to incorrect configuration of, or bugs with, SSL implementations.&lt;/p&gt;
-
-&lt;p&gt;A lot of network services use SSL to provide encryption and authentication of the server these days and default configurations a generally not ideal, with things like Self-Signed certificates being common.  In addition to that the quite large number of SSL bugs means that there can be quite a few findings relating to each SSL endpoint on a given host.&lt;/p&gt;
-
-&lt;p&gt;So far, so expected.  Vulnerability Assessment scanners are meant to flag up this kind of issue.  However what struck me about this is that mis-configured encryption seems to be a lot worse (from a findings point of view) than no encryption at all, which doesn’t seem right at all.&lt;/p&gt;
-
-&lt;p&gt;Lets take the example of telnet.  In Nessus this seems to be a Low with a CVSS base score of &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=42263&quot;&gt;2.6&lt;/a&gt;, Nexpose has this issue as a CVSS &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/telnet-open-port&quot;&gt;4&lt;/a&gt;. (BTW I’m not particularly focusing on these scanners for any reason other than they’re the ones I’m most familiar with).&lt;/p&gt;
-
-&lt;p&gt;In comparison to this having a self-signed certificate in Nessus is a &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=57582&quot;&gt;6.4&lt;/a&gt; and in Nexpose is &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/ssl-self-signed-certificate&quot;&gt;4&lt;/a&gt;, or supporting SSLv2 which is a &lt;a href=&quot;http://www.tenable.com/plugins/index.php?view=single&amp;amp;id=20007&quot;&gt;5&lt;/a&gt; or &lt;a href=&quot;http://www.rapid7.co.uk/db/vulnerabilities/sslv2-and-up-enabled&quot;&gt;6&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;So on the one hand we have a completely unencrypted service which transmits credentials and data in the clear and is vulnerable to passive traffic sniffing and active MITM attacks. On the other hand we have vulnerabilities which may allow for an active MITM and wouldn’t allow for passive sniffing, and yet the encrypted solution is rated as a more severe issue in Nessus and equally as bad or worse in Nexpose.&lt;/p&gt;
-
-&lt;p&gt;The only good argument I’ve heard in favour of this situation is that the encrypted services give a false sense of security.  That could be true, but in this case it’s not relevant as CVSS base score don’t account for that…&lt;/p&gt;
-
-&lt;p&gt;So why does this matter, surely any compentant tester will look at these scores, chuckle, and rate the findings appropraitely?  Sure, but in situations like PCI DSS ASV scanning, the CVSS base score is law, unless the customer wants to fight it point by point, so it’s kind of important these things are logical.&lt;/p&gt;
-
-&lt;p&gt;What could be done about it?  Well for me, any weakness in SSL or other encrypted protocol should automatically be lower rated than a completely unencrypted protocol, for kind of obvious reasons.&lt;/p&gt;
-
-</description>
-				<pubDate>Mon, 17 Nov 2014 18:48:16 +0000</pubDate>
-				<link>/blog/2014/11/17/want-to-improve-your-security-just-turn-off-ssl/</link>
-				<guid isPermaLink="true">/blog/2014/11/17/want-to-improve-your-security-just-turn-off-ssl/</guid>
 			</item>
 		
 	</channel>

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Docker 1.10 Notes - User Namespaces</title>
+	<title>Exploration in Docker Bridging</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Docker 1.10 Notes - User Namespaces </h1>
+  <h1>Exploration in Docker Bridging </h1>
 </div>
 	
 <article>
@@ -158,58 +158,54 @@
 	 <span class="post-date">
 	   
 	   February 
-	   4th,
+	   7th,
 	   
 	   2016
 	 </span>
 	  <div class="article_body">
-	  <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
+	  <p>One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.</p>
 
-<p>When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces don’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.</p>
+<p>Docker does this by attaching the container to a bridge on the host and setting up iptables NAT rules to allow traffic to flow from this bridged network to the wider external network.  There’s a couple of downsides to this approach.  Firstly you need to explicitly specify inbound ports at container launch time if you want to have server services receive connections.  When you do this, docker sets up port-forwarding to allow that traffic into the container.</p>
 
-<p>To get this working on Ubuntu 15.10, which uses systemd, I did this</p>
+<p>The problem with this approach is that if you’re running a service that sets ports up on the fly or which may change port during it’s runtime (e.g. metasploit) this is a bit on the inflexible side.</p>
 
-<p>copy the base systemd config file to /etc/systemd/system</p>
+<p>The other downside is the use of NAT, which can cause issues with some networking tools that make a large number of network connections (e.g. nmap).</p>
 
-<p><code class="highlighter-rouge">sudo cp /lib/systemd/system/docker.service /etc/systemd/system/</code></p>
+<p>One option to address this is to use the docker option <code class="highlighter-rouge">-net=host</code> which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.</p>
 
-<p>It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.</p>
+<p>So ideally I’d like another option which provides no-NAT access to a container, ideally with an IP address on the host network subnet, with user namespaces enabled.  This is kind of similar to the VMWare Workstation/fusion setup with bridged networking.</p>
 
-<p>Once you’ve done that you need to tell docker to remap the userns.  This can be done to an explicitly chosen uid:gid, but the basic default option will probably work fine for a lot of use-cases.</p>
+<p>I had quite a dig around in the official docker documentation to see if this kind of setup is possible using in-built functionality and I didn’t see a way of doing this, so a little manual work is required. However I did find some interesting references to working out this kind of problem notably this <a href="https://stackoverflow.com/questions/25529386/how-can-i-set-a-static-ip-address-in-a-docker-container">StackOverflow post</a> and <a href="http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/">this</a> slightly older post on Docker networking.</p>
 
-<p>So in /etc/systemd/system/docker you can edit</p>
+<p>First in one shell we need to start our target container.  We use the option <code class="highlighter-rouge">--net=none</code> to setup the container without having docker do it’s usual network setup routines.</p>
 
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon -H fd://</code></p>
+<p><code class="highlighter-rouge">docker run -it --net=none --name=nettest ubuntu:14.04 /bin/bash</code></p>
 
-<p>to</p>
+<p>Next we need to create our virtual interface as below, I’ve called it <code class="highlighter-rouge">virtual0</code> , in my case <code class="highlighter-rouge">eno16777736</code> is the name of my host ethernet interface</p>
 
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://</code></p>
+<p><code class="highlighter-rouge">sudo ip link add virtual0 link eno16777736 type macvlan mode bridge</code></p>
 
-<p>and then restart docker with</p>
+<p>After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.</p>
 
-<p><code class="highlighter-rouge">sudo systemctl daemon-reload</code></p>
+<p><code class="highlighter-rouge">docker inspect --format '' nettest</code></p>
 
-<p><code class="highlighter-rouge">sudo systemctl restart docker</code></p>
+<p>Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.</p>
 
-<p>Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.</p>
+<p><code class="highlighter-rouge">sudo mkdir -p /var/run/netns</code></p>
 
-<p>So something like</p>
+<p><code class="highlighter-rouge">sudo ln -s /proc/3463/ns/net /var/run/netns/3463</code></p>
 
-<p><code class="highlighter-rouge">docker run -it ubuntu:14.04 top</code></p>
+<p><code class="highlighter-rouge">sudo ip link set virtual0 netns 3463</code></p>
 
-<p>should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like</p>
+<p>We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the <code class="highlighter-rouge">ip netns exec</code> command from the host</p>
 
-<p><code class="highlighter-rouge">165536     2347   2323  0 21:20 pts/0    00:00:00 top</code></p>
+<p><code class="highlighter-rouge">sudo ip netns exec 3463 ip link set virtual0 up</code></p>
 
-<p>So, no longer running as root , yay!</p>
+<p>and we can then assign a DHCP address from the host network DHCP server to the container</p>
 
-<p>One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download the one’s I had.  So it’s defintely worth trying this change out on test systems before rolling out to production!</p>
+<p><code class="highlighter-rouge">sudo ip netns exec 3463 dhclient virtual0</code></p>
 
-<p>You can back up your existing images with something like</p>
-
-<p><code class="highlighter-rouge">docker save</code></p>
-
-<p>if needed and it’s also worth noting that if you disable userns again, your original images will be available.</p>
+<p>Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.</p>
 
 	  </div>
 
@@ -222,7 +218,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Docker 1.10 Notes - User Namespaces&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Exploration in Docker Bridging&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -250,10 +246,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/01/31/is-this-thing-on/" title="Is This Thing on ">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2016/02/04/Docker-User-Namespaces/" title="Docker 1.10 Notes - User Namespaces">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2016/02/07/Exploration-in-Docker-bridging/" title="Exploration in Docker Bridging">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
