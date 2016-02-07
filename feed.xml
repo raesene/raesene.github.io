@@ -34,7 +34,7 @@
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect --format &#39;{ { .State.Pid }}&#39; nettest&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.&lt;/p&gt;
+&lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir -p /var/run/netns&lt;/code&gt;&lt;/p&gt;
 
