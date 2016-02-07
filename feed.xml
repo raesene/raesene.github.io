@@ -32,7 +32,7 @@
 
 &lt;p&gt;After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect --format &#39;&#39; nettest&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect --format &#39;{ { .State.Pid }}&#39; nettest&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.&lt;/p&gt;
 
@@ -51,6 +51,8 @@
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip netns exec 3463 dhclient virtual0&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Edit:&lt;/strong&gt; I did find &lt;a href=&quot;https://github.com/gopher-net/macvlan-docker-plugin&quot;&gt;this project&lt;/a&gt; which looks to address the same problem, but at the moment it doesn’t seem to work for me…&lt;/p&gt;
 </description>
 				<pubDate>Sun, 07 Feb 2016 14:45:39 +0000</pubDate>
 				<link>/blog/2016/02/07/Exploration-in-Docker-bridging/</link>
