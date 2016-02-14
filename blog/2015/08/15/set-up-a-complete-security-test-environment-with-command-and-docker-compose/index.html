@@ -66,8 +66,8 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/categories.html">Categories</a></li>
-				<li><a href="/tags.html">Tags</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
 			</ul>
 		</div><!-- /.navbar-collapse -->
 	</nav>
@@ -79,8 +79,8 @@
 		</button>
 		<ul class="dropdown-menu" role="menu">
 			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
-			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
-			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
 			<li class="divider"></li>
 			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
 		</ul>
@@ -171,25 +171,23 @@
 
 <p>So for this setup the Docker Compose file looks like this</p>
 
-<p><code class="highlighter-rouge">
-sectest:
-  image: raesene/sectest
-  command: /bin/bash
-  links:
-     - dradis
-     - openvas
-dradis: 
-  image: raesene/auto-docker-dradis
-  ports: 
-      - "3000:3000"
-  command: bundle exec rails server
-openvas:
-  image: mikesplain/openvas
-  ports:
-      - "443:443"
-      - "9390:9390"
-      - "9391:9391"
-</code></p>
+<figure class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="s">sectest</span><span class="pi">:</span>
+  <span class="s">image</span><span class="pi">:</span> <span class="s">raesene/sectest</span>
+  <span class="s">command</span><span class="pi">:</span> <span class="s">/bin/bash</span>
+  <span class="s">links</span><span class="pi">:</span>
+     <span class="pi">-</span> <span class="s">dradis</span>
+     <span class="pi">-</span> <span class="s">openvas</span>
+<span class="s">dradis</span><span class="pi">:</span> 
+  <span class="s">image</span><span class="pi">:</span> <span class="s">raesene/auto-docker-dradis</span>
+  <span class="s">ports</span><span class="pi">:</span> 
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">3000:3000"</span>
+  <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec rails server</span>
+<span class="s">openvas</span><span class="pi">:</span>
+  <span class="s">image</span><span class="pi">:</span> <span class="s">mikesplain/openvas</span>
+  <span class="s">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">443:443"</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">9390:9390"</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">9391:9391"</span></code></pre></figure>
 
 <p>This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created <a href="https://github.com/raesene/sectest">here</a>.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.</p>
 
@@ -210,6 +208,19 @@ docker-compose run --service-ports sectest /bin/bash
 
 	  </div>
 
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Docker-ref">
+					Docker <span>(6)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
 		  
 
 		  

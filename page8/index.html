@@ -66,8 +66,8 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/categories.html">Categories</a></li>
-				<li><a href="/tags.html">Tags</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
 			</ul>
 		</div><!-- /.navbar-collapse -->
 	</nav>
@@ -79,8 +79,8 @@
 		</button>
 		<ul class="dropdown-menu" role="menu">
 			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
-			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
-			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
 			<li class="divider"></li>
 			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
 		</ul>
@@ -152,6 +152,44 @@
   <h1>Raesene's Ramblings </h1>
 </div>
 
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    25th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/25/thoughts_on_sec/">Thoughts on Secure Data Handling in web applications...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I had an interesting conversation/debate over on <a href="http://www.reddit.com/r/programming/comments/86kgp/xss_cross_site_scripting_prevention_cheat_sheet/c08g0ol?context=3">reddit</a> today on the topic of input handling and I thought it was worth posting up.<br />
+Essentially there are two approaches handling data in an web applications.<br />
+1. Carry out input validation as the data enters your application.  This can either be white-list (only allow "known good" data types), or black-list (try to block "known-bad" data types)<br />
+2.  Carry out output normalization on the data as it leaves your application.  Here you look to understand the special or "meta" characters for the type of system or data format that you are outputting to and ensure that the data is encoded or rendered in such a way that it can't have a negative effect on that output system.<br />
+So which of these approaches is better?  Well my view on that after my discussion is that they both have pros and cons, which need to be considered before making a choice.<br />
+<u><strong><big>Input Validation</big></strong></u></p>
+<p><b>Pros:</b> The advantage of white list input validation is that, in a lot of cases, you can relatively easily cut down the number of attacks that will be effective against an application with minimal effort.  For example if you're not taking in mark-up (eg, HTML) in any part of your application then stripping or blocking the &lt; and &gt; characters from your input will drastically reduce your exposure to Cross Site Scripting.  This is the approach that .NET request validation takes.</p>
+<p><b>Cons:</b>The problem with input validation is, it can never take account of all possibilities.  It's impossible to know when you take input into the application, how that data will be used and exactly where it will be processed in future, so there's always a risk that it will miss some class of character which turns out to be important to a given format</p>
+<p><u><strong><big>Output Normalization</big></strong></u></p>
+<p><b>Pros: </b>So essentially the opposite applies.  The advantage of output normalization is that it can take into consideration the exact nature of the system that the data is being passed to and can ensure that the data it's passing will not have a negative effect.  This kind of approach can be seen in HTML encoding function like h() in Ruby on Rails.</p>
+<p><b>Cons: </b>Essentially for me the major downside here is a practical one.  A security control that needs to be implemented many times to be effective is one that is likely to be forgotten and because under ordinary conditions the application is likely to behave perfectly even though the control isn't in place, a developer may well not notice the problem until it's too late.  You can see this kind of effect in a lot of web applications.  I've seen many cases where the obvious areas of the application (form fields) have been covered for things like Cross Site Scripting, but more obscure areas (drop-downs, cookies, HTTP headers) get missed out, either because the developer forgets, or because they don't realise that those areas of the application are susceptible to attack</p>
+<p>So which of these approaches would I recommend..... Well I'm a security person, so I'll say <b><i>Both</i></b> for defence in depth!<br />
+Beyond that I'd say that Input validation is a great first step and will cut down the practical attacks greatly, but if you're looking for a "perfect" approach then you'll need to add output normalization to the mix...</p>
+
+    
+    
+  </div>
+
+</article>
 
 
 <article class="home">
@@ -446,35 +484,6 @@ This example (which may be a users main interaction with "security") sets the ex
 So what's the answer..<br />
 Well when designing controls, I think that it's not enough to just look at the technical security properties in abstract.  We've got to consider the psychological/sociological elements of the people we're expecting to execute the controls, and maybe take a path that isn't the best abstract solution but may well be the one that will work best in real life...<br />
 After all once users are set on the path of ignoring security it becomes pretty difficult to get them back on the one true way!</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    15th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/05/15/when_is_a_debia/">When is a debian user not a debian user?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So lots of people have commented on the potentially very nasty crypto bug in OpenSSL on debian Linux (and derivatives, including Ubuntu) with the good advice of patching and regenerating your SSH keys...<br />
-Only thing is, what if you don't have access to the shell to do exactly that....? What if you don't even know you run debian Linux...?<br />
-Over the last several years there has been a proliferation of computing "appliances" which almost inevitably run a cut-down Linux underneath the main software stack and in many cases, that's going to be debian Linux.<br />
-The thing is, in some cases the vendor won't even explicitly mention what the underlying software is, so the end customer may be blissfully unaware that they have vulnerable machines...</p>
 
     
     

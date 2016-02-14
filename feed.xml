@@ -7,6 +7,74 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>New Docker Compose Features</title>
+				<description>&lt;p&gt;Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for &lt;a href=&quot;https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/&quot;&gt;pen testing&lt;/a&gt; one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.&lt;/p&gt;
+
+&lt;p&gt;So now with the new setup, we can use something like the example below, and then start it up with &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose run sectest /bin/bash&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This will start up four containers on the default private docker network, and provide a shell for the sectest container which we can use to run tools like nmap and metasploit.  Using this approach we get a couple of handy features.&lt;/p&gt;
+
+&lt;p&gt;Because of docker links the names of the other containers are registered in each one, so for example in sectest we can &lt;code class=&quot;highlighter-rouge&quot;&gt;ping dradis&lt;/code&gt; and have that work ok.&lt;/p&gt;
+
+&lt;p&gt;As the browser and the dradis/openvas instances are on the same private network we can access these browser based tools without having to expose them to the wider network.&lt;/p&gt;
+
+&lt;p&gt;All the tools will have a directory in their filesystem at &lt;code class=&quot;highlighter-rouge&quot;&gt;/data&lt;/code&gt; which points to our data volume.  At the end of the test this can then be saved off either from within the tools or outside at host level.&lt;/p&gt;
+
+&lt;p&gt;If you’re doing it at host level you need to note where the data’s actually stored.  To do that do&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker volume ls&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;to get the name of your data volume.  By default it’ll be the name of the directory you ran the docker-compose file from and then ‘-data’ after that.&lt;/p&gt;
+
+&lt;p&gt;Once you know the name just do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect (name)&lt;/code&gt; and copy the files from there to whereever you’re storing them.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;s&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&#39;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&#39;&lt;/span&gt;
+
+&lt;span class=&quot;s&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;sectest&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/sectest&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/bin/bash&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt; 
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;firefox&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/auto-docker-dradis&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;expose&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000&quot;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bundle exec rails server&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mikesplain/openvas&lt;/span&gt; 
+    &lt;span class=&quot;s&quot;&gt;expose&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;443&quot;&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9390&quot;&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9391&quot;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;firefox&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;jess/firefox&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;s&quot;&gt;DISPLAY&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$DISPLAY&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/tmp/.X11-unix:/tmp/.X11-unix&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt; 
+&lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+</description>
+				<pubDate>Sun, 14 Feb 2016 16:15:39 +0000</pubDate>
+				<link>/blog/2016/02/14/New-Docker-Compose-Features/</link>
+				<guid isPermaLink="true">/blog/2016/02/14/New-Docker-Compose-Features/</guid>
+			</item>
+		
+			<item>
 				<title>Exploration in Docker Bridging</title>
 				<description>&lt;p&gt;One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.&lt;/p&gt;
 
@@ -24,31 +92,29 @@
 
 &lt;p&gt;First in one shell we need to start our target container.  We use the option &lt;code class=&quot;highlighter-rouge&quot;&gt;--net=none&lt;/code&gt; to setup the container without having docker do it’s usual network setup routines.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run -it --net=none --name=nettest ubuntu:14.04 /bin/bash&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;docker run -it --net&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;none --name&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;nettest ubuntu:14.04 /bin/bash&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Next we need to create our virtual interface as below, I’ve called it &lt;code class=&quot;highlighter-rouge&quot;&gt;virtual0&lt;/code&gt; , in my case &lt;code class=&quot;highlighter-rouge&quot;&gt;eno16777736&lt;/code&gt; is the name of my host ethernet interface&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip link add virtual0 link eno16777736 type macvlan mode bridge&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip link add virtual0 link eno16777736 &lt;span class=&quot;nb&quot;&gt;type &lt;/span&gt;macvlan mode bridge&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect --format &#39;{ { .State.Pid }}&#39; nettest&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;docker inspect --format &lt;span class=&quot;s1&quot;&gt;&#39;{ { .State.Pid }}&#39;&lt;/span&gt; nettest&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir -p /var/run/netns&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ln -s /proc/3463/ns/net /var/run/netns/3463&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip link set virtual0 netns 3463&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo mkdir -p /var/run/netns
+sudo ln -s /proc/3463/ns/net /var/run/netns/3463
+sudo ip link &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;virtual0 netns 3463&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the &lt;code class=&quot;highlighter-rouge&quot;&gt;ip netns exec&lt;/code&gt; command from the host&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip netns exec 3463 ip link set virtual0 up&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip netns &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3463 ip link &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;virtual0 up&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;and we can then assign a DHCP address from the host network DHCP server to the container&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ip netns exec 3463 dhclient virtual0&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip netns &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3463 dhclient virtual0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.&lt;/p&gt;
 
@@ -137,25 +203,23 @@
 
 &lt;p&gt;So for this setup the Docker Compose file looks like this&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-sectest:
-  image: raesene/sectest
-  command: /bin/bash
-  links:
-     - dradis
-     - openvas
-dradis: 
-  image: raesene/auto-docker-dradis
-  ports: 
-      - &quot;3000:3000&quot;
-  command: bundle exec rails server
-openvas:
-  image: mikesplain/openvas
-  ports:
-      - &quot;443:443&quot;
-      - &quot;9390:9390&quot;
-      - &quot;9391:9391&quot;
-&lt;/code&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;s&quot;&gt;sectest&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/sectest&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/bin/bash&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+     &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;
+     &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/auto-docker-dradis&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000:3000&quot;&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bundle exec rails server&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mikesplain/openvas&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;443:443&quot;&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9390:9390&quot;&lt;/span&gt;
+      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9391:9391&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.&lt;/p&gt;
 
@@ -381,120 +445,6 @@ docker attach compassionate_goodall
 				<pubDate>Sun, 01 Mar 2015 21:05:43 +0000</pubDate>
 				<link>/blog/2015/03/01/software-library-repositories-and-security/</link>
 				<guid isPermaLink="true">/blog/2015/03/01/software-library-repositories-and-security/</guid>
-			</item>
-		
-			<item>
-				<title>Burp Passive Scanner Plugins with JRuby</title>
-				<description>&lt;p&gt;Like most web application testers, I’m a fan of using &lt;a href=&quot;http://www.portswigger.net&quot;&gt;Burp Suite&lt;/a&gt; for automation and generally making the process of completing a test a whole lot easier.&lt;/p&gt;
-
-&lt;p&gt;In recent versions the Portswigger team have opened up the Burp API and we’ve started to see more 3rd party plugins coming along which is awesome as it lets Burp users contribute, whilst making their own testing lives easier.  Plugins can be written in Java, Jython, or JRuby.  Looking at the &lt;a href=&quot;https://pro.portswigger.net/bappstore&quot;&gt;BApp store&lt;/a&gt; most of the entries at the moment are either in Java or Jython, so I thought it was worth documenting a basic passive scanner check in JRuby as there are definitely a couple of gotchas to getting everything working, including one that had me stumped (thanks to Timur and Ryan for pointing me in the right direction!)&lt;/p&gt;
-
-&lt;p&gt;First up to use JRuby you need to point Burp at your JRuby jar file in the extender–&amp;gt; options tab, and after that you should be able to load an appropriately configured ruby file in the main Extensions window.&lt;/p&gt;
-
-&lt;p&gt;The code for this basic check is on &lt;a href=&quot;https://github.com/raesene/burp_sample_plugins&quot;&gt;github&lt;/a&gt; so here are a couple of points to note.&lt;/p&gt;
-
-&lt;p&gt;First up there’s a load of information on the topic of Burp plugins on the &lt;a href=&quot;http://blog.portswigger.net/search?updated-min=2012-01-01T00:00:00Z&amp;amp;updated-max=2013-01-01T00:00:00Z&amp;amp;max-results=16&quot;&gt;Portswigger blog&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;In general structure the basic plugin is a ruby class called BurpExtender, with a method which implements the callback (registerExtenderCallback) and for the passive scan we need a doPassiveScan method as well.&lt;/p&gt;
-
-&lt;p&gt;The main meat of the check happens in doPassiveScan.  This method is called whenever Burp encounters a URL that it’s set to passively scan (either just URLs in scope or all URLs depending on the configuration you’ve set).&lt;/p&gt;
-
-&lt;p&gt;Within that you can extract information about the request that triggered the call and analyze that information to see if an issue is present.&lt;/p&gt;
-
-&lt;p&gt;So in the sample check we’re looking for an HTTP header, which if it’s not found, will add a low severity issue to the burp scanner.&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;p&gt;def doPassiveScan(baseRequestResponse)
-    service_info = baseRequestResponse.getHttpService()
-    host_name = service_info.getHost()
-    response_info = @helpers.analyzeResponse(baseRequestResponse.getResponse)
-    headers = response_info.getHeaders()&lt;/p&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;p&gt;header_found = false&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;headers.each do |header|
-  if header.downcase =~ /your_value_here/
-      header_found = true
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;the next section of code is really the only analysis that we’re doing in this basic example.  The headers variable is an array, so we can iterate over it and check each element to see if it’s found. In this case our header is called ‘your_value_here’ which is pretty unlikely to show up, but in a real check this could be replaced with something like ‘Strict-Transport-Security’ or ‘Public-Key-Pins’ to check for the presence of security related HTTP headers.&lt;/p&gt;
-
-&lt;p&gt;Once we’ve got our finding of course the next step is to add it to the scanner results, so we’ll need to create a Scan Issue and pass it back to Burp.&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;p&gt;findings = Java::JavaUtil::ArrayList.new&lt;/p&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;This line was one of the places I tripped up initially.  Burp expects an array of results back and not a single Scan issue so creating an array to hold the findings is handy.&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;finding_message = CustomHttpRequestResponse.new
-finding_message.setResponse(baseRequestResponse.getResponse())
-finding_message.setRequest(baseRequestResponse.getRequest())
-finding_message.setHttpService(baseRequestResponse.getHttpService())
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;This section is necessary if you want to return the request/response information into the scanner and is another place where I had some issues. The key point is that you need to implement a class that conforms to the interface for the IHttpRequestResponse class that the Burp API describes.  In the file on github there’s a class that seems to work for me.  It looks a bit boilerplate heavy, but at the moment the more rubyish setup with attr_accessor helpers for the class properties doesn’t seem to fly for me, so manual getter/setter methods it is.&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unless header_found
-  finding = CustomScanIssue.new
-  finding.httpMessages=finding_message
-  finding.httpService=baseRequestResponse.getHttpService()
-  finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
-  finding.name = &quot;Header Not Set&quot;
-  finding.detail = &quot;A header that should be set isn&#39;t&quot;
-  finding.severity = &quot;Low&quot;
-  finding.confidence = &quot;Certain&quot;
-  finding.remediation_detail = &quot;Lorem Ipsum&quot;
-  finding.issue_background = &quot;Sit Dolor Amet&quot;
-  findings.add finding
-end
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;This code just populates another class which you need to implement which is the Scan Issue.  In general that class is pretty straight forward like the RequestResponse class but a key point is that Burp expects an array of RequestResponse issues to be returned in the messages property of the scan issue.&lt;/p&gt;
-
-&lt;p&gt;Last bit in this basic example is a brief method to do some basic handling of duplicate instances of the same issue (saves the scanner repeatedly finding the same issue for a URL)&lt;/p&gt;
-
-&lt;p&gt;``` ruby&lt;/p&gt;
-
-&lt;p&gt;def consolidateDuplicateIssues(existing_issue, new_issue)
-    if existing_issue.getIssueName == new_issue.getIssueName
-      return -1
-    else
-      return 0
-    end
-  end&lt;/p&gt;
-
-&lt;p&gt;```&lt;/p&gt;
-
-&lt;p&gt;This is obviously quite a basic example but hopefully shows that once you know the structure of the code, implementing scanner checks in Burp should be a relatively straightforward task, and can have some cool benefits in terms of automating the testing process.&lt;/p&gt;
-</description>
-				<pubDate>Thu, 15 Jan 2015 20:45:28 +0000</pubDate>
-				<link>/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</link>
-				<guid isPermaLink="true">/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/</guid>
 			</item>
 		
 	</channel>

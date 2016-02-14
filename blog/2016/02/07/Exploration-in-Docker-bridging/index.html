@@ -66,8 +66,8 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/categories.html">Categories</a></li>
-				<li><a href="/tags.html">Tags</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
 			</ul>
 		</div><!-- /.navbar-collapse -->
 	</nav>
@@ -79,8 +79,8 @@
 		</button>
 		<ul class="dropdown-menu" role="menu">
 			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
-			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
-			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
 			<li class="divider"></li>
 			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
 		</ul>
@@ -179,31 +179,29 @@
 
 <p>First in one shell we need to start our target container.  We use the option <code class="highlighter-rouge">--net=none</code> to setup the container without having docker do it’s usual network setup routines.</p>
 
-<p><code class="highlighter-rouge">docker run -it --net=none --name=nettest ubuntu:14.04 /bin/bash</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">docker run -it --net<span class="o">=</span>none --name<span class="o">=</span>nettest ubuntu:14.04 /bin/bash</code></pre></figure>
 
 <p>Next we need to create our virtual interface as below, I’ve called it <code class="highlighter-rouge">virtual0</code> , in my case <code class="highlighter-rouge">eno16777736</code> is the name of my host ethernet interface</p>
 
-<p><code class="highlighter-rouge">sudo ip link add virtual0 link eno16777736 type macvlan mode bridge</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip link add virtual0 link eno16777736 <span class="nb">type </span>macvlan mode bridge</code></pre></figure>
 
 <p>After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.</p>
 
-<p><code class="highlighter-rouge">docker inspect --format '{ { .State.Pid }}' nettest</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">docker inspect --format <span class="s1">'{ { .State.Pid }}'</span> nettest</code></pre></figure>
 
 <p>Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.</p>
 
-<p><code class="highlighter-rouge">sudo mkdir -p /var/run/netns</code></p>
-
-<p><code class="highlighter-rouge">sudo ln -s /proc/3463/ns/net /var/run/netns/3463</code></p>
-
-<p><code class="highlighter-rouge">sudo ip link set virtual0 netns 3463</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo mkdir -p /var/run/netns
+sudo ln -s /proc/3463/ns/net /var/run/netns/3463
+sudo ip link <span class="nb">set </span>virtual0 netns 3463</code></pre></figure>
 
 <p>We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the <code class="highlighter-rouge">ip netns exec</code> command from the host</p>
 
-<p><code class="highlighter-rouge">sudo ip netns exec 3463 ip link set virtual0 up</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip netns <span class="nb">exec </span>3463 ip link <span class="nb">set </span>virtual0 up</code></pre></figure>
 
 <p>and we can then assign a DHCP address from the host network DHCP server to the container</p>
 
-<p><code class="highlighter-rouge">sudo ip netns exec 3463 dhclient virtual0</code></p>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip netns <span class="nb">exec </span>3463 dhclient virtual0</code></pre></figure>
 
 <p>Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.</p>
 
@@ -213,6 +211,19 @@
 
 	  </div>
 
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Docker-ref">
+					Docker <span>(6)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
 		  
 
 		  
@@ -253,7 +264,7 @@
 		  <li class="previous"><a href="/blog/2016/02/04/Docker-User-Namespaces/" title="Docker 1.10 Notes - User Namespaces">&larr; Previous</a></li>
 		  
 		  
-			<li class="next disabled"><a>Next &rarr;</a>
+		  <li class="next"><a href="/blog/2016/02/14/New-Docker-Compose-Features/" title="New Docker Compose Features">Next &rarr;</a></li>
 		  
 		</ul>
 

@@ -66,8 +66,8 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/categories.html">Categories</a></li>
-				<li><a href="/tags.html">Tags</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
 			</ul>
 		</div><!-- /.navbar-collapse -->
 	</nav>
@@ -79,8 +79,8 @@
 		</button>
 		<ul class="dropdown-menu" role="menu">
 			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
-			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
-			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
 			<li class="divider"></li>
 			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
 		</ul>
@@ -152,6 +152,34 @@
   <h1>Raesene's Ramblings </h1>
 </div>
 
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    25th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/25/sitekey_vulnera/">Sitekey vulnerabilities article</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SiteKey-20060718.pdf (application/pdf Object)" href="http://cr-labs.com/publications/SiteKey-20060718.pdf">SiteKey-20060718.pdf (application/pdf Object)</a><br />
+An article detailing some problems with the SiteKey implementation at BofA.  I must say I'm not surprised by the one about real-time MITM bypassing the problem, but I'm a little surprised about one of the security processes for login being waived once the user clicks a button on a given PC and moreso that there's no easy way to remove the bypass from a given PC....<br />
+Secondary security questions (well one's that aren't likely to be public knowledge anyway) are a decent add-on to an authentication procedure, but I wouldn't have thought that they were so onerous, that you couldn't just ask them every time...</p>
+
+    
+    
+  </div>
+
+</article>
 
 
 <article class="home">
@@ -396,35 +424,6 @@ One thing I did notice is that, unsurprisingly, all the VM's I looked at are bas
 you could pay for a windows server license, buy it, configure it, get some software to do the filtering, install it, configure it, etc etc<br />
 or you could download a pre-configured Linux VM using Pre-configured Open source software ...<br />
 If you were a small overworked IT department... which would you choose?</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    11th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="/blog/2006/07/11/2factor_auth_in/">2-Factor Auth in banking Attacked</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Security Fix - Brian Krebs on Computer and Internet Security - (washingtonpost.com)" href="http://blog.washingtonpost.com/securityfix/2006/07/citibank_phish_spoofs_2factor_1.html">Security Fix - Brian Krebs on Computer and Internet Security - (washingtonpost.com)</a><br />
-Post about a MITM attack on Citibanks two-factor authentication system.  The relaying of error messages from Citi by the attacker is a nice touch as it makes it seem a lot more legitimate...<br />
-Well not really a surprise that the attackers have worked this out.  Of course it's slightly easier to detect/shut down as they have to do the attack in real-time as opposed to gathering the credentials and then using them at their leisure, which can happen with standard phishing.<br />
-Still, goes to show that there's more work neeeded to be done on this.</p>
 
     
     

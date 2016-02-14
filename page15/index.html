@@ -66,8 +66,8 @@
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav">
 				<li class="active"><a href="/">Home</a></li>
-				<li><a href="/categories.html">Categories</a></li>
-				<li><a href="/tags.html">Tags</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
 			</ul>
 		</div><!-- /.navbar-collapse -->
 	</nav>
@@ -79,8 +79,8 @@
 		</button>
 		<ul class="dropdown-menu" role="menu">
 			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
-			<li><a href="/categories.html"><i class="fa fa-folder"></i>Categories</a></li>
-			<li><a href="/tags.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
 			<li class="divider"></li>
 			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
 		</ul>
@@ -152,6 +152,35 @@
   <h1>Raesene's Ramblings </h1>
 </div>
 
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    February
+    5th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/02/05/the_final_front/">The Final Frontier for Microsoft Security - Complexity</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a really interesting posting at <a href="http://www.visualcomplexity.com/vc/project.cfm?id=392">Visual Complexity</a> that provides a good illustration of what I think Microsofts main remaining problem in regards to security is.<br />
+MS have done tons of work in improving their code quality, improving their default builds and adding features like Address space layout randomization (ALSR) to make hacking into their products harder.<br />
+The one area that's left is complexity.  Ultimately the more code that is installed on a system the more code there is to be attacked, either remotely or locallly.  what the graphs from visual complexity show is that for web servers IIS on windows has more potentially active code that Apache on Linux.<br />
+Hopefully some of the other stories that have <a href="http://arstechnica.com/news.ars/post/20070129-8728.html">surfaced recently</a> will lead to the possibility of having a very stripped down Windows OS if you need it...</p>
+
+    
+    
+  </div>
+
+</article>
 
 
 <article class="home">
@@ -417,36 +446,6 @@ And the great thing is... it's all free.<br />
 The SSL VPN is courtesy of the excellent <a href="http://www.3sp.com/showSslExplorerCommunity.do">sslexplorer</a>.  the community edition is stored on my <a href="www.centos.org">CentOS</a> server at home which has a port forward from my little <a href="http://www.ipcop.org/">ipcop</a> firewall..<br />
 The next piece of the puzzle is <a href="http://www.slimdevices.com/su_downloads.html">slimserver</a> which is designed to support Slim devices squeeze boxes , but which they release as a free download whether you use their product or not...  This lets me set up a stream over HTTP of any music I like, that I can connect to with any media player (windows media etc)<br />
 Actually what occurs to me is that the common piece of all this is Open source software.  Without that all this would cost me a fortune and very likely I wouldn't have it at all...!  Yay open source.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    6th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="/blog/2006/12/06/cool_netstat_an/">Cool netstat and wmic stuff</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System" href="http://isc.sans.org/diary.php?storyid=1911&amp;isc=6113ddcc651a8e9b3c8de550deb0fd3f">SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System</a><br />
-This post on the sans handlers log has some really useful information about the use of netstat to detect connection information on windows boxes, with some features that I wasn't aware of.<br />
-Also put me on to something else that I've been woefully ignorant of . <a href="http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/wmic.mspx?mfr=true"> wmic</a><br />
-This looks like a really handy command-line tool for getting information out of windows boxes.  from what I can see so far, there's a load of interesting information that you can get from it.  To get started just type <i>"wmic"</i> from a command prompt then type /? for a list of "aliases" that wmic uses for information retrieval.<br />
-Some of the commands I've found so far which seem handy "process list brief" and nicconfig list brief" but you can use the <i>/?</i> switch after anything to get some useful help about options...</p>
 
     
     
