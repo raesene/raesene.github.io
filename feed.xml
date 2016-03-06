@@ -23,8 +23,8 @@
 &lt;p&gt;So in general I’d recommend thinking very carefully before making use of a Docker image that requires access to the Docker socket, even with read-only permissions as it could open your environment up to some additional risks. Hopefully with future developments on the Docker authorization model it’ll get easier to allow a container introspection in a less risky manner…&lt;/p&gt;
 </description>
 				<pubDate>Sun, 06 Mar 2016 16:15:39 +0000</pubDate>
-				<link>/blog/2016/03/06/The-Dangers-Of-Docker.sock-Copy/</link>
-				<guid isPermaLink="true">/blog/2016/03/06/The-Dangers-Of-Docker.sock-Copy/</guid>
+				<link>/blog/2016/03/06/The-Dangers-Of-Docker.sock/</link>
+				<guid isPermaLink="true">/blog/2016/03/06/The-Dangers-Of-Docker.sock/</guid>
 			</item>
 		
 			<item>
