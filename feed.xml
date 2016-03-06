@@ -7,6 +7,27 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The Dangers of Docker.sock</title>
+				<description>&lt;p&gt;One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.&lt;/p&gt;
+
+&lt;p&gt;At the moment the Docker Engine authorization model is pretty basic (although there’s now a plugin API available, so hopefully this will improve soon). Essentially a process which can access the docker socket (usually at /var/run/docker.sock) or who can connect to the HTTP API, can execute any command that the docker service can run, which generally provides access to the whole host system as the docker service runs as root.&lt;/p&gt;
+
+&lt;p&gt;Where this can trip you up is where you might want to provide access to the Docker socket to a container to allow a process running in that container to extract information about the containers running on the service. This is typically done by mounting the Docker socket into the container with a switch like &lt;code class=&quot;highlighter-rouge&quot;&gt;-v /var/run/docker.sock:/var/run/docker.sock&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;There are a couple of projects that, I’ve noticed so far which do this, one of the more popular is &lt;a href=&quot;https://github.com/jwilder/nginx-proxy&quot;&gt;nginx-proxy&lt;/a&gt; which uses access to the Docker socket to allow it to automatically create reverse proxy entries for other containers.&lt;/p&gt;
+
+&lt;p&gt;The only real access control that’s possible with this kind of set-up is that you can set the access to be read only (e.g. &lt;code class=&quot;highlighter-rouge&quot;&gt;-v /var/run/docker.sock:/var/run/docker.sock:ro&lt;/code&gt;), however this could still be risky, depending on your configuration as commands like &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect&lt;/code&gt; can leak secret information about running containers.&lt;/p&gt;
+
+&lt;p&gt;For example the official &lt;a href=&quot;https://hub.docker.com/_/postgres/&quot;&gt;Docker postgre image&lt;/a&gt; provides a startup command of &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres&lt;/code&gt; which uses an environment variable to set the postgres password.  So if another container gets access to the docker socket, they can extract that password from docker inspect and then likely make a connection straight to your database (unless you’ve disabled &lt;a href=&quot;https://docs.docker.com/engine/userguide/networking/default_network/container-communication/&quot;&gt;Inter-container commmunication&lt;/a&gt; ).&lt;/p&gt;
+
+&lt;p&gt;So in general I’d recommend thinking very carefully before making use of a Docker image that requires access to the Docker socket, even with read-only permissions as it could open your environment up to some additional risks. Hopefully with future developments on the Docker authorization model it’ll get easier to allow a container introspection in a less risky manner…&lt;/p&gt;
+</description>
+				<pubDate>Sun, 06 Mar 2016 16:15:39 +0000</pubDate>
+				<link>/blog/2016/03/06/The-Dangers-Of-Docker.sock-Copy/</link>
+				<guid isPermaLink="true">/blog/2016/03/06/The-Dangers-Of-Docker.sock-Copy/</guid>
+			</item>
+		
+			<item>
 				<title>New Docker Compose Features</title>
 				<description>&lt;p&gt;Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for &lt;a href=&quot;https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/&quot;&gt;pen testing&lt;/a&gt; one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.&lt;/p&gt;
 
@@ -424,27 +445,6 @@ docker attach compassionate_goodall
 				<pubDate>Fri, 17 Apr 2015 18:08:34 +0100</pubDate>
 				<link>/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</link>
 				<guid isPermaLink="true">/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</guid>
-			</item>
-		
-			<item>
-				<title>Software Library Repositories and Security</title>
-				<description>&lt;p&gt;Last week I did a presentation for the &lt;a href=&quot;http://www.securi-tay.co.uk&quot;&gt;Securi-Tay Conference&lt;/a&gt;.  The title of the talk was “Security and ‘modern’ software development”, and the main theme of the talk was looking at library repositories like &lt;a href=&quot;http://www.rubygems.org&quot;&gt;Rubygems&lt;/a&gt;, &lt;a href=&quot;http://www.npmjs.org&quot;&gt;npm&lt;/a&gt; and &lt;a href=&quot;http://www.nuget.org&quot;&gt;NuGet&lt;/a&gt; and how an attacker could try and place malicous content into those locations.&lt;/p&gt;
-
-&lt;p&gt;Now nothing in this talk is particularly new as people have been talking about malicious library installs in &lt;a href=&quot;http://lanyrd.com/2013/rulu/scgxzr/&quot;&gt;Ruby&lt;/a&gt; and &lt;a href=&quot;http://webinos.org/2013/06/17/reflections-on-nodejs-malware/&quot;&gt;npm&lt;/a&gt; amongst others for some time, however I do think that it’s still not a widely recognized problem and particularly as these repositories grow in size and use, we’re going to see more malicious content on them.&lt;/p&gt;
-
-&lt;p&gt;An example of a fairly basic typo-squatting approach on PyPi was actually seen recently &lt;a href=&quot;https://www.reddit.com/r/Python/comments/2wr93b/this_one_looks_odd_doesnt_it/&quot;&gt;as noted on /r/python&lt;/a&gt;, which lasted for a while before it was noted.&lt;/p&gt;
-
-&lt;p&gt;My initial reviews looked at areas like how package maintainers are authenticated to the repos, whether digital signing is supported and/or widely used, whether there is any curation on the repositories and some other associated areas.&lt;/p&gt;
-
-&lt;p&gt;In most cases the picture at the moment isn’t particularly bright from a security standpoint, although initiatives like &lt;a href=&quot;http://theupdateframework.com/&quot;&gt;The Update Framework&lt;/a&gt; are trying to improve the situation, progress appears pretty difficult to make.  This isn’t particularly surprising as adding security is going to make development/publishing more awkward and at the moment I don’t think many developers see this trade-off as worth the added security benefits.&lt;/p&gt;
-
-&lt;p&gt;Anyway I have an expanded version of this talk planned for &lt;a href=&quot;http://2015.appsec.eu/&quot;&gt;OWASP AppSec EU&lt;/a&gt; in May, so I’ve got some experiments to try out between now and then to look at other aspects of Repository security.&lt;/p&gt;
-
-&lt;p&gt;I mention this specifically as I’m going to put a reference to this post into the description of various test libraries that I’m planning to write and if you’ve installed one and are wondering what the heck I’m up to, this will hopefully provide some information :)&lt;/p&gt;
-</description>
-				<pubDate>Sun, 01 Mar 2015 21:05:43 +0000</pubDate>
-				<link>/blog/2015/03/01/software-library-repositories-and-security/</link>
-				<guid isPermaLink="true">/blog/2015/03/01/software-library-repositories-and-security/</guid>
 			</item>
 		
 	</channel>

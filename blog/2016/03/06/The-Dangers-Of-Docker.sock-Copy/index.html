@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Docker 1.10 Notes - User Namespaces</title>
+	<title>The Dangers of Docker.sock</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Docker 1.10 Notes - User Namespaces </h1>
+  <h1>The Dangers of Docker.sock </h1>
 </div>
 	
 <article>
@@ -157,59 +157,25 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   February 
-	   4th,
+	   March 
+	   6th,
 	   
 	   2016
 	 </span>
 	  <div class="article_body">
-	  <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
+	  <p>One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.</p>
 
-<p>When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces don’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.</p>
+<p>At the moment the Docker Engine authorization model is pretty basic (although there’s now a plugin API available, so hopefully this will improve soon). Essentially a process which can access the docker socket (usually at /var/run/docker.sock) or who can connect to the HTTP API, can execute any command that the docker service can run, which generally provides access to the whole host system as the docker service runs as root.</p>
 
-<p>To get this working on Ubuntu 15.10, which uses systemd, I did this</p>
+<p>Where this can trip you up is where you might want to provide access to the Docker socket to a container to allow a process running in that container to extract information about the containers running on the service. This is typically done by mounting the Docker socket into the container with a switch like <code class="highlighter-rouge">-v /var/run/docker.sock:/var/run/docker.sock</code></p>
 
-<p>copy the base systemd config file to /etc/systemd/system</p>
+<p>There are a couple of projects that, I’ve noticed so far which do this, one of the more popular is <a href="https://github.com/jwilder/nginx-proxy">nginx-proxy</a> which uses access to the Docker socket to allow it to automatically create reverse proxy entries for other containers.</p>
 
-<p><code class="highlighter-rouge">sudo cp /lib/systemd/system/docker.service /etc/systemd/system/</code></p>
+<p>The only real access control that’s possible with this kind of set-up is that you can set the access to be read only (e.g. <code class="highlighter-rouge">-v /var/run/docker.sock:/var/run/docker.sock:ro</code>), however this could still be risky, depending on your configuration as commands like <code class="highlighter-rouge">docker inspect</code> can leak secret information about running containers.</p>
 
-<p>It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.</p>
+<p>For example the official <a href="https://hub.docker.com/_/postgres/">Docker postgre image</a> provides a startup command of <code class="highlighter-rouge">docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres</code> which uses an environment variable to set the postgres password.  So if another container gets access to the docker socket, they can extract that password from docker inspect and then likely make a connection straight to your database (unless you’ve disabled <a href="https://docs.docker.com/engine/userguide/networking/default_network/container-communication/">Inter-container commmunication</a> ).</p>
 
-<p>Once you’ve done that you need to tell docker to remap the userns.  This can be done to an explicitly chosen uid:gid, but the basic default option will probably work fine for a lot of use-cases.</p>
-
-<p>So in /etc/systemd/system/docker you can edit</p>
-
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon -H fd://</code></p>
-
-<p>to</p>
-
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://</code></p>
-
-<p>and then restart docker with</p>
-
-<p><code class="highlighter-rouge">sudo systemctl daemon-reload</code></p>
-
-<p><code class="highlighter-rouge">sudo systemctl restart docker</code></p>
-
-<p>Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.</p>
-
-<p>So something like</p>
-
-<p><code class="highlighter-rouge">docker run -it ubuntu:14.04 top</code></p>
-
-<p>should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like</p>
-
-<p><code class="highlighter-rouge">165536     2347   2323  0 21:20 pts/0    00:00:00 top</code></p>
-
-<p>So, no longer running as root , yay!</p>
-
-<p>One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download the one’s I had.  So it’s defintely worth trying this change out on test systems before rolling out to production!</p>
-
-<p>You can back up your existing images with something like</p>
-
-<p><code class="highlighter-rouge">docker save</code></p>
-
-<p>if needed and it’s also worth noting that if you disable userns again, your original images will be available.</p>
+<p>So in general I’d recommend thinking very carefully before making use of a Docker image that requires access to the Docker socket, even with read-only permissions as it could open your environment up to some additional risks. Hopefully with future developments on the Docker authorization model it’ll get easier to allow a container introspection in a less risky manner…</p>
 
 	  </div>
 
@@ -235,7 +201,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=Docker 1.10 Notes - User Namespaces&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="http://twitter.com/share?text=The Dangers of Docker.sock&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -263,10 +229,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/01/31/is-this-thing-on/" title="Is This Thing on ">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2016/02/14/New-Docker-Compose-Features/" title="New Docker Compose Features">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2016/02/07/Exploration-in-Docker-bridging/" title="Exploration in Docker Bridging">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
