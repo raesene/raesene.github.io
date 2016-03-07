@@ -177,7 +177,7 @@
 
 <p>So in general I’d recommend thinking very carefully before making use of a Docker image that requires access to the Docker socket, even with read-only permissions as it could open your environment up to some additional risks. Hopefully with future developments on the Docker authorization model it’ll get easier to allow a container introspection in a less risky manner…</p>
 
-<p><strong>Update</strong> - After tweeting this article out @benhall <a href="https://twitter.com/Ben_Hall/status/706879493135323136">pointed out</a> that actually the ro setting on the mount doesn’t have a lot of affect in terms of security.  An attacker with ro access to the socket can still create another container and do something like mount /etc/ into it from the host, essentially giving them root access to the host.  So bottom line is don’t mount docker.sock into a container unless you trust its provenance and security…</p>
+<p><strong>Update</strong> - After tweeting this article out @benhall <a href="https://twitter.com/Ben_Hall/status/706879493135323136">pointed out</a> that actually the <code class="highlighter-rouge">ro</code> setting on the volume mount doesn’t have a lot of effect in terms of security.  An attacker with ro access to the socket can still create another container and do something like mount /etc/ into it from the host, essentially giving them root access to the host.  So bottom line is don’t mount docker.sock into a container unless you trust its provenance and security…</p>
 
 	  </div>
 
