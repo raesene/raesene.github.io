@@ -211,6 +211,17 @@
 
 <p>if needed and it’s also worth noting that if you disable userns again, your original images will be available.</p>
 
+<p><strong>EDIT</strong> I got a mail from <a href="https://twitter.com/estesp">Phil Estes</a> who has some good additional info. about the reasons that images aren’t visible when you enable userns, which I thought would be good to add here in case anyone finds this blog about it before the other ones that Phil mentions below.</p>
+
+<p>–</p>
+
+<p>“This segregation of image &amp; layer content separated by user/group mapping is required because of file ownership within these image layers. 
+If we tried to use the same layers in a remapped range environment it would nearly operate as a read-only environment, or worse, given the UIDs/GIDs used within your user namespaced process would have no write access to most directories and probably also not have read access to many as well due to permission bits in the original content.</p>
+
+<p>So, instead of trying to do all kinds of funny “chown” tricks on use of the content (which would then need to be “chowned” back later in case you then run your daemon with different mappings or with user namespaces off), we basically create a new “root” cache that is empty when you start with a specific uid/gid mapping.  As you pull content it acts the same as any daemon and will be there for use when that mapping is enabled.  If you restart your daemon with user namespaces disabled, then all the prior content is there as you noted.</p>
+
+<p>These details are also explained in <a href="https://integratedcode.us/2015/10/13/user-namespaces-have-arrived-in-docker/">my blog post</a> on the topic as well as the <a href="https://docs.docker.com/engine/reference/commandline/daemon/#daemon-user-namespace-options">official documentation on user namespaces</a>. “</p>
+
 	  </div>
 
 		
