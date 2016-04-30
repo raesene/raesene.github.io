@@ -163,7 +163,7 @@
 	   2016
 	 </span>
 	  <div class="article_body">
-	  <p>So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opporuntity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issues is availble on the <a href="https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/">OSVDB Blog</a>.</p>
+	  <p>So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opportunity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issue is available on the <a href="https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/">OSVDB Blog</a>.</p>
 
 <p>The thing that sprung out to me from the list was the first two mentioned as top 10 successfully exploited issues on the OSVDB blog.</p>
 
@@ -178,10 +178,10 @@
 
 <h2 id="why-is-it-unlikely">Why is it unlikely?</h2>
 
-<p>It’s unlikely because to exploit this issues there’s a number of pre-requisities that need to be satisfied.</p>
+<p>It’s unlikely because to exploit this issues there’s a number of pre-requisites that need to be satisfied.</p>
 
 <ol>
-  <li><strong>MiTM</strong> - This is the big one.  This issue is only exploitable when the attacker can sit in a position to intercept and modify traffic between the client and the server</li>
+  <li><strong>MiTM</strong> - This is the big one.  This issue is only exploitable when the attacker can sit in a position to intercept and modify traffic between the client and the server.</li>
   <li><strong>Client + Server Vuln. required</strong> - Unlike some of the other SSL vulnerabilities we’ve seen this requires a vulnerable client and server. Most popular browsers got patched for this pretty quickly (either via auto-update or monthly patch) so the window of attack for most users was pretty small.</li>
   <li><strong>Cryptographic Power</strong>.  We’re talking about the ability to mass crack ciphers here.  Now they’re not strong ones (that’s the point of the attack) but still this is some endevour to do at scale.</li>
   <li><strong>Detecting Exploitation</strong>.  To detect exploitation requires that the sensor can tell when the ciphersuite is downgraded,  the attacker cracks the key and then presumably carries out some follow-on attack.</li>
@@ -198,7 +198,7 @@
 
 <p>If this is true that’s a pretty serious problem, as this set of attackers are hardly going to stop what they’re doing once the patch rate for FREAK improves as it did quite rapidly.</p>
 
-<p>Anyone from the OSVDB blog I understand that Kenna are planning a explanatory blog posting, which I very much look forward to reading.  Things I would really like to see in that would be</p>
+<p>Anyway, from the OSVDB blog I understand that Kenna are planning a explanatory blog posting, which I very much look forward to reading.  Things I would really like to see in that would be</p>
 
 <ul>
   <li>Details of how detection successful exploitation of FREAK was achieved.</li>
