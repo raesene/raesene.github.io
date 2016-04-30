@@ -7,6 +7,56 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Verizon DBIR, Vulnerabilities and Cold Fusion</title>
+				<description>&lt;p&gt;So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opporuntity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issues is availble on the &lt;a href=&quot;https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/&quot;&gt;OSVDB Blog&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The thing that sprung out to me from the list was the first two mentioned as top 10 successfully exploited issues on the OSVDB blog.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2015-03-05 – CVE-2015-1637 – Microsoft Windows Secure Channel (Schannel) RSA Temporary Key Handling EXPORT_RSA Ciphers Downgrade MitM (FREAK)&lt;/li&gt;
+  &lt;li&gt;2015-01-06 – CVE-2015-0204 – OpenSSL RSA Temporary Key Handling EXPORT_RSA Ciphers Downgrade MitM (FREAK)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These CVEs related to the &lt;a href=&quot;https://freakattack.com/&quot;&gt;TLS FREAK attack&lt;/a&gt; which is an SSL cipher downgrade issue.  They jumped out at me as I see these on tests quite a bit and frankly, they don’t generally get rated as that serious of an issue.&lt;/p&gt;
+
+&lt;p&gt;To draw an analogy if it turns out that these were two of the most successful attacks of 2015, this is kind of like (to me) a scientist saying they’ve perfected &lt;strong&gt;cold fusion&lt;/strong&gt;! a) it’s very unlikely and b) if true it’s extremely significant and deserves a lot more prominence than a footnote in the DBIR!&lt;/p&gt;
+
+&lt;h2 id=&quot;why-is-it-unlikely&quot;&gt;Why is it unlikely?&lt;/h2&gt;
+
+&lt;p&gt;It’s unlikely because to exploit this issues there’s a number of pre-requisities that need to be satisfied.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;MiTM&lt;/strong&gt; - This is the big one.  This issue is only exploitable when the attacker can sit in a position to intercept and modify traffic between the client and the server&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Client + Server Vuln. required&lt;/strong&gt; - Unlike some of the other SSL vulnerabilities we’ve seen this requires a vulnerable client and server. Most popular browsers got patched for this pretty quickly (either via auto-update or monthly patch) so the window of attack for most users was pretty small.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cryptographic Power&lt;/strong&gt;.  We’re talking about the ability to mass crack ciphers here.  Now they’re not strong ones (that’s the point of the attack) but still this is some endevour to do at scale.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Detecting Exploitation&lt;/strong&gt;.  To detect exploitation requires that the sensor can tell when the ciphersuite is downgraded,  the attacker cracks the key and then presumably carries out some follow-on attack.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;what-does-it-mean&quot;&gt;What does it mean?.&lt;/h2&gt;
+
+&lt;p&gt;So lets assume these are indeed two of the most exploited vulnerabilities of 2015, what would that mean?&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There are a set of attackers who have MiTM positions to attack large numbers of clients and servers on the Internet&lt;/li&gt;
+  &lt;li&gt;Those attackers have the processing power to mass-crack cryptographic keys gathered from intercepted connections presumably quickly enough to do something with the key in question.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If this is true that’s a pretty serious problem, as this set of attackers are hardly going to stop what they’re doing once the patch rate for FREAK improves as it did quite rapidly.&lt;/p&gt;
+
+&lt;p&gt;Anyone from the OSVDB blog I understand that Kenna are planning a explanatory blog posting, which I very much look forward to reading.  Things I would really like to see in that would be&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Details of how detection successful exploitation of FREAK was achieved.&lt;/li&gt;
+  &lt;li&gt;Details on what the attack group did with this afterwards.&lt;/li&gt;
+  &lt;li&gt;Details of what threat group carried out these attacks.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sat, 30 Apr 2016 07:50:39 +0100</pubDate>
+				<link>/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/</link>
+				<guid isPermaLink="true">/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/</guid>
+			</item>
+		
+			<item>
 				<title>The Dangers of Docker.sock</title>
 				<description>&lt;p&gt;One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.&lt;/p&gt;
 
@@ -263,9 +313,9 @@ If we tried to use the same layers in a remapped range environment it would near
 
 &lt;p&gt;Now we’ve got this file created we just need to start things up.  The command I’ve used for this is&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-docker-compose run --service-ports sectest /bin/bash
-&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker-compose run --service-ports sectest /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;p&gt;What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.&lt;/p&gt;
 
@@ -325,9 +375,9 @@ docker-compose run --service-ports sectest /bin/bash
 
 &lt;p&gt;If you do one of the canonical examples that’s provided in many tutorials&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-docker run -t -i ubuntu:latest /bin/bash
-&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -t -i ubuntu:latest /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;p&gt;You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.&lt;/p&gt;
 
@@ -335,27 +385,27 @@ docker run -t -i ubuntu:latest /bin/bash
 
 &lt;p&gt;To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-docker ps -a
-&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;p&gt;which will list all the container instances you’ve ever run on that system and it’ll look something like&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
 39c1e5cf8319        raesene/auto-docker-dradis   &quot;bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&amp;gt;3000/tcp   cranky_kilby
 e529903a3183        raesene/auto-docker-dradis   &quot;bundle exec rails s   55 minutes ago                                                           compassionate_yonath
 f084aaca32ee        raesene/dradisframework      &quot;bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
 8a8f7b95082a        2bfb337a0aa8                 &quot;bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
 8a2a0046b769        ruby:latest                  &quot;/bin/bash&quot;            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
-&lt;/code&gt;&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;p&gt;from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;
-docker start compassionate_goodall
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker start compassionate_goodall
 docker attach compassionate_goodall
-&lt;/code&gt;&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;h2 id=&quot;docker-hub-build-options&quot;&gt;docker hub build options&lt;/h2&gt;
 
@@ -415,49 +465,6 @@ docker attach compassionate_goodall
 				<pubDate>Sat, 23 May 2015 13:16:12 +0100</pubDate>
 				<link>/blog/2015/05/23/so-youre-giving-a-conference-talk/</link>
 				<guid isPermaLink="true">/blog/2015/05/23/so-youre-giving-a-conference-talk/</guid>
-			</item>
-		
-			<item>
-				<title>Some potential problems extrapolating from data in security</title>
-				<description>&lt;p&gt;One of the perennial problems in security is the lack of hard data, so it’s been good to see over the last couple of years a growing number of reports coming out which seek to shed a bit more light on what’s happening in InfoSec.  One of the more prominent of these reports is the &lt;a href=&quot;http://www.verizonenterprise.com/DBIR/2015/&quot;&gt;Verizon Data Breach Investigation report&lt;/a&gt; and I always read it as it has some interesting insights into what’s happening in areas that I don’t get too much exposure too.&lt;/p&gt;
-
-&lt;p&gt;However when I read this years report I noticed a section which looked .. well odd.  It’s on page 16 of the report and talks about the top 10 “exploited” vulnerabilities in 2014.  What struck me as very odd is the number of very old vulnerabilities in the list.  Eight of the ten issues listed are from 2002 or before.  Now I know IT security patching can be a bit slow, but this seems excessive!&lt;/p&gt;
-
-&lt;p&gt;So I had a look at the CVE references provided and what I found did not ehance my confidence that this data was an accurate reflection of exploited issues.  In a number of cases the referenced CVEs are for old and or obscure products that would surprise me if they’re in wide deployment.&lt;/p&gt;
-
-&lt;p&gt;The best example of this problem is &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1931&quot;&gt;CVE-2002-1931&lt;/a&gt; which gets listed at number nine.  This is a Cross-Site Scripting issue in version 2.1.1 and 1.1.3 of a product called PHP Arena and specifically the pafileDB area of that product.  Now I struggled to find out too much about that product because the site that used to host it www.phparena.net is now a gambling site (I presume that the domain name lapsed and was picked up as it got decent traffic).  Searching via google for information, most of the results seemed to be from vulnerability databases(!) and using a google dork of &lt;a href=&quot;https://www.google.co.uk/?gws_rd=ssl#q=inurl:pafiledb.php&amp;amp;start=170&quot;&gt;inurl:pafiledb&lt;/a&gt; shows a total of 156 results, which seems low for one of the most exploited issues on the Internet.&lt;/p&gt;
-
-&lt;p&gt;Also looking at &lt;a href=&quot;http://www.securityfocus.com/bid/6021&quot;&gt;this securityfocus page&lt;/a&gt; we can see that PHP Arena pafileDB 3.0 isn’t vulnerable to this issue and from &lt;a href=&quot;http://www.cvedetails.com/product/2451/Php-Arena-Pafiledb.html?vendor_id=1413&quot;&gt;this cvedetails page&lt;/a&gt; we can see that pafileDB 3.0 came out in 2002.&lt;/p&gt;
-
-&lt;p&gt;So for this issue to be in the top 10 most exploited issues on the Internet, we need a large number of people to not have updated a very exploitable, discontinued PHP forum product for 13 years…&lt;/p&gt;
-
-&lt;p&gt;When I saw this initially, I thought “ahh must be a problem with the publishing”, so I contacted Verizon by e-mail and then &lt;a href=&quot;https://twitter.com/raesene/status/589022276252782592&quot;&gt;over twitter&lt;/a&gt;, however apparently not, this is the real data!  They were very nice and provided some additional detail (although it’s hard to be specific in 140 chars) which indicates that this data came from IDS sensors correlated to vulnerabilities, but I can’t really see how that could possibly be the case.&lt;/p&gt;
-
-&lt;p&gt;If it were just raw network IDS sensor data it’s possible if it were just looking at network traffic and alerting on vulnerability scanners testing for things, but a) that’s not exploitation of an issue, just scaning for its presence and b) even then things like the PHP arena one don’t make sense unless the IDS sensor is just mistakenly putting all XSS attempts into that bucket.  Either way I’m afraid this looks like mistaken interpretation of the available data and an extrapolation based on that interpretation&lt;/p&gt;
-
-&lt;p&gt;So why do I care enough to write this?  Well unfortunately what a lot of people in the industry will do here is take the headline “97% of exploited issues came from these 10 issues” and use this to drive spending and other decisions, and that’s unfortunate as without looking at the detail you don’t realise that there are problems with that interpretation of it.&lt;/p&gt;
-
-&lt;p&gt;For completeness here’s some notes on the other issues.  The first two are generic SNMPv1 issues from 2002 which from their descriptions &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0012&quot;&gt;CVE−2002−0012&lt;/a&gt; and &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-0013&quot;&gt;CVE−2002−0013 &lt;/a&gt; look kind of like the same thing and also are not very specific as it’s multiple vendors.&lt;/p&gt;
-
-&lt;p&gt;Number three is default SNMP community strings &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1999-0517&quot;&gt;CVE-1999-0517&lt;/a&gt; which is kind of believable as you do see a fair bit of SNMP out there, although in my recent experience default community strings on the Internet are rarer.&lt;/p&gt;
-
-&lt;p&gt;Number four is a memory leak DoS in Windows NT 4 and 2000 &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0540&quot;&gt;CVE-2001-0540&lt;/a&gt; RDP requests. Now both these products have been out of support for some years and are less seen these days, also with a DoS issue whilst it’s possible to detect someone attacking it with network IDS, I don’t see how you’d easily detect actual exploitation without something running on the target server to note the service crashing.&lt;/p&gt;
-
-&lt;p&gt;Number five is a newer one, &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2014-3566&quot;&gt;POODLE&lt;/a&gt;.  This being in the top 10 exploited issues would be very interesting as traditionally SSL issues which require an active Man-In-The-Middle attack are considered less exploited (usually ‘cause if the person has a privileged position on the network like that, they can do far worse things that exploit SSL issues!).  Now I’d believe it was one of the top “scanned for “ issues but not exploited.&lt;/p&gt;
-
-&lt;p&gt;Number six is &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-0152&quot;&gt;another RDP DoS&lt;/a&gt; .  This one is more modern, but the problem of accurately detecting DoS exploitation remains..&lt;/p&gt;
-
-&lt;p&gt;Number seven is a pretty obscure one &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2001-0680&quot;&gt;Directory traversal vulnerability in ftpd in QPC QVT/Net 4.0 and AVT/Term 5.0&lt;/a&gt;.  As with the PHP Arena, there’s not a lot of information on the Internet about this product.  the host company still exists but no download/version information seems easily available.  That said from &lt;a href=&quot;http://www.securityfocus.com/bid/2618&quot;&gt;Securityfocus&lt;/a&gt; the latest affected OS is Windows 2000 SP2, which hasn’t been in support for a long time and has other critical exploitable issues, so I’d have guessed that if someone was going to exploit it they wouldn’t have targeted this issue…&lt;/p&gt;
-
-&lt;p&gt;Number eight is a directory traversal issue in &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1054&quot;&gt;Pablo FTP v1.0 build 9&lt;/a&gt; . From a quick search the product was up to &lt;a href=&quot;http://www.pablosoftwaresolutions.com/html/quick__n_easy_ftp_server.html&quot;&gt;version 3.2&lt;/a&gt; when it was last released and that version supports up to Windows vista, so it’s a fair guess that version 1 hasn’t been in use/supported for a while.&lt;/p&gt;
-
-&lt;p&gt;Number nine is the PHP Arena issue mentioned previously.&lt;/p&gt;
-
-&lt;p&gt;Number ten is a bug in &lt;a href=&quot;http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2002-1932&quot;&gt;windows 2000 and XP&lt;/a&gt; where administrators aren’t notified if logs fill up. If a system isn’t patched for this they also have all the canonical remote code execution bugs like MS06-040 and MS08-067.  So for this to be more exploited, we have to have large numbers of attackers who want to fill up logs with impunity, instead of taking over the system.&lt;/p&gt;
-</description>
-				<pubDate>Fri, 17 Apr 2015 18:08:34 +0100</pubDate>
-				<link>/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</link>
-				<guid isPermaLink="true">/blog/2015/04/17/some-potential-problems-extrapolating-from-data-in-security/</guid>
 			</item>
 		
 	</channel>

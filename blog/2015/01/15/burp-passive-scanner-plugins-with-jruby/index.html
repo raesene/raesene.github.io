@@ -181,92 +181,86 @@
 
 <p>So in the sample check we’re looking for an HTTP header, which if it’s not found, will add a low severity issue to the burp scanner.</p>
 
-<p>``` ruby</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+  <span class="k">def</span> <span class="nf">doPassiveScan</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">)</span>
+    <span class="n">service_info</span> <span class="o">=</span> <span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getHttpService</span><span class="p">()</span>
+    <span class="n">host_name</span> <span class="o">=</span> <span class="n">service_info</span><span class="p">.</span><span class="nf">getHost</span><span class="p">()</span>
+    <span class="n">response_info</span> <span class="o">=</span> <span class="vi">@helpers</span><span class="p">.</span><span class="nf">analyzeResponse</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getResponse</span><span class="p">)</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="n">response_info</span><span class="p">.</span><span class="nf">getHeaders</span><span class="p">()</span>
 
-<p>def doPassiveScan(baseRequestResponse)
-    service_info = baseRequestResponse.getHttpService()
-    host_name = service_info.getHost()
-    response_info = @helpers.analyzeResponse(baseRequestResponse.getResponse)
-    headers = response_info.getHeaders()</p>
-
-<p>```</p>
-
-<p>This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.</p>
-
-<p>``` ruby</p>
-
-<p>header_found = false</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>headers.each do |header|
-  if header.downcase =~ /your_value_here/
-      header_found = true
-  end
-end
 </code></pre>
 </div>
 
-<p>```</p>
+<p>This section of code extracts some information from the request-response object that Burp passes in to the method.  It’s pretty easy to extract the various parts of the HTTP request to analyze and once you’ve done it they appear as ruby objects (e.g. strings or arrays) which can be analyzed with standard ruby methods.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>
+  <span class="n">header_found</span> <span class="o">=</span> <span class="kp">false</span>
+
+    <span class="n">headers</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">header</span><span class="o">|</span>
+      <span class="k">if</span> <span class="n">header</span><span class="p">.</span><span class="nf">downcase</span> <span class="o">=~</span> <span class="sr">/your_value_here/</span>
+          <span class="n">header_found</span> <span class="o">=</span> <span class="kp">true</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+</code></pre>
+</div>
 
 <p>the next section of code is really the only analysis that we’re doing in this basic example.  The headers variable is an array, so we can iterate over it and check each element to see if it’s found. In this case our header is called ‘your_value_here’ which is pretty unlikely to show up, but in a real check this could be replaced with something like ‘Strict-Transport-Security’ or ‘Public-Key-Pins’ to check for the presence of security related HTTP headers.</p>
 
 <p>Once we’ve got our finding of course the next step is to add it to the scanner results, so we’ll need to create a Scan Issue and pass it back to Burp.</p>
 
-<p>``` ruby</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+   <span class="n">findings</span> <span class="o">=</span> <span class="no">Java</span><span class="o">::</span><span class="no">JavaUtil</span><span class="o">::</span><span class="no">ArrayList</span><span class="p">.</span><span class="nf">new</span>
 
-<p>findings = Java::JavaUtil::ArrayList.new</p>
-
-<p>```</p>
+</code></pre>
+</div>
 
 <p>This line was one of the places I tripped up initially.  Burp expects an array of results back and not a single Scan issue so creating an array to hold the findings is handy.</p>
 
-<p>``` ruby</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+    <span class="n">finding_message</span> <span class="o">=</span> <span class="no">CustomHttpRequestResponse</span><span class="p">.</span><span class="nf">new</span>
+    <span class="n">finding_message</span><span class="p">.</span><span class="nf">setResponse</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getResponse</span><span class="p">())</span>
+    <span class="n">finding_message</span><span class="p">.</span><span class="nf">setRequest</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getRequest</span><span class="p">())</span>
+    <span class="n">finding_message</span><span class="p">.</span><span class="nf">setHttpService</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getHttpService</span><span class="p">())</span>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>finding_message = CustomHttpRequestResponse.new
-finding_message.setResponse(baseRequestResponse.getResponse())
-finding_message.setRequest(baseRequestResponse.getRequest())
-finding_message.setHttpService(baseRequestResponse.getHttpService())
 </code></pre>
 </div>
-
-<p>```</p>
 
 <p>This section is necessary if you want to return the request/response information into the scanner and is another place where I had some issues. The key point is that you need to implement a class that conforms to the interface for the IHttpRequestResponse class that the Burp API describes.  In the file on github there’s a class that seems to work for me.  It looks a bit boilerplate heavy, but at the moment the more rubyish setup with attr_accessor helpers for the class properties doesn’t seem to fly for me, so manual getter/setter methods it is.</p>
 
-<p>``` ruby</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+    <span class="k">unless</span> <span class="n">header_found</span>
+      <span class="n">finding</span> <span class="o">=</span> <span class="no">CustomScanIssue</span><span class="p">.</span><span class="nf">new</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">httpMessages</span><span class="o">=</span><span class="n">finding_message</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">httpService</span><span class="o">=</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getHttpService</span><span class="p">()</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">url</span><span class="o">=</span><span class="vi">@helpers</span><span class="p">.</span><span class="nf">analyzeRequest</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getHttpService</span><span class="p">(),</span> <span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getRequest</span><span class="p">).</span><span class="nf">getUrl</span><span class="p">()</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">name</span> <span class="o">=</span> <span class="s2">"Header Not Set"</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">detail</span> <span class="o">=</span> <span class="s2">"A header that should be set isn't"</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">severity</span> <span class="o">=</span> <span class="s2">"Low"</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">confidence</span> <span class="o">=</span> <span class="s2">"Certain"</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">remediation_detail</span> <span class="o">=</span> <span class="s2">"Lorem Ipsum"</span>
+      <span class="n">finding</span><span class="p">.</span><span class="nf">issue_background</span> <span class="o">=</span> <span class="s2">"Sit Dolor Amet"</span>
+      <span class="n">findings</span><span class="p">.</span><span class="nf">add</span> <span class="n">finding</span>
+    <span class="k">end</span>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>unless header_found
-  finding = CustomScanIssue.new
-  finding.httpMessages=finding_message
-  finding.httpService=baseRequestResponse.getHttpService()
-  finding.url=@helpers.analyzeRequest(baseRequestResponse.getHttpService(), baseRequestResponse.getRequest).getUrl()
-  finding.name = "Header Not Set"
-  finding.detail = "A header that should be set isn't"
-  finding.severity = "Low"
-  finding.confidence = "Certain"
-  finding.remediation_detail = "Lorem Ipsum"
-  finding.issue_background = "Sit Dolor Amet"
-  findings.add finding
-end
 </code></pre>
 </div>
-
-<p>```</p>
 
 <p>This code just populates another class which you need to implement which is the Scan Issue.  In general that class is pretty straight forward like the RequestResponse class but a key point is that Burp expects an array of RequestResponse issues to be returned in the messages property of the scan issue.</p>
 
 <p>Last bit in this basic example is a brief method to do some basic handling of duplicate instances of the same issue (saves the scanner repeatedly finding the same issue for a URL)</p>
 
-<p>``` ruby</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>
+  <span class="k">def</span> <span class="nf">consolidateDuplicateIssues</span><span class="p">(</span><span class="n">existing_issue</span><span class="p">,</span> <span class="n">new_issue</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing_issue</span><span class="p">.</span><span class="nf">getIssueName</span> <span class="o">==</span> <span class="n">new_issue</span><span class="p">.</span><span class="nf">getIssueName</span>
+      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
 
-<p>def consolidateDuplicateIssues(existing_issue, new_issue)
-    if existing_issue.getIssueName == new_issue.getIssueName
-      return -1
-    else
-      return 0
-    end
-  end</p>
-
-<p>```</p>
+</code></pre>
+</div>
 
 <p>This is obviously quite a basic example but hopefully shows that once you know the structure of the code, implementing scanner checks in Burp should be a relatively straightforward task, and can have some cool benefits in terms of automating the testing process.</p>
 

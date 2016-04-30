@@ -158,6 +158,36 @@
 
   <span class="post-date">
     
+    March
+    8th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/03/08/february_owasp/">February OWASP meeting</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The February meeting of the <a href="http://www.owasp.org/index.php/Scotland">scottish OWASP chapter</a> went pretty well on the 28th.<br />
+We had Steve Moyle doing a presentation on Database security (slides can be found <a href="https://lists.owasp.org/pipermail/owasp-scotland/attachments/20080306/626374c3/attachment-0001.ppt"> here</a> )<br />
+I picked up some interesting ideas from his presentation.  Firstly the idea that relational databases have a fundamental flaw when it comes to security, which is that the channel used to control them and the channel used to access the information they contain, are the same.  This allows for someone who should only have access to information in the system to easily attack it as well.<br />
+The other thought which occurred to me when I was listening to the presentation was that any IDS/IPS style device which wants to block "malicious" traffic going to a system needs to parse the information it's seeing <i> in the same way as the protected system </i> otherwise there's a risk that quirks of rendering will introduce false positives or negatives.<br />
+It's something I was talking to a WAF vendor about recently, as I was asking them whether their product rendered JavaScript when looking for malicious traffic, as there's a specific problem with the idea of self-modifying JavaScript, looking innocuous in transit but then being malicious when executed</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     February
     21st,
     
@@ -413,45 +443,6 @@ Then it's off to add the debian repositories to the apt setup on it and before y
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    6th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/10/06/risk_assessed_p_2/">Risk Assessed Password Policies - Account Lockout</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>The last piece of the puzzle when it comes to password policies is the account lockout .  Also this is another area where a tighter policy doesn't necessarily lead to improved security.  A lot of companies go for 3 incorrect attempts, and this does lead to a lot of lockouts on Monday mornings and consequently a lot of false positives in the security departments monitoring for attacks on authentication systems.<br />
-Again with this section of policy it's important to understand what threat is being mitigated.  Account lockout is designed to mitigate online password guessing attacks.<br />
-Now given that if you have a password length of say 8 characters with a requirement for upper and lower case characters you've got a theoretical maximum of 52^8 combinations (reality will be obviously be somewhat less than that).<br />
-So realistically the risk of an online password guessing attack succeeding is pretty low, if the attacker doesn't have an insight into likely passwords that a user will choose.<br />
-So what's a good number for password lockout.  Well Microsoft <a href="http://technet2.microsoft.com/windowsserver/en/library/353f7ad9-b53d-41d0-9867-199f6595a01b1033.mspx?mfr=true"> recommends 50</a>, but I've got to say that I think around 10 is good for most circumstances.  My reasoning here is that if someone can't remember their password after 10 goes, they've almost definitely forgotten it.<br />
-Of course the next part of this is what to do when you've locked the account out.  Well if you've gone for a reasonably high setting on the incorrect password attempts, then I'd say in most cases lock the account permanently until the user has gone through the password reset procedure (establishing a good password reset procedure is a topic for another day!).<br />
-One problem with account lockout that's raised is the potential for Denial-Of-Service.  If the username is predictable to an attacker they can iterate over the namespace and lockout all the accounts.<br />
-The mitigation for this depends on the architecture of the systems.  If the system is inside a corporation then monitoring should track the attack and incident response should <i>hopefully</i> be able to track down the attacker.<br />
-However for Internet facing systems that's obviously not possible, so some other mitigation may be needed.<br />
-Two potential options for this are</p>
-<ul>
-<li><b>IP based lockout.</b> Instead of locking the account for all users, only lock it for the source IP of the attack.  This isn't perfect protection but may well work for many attackers</li>
-<li><b>Use multiple secrets.</b> For example have a password and a secondary secret.  Then only increment the incorrect login count if the attacker is getting the username and one of the secrets correct.  </li>
-</ul>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -465,7 +456,7 @@ Two potential options for this are</p>
   
   
   <li>
-    <span class="page_number">Page: 10 of 47</span>
+    <span class="page_number">Page: 10 of 48</span>
   </li>
 
   
