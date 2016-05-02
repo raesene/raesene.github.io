@@ -7,7 +7,7 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>Verizon DBIR, Vulnerabilities and Cold Fusion</title>
+				<title>Verizon DBIR Vulnerabilities Redux</title>
 				<description>&lt;p&gt;Since my &lt;a href=&quot;https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/&quot;&gt;last post&lt;/a&gt; on this there have been quite a few conversations had on twitter and we’ve now got &lt;a href=&quot;http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/&quot;&gt;Kenna’s blog post&lt;/a&gt; with additional details on their methodology.&lt;/p&gt;
 
 &lt;p&gt;I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as&lt;/p&gt;
