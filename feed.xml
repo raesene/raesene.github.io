@@ -8,6 +8,45 @@
 		
 			<item>
 				<title>Verizon DBIR, Vulnerabilities and Cold Fusion</title>
+				<description>&lt;p&gt;Since my &lt;a href=&quot;https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/&quot;&gt;last post&lt;/a&gt; on this there have been quite a few conversations had on twitter and we’ve now got &lt;a href=&quot;http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/&quot;&gt;Kenna’s blog post&lt;/a&gt; with additional details on their methodology.&lt;/p&gt;
+
+&lt;p&gt;I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
+1. An asset has a known CVE open. 
+2. An attack come in that matches the signature for that CVE on that asset and 
+3. One or more IOCs are detected/correlated post attack
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The “mystery sauce” here is part 3 around IOCs to detect a successful exploit, as that’s tricky to do with a MiTM attack like the two FREAK CVEs.  Attackers who successfully exploited that may just intercept sensitive data from the connection and them misuse it elsewhere, which is virtually impossible to correlate.&lt;/p&gt;
+
+&lt;p&gt;Kenna also provided some interesting graphs for these vulns &lt;a href=&quot;http://www.stathat.com/s/4813HmgKhyPk&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;http://www.stathat.com/s/YSHQp2H6OAin&quot;&gt;here&lt;/a&gt; which show large spikes of activity initially followed by periodic smaller spikes through the year.&lt;/p&gt;
+
+&lt;p&gt;Now, to me, that doesn’t really seem to fit a real attack on this issue as I kind of doubt that many people have the ability to crack 800k even weak RSA keys at once, also if someone had compromised that volume of SSL connections in a short space of time you’d have thought there would’ve been some fallout from it…&lt;/p&gt;
+
+&lt;p&gt;However, what it does match is someone running a scanning tool over the large parts of the Internet looking for this vulnerability.  A scanning tool for this will negotiate a connection using the weak RSA keys, that’s how they work.&lt;/p&gt;
+
+&lt;p&gt;Looking at the graph for CVE-2015-0204, we can see a …. huge spike in activity around March 2015, when… the researchers for the FREAK attack did a large scan looking for the issue. Looking at the &lt;a href=&quot;&quot;&gt;Freak Attack&lt;/a&gt; page we see a note&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;indicating that they did a big scan in March 2015 which roughly correlates with the big spike in Kenna’s graph.  I’d also guess that a lot of other researchers would scan around that time as it was when the vulnerability was released.&lt;/p&gt;
+
+&lt;p&gt;So whilst I can’t be really sure, if I was a betting man, I’d suggest that Kenna’s data doesn’t point to a sophisticated attacker exploiting an SSL MITM issue, but to a group of security researchers scanning a large number of sites after they had announced their vulnerability.&lt;/p&gt;
+
+&lt;p&gt;The only mystery then is “what was the IOC seen on the affected hosts?”.&lt;/p&gt;
+
+</description>
+				<pubDate>Mon, 02 May 2016 10:01:39 +0100</pubDate>
+				<link>/blog/2016/05/02/Verizon-DBIR-Vulns-Redux/</link>
+				<guid isPermaLink="true">/blog/2016/05/02/Verizon-DBIR-Vulns-Redux/</guid>
+			</item>
+		
+			<item>
+				<title>Verizon DBIR, Vulnerabilities and Cold Fusion</title>
 				<description>&lt;p&gt;So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opportunity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issue is available on the &lt;a href=&quot;https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/&quot;&gt;OSVDB Blog&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;The thing that sprung out to me from the list was the first two mentioned as top 10 successfully exploited issues on the OSVDB blog.&lt;/p&gt;
@@ -421,50 +460,6 @@ docker attach compassionate_goodall
 				<pubDate>Sun, 05 Jul 2015 20:10:15 +0100</pubDate>
 				<link>/blog/2015/07/05/some-notes-on-docker/</link>
 				<guid isPermaLink="true">/blog/2015/07/05/some-notes-on-docker/</guid>
-			</item>
-		
-			<item>
-				<title>So you're giving a conference talk</title>
-				<description>&lt;p&gt;I realised the other day that I’ve been doing public speaking for quite a while now (started with doing internal training courses back in the 90’s, and graduated on to doing external speaking at seminars and conferences about 10 years back).&lt;/p&gt;
-
-&lt;p&gt;Over that time, I’ve inevitably made some mis-steps and also seen a number of others from speakers at conferences I’ve attended, so I thought it would be worth putting together some hints and tips for prospective speakers.  Hopefully some of these will be useful!&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Treat your presentation like a story.&lt;/strong&gt; It should have a start, middle and an end. I find it helps to think of presentations in this way, as you can imagine the story your trying to tell and think about whether a particular slide fits into that part of the narrative or not. Think about “what am I trying to say, why should the audience care and what can they do about it”, and make sure your conclusion has some clear points or advice for next steps.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Don’t sweat presentation tool choice too much.&lt;/strong&gt;  A lot of people get very hung up on liking/disliking specific presentation tools (e.g. PowerPoint, Prezi, Keynote).  The simple fact is that I’ve seen good and bad presentations with every tool.  The important part is that you find one that suits your style and learn how to use it well.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Avoid walls of text in your presentation.&lt;/strong&gt;  This one is very common.  If you put a lot of dense text on your slides, people will naturally start reading that and not paying attention to what you’re saying.  There’s a natural desire to provide information for people after the talk but that can easily go in speaker notes, or a white paper, or a blog post.  It doesn’t need to go into the body of the slide.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Practice, Practice, Practice.&lt;/strong&gt; Timing a talk is really tricky to do.  The best way to address this is practice your talk.  Talk to yourself, your dog/cat, your partner, your friends, basically anyone who’ll listen.  I find that once I’ve delivered a talk a couple of times in this way, it’s easier to remember queues and the flow of the talk.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Speaker Note cards.&lt;/strong&gt;  Again this one gets a lot of pro/con feeling.  My advice is, if you feel you need prompt cards, use them.  But try to avoid just reading them one at a time.  Keep themes or key points on there, don’t put the exact words you want to say.  If you just read from cards, you won’t be able to engage your audience.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Engage your audience.&lt;/strong&gt;  So this is hard, especially if you’re not used to public speaking.  But it’s important to look up at your audience while you speak.  Try to look around, not just at one person.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Demos (and the dark god).&lt;/strong&gt;  Live demos can help bring a topic to life and, when done right, can really help drive a point across.  With that said, they often fail, which can be pretty stressful in the middle of a presentation! I’ve had things which literally worked 30 minutes earlier, fail for no obvious reason. This happens so often that many presenters will refer to “The dark god of demos”!.  My recommendation for speakers who are starting out is to avoid them unless really necessary and always have a back-up option like a pre-recorded video.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Fonts and colours.&lt;/strong&gt;  Watch out for this when presenting things like live coding or other demos.  Fonts and colour schemes which look good on your laptop may be totally unintelligible when up on a big screen.  In particular avoid dark backgrounds with coloured text, these rarely look good.  Also make sure you’re au-fait with the keyboard shortcuts for making text larger and smaller in your editor/IDE, as you will likely need to use them on the day…&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Always develop your own material.&lt;/strong&gt;  It’s very hard to deliver someone else’s slide deck well.  I’ve seen a number of times where the presenter didn’t write their presentation, and sometimes didn’t seem to have read it either! This results in a rather disjointed delivery and inability to answer questions, which rarely ends well…  If you absolutely have to do this, make sure to read/understand the whole thing before delivery.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Lastly Enjoy yourself :).&lt;/strong&gt;  Public speaking can seem like a stressful thing to do, and everyone gets nervous when then present (well I do anyway) but it can be fun to explain your ideas to a group of people and in a lot of cases you’ll get some good feedback/ideas about what you could do next.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sat, 23 May 2015 13:16:12 +0100</pubDate>
-				<link>/blog/2015/05/23/so-youre-giving-a-conference-talk/</link>
-				<guid isPermaLink="true">/blog/2015/05/23/so-youre-giving-a-conference-talk/</guid>
 			</item>
 		
 	</channel>

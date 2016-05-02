@@ -158,6 +158,44 @@
 
   <span class="post-date">
     
+    April
+    1st,
+    
+    2014
+  </span>
+
+  <h2>
+    <a href="/blog/2014/04/01/house-of-cards/">House of Cards</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I was reading <a href="http://www.ramshackleglam.com/2014/04/01/my-website-was-stolen-by-a-hacker-and-i-got-it-back/">this post</a> and I was thinking that this is another good example of the general theme in a lot of modern business and security.</p>
+
+<p>People will a lot of times neglect some of the “plumbing” of their website and not realise quite how important it is to their sites security.  In the linked example it was DNS.  An attacker was able to get control of the site domain name and then essentially controlled the site. That’s one way of pulling it off but there are others.</p>
+
+<p>Good examples of services which are often overlooked but are critical</p>
+
+<ul>
+  <li>Hosting services.  If you use VPS or the like and the hosting service is compromised then, the attackers can likely get access to your servers too.  A good example of this was the Linode hack in 2013.  There the attackers didn’t even have Linode as a primary target, they were after one specific customer.</li>
+  <li>DNS providers.  If the attacker can control your DNS, they can redirect mail, carry out MITM attacks on web sites, basically make a right mess of your system.  But hacks on DNS providers (either social engineering or direct) are a common theme in stories of compromise.</li>
+  <li>E-Mail providers.  Might not seem as critical, but how are most password resets done…. by E-Mail.  If the attacker owns your e-mail service they can usually trigger password resets for other things like DNS or hosting.</li>
+</ul>
+
+<p>So what makes me say these things are “neglected”?  Well look at the market and it’s pretty obvious.  In a lot of cases the successful providers in these areas are the cheapest/easiest to use, not the most secure.  Of course there’s the usual security problem of a “market for lemons” in that all providers will say that they’re secure but I’d still recommend that if you have a system that’s important to you (and that’s true for an increasing number of companies who do business primarily on-line), then spending some time trying to find high quality “plumbing” will pay off in the long run.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     March
     14th,
     
@@ -437,38 +475,6 @@
 <p>Some of the conversations had after my talk centered around choosing a licence for code that you release.  It's a important area to consider if you're releasing your own code as you should always put some form of license up there so people know how they can and cannot use your code.  My feelings for most of the scripts I do is that a GPL based license is the best option, as it encourages other people who want to use your code to contribute back to the community.</p>
 <p>Another point on licensing that was brought up is the flip side which is that you should always check the license of code that you make use of, to ensure that you're within the terms specified.</p>
 <p>My presentation is up on the prezi site <a href="http://prezi.com/j3o6skwv8gwb/pentest-automation/">here</a> .  Most of the code along with the other scripts I've released is on github <a href="https://github.com/raesene/TestingScripts">here</a> . I'll add the cookie grabber script up there over the next day or two.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    24th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/03/24/three-lines/">Three Lines</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>We've decided that the results/recommendations coming out of most of the Internal Security Reviews we do can be summarised in three lines.</p>
-<p>a)  Patch everything.  Not just Windows - everything.</p>
-<p>b)  Change default credentials.  Don't leave your main router with creds of admin/admin</p>
-<p>c) Get rid of clear text protocols.  Ditch telnet for SSH and ftp for sftp</p>
-<p>It doesn't require Ninjas, Red Teams or Zero days to compromise most organisations, given access to their internal networks.  In fact why bother with anything fancy, when the most basic of techniques uncovers such glaring faults.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 
     
     

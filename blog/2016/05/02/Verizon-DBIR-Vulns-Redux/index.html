@@ -157,54 +157,43 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   30th,
-	   
+	   May 
+	   2nd,
+	     
 	   2016
 	 </span>
 	  <div class="article_body">
-	  <p>So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opportunity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issue is available on the <a href="https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/">OSVDB Blog</a>.</p>
+	  <p>Since my <a href="https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/">last post</a> on this there have been quite a few conversations had on twitter and we’ve now got <a href="http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/">Kenna’s blog post</a> with additional details on their methodology.</p>
 
-<p>The thing that sprung out to me from the list was the first two mentioned as top 10 successfully exploited issues on the OSVDB blog.</p>
+<p>I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as</p>
 
-<ul>
-  <li>2015-03-05 – CVE-2015-1637 – Microsoft Windows Secure Channel (Schannel) RSA Temporary Key Handling EXPORT_RSA Ciphers Downgrade MitM (FREAK)</li>
-  <li>2015-01-06 – CVE-2015-0204 – OpenSSL RSA Temporary Key Handling EXPORT_RSA Ciphers Downgrade MitM (FREAK)</li>
-</ul>
+<div class="highlighter-rouge"><pre class="highlight"><code>Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
+1. An asset has a known CVE open. 
+2. An attack come in that matches the signature for that CVE on that asset and 
+3. One or more IOCs are detected/correlated post attack
+</code></pre>
+</div>
 
-<p>These CVEs related to the <a href="https://freakattack.com/">TLS FREAK attack</a> which is an SSL cipher downgrade issue.  They jumped out at me as I see these on tests quite a bit and frankly, they don’t generally get rated as that serious of an issue.</p>
+<p>The “mystery sauce” here is part 3 around IOCs to detect a successful exploit, as that’s tricky to do with a MiTM attack like the two FREAK CVEs.  Attackers who successfully exploited that may just intercept sensitive data from the connection and them misuse it elsewhere, which is virtually impossible to correlate.</p>
 
-<p>To draw an analogy if it turns out that these were two of the most successful attacks of 2015, this is kind of like (to me) a scientist saying they’ve perfected <strong>cold fusion</strong>! a) it’s very unlikely and b) if true it’s extremely significant and deserves a lot more prominence than a footnote in the DBIR!</p>
+<p>Kenna also provided some interesting graphs for these vulns <a href="http://www.stathat.com/s/4813HmgKhyPk">here</a> and <a href="http://www.stathat.com/s/YSHQp2H6OAin">here</a> which show large spikes of activity initially followed by periodic smaller spikes through the year.</p>
 
-<h2 id="why-is-it-unlikely">Why is it unlikely?</h2>
+<p>Now, to me, that doesn’t really seem to fit a real attack on this issue as I kind of doubt that many people have the ability to crack 800k even weak RSA keys at once, also if someone had compromised that volume of SSL connections in a short space of time you’d have thought there would’ve been some fallout from it…</p>
 
-<p>It’s unlikely because to exploit this issues there’s a number of pre-requisites that need to be satisfied.</p>
+<p>However, what it does match is someone running a scanning tool over the large parts of the Internet looking for this vulnerability.  A scanning tool for this will negotiate a connection using the weak RSA keys, that’s how they work.</p>
 
-<ol>
-  <li><strong>MiTM</strong> - This is the big one.  This issue is only exploitable when the attacker can sit in a position to intercept and modify traffic between the client and the server.</li>
-  <li><strong>Client + Server Vuln. required</strong> - Unlike some of the other SSL vulnerabilities we’ve seen this requires a vulnerable client and server. Most popular browsers got patched for this pretty quickly (either via auto-update or monthly patch) so the window of attack for most users was pretty small.</li>
-  <li><strong>Cryptographic Power</strong>.  We’re talking about the ability to mass crack ciphers here.  Now they’re not strong ones (that’s the point of the attack) but still this is some endevour to do at scale.</li>
-  <li><strong>Detecting Exploitation</strong>.  To detect exploitation requires that the sensor can tell when the ciphersuite is downgraded,  the attacker cracks the key and then presumably carries out some follow-on attack.</li>
-</ol>
+<p>Looking at the graph for CVE-2015-0204, we can see a …. huge spike in activity around March 2015, when… the researchers for the FREAK attack did a large scan looking for the issue. Looking at the <a href="">Freak Attack</a> page we see a note</p>
 
-<h2 id="what-does-it-mean">What does it mean?.</h2>
+<div class="highlighter-rouge"><pre class="highlight"><code>The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
+</code></pre>
+</div>
 
-<p>So lets assume these are indeed two of the most exploited vulnerabilities of 2015, what would that mean?</p>
+<p>indicating that they did a big scan in March 2015 which roughly correlates with the big spike in Kenna’s graph.  I’d also guess that a lot of other researchers would scan around that time as it was when the vulnerability was released.</p>
 
-<ul>
-  <li>There are a set of attackers who have MiTM positions to attack large numbers of clients and servers on the Internet</li>
-  <li>Those attackers have the processing power to mass-crack cryptographic keys gathered from intercepted connections presumably quickly enough to do something with the key in question.</li>
-</ul>
+<p>So whilst I can’t be really sure, if I was a betting man, I’d suggest that Kenna’s data doesn’t point to a sophisticated attacker exploiting an SSL MITM issue, but to a group of security researchers scanning a large number of sites after they had announced their vulnerability.</p>
 
-<p>If this is true that’s a pretty serious problem, as this set of attackers are hardly going to stop what they’re doing once the patch rate for FREAK improves as it did quite rapidly.</p>
+<p>The only mystery then is “what was the IOC seen on the affected hosts?”.</p>
 
-<p>Anyway, from the OSVDB blog I understand that Kenna are planning a explanatory blog posting, which I very much look forward to reading.  Things I would really like to see in that would be</p>
-
-<ul>
-  <li>Details of how detection successful exploitation of FREAK was achieved.</li>
-  <li>Details on what the attack group did with this afterwards.</li>
-  <li>Details of what threat group carried out these attacks.</li>
-</ul>
 
 	  </div>
 
@@ -258,10 +247,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/03/06/The-Dangers-Of-Docker.sock/" title="The Dangers of Docker.sock">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/" title="Verizon DBIR, Vulnerabilities and Cold Fusion">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2016/05/02/Verizon-DBIR-Vulns-Redux/" title="Verizon DBIR, Vulnerabilities and Cold Fusion">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
