@@ -187,7 +187,7 @@ CMD ["jekyll", "serve", "-H", "0.0.0.0"]
 </code></pre>
 </div>
 
-<p>from the base jekyll install it basically just adds the working directory and runs jekyll to serve up the container.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.</p>
+<p>from the base jekyll install it basically just adds the git working directory to the image and runs jekyll to serve up the presentation.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.</p>
 
 <p>This is also a useful time to use a <code class="highlighter-rouge">.dockerignore</code> file to avoid the container getting all the git history which it doesn’t need</p>
 
