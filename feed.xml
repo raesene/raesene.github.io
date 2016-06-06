@@ -7,6 +7,51 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Presenting from a Docker Container</title>
+				<description>&lt;p&gt;I’ve been presenting a bit recently on &lt;a href=&quot;http://www.docker.com&quot;&gt;docker&lt;/a&gt; and in an attempt to keep my presentation environment relatively I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.&lt;/p&gt;
+
+&lt;p&gt;After some looking around I settled on using &lt;a href=&quot;https://github.com/dploeger/jekyll-revealjs&quot;&gt;jekyll-revealjs&lt;/a&gt; which combines &lt;a href=&quot;https://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt; publishing with the &lt;a href=&quot;http://lab.hakim.se/reveal-js/#/&quot;&gt;Reveal.JS&lt;/a&gt; HTML/JS presentation framework.&lt;/p&gt;
+
+&lt;p&gt;This turns out to have quite a nice workflow for creating presentations as all your content is a series of markdown files and you can just commit changes to a git repository, which makes updating and modifying content for your presentation very easy, basically anywhere with a text editor does the job.&lt;/p&gt;
+
+&lt;p&gt;Also once your presentation is complete you can access from any machine with a browser, which removes the ties of having to run on a specific operating system with specific presentation software installed.&lt;/p&gt;
+
+&lt;p&gt;All that said, one slight downside which occurred to me is that whilst editing the presentation is as simple as running a text editor, when you’re presenting you need a working jekyll environment with a valid ruby install and the attendant gems. This sounded like a classic case where …. you guessed it…. Docker comes in handy !&lt;/p&gt;
+
+&lt;p&gt;So I turned my presentation into a docker container :)&lt;/p&gt;
+
+&lt;p&gt;The Dockerfile to do this was really pretty straightforward&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM jekyll/jekyll
+MAINTAINER Rory McCune &amp;lt;rorym@mccune.org.uk&amp;gt;
+RUN mkdir /presentation
+WORKDIR /presentation/
+ADD . /presentation/
+RUN chown -R 1000:1000 /presentation/*
+CMD [&quot;jekyll&quot;, &quot;serve&quot;, &quot;-H&quot;, &quot;0.0.0.0&quot;]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;from the base jekyll install it basically just adds the working directory and runs jekyll to serve up the container.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.&lt;/p&gt;
+
+&lt;p&gt;This is also a useful time to use a &lt;code class=&quot;highlighter-rouge&quot;&gt;.dockerignore&lt;/code&gt; file to avoid the container getting all the git history which it doesn’t need&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;.git
+.gitignore
+README.md
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;After that it’s just a questions of running the container and exposing the relevant port, and your presentation will run from any machine that has docker installed and a browser to view the content.&lt;/p&gt;
+
+&lt;p&gt;In my case it’s let me have a backup of my talk sitting on a &lt;a href=&quot;http://presentation.pwndland.uk&quot;&gt;web server&lt;/a&gt; in case of last minute laptop problems.  I may also have created a Kubernetes cluster to run it, but that’s a story for another blog post :)&lt;/p&gt;
+</description>
+				<pubDate>Mon, 06 Jun 2016 10:01:39 +0100</pubDate>
+				<link>/blog/2016/06/06/Presentation-In-A-Docker-Container/</link>
+				<guid isPermaLink="true">/blog/2016/06/06/Presentation-In-A-Docker-Container/</guid>
+			</item>
+		
+			<item>
 				<title>Verizon DBIR Vulnerabilities Redux</title>
 				<description>&lt;p&gt;Since my &lt;a href=&quot;https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/&quot;&gt;last post&lt;/a&gt; on this there have been quite a few conversations had on twitter and we’ve now got &lt;a href=&quot;http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/&quot;&gt;Kenna’s blog post&lt;/a&gt; with additional details on their methodology.&lt;/p&gt;
 
@@ -400,66 +445,6 @@ If we tried to use the same layers in a remapped range environment it would near
 				<pubDate>Thu, 23 Jul 2015 20:56:47 +0100</pubDate>
 				<link>/blog/2015/07/23/using-docker-for-security-testing/</link>
 				<guid isPermaLink="true">/blog/2015/07/23/using-docker-for-security-testing/</guid>
-			</item>
-		
-			<item>
-				<title>Some notes on docker</title>
-				<description>&lt;p&gt;I’ve been spending some time this weekend looking more at docker and where I think it could be useful for my workflows, and along the way I’ve learned a couple of things which I didn’t know, so I thought it would be worth recording them, in case they’re useful to others.  None of this is particularly earth shattering but hey could save someone some time :)&lt;/p&gt;
-
-&lt;h2 id=&quot;images-and-containers&quot;&gt;Images and Containers&lt;/h2&gt;
-
-&lt;p&gt;First was the distinction between images and containers.  Images are what you build from (e.g. a template) containers are running instances of those images.&lt;/p&gt;
-
-&lt;h2 id=&quot;container-persistence&quot;&gt;Container Persistence&lt;/h2&gt;
-
-&lt;p&gt;If you do one of the canonical examples that’s provided in many tutorials&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -t -i ubuntu:latest /bin/bash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.&lt;/p&gt;
-
-&lt;p&gt;From that you might get the impression that docker container filesystems are not persistent (i.e. when the exit all the data is lost), but that’s not the case from what I can see.&lt;/p&gt;
-
-&lt;p&gt;To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker ps -a
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;which will list all the container instances you’ve ever run on that system and it’ll look something like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
-39c1e5cf8319        raesene/auto-docker-dradis   &quot;bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&amp;gt;3000/tcp   cranky_kilby
-e529903a3183        raesene/auto-docker-dradis   &quot;bundle exec rails s   55 minutes ago                                                           compassionate_yonath
-f084aaca32ee        raesene/dradisframework      &quot;bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
-8a8f7b95082a        2bfb337a0aa8                 &quot;bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
-8a2a0046b769        ruby:latest                  &quot;/bin/bash&quot;            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker start compassionate_goodall
-docker attach compassionate_goodall
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;h2 id=&quot;docker-hub-build-options&quot;&gt;docker hub build options&lt;/h2&gt;
-
-&lt;p&gt;There’s two options for getting your builds onto docker hub.  The first is to get a container, make modifications to it on your own docker engine and then commit the changes back to your own repository on docker hub.  This works fine but is rather lacking in transparancy as to what went into the build and also doesn’t really lend to others participating.&lt;/p&gt;
-
-&lt;p&gt;The other option is using Docker Hub automated builds, where a github/bitbucket repository is created with the Dockerfile present and then Docker Hub handles the build in an automated fashion from that Dockerfile. &lt;a href=&quot;https://docs.docker.com/docker-hub/builds/&quot;&gt;docker automated build docs&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;exposing-docker-ports&quot;&gt;Exposing docker ports&lt;/h2&gt;
-
-&lt;p&gt;By default containers have no ports exposed the the host network and many containers do not have things like SSHD installed, so remote access isn’t there by default.  The best way to map a port from the host to the guest is when the docker run command is used with the &lt;code class=&quot;highlighter-rouge&quot;&gt;-p&lt;/code&gt; option.&lt;/p&gt;
-
-</description>
-				<pubDate>Sun, 05 Jul 2015 20:10:15 +0100</pubDate>
-				<link>/blog/2015/07/05/some-notes-on-docker/</link>
-				<guid isPermaLink="true">/blog/2015/07/05/some-notes-on-docker/</guid>
 			</item>
 		
 	</channel>
