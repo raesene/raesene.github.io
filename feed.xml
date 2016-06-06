@@ -8,7 +8,7 @@
 		
 			<item>
 				<title>Presenting from a Docker Container</title>
-				<description>&lt;p&gt;I’ve been presenting a bit recently on &lt;a href=&quot;http://www.docker.com&quot;&gt;docker&lt;/a&gt; and in an attempt to keep my presentation environment relatively I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.&lt;/p&gt;
+				<description>&lt;p&gt;I’ve been presenting a bit recently on &lt;a href=&quot;http://www.docker.com&quot;&gt;docker&lt;/a&gt; and in an attempt to keep my presentation environment relatively simple, I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.&lt;/p&gt;
 
 &lt;p&gt;After some looking around I settled on using &lt;a href=&quot;https://github.com/dploeger/jekyll-revealjs&quot;&gt;jekyll-revealjs&lt;/a&gt; which combines &lt;a href=&quot;https://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt; publishing with the &lt;a href=&quot;http://lab.hakim.se/reveal-js/#/&quot;&gt;Reveal.JS&lt;/a&gt; HTML/JS presentation framework.&lt;/p&gt;
 
