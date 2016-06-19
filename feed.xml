@@ -71,6 +71,8 @@
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
+&lt;p&gt;Once we’ve got this plugin working, we can add it to a session handling rule in Burp’s project options.  You set the action to be “run macro” and then in macro handling there’s an option to invoke your extension after running the macro.  If you’ve loaded the plugin into burp ok, your plugin name should be on the drop down and you can insert it to have it run.&lt;/p&gt;
+
 &lt;p&gt;The final code is up on my &lt;a href=&quot;https://github.com/raesene/burp_sample_plugins/blob/master/test_header_injection.rb&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 19 Jun 2016 10:01:39 +0100</pubDate>
