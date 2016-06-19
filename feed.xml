@@ -7,6 +7,78 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Burp Plugin for use with JWT Tokens</title>
+				<description>&lt;p&gt;One of the things that you get used to after using &lt;a href=&quot;https://portswigger.net/&quot;&gt;Burp&lt;/a&gt; for a while is that if there’s any area that it doesn’t have native functionality for, it’s possible to use Extender to code up your own.  I had cause to do a bit of this recently and as with the previous time I looked at this (&lt;a href=&quot;https://raesene.github.io/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/&quot;&gt;for passive scanner checks&lt;/a&gt;) there were some gaps in the documentation for doing this with JRuby, so I thought I’d write it up.&lt;/p&gt;
+
+&lt;p&gt;This time, I was looking to automate the process of getting a new JWT token as a session handling rule for an application that needed a new token with each request.  Burp has pretty good session handling rules, but AFAIK at the moment they don’t cover the scenario where you need to embed your value into an HTTP header (as you do with JWT tokens sometimes).&lt;/p&gt;
+
+&lt;p&gt;To do this what I did was write some code that implemented the ISessionHandlingAction interface using JRuby.  It’s a pretty simple interface, just two methods, so it wasn’t too tricky to get working.&lt;/p&gt;
+
+&lt;p&gt;The main action you need to look at is called &lt;code class=&quot;highlighter-rouge&quot;&gt;performAction&lt;/code&gt; which takes two parameters which represent the request to be modified and the results of any macros that have been run.  That second part is important as using a macro is how we’re going to get our token to inject into the request.&lt;/p&gt;
+
+&lt;p&gt;So first we set a couple of variables with the information from our two input requests.  We use these later on to get information about the requests that we need to extract data from them&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#This analyses the request that we&#39;re going to modify&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#This gets the first response from a macro item... should work for the basic case&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;macro_response_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macroItems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The next bit is to get the token out of our macro response.  the idea of this process is that we use a burp macro to replay a request which generates a new token and then we extract it and insert it into new requests, so we’ll need that token.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Extract the JWT token from the macro response&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;macro_msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macroItems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;macro_body_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macro_response_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getBodyOffset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;macro_body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macro_msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body_offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;macro_body_string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;bytesToString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;jwt_token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body_string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt_token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;jwt&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Next up we need to ensure that any existing Authorization header is removed before we add our new one.  This code is a bit brittle at the moment as it doesn’t account for cases where you have other authorization headers you might want (e.g. an HTTP basic one) or cases where there are multiple headers to remove.&lt;/p&gt;
+
+&lt;p&gt;One thing I found a little tricky in this, coming from a ruby background, was the handling of removing an element from the array.  If you were doing this in ruby you might use &lt;code class=&quot;highlighter-rouge&quot;&gt;delete!&lt;/code&gt; to remove the element, but it’s important to note that the getHeaders call doesn’t return a ruby array, it returns a Java ArrayList which has a different set of methods altogether.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Get the headers from our base request&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getHeaders&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#we need a ref for the existing authorisation header if any to delete&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&#39;&#39;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#So headers is an ArrayList so no ruby delete methods first iterate over and get our header&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=~&lt;/span&gt; &lt;span class=&quot;sr&quot;&gt;/Authorization: JWT/&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#then remove the header if it exists &lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;Then with our new JWT token in hand and any previous one removed we just add our token into the request and send it on its way&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Add in our new authorization header&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&#39;Authorization: JWT &#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#We need to get the body to add to our headers which is what the next three lines do&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getBodyOffset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#Now we can create our new message with the headers and body that we need&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;buildHttpMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#Lets just log something so we know it&#39;s doing something&lt;/span&gt;
+&lt;span class=&quot;vi&quot;&gt;@stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Changed a message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#Set our Request to be the modified version from our code.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The final code is up on my &lt;a href=&quot;https://github.com/raesene/burp_sample_plugins/blob/master/test_header_injection.rb&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 19 Jun 2016 10:01:39 +0100</pubDate>
+				<link>/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</link>
+				<guid isPermaLink="true">/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</guid>
+			</item>
+		
+			<item>
 				<title>Presenting from a Docker Container</title>
 				<description>&lt;p&gt;I’ve been presenting a bit recently on &lt;a href=&quot;http://www.docker.com&quot;&gt;docker&lt;/a&gt; and in an attempt to keep my presentation environment relatively simple, I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.&lt;/p&gt;
 
@@ -409,42 +481,6 @@ If we tried to use the same layers in a remapped range environment it would near
 				<pubDate>Sat, 15 Aug 2015 20:06:39 +0100</pubDate>
 				<link>/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</link>
 				<guid isPermaLink="true">/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</guid>
-			</item>
-		
-			<item>
-				<title>Using Docker for Security Testing</title>
-				<description>&lt;p&gt;Following on from my &lt;a href=&quot;http://raesene.github.io/blog/2015/07/05/some-notes-on-docker/&quot;&gt;previous post&lt;/a&gt; about Docker, I’ve been giving some thoughts to how I could make use of this in my day-to-day work of security testing.&lt;/p&gt;
-
-&lt;p&gt;There’s a couple of areas where I can see Docker being quite useful, mainly due to the ease of maintaining and installing applications and also the reduced resource utilization over “tradtional” virtual machines.&lt;/p&gt;
-
-&lt;p&gt;The first one is in isolating security testing applications which require a bit of setup or a particular environment to operate in.  Some very useful security testing tools are slightly more complex to setup and run than just doing a  &lt;code class=&quot;highlighter-rouge&quot;&gt;git clone&lt;/code&gt; of the repo and running a script and there can always be conflicts in the version of underlying tools and libraries required for them to run. These tools can benefit from the isolation that using a containerized version brings.&lt;/p&gt;
-
-&lt;p&gt;Already on &lt;a href=&quot;https://hub.docker.com&quot;&gt;Docker Hub&lt;/a&gt; you can see a number of containers avaiable which do this for you.  An example is &lt;a href=&quot;http://www.openvas.org/&quot;&gt;OpenVAS&lt;/a&gt; for which there are a number of containers available, for example &lt;a href=&quot;https://registry.hub.docker.com/u/mikesplain/openvas/&quot;&gt;this one&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;One of the nice things about containers built using the automated build approach is that Docker Hub will show you the dockerfile used to build the container, which provides some level of transparancy over what you’re downloading (and the syntax is relatively basic, so easy to see what’s going on).  You still obviously have to trust Docker Hub and the sources of data used to build the container, which may not be applicable to some environments, and there a better option might be an internal docker repository with internally validated builds.  Even there, the Docker Hub examples are useful to base your Dockerfiles on.&lt;/p&gt;
-
-&lt;p&gt;Another way in which containers can be handy is in creating new, consistent, security test environments for each piece of work done.  A common problem in security testing is ensuring that your testing environment is clear of any data from previous reviews, to avoid inadvertant contamination and also ensuring that your tools are regularly updated.&lt;/p&gt;
-
-&lt;p&gt;Using a containerized image as your base here is quite straightforward as you just get an image, and then create a new container based on that image for each review.  I’ve started a sample one &lt;a href=&quot;https://registry.hub.docker.com/u/raesene/sectest/&quot;&gt;here&lt;/a&gt; which shows some of the basic tools.  The Dockerfile is on github &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;, and could be useful as a starting point for others.&lt;/p&gt;
-
-&lt;p&gt;Now you could replicate this with virtual machines, but the downside there is that the disk space requirements for a new VM per test would be pretty hefty and cloning/starting a new VM can be a bit slow, when compared to containers.  Depending on the type of testing you do, you may need the more complete environemnt that a VM provides, but I reckon for a lot of  testing a container should work just fine.&lt;/p&gt;
-
-&lt;p&gt;Another potential advantage of this approach is that you could archive off the container at the end of the test which could make reproducing findings at a later date simpler (less risk of tools updates changing the results of a test)&lt;/p&gt;
-
-&lt;h2 id=&quot;some-other-security-testing-containers&quot;&gt;Some Other Security Testing Containers&lt;/h2&gt;
-
-&lt;p&gt;As I mentioned before there are quite a few containers turning up on Docker Hub which could be useful, here’s some of the ones I’ve seen so far&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/raesene/auto-docker-dradis/&quot;&gt;Dradis community&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/owasp/zap2docker-stable/&quot;&gt;OWASP ZAP&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/kalilinux/kali-linux-docker/&quot;&gt;Kali Linux&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://registry.hub.docker.com/u/wpscanteam/wpscan/&quot;&gt;WPScan&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Thu, 23 Jul 2015 20:56:47 +0100</pubDate>
-				<link>/blog/2015/07/23/using-docker-for-security-testing/</link>
-				<guid isPermaLink="true">/blog/2015/07/23/using-docker-for-security-testing/</guid>
 			</item>
 		
 	</channel>
