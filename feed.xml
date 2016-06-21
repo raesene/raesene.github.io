@@ -7,6 +7,63 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>A couple of initial thoughts on Docker Swarm mode and 1.12</title>
+				<description>&lt;p&gt;It’s Dockercon time of year again, and of course you know what that means… loads of cool new features coming to the Docker ecosystem.  I’ve been (enviously) watching all the action remotely on twitter and various blogs and one of the features that jumped out at me was the new swarm mode for Docker engine. The idea of providing very easy to use clustering features for containerization is of course very attractive, but there are possible security concerns, both with encryption of traffic amongst swarm nodes and authentication/authorisation for systems joining the cluster.&lt;/p&gt;
+
+&lt;p&gt;All the demos from various blogs show the setup of the swarm being super-simple, with only a couple of commands needed to get going (for example &lt;a href=&quot;https://ordina-jworks.github.io/conference/2016/06/20/whats-new-in-docker-112.html&quot;&gt;this post&lt;/a&gt;)&lt;/p&gt;
+
+&lt;p&gt;So I thought this was worth a bit of investigation to see what’s happening under the covers.  I set-up a couple of VMs and installed docker 1.12 rc2 on both.&lt;/p&gt;
+
+&lt;h1 id=&quot;network-attack-surface&quot;&gt;Network Attack Surface&lt;/h1&gt;
+
+&lt;p&gt;Starting with the master node, after installing docker engine but before running &lt;code class=&quot;highlighter-rouge&quot;&gt;docker swarm init&lt;/code&gt; there are no network connections belonging to the docker process as, by default it only listens on the unix socket. After initializing the swarm, we can see they look like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112manager:~$ sudo netstat -tunap
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 192.168.41.185:7946     0.0.0.0:*               LISTEN      1064/dockerd
+tcp6       0      0 :::2377                 :::*                    LISTEN      1064/dockerd
+tcp6       0      0 127.0.0.1:2377          127.0.0.1:58742         ESTABLISHED 1064/dockerd
+udp        0      0 192.168.41.185:7946     0.0.0.0:*                           1064/dockerd
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;from that we can see that running the swarm command adds some services listening on 7946/TCP and UDP and 2377/TCP.  From &lt;a href=&quot;https://docs.docker.com/engine/swarm/swarm-tutorial/&quot;&gt;the documentation&lt;/a&gt; we can see that these are used for cluster management and node communications.  This is kind of interesting from a security standpoint as it means that we have a network attack surface to look at, which for vanilla docker engine we didn’t.&lt;/p&gt;
+
+&lt;h1 id=&quot;lack-of-authentication&quot;&gt;(Lack) of Authentication&lt;/h1&gt;
+
+&lt;p&gt;Possibly more interesting, is how authentication for swarm nodes is set-up by default.&lt;/p&gt;
+
+&lt;p&gt;After we’ve got our swarm started, we can go to our worker node and just type &lt;code class=&quot;highlighter-rouge&quot;&gt;rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377&lt;/code&gt; and we’re joined to the swarm.  Indeed really easy.&lt;/p&gt;
+
+&lt;p&gt;From this the more security minded amongst you will have noticed something…. We weren’t asked for any credentials when joining the swarm!  So by default, anyone running docker-engine on a network that can contact the master can join the swarm and be assigned workloads as part of the swarm.&lt;/p&gt;
+
+&lt;p&gt;Whilst this is obviously a nice setup for ease of development, I’d strongly recommend changing the defaults here if you’re running this in production.  As expected from &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/swarm_init/&quot;&gt;the documentation&lt;/a&gt; there are options which can be run at swarm creation time to change the &lt;code class=&quot;highlighter-rouge&quot;&gt;autoaccept&lt;/code&gt; policy for the swarm and also allows for a secret that needs specified to join the swarm.&lt;/p&gt;
+
+&lt;p&gt;To specify a secret you just add it to the init command&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112manager:~$ docker swarm init --secret loremipsum123
+Swarm initialized: current node (0qkezlwlccd7wfuadshi77zsy) is now a manager.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;and then if you try to join this swarm without specifying the secret, Docker will throw an error&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+Error response from daemon: rpc error: code = 3 desc = A valid secret token is necessary to join this cluster: invalid policy or secret
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Once you’re all setup with your secrets specified, you’re good to get started setting up services and deploying containers over the swarm.&lt;/p&gt;
+
+&lt;p&gt;Definitely looks promising and lots of stuff to get stuck into.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 19 Jun 2016 10:01:39 +0100</pubDate>
+				<link>/blog/2016/06/19/Docker-Swarm/</link>
+				<guid isPermaLink="true">/blog/2016/06/19/Docker-Swarm/</guid>
+			</item>
+		
+			<item>
 				<title>Burp Plugin for use with JWT Tokens</title>
 				<description>&lt;p&gt;One of the things that you get used to after using &lt;a href=&quot;https://portswigger.net/&quot;&gt;Burp&lt;/a&gt; for a while is that if there’s any area that it doesn’t have native functionality for, it’s possible to use Extender to code up your own.  I had cause to do a bit of this recently and as with the previous time I looked at this (&lt;a href=&quot;https://raesene.github.io/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/&quot;&gt;for passive scanner checks&lt;/a&gt;) there were some gaps in the documentation for doing this with JRuby, so I thought I’d write it up.&lt;/p&gt;
 
@@ -433,56 +490,6 @@ If we tried to use the same layers in a remapped range environment it would near
 				<pubDate>Sun, 31 Jan 2016 19:36:39 +0000</pubDate>
 				<link>/blog/2016/01/31/is-this-thing-on/</link>
 				<guid isPermaLink="true">/blog/2016/01/31/is-this-thing-on/</guid>
-			</item>
-		
-			<item>
-				<title>Set-up a Complete Security Test Environment with One Command and Docker Compose</title>
-				<description>&lt;p&gt;Following on from my last post on &lt;a href=&quot;http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/&quot;&gt;Using Docker for Security Testing&lt;/a&gt;, I thought it would be interesting to see if we can set-up an even more automated environment by using &lt;a href=&quot;https://www.docker.com/docker-compose&quot;&gt;Docker Compose&lt;/a&gt;.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.&lt;/p&gt;
-
-&lt;p&gt;For the use case of Security Testing I was thinking it would be nice to have containers which provide a service that you connect to over a network port, for example &lt;a href=&quot;http://dradisframework.org/&quot;&gt;Dradis&lt;/a&gt; or &lt;a href=&quot;http://www.openvas.org/&quot;&gt;OpenVAS&lt;/a&gt;, alongside your main command line driven container which has tools that you’re more likely to use interactively on a test, for example &lt;a href=&quot;https://nmap.org/&quot;&gt;Nmap&lt;/a&gt; or &lt;a href=&quot;https://github.com/rapid7/metasploit-framework&quot;&gt;Metasploit&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;It turns out this is relatively straightforward using Docker Compose.  You can set-up a yml file with information on the containers you want to instantiate (the default name is docker-compose.yml) and then just spin that up with a single command.&lt;/p&gt;
-
-&lt;p&gt;So for this setup the Docker Compose file looks like this&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;s&quot;&gt;sectest&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/sectest&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/bin/bash&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-     &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;
-     &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/auto-docker-dradis&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000:3000&quot;&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bundle exec rails server&lt;/span&gt;
-&lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mikesplain/openvas&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;443:443&quot;&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9390:9390&quot;&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9391:9391&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created &lt;a href=&quot;https://github.com/raesene/sectest&quot;&gt;here&lt;/a&gt;.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.&lt;/p&gt;
-
-&lt;p&gt;In the next section we start up the dradis container and here it’s worth noting two points.  The first is the “ports” command.  This sets up port mappings so that the service will be visible on the docker host, which is where we’ll be connecting to it from.  The second thing to note is the “command” directive which just specifies what should be run when the container comes up.&lt;/p&gt;
-
-&lt;p&gt;In the third section we specify the openvas container and set-up some port mappings to expose the relevant ports to the host.&lt;/p&gt;
-
-&lt;p&gt;Now we’ve got this file created we just need to start things up.  The command I’ve used for this is&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker-compose run --service-ports sectest /bin/bash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.&lt;/p&gt;
-
-&lt;p&gt;If all goes well this should download and start-up all three containers and you should have a command prompt in the sectest container, along with started accessible services for the other two containers.&lt;/p&gt;
-
-</description>
-				<pubDate>Sat, 15 Aug 2015 20:06:39 +0100</pubDate>
-				<link>/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</link>
-				<guid isPermaLink="true">/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/</guid>
 			</item>
 		
 	</channel>
