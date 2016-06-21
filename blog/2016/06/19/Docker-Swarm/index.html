@@ -193,9 +193,24 @@ udp        0      0 192.168.41.185:7946     0.0.0.0:*                           
 
 <p>From this the more security minded amongst you will have noticed something…. We weren’t asked for any credentials when joining the swarm!  So by default, anyone running docker-engine on a network that can contact the master can join the swarm and be assigned workloads as part of the swarm.</p>
 
-<p>Whilst this is obviously a nice setup for ease of development, I’d strongly recommend changing the defaults here if you’re running this in production.  As expected from <a href="https://docs.docker.com/engine/reference/commandline/swarm_init/">the documentation</a> there are options which can be run at swarm creation time to change the <code class="highlighter-rouge">autoaccept</code> policy for the swarm and also allows for a secret that needs specified to join the swarm.</p>
+<p>Whilst this is obviously a nice setup for ease of development, I’d strongly recommend changing the defaults here if you’re running this in production.  As expected from <a href="https://docs.docker.com/engine/reference/commandline/swarm_init/">the documentation</a> there are options which can be run at swarm creation time to improve this situation.</p>
 
-<p>To specify a secret you just add it to the init command</p>
+<p>Firstly the autoaccept policy of the swarm can be changed.  This determines whether a swarm will automatically add new nodes or whether a manager has to explicitly accept them.  We can change the auto-accept policy with a command to our existing swarm</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>root@docker112manager:/etc/systemd/network# docker swarm update --auto-accept none
+Swarm updated.
+</code></pre>
+</div>
+
+<p>After this if we try to join a node to a swarm we get this message</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+Error response from daemon: Your node is in the process of joining the cluster but needs to be accepted by existing cluster member.
+To accept this node into cluster run "docker node accept epy504pa1vr9oe4p3fvsp6fp7" in an existing cluster manager. Use "docker info" command to see the current Swarm status of your node.
+</code></pre>
+</div>
+
+<p>The other option we have to improve the situation with regard to node authentication is to specify a secret required to joing the swarm.  To specify a secret you just add it to the init command or use swarm update. For example:-</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112manager:~$ docker swarm init --secret loremipsum123
 Swarm initialized: current node (0qkezlwlccd7wfuadshi77zsy) is now a manager.
@@ -209,9 +224,7 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 </code></pre>
 </div>
 
-<p>Once you’re all setup with your secrets specified, you’re good to get started setting up services and deploying containers over the swarm.</p>
-
-<p>Definitely looks promising and lots of stuff to get stuck into.</p>
+<p>Once you’re all setup with your secrets specified and your auto-accept policy set, you’re good to get started setting up services and deploying containers over the swarm.</p>
 
 	  </div>
 
