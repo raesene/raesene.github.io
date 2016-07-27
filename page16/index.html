@@ -165,6 +165,38 @@
   </span>
 
   <h2>
+    <a href="/blog/2007/01/28/firefox_extensi/">(Firefox) Extension Security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Here's one that I think will be a growing problem... 3rd party extension security.  I'll use Firefox as an example as it uses this kind of system, but I don't think that the problem is limited to Firefox.<br />
+So you've got a piece of software from an organisation you trust (whether you should or not's a different question), in this case the Firefox browser.  You download it and install it from the main site (hey if you're good you even check the MDS5SUM to make sure it's as packaged)<br />
+Now one of the best features of Firefox is the extensive range of extensions that are available to add useful functionality to the browser.  things like noscript or web developer are real handy things to have and I definitely install them every time I install Firefox.<br />
+Now here's the problem... do you trust the people that wrote those plug-ins, or an even wider question, do you trust the security of the environment that those plug-ins were developed in?  Do you even know who the person who wrote the plug-in is?<br />
+Some people may say "why do I care it's just a browser", yeah but do you do E-Commerce and put your credit card details into webpages? Do you do on-line banking?  do you use a browser for it?<br />
+A very brief read uncovered one instance of a rogue plug-in last year (more <a href="http://www.techweb.com/wire/security/191101268"> here</a> and <a href="http://www.heise-security.co.uk/news/76019"> here</a> ) but I doubt it'll be the last.<br />
+One thing I've not read up on yet is what security model there is for what actions a plug-in can take when installed... my instinct says that in this case there's not too much restriction, but worth investigating anyway.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    28th,
+    
+    2007
+  </span>
+
+  <h2>
     <a href="/blog/2007/01/28/security_blogge/">Security Bloggers Network</a>
   </h2>
 
@@ -420,34 +452,6 @@ Some of the commands I've found so far which seem handy "process list brief" and
     
     <p>A post over on <a href="http://www.whitehatsec.com/home/resources/articles/files/myth_busting_ajax_insecurity.html">White Hat Security</a> makes a great run at bursting the bubble of all the people saying that AJAX is some kind of terrible security risk.<br />
 I won't reiterate the arguments in the article, 'cause they do a pretty good job of laying out what the problems and non-problems of AJAX security are.  I'd just say that I agree this has been a really overhyped area of security.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    November
-    29th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="/blog/2006/11/29/more_on_windows/">More on windows cached password recovery</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="" href="http://www.off-by-one.net/misc/cachedump.html"></a><br />
-hmm looks like it's not quite as bad as I thought it was.  After a bit more reading on the subject, the windows cached password is not just an NTLM hash, it's actually a salted hash, with the salt being the username.<br />
-So rainbow tables aren't really a practical attack for this, although it's interesting to note that there's a John the ripper plug-in for cachedump now which enables you to do dictionary based/brute-force attacks on retrieved credentials</p>
 
     
     

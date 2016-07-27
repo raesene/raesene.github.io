@@ -7,6 +7,38 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Docker 1.12 - Macvlan</title>
+				<description>&lt;p&gt;Another new cool facet of the 1.12 release of Docker Engine is that Macvlan and Ipvlan support is leaving experimental and is available for all users.  So now instead of the rather convoluted procedure I mentioned &lt;a href=&quot;https://raesene.github.io/blog/2016/02/07/Exploration-in-Docker-bridging/&quot;&gt;last time I looked at this&lt;/a&gt; we can now simplify the setup of containers attached to the same network as the host, removing the need for NAT translation from the container network to the host network.&lt;/p&gt;
+
+&lt;p&gt;An aside first is that it can get a little confusing with Docker’s naming as you may be thinking “hey I already have containers on the docker bridge isn’t that already like being connected to the host network?”.  Well as explained &lt;a href=&quot;http://hicu.be/docker-container-network-types&quot;&gt;here&lt;/a&gt; what docker calls “bridged” is really “NAT” and macvlan is what most people would think of as “bridged”!&lt;/p&gt;
+
+&lt;p&gt;Anyway, the first step in getting a container online directly with the host interface is to create a new macvlan network&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker network create -d macvlan --subnet=192.168.41.0/24 --gateway=192.168.41.1 --ip-range=192.168.41.128/26 -o parent=ens33 testnet
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;So in this example our host network’s subnet is 192.168.41.0/24 and our gateway is just the default gateway for that network.  Where it gets a little interesting is that we need to specify an ip range that docker can use to hand out to containers that connect to this network.  At the moment there’s no supported way to get containers connecting to a macvlan network to use the host network’s DHCP server so you need to either specify an &lt;code class=&quot;highlighter-rouge&quot;&gt;--ip-range &lt;/code&gt; with a range that’s available and doesn’t overlap with a DHCP scope on the host network or alternatively you can pass &lt;code class=&quot;highlighter-rouge&quot;&gt;--ip &amp;lt;address&amp;gt;&lt;/code&gt; to the individual &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; commands that we use to create containers on this network.&lt;/p&gt;
+
+&lt;p&gt;Once you’ve created the network it’s just a question of specifying the network to use in the docker run command, so something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --network=testnet ubuntu:16.04 /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;should give you a container, likely with an address of 192.168.41.128 in this case.&lt;/p&gt;
+
+&lt;p&gt;A couple of other points worth noting about macvlan support.  You can only have one macvlan or ipvlan network setup on a Docker engine instance at the moment (although obviously you can have multiple containers connected to it), and from the macvlan network, you won’t be able to contact the IP address of the host system.&lt;/p&gt;
+
+&lt;p&gt;For more reading on this topic there’s a great set of articles at hicu.be on &lt;a href=&quot;http://hicu.be/docker-networking-macvlan-bridge-mode-configuration&quot;&gt;macvlan networking&lt;/a&gt; and &lt;a href=&quot;http://hicu.be/bridge-vs-macvlan&quot;&gt;bridges vs macvlan&lt;/a&gt; amongst others.&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 23 Jul 2016 10:05:39 +0100</pubDate>
+				<link>/blog/2016/07/23/Docker-MacVLAN/</link>
+				<guid isPermaLink="true">/blog/2016/07/23/Docker-MacVLAN/</guid>
+			</item>
+		
+			<item>
 				<title>A couple of initial thoughts on Docker Swarm mode and 1.12</title>
 				<description>&lt;p&gt;It’s Dockercon time of year again, and of course you know what that means… loads of cool new features coming to the Docker ecosystem.  I’ve been (enviously) watching all the action remotely on twitter and various blogs and one of the features that jumped out at me was the new swarm mode for Docker engine. The idea of providing very easy to use clustering features for containerization is of course very attractive, but there are possible security concerns, both with encryption of traffic amongst swarm nodes and authentication/authorisation for systems joining the cluster.&lt;/p&gt;
 
@@ -492,17 +524,6 @@ If we tried to use the same layers in a remapped range environment it would near
 				<pubDate>Thu, 04 Feb 2016 20:30:39 +0000</pubDate>
 				<link>/blog/2016/02/04/Docker-User-Namespaces/</link>
 				<guid isPermaLink="true">/blog/2016/02/04/Docker-User-Namespaces/</guid>
-			</item>
-		
-			<item>
-				<title>Is This Thing on </title>
-				<description>&lt;p&gt;One of the perenial problems of being an infrequent blogger is of course, you forget exactly how you used to do things…&lt;/p&gt;
-
-&lt;p&gt;So this post is just to make sure I’ve actually remembered how this is all set-up before I write something more substantive :)&lt;/p&gt;
-</description>
-				<pubDate>Sun, 31 Jan 2016 19:36:39 +0000</pubDate>
-				<link>/blog/2016/01/31/is-this-thing-on/</link>
-				<guid isPermaLink="true">/blog/2016/01/31/is-this-thing-on/</guid>
 			</item>
 		
 	</channel>
