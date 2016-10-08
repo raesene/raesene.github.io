@@ -165,7 +165,11 @@
 	  <div class="article_body">
 	  <p>I’ve been reading up on Kubernetes a bit recently and <a href="https://twitter.com/killahertz_">Jesse Hertz</a> pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.</p>
 
+<hr />
+
 <p><strong>td;dr</strong> if you can get access to the kubelet API port you can control the whole cluster and default configurations of Kubernetes are likely to make this possible, so be careful when setting up your clusters.</p>
+
+<hr />
 
 <p>So the issue I wanted to look at is this <a href="https://github.com/kayrus/kubelet-exploit">kubelet exploit</a>.  Basically the kubelet is the service which runs on Kubernetes nodes and manages things like the docker installation on that node amongst other things.  It receives commands from the API server which co-ordinates the actions of the nodes in the cluster.</p>
 
@@ -340,7 +344,7 @@ spec:
 
 <p>we can then run a command to cat out the /etc/shadow file of the underlying node</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>/kubectl exec test-pd -c test-container cat /test-pd/shadow
+<div class="highlighter-rouge"><pre class="highlight"><code>./kubectl exec test-pd -c test-container cat /test-pd/shadow
 </code></pre>
 </div>
 

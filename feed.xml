@@ -10,7 +10,11 @@
 				<title>Kubernetes - From Container to Cluster</title>
 				<description>&lt;p&gt;I’ve been reading up on Kubernetes a bit recently and &lt;a href=&quot;https://twitter.com/killahertz_&quot;&gt;Jesse Hertz&lt;/a&gt; pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.&lt;/p&gt;
 
+&lt;hr /&gt;
+
 &lt;p&gt;&lt;strong&gt;td;dr&lt;/strong&gt; if you can get access to the kubelet API port you can control the whole cluster and default configurations of Kubernetes are likely to make this possible, so be careful when setting up your clusters.&lt;/p&gt;
+
+&lt;hr /&gt;
 
 &lt;p&gt;So the issue I wanted to look at is this &lt;a href=&quot;https://github.com/kayrus/kubelet-exploit&quot;&gt;kubelet exploit&lt;/a&gt;.  Basically the kubelet is the service which runs on Kubernetes nodes and manages things like the docker installation on that node amongst other things.  It receives commands from the API server which co-ordinates the actions of the nodes in the cluster.&lt;/p&gt;
 
@@ -185,7 +189,7 @@ spec:
 
 &lt;p&gt;we can then run a command to cat out the /etc/shadow file of the underlying node&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/kubectl exec test-pd -c test-container cat /test-pd/shadow
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./kubectl exec test-pd -c test-container cat /test-pd/shadow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 
