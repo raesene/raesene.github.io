@@ -7,6 +7,36 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes Attack Surface - cAdvisor</title>
+				<description>&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
+
+&lt;p&gt;So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.&lt;/p&gt;
+
+&lt;p&gt;This cluster has three nodes on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.233&lt;/code&gt; , &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.201&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.232&lt;/code&gt; so we can start with&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nmap -sT -n -p- 192.168.41.201,232,233&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.&lt;/p&gt;
+
+&lt;p&gt;This provides quite a bit of information about the configuration of the cluster like a process list&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;and some details on the configuration of the docker daemon on the host&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
+
+&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a known issue https://github.com/kubernetes/kubernetes/issues/11710 but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
+
+</description>
+				<pubDate>Fri, 14 Oct 2016 19:05:39 +0100</pubDate>
+				<link>/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/</link>
+				<guid isPermaLink="true">/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes - From Container to Cluster</title>
 				<description>&lt;p&gt;I’ve been reading up on Kubernetes a bit recently and &lt;a href=&quot;https://twitter.com/killahertz_&quot;&gt;Jesse Hertz&lt;/a&gt; pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.&lt;/p&gt;
 
@@ -601,59 +631,6 @@ README.md
 				<pubDate>Sun, 14 Feb 2016 16:15:39 +0000</pubDate>
 				<link>/blog/2016/02/14/New-Docker-Compose-Features/</link>
 				<guid isPermaLink="true">/blog/2016/02/14/New-Docker-Compose-Features/</guid>
-			</item>
-		
-			<item>
-				<title>Exploration in Docker Bridging</title>
-				<description>&lt;p&gt;One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.&lt;/p&gt;
-
-&lt;p&gt;Docker does this by attaching the container to a bridge on the host and setting up iptables NAT rules to allow traffic to flow from this bridged network to the wider external network.  There’s a couple of downsides to this approach.  Firstly you need to explicitly specify inbound ports at container launch time if you want to have server services receive connections.  When you do this, docker sets up port-forwarding to allow that traffic into the container.&lt;/p&gt;
-
-&lt;p&gt;The problem with this approach is that if you’re running a service that sets ports up on the fly or which may change port during it’s runtime (e.g. metasploit) this is a bit on the inflexible side.&lt;/p&gt;
-
-&lt;p&gt;The other downside is the use of NAT, which can cause issues with some networking tools that make a large number of network connections (e.g. nmap).&lt;/p&gt;
-
-&lt;p&gt;One option to address this is to use the docker option &lt;code class=&quot;highlighter-rouge&quot;&gt;-net=host&lt;/code&gt; which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.&lt;/p&gt;
-
-&lt;p&gt;So ideally I’d like another option which provides no-NAT access to a container, ideally with an IP address on the host network subnet, with user namespaces enabled.  This is kind of similar to the VMWare Workstation/fusion setup with bridged networking.&lt;/p&gt;
-
-&lt;p&gt;I had quite a dig around in the official docker documentation to see if this kind of setup is possible using in-built functionality and I didn’t see a way of doing this, so a little manual work is required. However I did find some interesting references to working out this kind of problem notably this &lt;a href=&quot;https://stackoverflow.com/questions/25529386/how-can-i-set-a-static-ip-address-in-a-docker-container&quot;&gt;StackOverflow post&lt;/a&gt; and &lt;a href=&quot;http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/&quot;&gt;this&lt;/a&gt; slightly older post on Docker networking.&lt;/p&gt;
-
-&lt;p&gt;First in one shell we need to start our target container.  We use the option &lt;code class=&quot;highlighter-rouge&quot;&gt;--net=none&lt;/code&gt; to setup the container without having docker do it’s usual network setup routines.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;docker run -it --net&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;none --name&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;nettest ubuntu:14.04 /bin/bash&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Next we need to create our virtual interface as below, I’ve called it &lt;code class=&quot;highlighter-rouge&quot;&gt;virtual0&lt;/code&gt; , in my case &lt;code class=&quot;highlighter-rouge&quot;&gt;eno16777736&lt;/code&gt; is the name of my host ethernet interface&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip link add virtual0 link eno16777736 &lt;span class=&quot;nb&quot;&gt;type &lt;/span&gt;macvlan mode bridge&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;docker inspect --format &lt;span class=&quot;s1&quot;&gt;&#39;{ { .State.Pid }}&#39;&lt;/span&gt; nettest&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo mkdir -p /var/run/netns
-sudo ln -s /proc/3463/ns/net /var/run/netns/3463
-sudo ip link &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;virtual0 netns 3463&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the &lt;code class=&quot;highlighter-rouge&quot;&gt;ip netns exec&lt;/code&gt; command from the host&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip netns &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3463 ip link &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;virtual0 up&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;and we can then assign a DHCP address from the host network DHCP server to the container&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;sudo ip netns &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3463 dhclient virtual0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Edit:&lt;/strong&gt; I did find &lt;a href=&quot;https://github.com/gopher-net/macvlan-docker-plugin&quot;&gt;this project&lt;/a&gt; which looks to address the same problem, but at the moment it doesn’t seem to work for me…&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Edit2:&lt;/strong&gt; Well that was quick. The problems I had with the macvlan docker plugin got fixed (thanks to @nerdalert), so for a faster/less manual solution to this problem I’d recommend having a look at the link in the first edit!&lt;/p&gt;
-</description>
-				<pubDate>Sun, 07 Feb 2016 14:45:39 +0000</pubDate>
-				<link>/blog/2016/02/07/Exploration-in-Docker-bridging/</link>
-				<guid isPermaLink="true">/blog/2016/02/07/Exploration-in-Docker-bridging/</guid>
 			</item>
 		
 	</channel>
