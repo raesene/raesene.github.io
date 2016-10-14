@@ -20,11 +20,11 @@
 
 &lt;p&gt;This provides quite a bit of information about the configuration of the cluster like a process list&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;and some details on the configuration of the docker daemon on the host&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/assets/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
 
