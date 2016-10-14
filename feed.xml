@@ -26,6 +26,45 @@
 
 &lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
 
+&lt;p&gt;There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://192.168.41.233:4194/api/v2.0/spec?recursive=true&lt;/code&gt; and get output like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &quot;/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;: {
+        &quot;creation_time&quot;: &quot;2016-10-09T03:55:54.113949226+01:00&quot;,
+        &quot;aliases&quot;: [
+            &quot;k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de&quot;,
+            &quot;0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;
+        ],
+        &quot;namespace&quot;: &quot;docker&quot;,
+        &quot;labels&quot;: {
+            &quot;io.kubernetes.container.hash&quot;: &quot;27539310&quot;,
+            &quot;io.kubernetes.container.name&quot;: &quot;weave-npc&quot;,
+            &quot;io.kubernetes.container.restartCount&quot;: &quot;0&quot;,
+            &quot;io.kubernetes.container.terminationMessagePath&quot;: &quot;/dev/termination-log&quot;,
+            &quot;io.kubernetes.pod.name&quot;: &quot;weave-net-xf53p&quot;,
+            &quot;io.kubernetes.pod.namespace&quot;: &quot;kube-system&quot;,
+            &quot;io.kubernetes.pod.terminationGracePeriod&quot;: &quot;30&quot;,
+            &quot;io.kubernetes.pod.uid&quot;: &quot;af83b2df-8683-11e6-849b-000c29d33879&quot;
+        },
+        &quot;has_cpu&quot;: true,
+        &quot;cpu&quot;: {
+            &quot;limit&quot;: 10,
+            &quot;max_limit&quot;: 0,
+            &quot;mask&quot;: &quot;0-1&quot;
+        },
+        &quot;has_memory&quot;: true,
+        &quot;memory&quot;: {
+            &quot;limit&quot;: 9223372036854771712,
+            &quot;reservation&quot;: 9223372036854771712
+        },
+        &quot;has_custom_metrics&quot;: false,
+        &quot;has_network&quot;: false,
+        &quot;has_filesystem&quot;: true,
+        &quot;has_diskio&quot;: true,
+        &quot;image&quot;: &quot;weaveworks/weave-npc:1.7.0&quot;
+    },
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
 &lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
 
 &lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;

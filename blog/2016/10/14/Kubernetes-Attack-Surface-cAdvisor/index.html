@@ -181,6 +181,45 @@
 
 <p><img src="/assets/media/cadvisor_docker.png" alt="cadvisor docker" /></p>
 
+<p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
+        "creation_time": "2016-10-09T03:55:54.113949226+01:00",
+        "aliases": [
+            "k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de",
+            "0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f"
+        ],
+        "namespace": "docker",
+        "labels": {
+            "io.kubernetes.container.hash": "27539310",
+            "io.kubernetes.container.name": "weave-npc",
+            "io.kubernetes.container.restartCount": "0",
+            "io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
+            "io.kubernetes.pod.name": "weave-net-xf53p",
+            "io.kubernetes.pod.namespace": "kube-system",
+            "io.kubernetes.pod.terminationGracePeriod": "30",
+            "io.kubernetes.pod.uid": "af83b2df-8683-11e6-849b-000c29d33879"
+        },
+        "has_cpu": true,
+        "cpu": {
+            "limit": 10,
+            "max_limit": 0,
+            "mask": "0-1"
+        },
+        "has_memory": true,
+        "memory": {
+            "limit": 9223372036854771712,
+            "reservation": 9223372036854771712
+        },
+        "has_custom_metrics": false,
+        "has_network": false,
+        "has_filesystem": true,
+        "has_diskio": true,
+        "image": "weaveworks/weave-npc:1.7.0"
+    },
+</code></pre>
+</div>
+
 <p>This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.</p>
 
 <p>After noting this I had a look through the Kubernetes issue list and it looks like this is a <a href="https://github.com/kubernetes/kubernetes/issues/11710">known issue</a> but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.</p>
