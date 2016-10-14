@@ -28,7 +28,7 @@
 
 &lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
 
-&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a known issue https://github.com/kubernetes/kubernetes/issues/11710 but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
+&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
 
 </description>
 				<pubDate>Fri, 14 Oct 2016 19:05:39 +0100</pubDate>
