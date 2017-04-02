@@ -7,6 +7,93 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes Attack Surface - Service Tokens</title>
+				<description>&lt;p&gt;Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.&lt;/p&gt;
+
+&lt;p&gt;When pods are deployed to a cluster, in most default installs, the &lt;a href=&quot;https://kubernetes.io/docs/admin/admission-controllers/&quot;&gt;Admission Contoller&lt;/a&gt; will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a &lt;a href=&quot;https://kubernetes.io/docs/admin/service-accounts-admin/&quot;&gt;Service Account&lt;/a&gt; inside the containers that make up the pod.&lt;/p&gt;
+
+&lt;p&gt;This service account includes a token which is mounted at a predictable location &lt;code class=&quot;highlighter-rouge&quot;&gt;/var/run/secrets/kubernetes.io/serviceaccount/token&lt;/code&gt; .&lt;/p&gt;
+
+&lt;p&gt;What’s interesting is that, by default unless &lt;a href=&quot;https://kubernetes.io/docs/admin/authorization/rbac/&quot;&gt;RBAC&lt;/a&gt; is deployed, it’s likely that this token provides cluster admin privileges.&lt;/p&gt;
+
+&lt;p&gt;This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kubelet exploit&lt;/a&gt; ).&lt;/p&gt;
+
+&lt;p&gt;If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of &lt;a href=&quot;https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl&quot;&gt;kubectl&lt;/a&gt; and point it at your API Server with something like&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;then try out some kubernetes commands…&lt;/p&gt;
+
+&lt;p&gt;Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.&lt;/p&gt;
+
+&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
+
+&lt;p&gt;So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.&lt;/p&gt;
+
+&lt;p&gt;This cluster has three nodes on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.233&lt;/code&gt; , &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.201&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.232&lt;/code&gt; so we can start with&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nmap -sT -n -p- 192.168.41.201,232,233&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.&lt;/p&gt;
+
+&lt;p&gt;This provides quite a bit of information about the configuration of the cluster like a process list&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;and some details on the configuration of the docker daemon on the host&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://192.168.41.233:4194/api/v2.0/spec?recursive=true&lt;/code&gt; and get output like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &quot;/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;: {
+        &quot;creation_time&quot;: &quot;2016-10-09T03:55:54.113949226+01:00&quot;,
+        &quot;aliases&quot;: [
+            &quot;k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de&quot;,
+            &quot;0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;
+        ],
+        &quot;namespace&quot;: &quot;docker&quot;,
+        &quot;labels&quot;: {
+            &quot;io.kubernetes.container.hash&quot;: &quot;27539310&quot;,
+            &quot;io.kubernetes.container.name&quot;: &quot;weave-npc&quot;,
+            &quot;io.kubernetes.container.restartCount&quot;: &quot;0&quot;,
+            &quot;io.kubernetes.container.terminationMessagePath&quot;: &quot;/dev/termination-log&quot;,
+            &quot;io.kubernetes.pod.name&quot;: &quot;weave-net-xf53p&quot;,
+            &quot;io.kubernetes.pod.namespace&quot;: &quot;kube-system&quot;,
+            &quot;io.kubernetes.pod.terminationGracePeriod&quot;: &quot;30&quot;,
+            &quot;io.kubernetes.pod.uid&quot;: &quot;af83b2df-8683-11e6-849b-000c29d33879&quot;
+        },
+        &quot;has_cpu&quot;: true,
+        &quot;cpu&quot;: {
+            &quot;limit&quot;: 10,
+            &quot;max_limit&quot;: 0,
+            &quot;mask&quot;: &quot;0-1&quot;
+        },
+        &quot;has_memory&quot;: true,
+        &quot;memory&quot;: {
+            &quot;limit&quot;: 9223372036854771712,
+            &quot;reservation&quot;: 9223372036854771712
+        },
+        &quot;has_custom_metrics&quot;: false,
+        &quot;has_network&quot;: false,
+        &quot;has_filesystem&quot;: true,
+        &quot;has_diskio&quot;: true,
+        &quot;image&quot;: &quot;weaveworks/weave-npc:1.7.0&quot;
+    },
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
+
+&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
+
+</description>
+				<pubDate>Fri, 14 Oct 2016 19:05:39 +0100</pubDate>
+				<link>/blog/2016/10/14/Kubernetes-Service-Tokens/</link>
+				<guid isPermaLink="true">/blog/2016/10/14/Kubernetes-Service-Tokens/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes Attack Surface - cAdvisor</title>
 				<description>&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
 
@@ -602,74 +689,6 @@ README.md
 				<pubDate>Sun, 06 Mar 2016 16:15:39 +0000</pubDate>
 				<link>/blog/2016/03/06/The-Dangers-Of-Docker.sock/</link>
 				<guid isPermaLink="true">/blog/2016/03/06/The-Dangers-Of-Docker.sock/</guid>
-			</item>
-		
-			<item>
-				<title>New Docker Compose Features</title>
-				<description>&lt;p&gt;Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for &lt;a href=&quot;https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/&quot;&gt;pen testing&lt;/a&gt; one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.&lt;/p&gt;
-
-&lt;p&gt;So now with the new setup, we can use something like the example below, and then start it up with &lt;code class=&quot;highlighter-rouge&quot;&gt;docker-compose run sectest /bin/bash&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;This will start up four containers on the default private docker network, and provide a shell for the sectest container which we can use to run tools like nmap and metasploit.  Using this approach we get a couple of handy features.&lt;/p&gt;
-
-&lt;p&gt;Because of docker links the names of the other containers are registered in each one, so for example in sectest we can &lt;code class=&quot;highlighter-rouge&quot;&gt;ping dradis&lt;/code&gt; and have that work ok.&lt;/p&gt;
-
-&lt;p&gt;As the browser and the dradis/openvas instances are on the same private network we can access these browser based tools without having to expose them to the wider network.&lt;/p&gt;
-
-&lt;p&gt;All the tools will have a directory in their filesystem at &lt;code class=&quot;highlighter-rouge&quot;&gt;/data&lt;/code&gt; which points to our data volume.  At the end of the test this can then be saved off either from within the tools or outside at host level.&lt;/p&gt;
-
-&lt;p&gt;If you’re doing it at host level you need to note where the data’s actually stored.  To do that do&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker volume ls&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;to get the name of your data volume.  By default it’ll be the name of the directory you ran the docker-compose file from and then ‘-data’ after that.&lt;/p&gt;
-
-&lt;p&gt;Once you know the name just do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect (name)&lt;/code&gt; and copy the files from there to whereever you’re storing them.&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-yaml&quot; data-lang=&quot;yaml&quot;&gt;&lt;span class=&quot;s&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&#39;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;2&#39;&lt;/span&gt;
-
-&lt;span class=&quot;s&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;sectest&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/sectest&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/bin/bash&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt; 
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;firefox&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/auto-docker-dradis&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;expose&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;3000&quot;&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bundle exec rails server&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;mikesplain/openvas&lt;/span&gt; 
-    &lt;span class=&quot;s&quot;&gt;expose&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;443&quot;&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9390&quot;&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;9391&quot;&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;firefox&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;jess/firefox&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;links&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;dradis&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openvas&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;s&quot;&gt;DISPLAY&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$DISPLAY&lt;/span&gt;
-    &lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/tmp/.X11-unix:/tmp/.X11-unix&lt;/span&gt;
-      &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;data:/data&lt;/span&gt; 
-&lt;span class=&quot;s&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;{}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-</description>
-				<pubDate>Sun, 14 Feb 2016 16:15:39 +0000</pubDate>
-				<link>/blog/2016/02/14/New-Docker-Compose-Features/</link>
-				<guid isPermaLink="true">/blog/2016/02/14/New-Docker-Compose-Features/</guid>
 			</item>
 		
 	</channel>
