@@ -26,67 +26,6 @@
 
 &lt;p&gt;Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.&lt;/p&gt;
 
-&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
-
-&lt;p&gt;So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.&lt;/p&gt;
-
-&lt;p&gt;This cluster has three nodes on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.233&lt;/code&gt; , &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.201&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.232&lt;/code&gt; so we can start with&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nmap -sT -n -p- 192.168.41.201,232,233&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.&lt;/p&gt;
-
-&lt;p&gt;This provides quite a bit of information about the configuration of the cluster like a process list&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;and some details on the configuration of the docker daemon on the host&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://192.168.41.233:4194/api/v2.0/spec?recursive=true&lt;/code&gt; and get output like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &quot;/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;: {
-        &quot;creation_time&quot;: &quot;2016-10-09T03:55:54.113949226+01:00&quot;,
-        &quot;aliases&quot;: [
-            &quot;k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de&quot;,
-            &quot;0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;
-        ],
-        &quot;namespace&quot;: &quot;docker&quot;,
-        &quot;labels&quot;: {
-            &quot;io.kubernetes.container.hash&quot;: &quot;27539310&quot;,
-            &quot;io.kubernetes.container.name&quot;: &quot;weave-npc&quot;,
-            &quot;io.kubernetes.container.restartCount&quot;: &quot;0&quot;,
-            &quot;io.kubernetes.container.terminationMessagePath&quot;: &quot;/dev/termination-log&quot;,
-            &quot;io.kubernetes.pod.name&quot;: &quot;weave-net-xf53p&quot;,
-            &quot;io.kubernetes.pod.namespace&quot;: &quot;kube-system&quot;,
-            &quot;io.kubernetes.pod.terminationGracePeriod&quot;: &quot;30&quot;,
-            &quot;io.kubernetes.pod.uid&quot;: &quot;af83b2df-8683-11e6-849b-000c29d33879&quot;
-        },
-        &quot;has_cpu&quot;: true,
-        &quot;cpu&quot;: {
-            &quot;limit&quot;: 10,
-            &quot;max_limit&quot;: 0,
-            &quot;mask&quot;: &quot;0-1&quot;
-        },
-        &quot;has_memory&quot;: true,
-        &quot;memory&quot;: {
-            &quot;limit&quot;: 9223372036854771712,
-            &quot;reservation&quot;: 9223372036854771712
-        },
-        &quot;has_custom_metrics&quot;: false,
-        &quot;has_network&quot;: false,
-        &quot;has_filesystem&quot;: true,
-        &quot;has_diskio&quot;: true,
-        &quot;image&quot;: &quot;weaveworks/weave-npc:1.7.0&quot;
-    },
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
-
-&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
-
 </description>
 				<pubDate>Sun, 02 Apr 2017 18:05:39 +0100</pubDate>
 				<link>/blog/2017/04/02/Kubernetes-Service-Tokens/</link>
