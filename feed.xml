@@ -88,9 +88,9 @@
 &lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
 
 </description>
-				<pubDate>Fri, 14 Oct 2016 19:05:39 +0100</pubDate>
-				<link>/blog/2016/10/14/Kubernetes-Service-Tokens/</link>
-				<guid isPermaLink="true">/blog/2016/10/14/Kubernetes-Service-Tokens/</guid>
+				<pubDate>Sun, 02 Apr 2017 18:05:39 +0100</pubDate>
+				<link>/blog/2017/04/02/Kubernetes-Service-Tokens/</link>
+				<guid isPermaLink="true">/blog/2017/04/02/Kubernetes-Service-Tokens/</guid>
 			</item>
 		
 			<item>
