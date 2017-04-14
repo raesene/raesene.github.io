@@ -7,32 +7,6 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>Kubernetes Attack Surface - Service Tokens</title>
-				<description>&lt;p&gt;Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.&lt;/p&gt;
-
-&lt;p&gt;When pods are deployed to a cluster, in most default installs, the &lt;a href=&quot;https://kubernetes.io/docs/admin/admission-controllers/&quot;&gt;Admission Contoller&lt;/a&gt; will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a &lt;a href=&quot;https://kubernetes.io/docs/admin/service-accounts-admin/&quot;&gt;Service Account&lt;/a&gt; inside the containers that make up the pod.&lt;/p&gt;
-
-&lt;p&gt;This service account includes a token which is mounted at a predictable location &lt;code class=&quot;highlighter-rouge&quot;&gt;/var/run/secrets/kubernetes.io/serviceaccount/token&lt;/code&gt; .&lt;/p&gt;
-
-&lt;p&gt;What’s interesting is that, by default unless &lt;a href=&quot;https://kubernetes.io/docs/admin/authorization/rbac/&quot;&gt;RBAC&lt;/a&gt; is deployed, it’s likely that this token provides cluster admin privileges.&lt;/p&gt;
-
-&lt;p&gt;This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kubelet exploit&lt;/a&gt; ).&lt;/p&gt;
-
-&lt;p&gt;If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of &lt;a href=&quot;https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl&quot;&gt;kubectl&lt;/a&gt; and point it at your API Server with something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;then try out some kubernetes commands…&lt;/p&gt;
-
-&lt;p&gt;Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.&lt;/p&gt;
-
-</description>
-				<pubDate>Sun, 02 Apr 2017 18:05:39 +0100</pubDate>
-				<link>/blog/2017/04/02/Kubernetes-Service-Tokens/</link>
-				<guid isPermaLink="true">/blog/2017/04/02/Kubernetes-Service-Tokens/</guid>
-			</item>
-		
-			<item>
 				<title>Some thoughts on the new OWASP Top 10 - A7</title>
 				<description>&lt;p&gt;The first release candidate of the new &lt;a href=&quot;https://github.com/OWASP/Top10/blob/master/2017/OWASP%20Top%2010%20-%202017%20RC1-English.pdf&quot;&gt;OWASP Top 10&lt;/a&gt; got released last week and one of the changes in particular seems to be generating a lot of comment, so I thought I’d chip in too with some thoughts.&lt;/p&gt;
 
@@ -69,9 +43,35 @@
 
 &lt;p&gt;Anyway, there’s still lots of discussions to be had on this one and the rest of the changes, before this years Top10 is finalized, so it’ll be interesting to see how it all shakes out.&lt;/p&gt;
 </description>
-				<pubDate>Sun, 02 Apr 2017 17:05:39 +0100</pubDate>
-				<link>/blog/2017/04/02/OWASP-Top-10-A7-Thoughts/</link>
-				<guid isPermaLink="true">/blog/2017/04/02/OWASP-Top-10-A7-Thoughts/</guid>
+				<pubDate>Fri, 14 Apr 2017 17:05:39 +0100</pubDate>
+				<link>/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/</link>
+				<guid isPermaLink="true">/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/</guid>
+			</item>
+		
+			<item>
+				<title>Kubernetes Attack Surface - Service Tokens</title>
+				<description>&lt;p&gt;Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.&lt;/p&gt;
+
+&lt;p&gt;When pods are deployed to a cluster, in most default installs, the &lt;a href=&quot;https://kubernetes.io/docs/admin/admission-controllers/&quot;&gt;Admission Contoller&lt;/a&gt; will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a &lt;a href=&quot;https://kubernetes.io/docs/admin/service-accounts-admin/&quot;&gt;Service Account&lt;/a&gt; inside the containers that make up the pod.&lt;/p&gt;
+
+&lt;p&gt;This service account includes a token which is mounted at a predictable location &lt;code class=&quot;highlighter-rouge&quot;&gt;/var/run/secrets/kubernetes.io/serviceaccount/token&lt;/code&gt; .&lt;/p&gt;
+
+&lt;p&gt;What’s interesting is that, by default unless &lt;a href=&quot;https://kubernetes.io/docs/admin/authorization/rbac/&quot;&gt;RBAC&lt;/a&gt; is deployed, it’s likely that this token provides cluster admin privileges.&lt;/p&gt;
+
+&lt;p&gt;This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kubelet exploit&lt;/a&gt; ).&lt;/p&gt;
+
+&lt;p&gt;If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of &lt;a href=&quot;https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl&quot;&gt;kubectl&lt;/a&gt; and point it at your API Server with something like&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;then try out some kubernetes commands…&lt;/p&gt;
+
+&lt;p&gt;Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.&lt;/p&gt;
+
+</description>
+				<pubDate>Sun, 02 Apr 2017 18:05:39 +0100</pubDate>
+				<link>/blog/2017/04/02/Kubernetes-Service-Tokens/</link>
+				<guid isPermaLink="true">/blog/2017/04/02/Kubernetes-Service-Tokens/</guid>
 			</item>
 		
 			<item>
