@@ -33,6 +33,48 @@
 			</item>
 		
 			<item>
+				<title>Some thoughts on the new OWASP Top 10 - A7</title>
+				<description>&lt;p&gt;The first release candidate of the new &lt;a href=&quot;https://github.com/OWASP/Top10/blob/master/2017/OWASP%20Top%2010%20-%202017%20RC1-English.pdf&quot;&gt;OWASP Top 10&lt;/a&gt; got released last week and one of the changes in particular seems to be generating a lot of comment, so I thought I’d chip in too with some thoughts.&lt;/p&gt;
+
+&lt;p&gt;The title of this one is “Insufficient Attack Protection” and at core I think its about applications actively protecting themselves from attack, which I think is a great idea.&lt;/p&gt;
+
+&lt;p&gt;What I don’t think it’s about, and it might benefit from some clarifications in this regard, is a requirement for all applications to use a WAF or RASP.&lt;/p&gt;
+
+&lt;p&gt;So why do I like this idea?  Well if you think about almost every application kind of has some attack protection already, with account lockout policies.  The application sees something which isn’t right, a login with the wrong password, and after a pre-determined number of incorrect attempts, it takes an action, perhaps locking the account, perhaps asking for additional details, perhaps alerting an administrator (maybe even all three!).&lt;/p&gt;
+
+&lt;p&gt;So the concept in general is already in use, but I think a lot of applications would benefit from extending it.  For example if a user says that their first name is &lt;code class=&quot;highlighter-rouge&quot;&gt;&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;&lt;/code&gt; that’s almost definitely not true! It’s a pretty clear indication that someone is trying to attack your application and you can make that attackers life harder by restricting their access or taking some other action, depending on the context.&lt;/p&gt;
+
+&lt;p&gt;Another one could be if there’s a dropdown in your application with 5 possible values and the form is submitted with something that’s not in that list.  An ordinary user pretty much won’t ever do this, so it’s an indication that someone is either editing the HTML before submission, or using a proxy to intercept and modify the request, both reasonable indications (in most cases) that something untoward is happening.&lt;/p&gt;
+
+&lt;p&gt;These are pretty simplistic examples but luckily there’s a really cool OWASP project that goes into a ton more detail, &lt;a href=&quot;https://www.owasp.org/index.php/OWASP_AppSensor_Project&quot;&gt;OWASP Appsensor&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This kind of action can make automated attacks much harder to execute and also can provide excellent alerting for blue teams to work with, and I think that’s a big win.  One key aspect of this is that the detection and response is embedded into the application.  One problem with external add-ons is that they can lack context about what is and is not expected behaviour in an application, that kind of context only really exists within the application itself.&lt;/p&gt;
+
+&lt;p&gt;Predictably and quite justifiably there have been a lot of concerns and questions raised about this suggested change.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;This will make Pentesters and Bug Bounty People’s lives harder&lt;/strong&gt; .  Yep that one’s true, but then as pentesters and bug bounty researchers are pseudo bad guys, isn’t that really a good thing? Flippancy aside, I think that applications with a lot of active defence need to have test environments where this is disabled specifically to allow for automated testing. Some testing would occur there, and then when the final product is ready to be tested, you can enable the protections and check that they’re working ok.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;This is a mandate for WAF vendors&lt;/strong&gt; I really hope not.  Sure some applications won’t be able to retro-fit controls, and might want to use a WAF.  But two things on that, one there are open source WAFs available and two, when the security industry started pushing 2FA harder, I don’t recall anyone saying that “hey this is just a vendor pitch for RSA tokens” and if they had, I wouldn’t have agreed with them either :)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;There’s no statistical evidence that this is a problem&lt;/strong&gt; . I’m a bit torn on this one.  On the one hand that’s likely true and data based approaches are good.  On the other hand, how would you measure this?  No automated scanning tool is going to put “hey we didn’t get kicked out whilst testing” in their report is it?  I can only offer anecdotal evidence, that I only very very rarely see any kind of application active protection in play, so it’s definitely not commonly deployed.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;This isn’t a vulnerability&lt;/strong&gt; .  Yep that’s true, but AFAICS this is a list of risks, not a list of vulnerabilities.  It may get used as a list of vulnerabilities, but on the title page it says risks :)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Anyway, there’s still lots of discussions to be had on this one and the rest of the changes, before this years Top10 is finalized, so it’ll be interesting to see how it all shakes out.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 02 Apr 2017 17:05:39 +0100</pubDate>
+				<link>/blog/2017/04/02/OWASP-Top-10-A7-Thoughts/</link>
+				<guid isPermaLink="true">/blog/2017/04/02/OWASP-Top-10-A7-Thoughts/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes Attack Surface - cAdvisor</title>
 				<description>&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
 
@@ -605,29 +647,6 @@ README.md
 				<pubDate>Sat, 30 Apr 2016 07:50:39 +0100</pubDate>
 				<link>/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/</link>
 				<guid isPermaLink="true">/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/</guid>
-			</item>
-		
-			<item>
-				<title>The Dangers of Docker.sock</title>
-				<description>&lt;p&gt;One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.&lt;/p&gt;
-
-&lt;p&gt;At the moment the Docker Engine authorization model is pretty basic (although there’s now a plugin API available, so hopefully this will improve soon). Essentially a process which can access the docker socket (usually at /var/run/docker.sock) or who can connect to the HTTPS API, can execute any command that the docker service can run, which generally provides access to the whole host system as the docker service runs as root.&lt;/p&gt;
-
-&lt;p&gt;Where this can trip you up is where you might want to provide access to the Docker socket to a container to allow a process running in that container to extract information about other containers running on the service. This is typically done by mounting the Docker socket into the container with a switch like &lt;code class=&quot;highlighter-rouge&quot;&gt;-v /var/run/docker.sock:/var/run/docker.sock&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;There are a couple of projects that I’ve noticed so far which do this, one of the more popular is &lt;a href=&quot;https://github.com/jwilder/nginx-proxy&quot;&gt;nginx-proxy&lt;/a&gt; which uses access to the Docker socket to allow it to automatically create reverse proxy entries for other containers.&lt;/p&gt;
-
-&lt;p&gt;The only real access control that’s possible with this kind of set-up is that you can set the access to be read only (e.g. &lt;code class=&quot;highlighter-rouge&quot;&gt;-v /var/run/docker.sock:/var/run/docker.sock:ro&lt;/code&gt;), however this could still be risky, depending on your configuration as commands like &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect&lt;/code&gt; can leak secret information about running containers. (Also see the &lt;strong&gt;update&lt;/strong&gt; below)&lt;/p&gt;
-
-&lt;p&gt;For example the official &lt;a href=&quot;https://hub.docker.com/_/postgres/&quot;&gt;Docker postgres image&lt;/a&gt; provides a startup command of &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres&lt;/code&gt; which uses an environment variable to set the postgres password.  So if another container gets access to the docker socket, they can extract that password from docker inspect and then likely make a connection straight to your database (unless you’ve disabled &lt;a href=&quot;https://docs.docker.com/engine/userguide/networking/default_network/container-communication/&quot;&gt;Inter-container commmunication&lt;/a&gt; ).&lt;/p&gt;
-
-&lt;p&gt;So in general I’d recommend thinking very carefully before making use of a Docker image that requires access to the Docker socket, even with read-only permissions as it could open your environment up to some additional risks. Hopefully with future developments on the Docker authorization model it’ll get easier to allow a container introspection in a less risky manner…&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt; - After tweeting this article out @benhall &lt;a href=&quot;https://twitter.com/Ben_Hall/status/706879493135323136&quot;&gt;pointed out&lt;/a&gt; that actually the &lt;code class=&quot;highlighter-rouge&quot;&gt;ro&lt;/code&gt; setting on the volume mount doesn’t have a lot of effect in terms of security.  An attacker with ro access to the socket can still create another container and do something like mount /etc/ into it from the host, essentially giving them root access to the host.  So bottom line is don’t mount docker.sock into a container unless you trust its provenance and security…&lt;/p&gt;
-</description>
-				<pubDate>Sun, 06 Mar 2016 16:15:39 +0000</pubDate>
-				<link>/blog/2016/03/06/The-Dangers-Of-Docker.sock/</link>
-				<guid isPermaLink="true">/blog/2016/03/06/The-Dangers-Of-Docker.sock/</guid>
 			</item>
 		
 	</channel>

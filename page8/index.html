@@ -158,6 +158,42 @@
 
   <span class="post-date">
     
+    August
+    9th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/08/09/defcon_17/">Defcon 17</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I got across to Defcon this year (and of course security Bsides)<br />
+There were several interesting presentations , here's some notes on some of the ones that I got along to.  The CD is up at <a href="https://media.defcon.org/dc-17/DEFCON-17-CD.rar">defcon.org</a>, and you can get the slides for most of the presentations there.<br />
+SSL Talks - There were several presentations on ways to bypass or subvert SSL. From my point of view the drive was around 2 themes.  The difficulty in correctly parsing SSL certs due to the complexity of the relevant RFCs and also the weaknesses in the issuing processes of some CAs (which is exacerbated by the fact that any CA can issue a "valid" cert. for any domain).  Dan Kaminsky's white paper on the subject is <a href="http://www.ioactive.com/pdfs/PKILayerCake.pdf"> here</a>, Moxie's blackhat presentation is <a href="http://tinyurl.com/nyh462"> here </a> and Michael Zusmans' blackhat presentation is <a href="http://tinyurl.com/ll5nlq">here</a> (the defcon presentations are on the CD linked above).<br />
+Metasploit - The Metasploit team had a whole track to themselves on Saturday and there's a load of interesting stuff in there, basically looks like Metasploit will have some coverage for most types of assessment eventually, which is very handy!<br />
+Egypts presentation on client-side attacks with Metasploit had some great content on browser fingerprinting (not just relying on User-Agent) and client side attacks with Metasploit.<br />
+The Oracle presentation from mc and Chris Gates  had some good content on going through the steps of an Oracle attack purely using Metasploit (more information on this on CG's <a href="http://carnal0wnage.attackresearch.com">blog</a><br />
+Druid had a good talk on the war-dialer that he's added to the framework (unfortunately the slides for that one aren't on the CD, but I'd guess that they'll be around soon). Another interesting thing in the Metasploit track was the demos of the Mac OSX and POSIX versions of meterpreter which are both in active development.<br />
+Other Ruby Tools - There was a bit of a theme of ruby tools across some of the presentations.  In addition to all the Metasploit stuff, there was a mobile device fuzzer (although the website for it, www.fuzzit.com isn't up yet).  Also there was a good presentation on <a href="http://dradisframework.org"> Dradis </a>from etd , which is a Pen test management and reporting tool written in Ruby and Rails.<br />
+Password Cracking - There was a good presentation, from Matt Weir,  on approaches to password cracking, speeding up brute-force attacks and picking good dictionary files .  There's more informaton on this one on his <a href="http://reusablesec.blogspot.com/"> blog </a> as well as on the presentation slides.<br />
+Router Hacking - FX had some more information on how to create reliable exploits on Cisco devices and the difficulties in doing so (amazing to think that Cisco Maintain thousands of discreete monolithic router builds!).  Slides from the Blackhat presentation are <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-SLIDES.pdf"> here</a> and White paper <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-PAPER.pdf"> here </a><br />
+USB Hacking - Interesting presentation from a guy from <a href="http://labs.mwrinfosecurity.com/">MWR </a> on how they approached an assignment to assess the security of a USB device and the approaches to fuzzing that they took.  Slides are up on their site <a href="http://labs.mwrinfosecurity.com/files/Publications/mwri_usb-attacks-defcon17_2009-08-02.pdf"> here </a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     July
     26th,
     
@@ -524,38 +560,6 @@ end
 end
 Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
 </pre>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    31st,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/03/31/scotland_on_rai/">Scotland on Rails - Web Application Security</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>It was the <a href="http://www.scotlandonrails.com">Scotland on Rails</a> 2009 conference on Friday/Saturday of last week.  A great couple of days with loads of interesting Ruby and Rails talks (I'm planning more of a recap once the videos are out)<br />
-I presented on Web Application Security (slides <a href="http://www.slideshare.net/raesene/web-appliction-security-scotland-on-rails-presentation"> here</a>), which seemed to go down reasonably well.<br />
-One of the main themes of my presentation was that, whilst Rails provides a variety of mechanisms to help developers to create secure applications, it still leaves a lot to the individual to think about, and relies on implementation of the protection that it provides.<br />
-One major example of this it Rails default protection mechanism from XSS which is the h() function.  This HTML encodes the contents of the argument passed to it.  This is an effective defense against XSS but relies on developers to use it consistently, which can be tricky to remember.<br />
-There's a couple of potential ways for improving this situation with plugins.<br />
-The <a href="http://rubyforge.org/projects/safe-erb/">Safe ERB</a> plugin is designed to help developers by raising an exception when information pulled from an ActiveRecord model is displayed in a view without h() being used.<br />
-The other way to approach the problem of XSS is to validate input when it's passed to the application.  There are a number of Rails plugins which take this approach including  <a href="http://code.google.com/p/sanitizeparams/">Sanitize Params</a> and <a href="http://code.google.com/p/xssterminate/">XSS Terminate</a></p>
 
     
     

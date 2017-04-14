@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - cAdvisor</title>
+	<title>Some thoughts on the new OWASP Top 10 - A7</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - cAdvisor </h1>
+  <h1>Some thoughts on the new OWASP Top 10 - A7 </h1>
 </div>
 	
 <article>
@@ -157,73 +157,46 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   October 
-	   14th,
-	   
-	   2016
+	   April 
+	   2nd,
+	     
+	   2017
 	 </span>
 	  <div class="article_body">
-	  <p>So following on from my post about the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kube-exploit</a>, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.</p>
+	  <p>The first release candidate of the new <a href="https://github.com/OWASP/Top10/blob/master/2017/OWASP%20Top%2010%20-%202017%20RC1-English.pdf">OWASP Top 10</a> got released last week and one of the changes in particular seems to be generating a lot of comment, so I thought I’d chip in too with some thoughts.</p>
 
-<p>So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.</p>
+<p>The title of this one is “Insufficient Attack Protection” and at core I think its about applications actively protecting themselves from attack, which I think is a great idea.</p>
 
-<p>This cluster has three nodes on <code class="highlighter-rouge">192.168.41.233</code> , <code class="highlighter-rouge">192.168.41.201</code> and <code class="highlighter-rouge">192.168.41.232</code> so we can start with</p>
+<p>What I don’t think it’s about, and it might benefit from some clarifications in this regard, is a requirement for all applications to use a WAF or RASP.</p>
 
-<p><code class="highlighter-rouge">nmap -sT -n -p- 192.168.41.201,232,233</code></p>
+<p>So why do I like this idea?  Well if you think about almost every application kind of has some attack protection already, with account lockout policies.  The application sees something which isn’t right, a login with the wrong password, and after a pre-determined number of incorrect attempts, it takes an action, perhaps locking the account, perhaps asking for additional details, perhaps alerting an administrator (maybe even all three!).</p>
 
-<p>From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.</p>
+<p>So the concept in general is already in use, but I think a lot of applications would benefit from extending it.  For example if a user says that their first name is <code class="highlighter-rouge">&lt;script&gt;alert(1)&lt;/script&gt;</code> that’s almost definitely not true! It’s a pretty clear indication that someone is trying to attack your application and you can make that attackers life harder by restricting their access or taking some other action, depending on the context.</p>
 
-<p>This provides quite a bit of information about the configuration of the cluster like a process list</p>
+<p>Another one could be if there’s a dropdown in your application with 5 possible values and the form is submitted with something that’s not in that list.  An ordinary user pretty much won’t ever do this, so it’s an indication that someone is either editing the HTML before submission, or using a proxy to intercept and modify the request, both reasonable indications (in most cases) that something untoward is happening.</p>
 
-<p><img src="/assets/media/cadvisor_processes.png" alt="cadvisor process" /></p>
+<p>These are pretty simplistic examples but luckily there’s a really cool OWASP project that goes into a ton more detail, <a href="https://www.owasp.org/index.php/OWASP_AppSensor_Project">OWASP Appsensor</a>.</p>
 
-<p>and some details on the configuration of the docker daemon on the host</p>
+<p>This kind of action can make automated attacks much harder to execute and also can provide excellent alerting for blue teams to work with, and I think that’s a big win.  One key aspect of this is that the detection and response is embedded into the application.  One problem with external add-ons is that they can lack context about what is and is not expected behaviour in an application, that kind of context only really exists within the application itself.</p>
 
-<p><img src="/assets/media/cadvisor_docker.png" alt="cadvisor docker" /></p>
+<p>Predictably and quite justifiably there have been a lot of concerns and questions raised about this suggested change.</p>
 
-<p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
+<ul>
+  <li>
+    <p><strong>This will make Pentesters and Bug Bounty People’s lives harder</strong> .  Yep that one’s true, but then as pentesters and bug bounty researchers are pseudo bad guys, isn’t that really a good thing? Flippancy aside, I think that applications with a lot of active defence need to have test environments where this is disabled specifically to allow for automated testing. Some testing would occur there, and then when the final product is ready to be tested, you can enable the protections and check that they’re working ok.</p>
+  </li>
+  <li>
+    <p><strong>This is a mandate for WAF vendors</strong> I really hope not.  Sure some applications won’t be able to retro-fit controls, and might want to use a WAF.  But two things on that, one there are open source WAFs available and two, when the security industry started pushing 2FA harder, I don’t recall anyone saying that “hey this is just a vendor pitch for RSA tokens” and if they had, I wouldn’t have agreed with them either :)</p>
+  </li>
+  <li>
+    <p><strong>There’s no statistical evidence that this is a problem</strong> . I’m a bit torn on this one.  On the one hand that’s likely true and data based approaches are good.  On the other hand, how would you measure this?  No automated scanning tool is going to put “hey we didn’t get kicked out whilst testing” in their report is it?  I can only offer anecdotal evidence, that I only very very rarely see any kind of application active protection in play, so it’s definitely not commonly deployed.</p>
+  </li>
+  <li>
+    <p><strong>This isn’t a vulnerability</strong> .  Yep that’s true, but AFAICS this is a list of risks, not a list of vulnerabilities.  It may get used as a list of vulnerabilities, but on the title page it says risks :)</p>
+  </li>
+</ul>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
-        "creation_time": "2016-10-09T03:55:54.113949226+01:00",
-        "aliases": [
-            "k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de",
-            "0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f"
-        ],
-        "namespace": "docker",
-        "labels": {
-            "io.kubernetes.container.hash": "27539310",
-            "io.kubernetes.container.name": "weave-npc",
-            "io.kubernetes.container.restartCount": "0",
-            "io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
-            "io.kubernetes.pod.name": "weave-net-xf53p",
-            "io.kubernetes.pod.namespace": "kube-system",
-            "io.kubernetes.pod.terminationGracePeriod": "30",
-            "io.kubernetes.pod.uid": "af83b2df-8683-11e6-849b-000c29d33879"
-        },
-        "has_cpu": true,
-        "cpu": {
-            "limit": 10,
-            "max_limit": 0,
-            "mask": "0-1"
-        },
-        "has_memory": true,
-        "memory": {
-            "limit": 9223372036854771712,
-            "reservation": 9223372036854771712
-        },
-        "has_custom_metrics": false,
-        "has_network": false,
-        "has_filesystem": true,
-        "has_diskio": true,
-        "image": "weaveworks/weave-npc:1.7.0"
-    },
-</code></pre>
-</div>
-
-<p>This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.</p>
-
-<p>After noting this I had a look through the Kubernetes issue list and it looks like this is a <a href="https://github.com/kubernetes/kubernetes/issues/11710">known issue</a> but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.</p>
-
+<p>Anyway, there’s still lots of discussions to be had on this one and the rest of the changes, before this years Top10 is finalized, so it’ll be interesting to see how it all shakes out.</p>
 
 	  </div>
 
@@ -233,8 +206,8 @@
 		  
 		  
 			 
-				<li><a href="/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(3)</span>
+				<li><a href="/categories/index.html#OWASP-ref">
+					OWASP <span>(1)</span>
 					
 				</a></li>
 			
@@ -249,7 +222,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - cAdvisor&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Some thoughts on the new OWASP Top 10 - A7&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -277,10 +250,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/" title="Kubernetes - From Container to Cluster">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/" title="Kubernetes Attack Surface - cAdvisor">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2017/04/02/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">Next &rarr;</a></li>
+		  <li class="next"><a href="/blog/2017/04/02/Kubernetes-Service-Tokens/" title="Kubernetes Attack Surface - Service Tokens">Next &rarr;</a></li>
 		  
 		</ul>
 
