@@ -10,7 +10,7 @@
 				<title>Kubernetes Attack Surface - etcd</title>
 				<description>&lt;p&gt;&lt;a href=&quot;https://coreos.com/etcd&quot;&gt;etcd&lt;/a&gt; is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.&lt;/p&gt;
 
-&lt;p&gt;So keeping access to this limited is pretty important for a secure cluster.  Depending on how what distribution of Kubernetes, there’s a number of different default configurations you might see.&lt;/p&gt;
+&lt;p&gt;So keeping access to this limited is pretty important for a secure cluster.  Depending on how your distribution of Kubernetes sets things up, there’s a number of different default configurations you might see.&lt;/p&gt;
 
 &lt;p&gt;Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.&lt;/p&gt;
 

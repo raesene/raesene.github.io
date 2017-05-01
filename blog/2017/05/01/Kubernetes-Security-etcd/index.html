@@ -165,7 +165,7 @@
 	  <div class="article_body">
 	  <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
 
-<p>So keeping access to this limited is pretty important for a secure cluster.  Depending on how what distribution of Kubernetes, there’s a number of different default configurations you might see.</p>
+<p>So keeping access to this limited is pretty important for a secure cluster.  Depending on how your distribution of Kubernetes sets things up, there’s a number of different default configurations you might see.</p>
 
 <p>Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.</p>
 
