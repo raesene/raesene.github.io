@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - Service Tokens</title>
+	<title>Kubernetes Attack Surface - etcd</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - Service Tokens </h1>
+  <h1>Kubernetes Attack Surface - etcd </h1>
 </div>
 	
 <article>
@@ -157,29 +157,52 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   2nd,
+	   May 
+	   1st,
 	     
 	   2017
 	 </span>
 	  <div class="article_body">
-	  <p>Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.</p>
+	  <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
 
-<p>When pods are deployed to a cluster, in most default installs, the <a href="https://kubernetes.io/docs/admin/admission-controllers/">Admission Contoller</a> will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a <a href="https://kubernetes.io/docs/admin/service-accounts-admin/">Service Account</a> inside the containers that make up the pod.</p>
+<p>So keeping access to this limited is pretty important for a secure cluster.  Depending on how what distribution of Kubernetes, there’s a number of different default configurations you might see.</p>
 
-<p>This service account includes a token which is mounted at a predictable location <code class="highlighter-rouge">/var/run/secrets/kubernetes.io/serviceaccount/token</code> .</p>
+<p>Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.</p>
 
-<p>What’s interesting is that, by default unless <a href="https://kubernetes.io/docs/admin/authorization/rbac/">RBAC</a> is deployed, it’s likely that this token provides cluster admin privileges.</p>
+<p>However the problem with localhost binding only is that it doesn’t really allow for clustered etcd setups.  If you want to have multiple etcd databases to allow some redundancy you need to allow for communications between datastores.</p>
 
-<p>This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kubelet exploit</a> ).</p>
+<p>In these cases port 2379/TCP and 2380/TCP are likely to be exposed on the network.  2379 is for client –&gt; etcd communications, and 2380 is for communications between the different nodes in the etcd cluster.</p>
 
-<p>If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of <a href="https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl">kubectl</a> and point it at your API Server with something like</p>
+<p>Its at this point that you’ll want to be well acquainted with the CoreOS guidelines on <a href="https://coreos.com/etcd/docs/latest/op-guide/security.html">etcd security</a>.  This lays out the options that are available.  Basically etcd uses client certificate authentication, but there’s a couple of important points to note</p>
 
-<p><code class="highlighter-rouge">./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]</code></p>
+<ul>
+  <li>
+    <p>There’s no checking of information in the certificate CN or SAN fields, so any valid certificate will allow access. So its probably worth using a dedicated certificate authority for the etcd cluster, and not using certificate issued by another CA (such as the one you’re using for general Kubernetes setup).</p>
+  </li>
+  <li>
+    <p>With etcd and Kubernetes the setup is all or nothing, there’s no authorisation used, so be very careful with which clients are allowed access to the etcd datastore.</p>
+  </li>
+</ul>
 
-<p>then try out some kubernetes commands…</p>
+<p>So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?</p>
 
-<p>Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.</p>
+<p>You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried wit curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(</p>
+
+<p>etcdctl can be acquired by downloading an etcd release like <a href="https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz">this one</a> and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like <a href="https://hub.docker.com/r/raesene/alpine-containertools/">this image</a> which has it already installed.</p>
+
+<p>once you’ve got etcdctl installed, you can query the API with something like</p>
+
+<p><code class="highlighter-rouge">etcdctl --endpoint=http://[etcd_server_ip]:2379 ls</code></p>
+
+<p>If you get back <code class="highlighter-rouge">/registry</code> you’re likely dealing with a v2 install (Kubernetes 1.5 or lower) and you can easily wander through and explore the config.  In particular the <code class="highlighter-rouge">/registry/secrets/default</code> path is likely to be of interest as it may contain the default service token which can provide elevated rights to the cluster.</p>
+
+<p>If you get back a blank line from the initial query its reasonably likely that you’ve got a v3 cluster and getting the data out is a bit different.</p>
+
+<p>First up you need to let etcdctl know that you’re dealing with v3, so <code class="highlighter-rouge">export ETCDCTL_API=3</code> is needed.</p>
+
+<p>Once you’ve got that environment variable set, you should see a different set of etcdctl commands as being available, including <code class="highlighter-rouge">etcdctl snapshot save</code> .  You can use this command to dump an instance of the etcd database to a file on disk.</p>
+
+<p>This database is in the boltdb format, so it’s possible to read the file using something like <a href="https://github.com/br0xen/boltbrowser">boltbrowser</a>.  Unfortunately the format of the data will be a bit broken as it’s serialized in proto format (more details in <a href="https://github.com/coreos/etcd/issues/7723">this github issue</a>), but you can likely still extract some useful information, if that’s your goal.</p>
 
 
 	  </div>
@@ -206,7 +229,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - Service Tokens&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - etcd&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -234,10 +257,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/" title="Kubernetes Attack Surface - cAdvisor">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2017/04/15/Container-Testing-small-tools-container/" title="Container Testing - A small tools container with SSH">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

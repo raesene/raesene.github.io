@@ -7,6 +7,55 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes Attack Surface - etcd</title>
+				<description>&lt;p&gt;&lt;a href=&quot;https://coreos.com/etcd&quot;&gt;etcd&lt;/a&gt; is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.&lt;/p&gt;
+
+&lt;p&gt;So keeping access to this limited is pretty important for a secure cluster.  Depending on how what distribution of Kubernetes, there’s a number of different default configurations you might see.&lt;/p&gt;
+
+&lt;p&gt;Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.&lt;/p&gt;
+
+&lt;p&gt;However the problem with localhost binding only is that it doesn’t really allow for clustered etcd setups.  If you want to have multiple etcd databases to allow some redundancy you need to allow for communications between datastores.&lt;/p&gt;
+
+&lt;p&gt;In these cases port 2379/TCP and 2380/TCP are likely to be exposed on the network.  2379 is for client –&amp;gt; etcd communications, and 2380 is for communications between the different nodes in the etcd cluster.&lt;/p&gt;
+
+&lt;p&gt;Its at this point that you’ll want to be well acquainted with the CoreOS guidelines on &lt;a href=&quot;https://coreos.com/etcd/docs/latest/op-guide/security.html&quot;&gt;etcd security&lt;/a&gt;.  This lays out the options that are available.  Basically etcd uses client certificate authentication, but there’s a couple of important points to note&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;There’s no checking of information in the certificate CN or SAN fields, so any valid certificate will allow access. So its probably worth using a dedicated certificate authority for the etcd cluster, and not using certificate issued by another CA (such as the one you’re using for general Kubernetes setup).&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;With etcd and Kubernetes the setup is all or nothing, there’s no authorisation used, so be very careful with which clients are allowed access to the etcd datastore.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?&lt;/p&gt;
+
+&lt;p&gt;You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried wit curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(&lt;/p&gt;
+
+&lt;p&gt;etcdctl can be acquired by downloading an etcd release like &lt;a href=&quot;https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz&quot;&gt;this one&lt;/a&gt; and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools/&quot;&gt;this image&lt;/a&gt; which has it already installed.&lt;/p&gt;
+
+&lt;p&gt;once you’ve got etcdctl installed, you can query the API with something like&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;etcdctl --endpoint=http://[etcd_server_ip]:2379 ls&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you get back &lt;code class=&quot;highlighter-rouge&quot;&gt;/registry&lt;/code&gt; you’re likely dealing with a v2 install (Kubernetes 1.5 or lower) and you can easily wander through and explore the config.  In particular the &lt;code class=&quot;highlighter-rouge&quot;&gt;/registry/secrets/default&lt;/code&gt; path is likely to be of interest as it may contain the default service token which can provide elevated rights to the cluster.&lt;/p&gt;
+
+&lt;p&gt;If you get back a blank line from the initial query its reasonably likely that you’ve got a v3 cluster and getting the data out is a bit different.&lt;/p&gt;
+
+&lt;p&gt;First up you need to let etcdctl know that you’re dealing with v3, so &lt;code class=&quot;highlighter-rouge&quot;&gt;export ETCDCTL_API=3&lt;/code&gt; is needed.&lt;/p&gt;
+
+&lt;p&gt;Once you’ve got that environment variable set, you should see a different set of etcdctl commands as being available, including &lt;code class=&quot;highlighter-rouge&quot;&gt;etcdctl snapshot save&lt;/code&gt; .  You can use this command to dump an instance of the etcd database to a file on disk.&lt;/p&gt;
+
+&lt;p&gt;This database is in the boltdb format, so it’s possible to read the file using something like &lt;a href=&quot;https://github.com/br0xen/boltbrowser&quot;&gt;boltbrowser&lt;/a&gt;.  Unfortunately the format of the data will be a bit broken as it’s serialized in proto format (more details in &lt;a href=&quot;https://github.com/coreos/etcd/issues/7723&quot;&gt;this github issue&lt;/a&gt;), but you can likely still extract some useful information, if that’s your goal.&lt;/p&gt;
+
+</description>
+				<pubDate>Mon, 01 May 2017 15:15:39 +0100</pubDate>
+				<link>/blog/2017/05/01/Kubernetes-Security-etcd/</link>
+				<guid isPermaLink="true">/blog/2017/05/01/Kubernetes-Security-etcd/</guid>
+			</item>
+		
+			<item>
 				<title>Container Testing - A small tools container with SSH</title>
 				<description>&lt;p&gt;When you’re doing security testing of container environments one of the things that can be pretty useful is having a container with useful tools connected to the container network.  From there you can run network scans of the container network and also test the scenario of “malicious container”&lt;/p&gt;
 
@@ -593,45 +642,6 @@ README.md
 				<pubDate>Mon, 06 Jun 2016 10:01:39 +0100</pubDate>
 				<link>/blog/2016/06/06/Presentation-In-A-Docker-Container/</link>
 				<guid isPermaLink="true">/blog/2016/06/06/Presentation-In-A-Docker-Container/</guid>
-			</item>
-		
-			<item>
-				<title>Verizon DBIR Vulnerabilities Redux</title>
-				<description>&lt;p&gt;Since my &lt;a href=&quot;https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/&quot;&gt;last post&lt;/a&gt; on this there have been quite a few conversations had on twitter and we’ve now got &lt;a href=&quot;http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/&quot;&gt;Kenna’s blog post&lt;/a&gt; with additional details on their methodology.&lt;/p&gt;
-
-&lt;p&gt;I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
-1. An asset has a known CVE open. 
-2. An attack come in that matches the signature for that CVE on that asset and 
-3. One or more IOCs are detected/correlated post attack
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The “mystery sauce” here is part 3 around IOCs to detect a successful exploit, as that’s tricky to do with a MiTM attack like the two FREAK CVEs.  Attackers who successfully exploited that may just intercept sensitive data from the connection and them misuse it elsewhere, which is virtually impossible to correlate.&lt;/p&gt;
-
-&lt;p&gt;Kenna also provided some interesting graphs for these vulns &lt;a href=&quot;http://www.stathat.com/s/4813HmgKhyPk&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;http://www.stathat.com/s/YSHQp2H6OAin&quot;&gt;here&lt;/a&gt; which show large spikes of activity initially followed by periodic smaller spikes through the year.&lt;/p&gt;
-
-&lt;p&gt;Now, to me, that doesn’t really seem to fit a real attack on this issue as I kind of doubt that many people have the ability to crack 800k even weak RSA keys at once, also if someone had compromised that volume of SSL connections in a short space of time you’d have thought there would’ve been some fallout from it…&lt;/p&gt;
-
-&lt;p&gt;However, what it does match is someone running a scanning tool over the large parts of the Internet looking for this vulnerability.  A scanning tool for this will negotiate a connection using the weak RSA keys, that’s how they work.&lt;/p&gt;
-
-&lt;p&gt;Looking at the graph for CVE-2015-0204, we can see a …. huge spike in activity around March 2015, when… the researchers for the FREAK attack did a large scan looking for the issue. Looking at the &lt;a href=&quot;&quot;&gt;Freak Attack&lt;/a&gt; page we see a note&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;indicating that they did a big scan in March 2015 which roughly correlates with the big spike in Kenna’s graph.  I’d also guess that a lot of other researchers would scan around that time as it was when the vulnerability was released.&lt;/p&gt;
-
-&lt;p&gt;So whilst I can’t be really sure, if I was a betting man, I’d suggest that Kenna’s data doesn’t point to a sophisticated attacker exploiting an SSL MITM issue, but to a group of security researchers scanning a large number of sites after they had announced their vulnerability.&lt;/p&gt;
-
-&lt;p&gt;The only mystery then is “what was the IOC seen on the affected hosts?”.&lt;/p&gt;
-
-</description>
-				<pubDate>Mon, 02 May 2016 10:01:39 +0100</pubDate>
-				<link>/blog/2016/05/02/Verizon-DBIR-Vulns-Redux/</link>
-				<guid isPermaLink="true">/blog/2016/05/02/Verizon-DBIR-Vulns-Redux/</guid>
 			</item>
 		
 	</channel>
