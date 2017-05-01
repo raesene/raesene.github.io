@@ -31,7 +31,7 @@
 
 &lt;p&gt;So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?&lt;/p&gt;
 
-&lt;p&gt;You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried wit curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(&lt;/p&gt;
+&lt;p&gt;You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried with curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(&lt;/p&gt;
 
 &lt;p&gt;etcdctl can be acquired by downloading an etcd release like &lt;a href=&quot;https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz&quot;&gt;this one&lt;/a&gt; and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools/&quot;&gt;this image&lt;/a&gt; which has it already installed.&lt;/p&gt;
 
