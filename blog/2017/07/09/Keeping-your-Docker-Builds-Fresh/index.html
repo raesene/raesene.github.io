@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Some notes on docker</title>
+	<title>Keeping your Docker builds fresh</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Some notes on docker </h1>
+  <h1>Keeping your Docker builds fresh </h1>
 </div>
 	
 <article>
@@ -158,63 +158,26 @@
 	 <span class="post-date">
 	   
 	   July 
-	   5th,
+	   9th,
 	   
-	   2015
+	   2017
 	 </span>
 	  <div class="article_body">
-	  <p>I’ve been spending some time this weekend looking more at docker and where I think it could be useful for my workflows, and along the way I’ve learned a couple of things which I didn’t know, so I thought it would be worth recording them, in case they’re useful to others.  None of this is particularly earth shattering but hey could save someone some time :)</p>
+	  <p>Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.</p>
 
-<h2 id="images-and-containers">Images and Containers</h2>
+<p>Luckily, one of the handy things that you can do with Docker is to have automated builds on Docker Hub.  This lets you create images based on a Github repository and have Docker manage the build process for you, and with a bit of scripting you can automate the update process so that your images stay nice and fresh and ready for use.</p>
 
-<p>First was the distinction between images and containers.  Images are what you build from (e.g. a template) containers are running instances of those images.</p>
+<p>To get this working for your build, go into the “build settings” tab on the Docker Hub page and scroll down to “Build Triggers”. If you click the “Activate Triggers” button Docker Hub will helpfully provide you with a token and trigger URL which can trigger your image to be rebuilt, and will also provide example curl commands to trigger the build.</p>
 
-<h2 id="container-persistence">Container Persistence</h2>
+<p>So for example for one of my images the curl request to trigger a build on it would look like this (with the [TOKEN] replaced with the trigger token for the build)</p>
 
-<p>If you do one of the canonical examples that’s provided in many tutorials</p>
+<p><code class="highlighter-rouge">curl -H "Content-Type: application/json" --data '{"build": true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/</code></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker run -t -i ubuntu:latest /bin/bash
-</code></pre>
-</div>
+<p>Now we have the method for updating our image, we just need to set up some mechanism for this to be carried out periodically.  The obvious way to do this is just to make use of a Linux host and cron but I’m sure there’s a variety of other ways of triggering an HTTP post on a regular basis.</p>
 
-<p>You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.</p>
+<p>So just add your curl command to a crontab file somewhere and away you go.</p>
 
-<p>From that you might get the impression that docker container filesystems are not persistent (i.e. when the exit all the data is lost), but that’s not the case from what I can see.</p>
-
-<p>To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>docker ps -a
-</code></pre>
-</div>
-
-<p>which will list all the container instances you’ve ever run on that system and it’ll look something like</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
-39c1e5cf8319        raesene/auto-docker-dradis   "bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&gt;3000/tcp   cranky_kilby
-e529903a3183        raesene/auto-docker-dradis   "bundle exec rails s   55 minutes ago                                                           compassionate_yonath
-f084aaca32ee        raesene/dradisframework      "bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
-8a8f7b95082a        2bfb337a0aa8                 "bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
-8a2a0046b769        ruby:latest                  "/bin/bash"            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
-</code></pre>
-</div>
-
-<p>from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use</p>
-
-<div class="highlighter-rouge"><pre class="highlight"><code>docker start compassionate_goodall
-docker attach compassionate_goodall
-</code></pre>
-</div>
-
-<h2 id="docker-hub-build-options">docker hub build options</h2>
-
-<p>There’s two options for getting your builds onto docker hub.  The first is to get a container, make modifications to it on your own docker engine and then commit the changes back to your own repository on docker hub.  This works fine but is rather lacking in transparancy as to what went into the build and also doesn’t really lend to others participating.</p>
-
-<p>The other option is using Docker Hub automated builds, where a github/bitbucket repository is created with the Dockerfile present and then Docker Hub handles the build in an automated fashion from that Dockerfile. <a href="https://docs.docker.com/docker-hub/builds/">docker automated build docs</a></p>
-
-<h2 id="exposing-docker-ports">Exposing docker ports</h2>
-
-<p>By default containers have no ports exposed the the host network and many containers do not have things like SSHD installed, so remote access isn’t there by default.  The best way to map a port from the host to the guest is when the docker run command is used with the <code class="highlighter-rouge">-p</code> option.</p>
-
+<p>The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in <code class="highlighter-rouge">Settings--&gt;Notifications</code>.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.</p>
 
 	  </div>
 
@@ -240,7 +203,7 @@ docker attach compassionate_goodall
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Some notes on docker&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Keeping your Docker builds fresh&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -268,10 +231,10 @@ docker attach compassionate_goodall
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2015/05/23/so-youre-giving-a-conference-talk/" title="So you're giving a conference talk">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2017/05/01/Kubernetes-Security-etcd/" title="Kubernetes Attack Surface - etcd">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2015/07/23/using-docker-for-security-testing/" title="Using Docker for Security Testing">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

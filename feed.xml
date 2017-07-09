@@ -7,6 +7,29 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Keeping your Docker builds fresh</title>
+				<description>&lt;p&gt;Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.&lt;/p&gt;
+
+&lt;p&gt;Luckily, one of the handy things that you can do with Docker is to have automated builds on Docker Hub.  This lets you create images based on a Github repository and have Docker manage the build process for you, and with a bit of scripting you can automate the update process so that your images stay nice and fresh and ready for use.&lt;/p&gt;
+
+&lt;p&gt;To get this working for your build, go into the “build settings” tab on the Docker Hub page and scroll down to “Build Triggers”. If you click the “Activate Triggers” button Docker Hub will helpfully provide you with a token and trigger URL which can trigger your image to be rebuilt, and will also provide example curl commands to trigger the build.&lt;/p&gt;
+
+&lt;p&gt;So for example for one of my images the curl request to trigger a build on it would look like this (with the [TOKEN] replaced with the trigger token for the build)&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;curl -H &quot;Content-Type: application/json&quot; --data '{&quot;build&quot;: true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we have the method for updating our image, we just need to set up some mechanism for this to be carried out periodically.  The obvious way to do this is just to make use of a Linux host and cron but I’m sure there’s a variety of other ways of triggering an HTTP post on a regular basis.&lt;/p&gt;
+
+&lt;p&gt;So just add your curl command to a crontab file somewhere and away you go.&lt;/p&gt;
+
+&lt;p&gt;The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in &lt;code class=&quot;highlighter-rouge&quot;&gt;Settings--&amp;gt;Notifications&lt;/code&gt;.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 09 Jul 2017 15:15:39 +0100</pubDate>
+				<link>/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</link>
+				<guid isPermaLink="true">/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes Attack Surface - etcd</title>
 				<description>&lt;p&gt;&lt;a href=&quot;https://coreos.com/etcd&quot;&gt;etcd&lt;/a&gt; is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.&lt;/p&gt;
 
@@ -537,7 +560,7 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 
 &lt;p&gt;So first we set a couple of variables with the information from our two input requests.  We use these later on to get information about the requests that we need to extract data from them&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#This analyses the request that we&#39;re going to modify&lt;/span&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#This analyses the request that we're going to modify&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#This gets the first response from a macro item... should work for the basic case&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;macro_response_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macroItems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
@@ -562,7 +585,7 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Get the headers from our base request&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getHeaders&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#we need a ref for the existing authorisation header if any to delete&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&#39;&#39;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#So headers is an ArrayList so no ruby delete methods first iterate over and get our header&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
   &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=~&lt;/span&gt; &lt;span class=&quot;sr&quot;&gt;/Authorization: JWT/&lt;/span&gt;
@@ -576,14 +599,14 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 &lt;p&gt;Then with our new JWT token in hand and any previous one removed we just add our token into the request and send it on its way&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Add in our new authorization header&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&#39;Authorization: JWT &#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Authorization: JWT '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#We need to get the body to add to our headers which is what the next three lines do&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getBodyOffset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#Now we can create our new message with the headers and body that we need&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;buildHttpMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#Lets just log something so we know it&#39;s doing something&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#Lets just log something so we know it's doing something&lt;/span&gt;
 &lt;span class=&quot;vi&quot;&gt;@stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Changed a message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;#Set our Request to be the modified version from our code.&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -597,51 +620,6 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 				<pubDate>Sun, 19 Jun 2016 10:01:39 +0100</pubDate>
 				<link>/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</link>
 				<guid isPermaLink="true">/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</guid>
-			</item>
-		
-			<item>
-				<title>Presenting from a Docker Container</title>
-				<description>&lt;p&gt;I’ve been presenting a bit recently on &lt;a href=&quot;http://www.docker.com&quot;&gt;docker&lt;/a&gt; and in an attempt to keep my presentation environment relatively simple, I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.&lt;/p&gt;
-
-&lt;p&gt;After some looking around I settled on using &lt;a href=&quot;https://github.com/dploeger/jekyll-revealjs&quot;&gt;jekyll-revealjs&lt;/a&gt; which combines &lt;a href=&quot;https://jekyllrb.com/&quot;&gt;Jekyll&lt;/a&gt; publishing with the &lt;a href=&quot;http://lab.hakim.se/reveal-js/#/&quot;&gt;Reveal.JS&lt;/a&gt; HTML/JS presentation framework.&lt;/p&gt;
-
-&lt;p&gt;This turns out to have quite a nice workflow for creating presentations as all your content is a series of markdown files and you can just commit changes to a git repository, which makes updating and modifying content for your presentation very easy, basically anywhere with a text editor does the job.&lt;/p&gt;
-
-&lt;p&gt;Also once your presentation is complete you can access from any machine with a browser, which removes the ties of having to run on a specific operating system with specific presentation software installed.&lt;/p&gt;
-
-&lt;p&gt;All that said, one slight downside which occurred to me is that whilst editing the presentation is as simple as running a text editor, when you’re presenting you need a working jekyll environment with a valid ruby install and the attendant gems. This sounded like a classic case where …. you guessed it…. Docker comes in handy !&lt;/p&gt;
-
-&lt;p&gt;So I turned my presentation into a docker container :)&lt;/p&gt;
-
-&lt;p&gt;The Dockerfile to do this was really pretty straightforward&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM jekyll/jekyll
-MAINTAINER Rory McCune &amp;lt;rorym@mccune.org.uk&amp;gt;
-RUN mkdir /presentation
-WORKDIR /presentation/
-ADD . /presentation/
-RUN chown -R 1000:1000 /presentation/*
-CMD [&quot;jekyll&quot;, &quot;serve&quot;, &quot;-H&quot;, &quot;0.0.0.0&quot;]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;from the base jekyll install it basically just adds the git working directory to the image and runs jekyll to serve up the presentation.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.&lt;/p&gt;
-
-&lt;p&gt;This is also a useful time to use a &lt;code class=&quot;highlighter-rouge&quot;&gt;.dockerignore&lt;/code&gt; file to avoid the container getting all the git history which it doesn’t need&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;.git
-.gitignore
-README.md
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;After that it’s just a questions of running the container and exposing the relevant port, and your presentation will run from any machine that has docker installed and a browser to view the content.&lt;/p&gt;
-
-&lt;p&gt;In my case it’s let me have a backup of my talk sitting on a &lt;a href=&quot;http://presentation.pwndland.uk&quot;&gt;web server&lt;/a&gt; in case of last minute laptop problems.  I may also have created a Kubernetes cluster to run it, but that’s a story for another blog post :)&lt;/p&gt;
-</description>
-				<pubDate>Mon, 06 Jun 2016 10:01:39 +0100</pubDate>
-				<link>/blog/2016/06/06/Presentation-In-A-Docker-Container/</link>
-				<guid isPermaLink="true">/blog/2016/06/06/Presentation-In-A-Docker-Container/</guid>
 			</item>
 		
 	</channel>
