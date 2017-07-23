@@ -7,6 +7,29 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Network Tools in Non-Root Docker Images</title>
+				<description>&lt;p&gt;As some environment which allow for Docker images to run (e.g. OpenShift Origins default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.&lt;/p&gt;
+
+&lt;p&gt;Usually tools like nmap, tcpdump and ping will either need to be setuid root or be run as a user who has root level privileges, however with a bit of capabilities fiddling its relatively easy to get a container that doesn’t need that level of privilege.&lt;/p&gt;
+
+&lt;p&gt;The key is use use the &lt;code class=&quot;highlighter-rouge&quot;&gt;setcap&lt;/code&gt; utility to add the appropriate capability to your binaries, in this case CAP_NET_RAW.  CAP_NET_RAW is generally avaialable to containers as it’s on Docker’s default white list.&lt;/p&gt;
+
+&lt;p&gt;Once you’ve downloaded packages into the image, just use something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;RUN setcap cap_net_raw+ep /usr/bin/nmap
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;to set the capability on that binary.  One trick to note is that setcap doesn’t work on symbolic links so you need to find the destination of any links before using it.  One example is that in Alpine based images, &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/ping&lt;/code&gt; is just a symlink to &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/busybox&lt;/code&gt; so if you want to enable CAP_NET_RAW in that setup &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/busybox&lt;/code&gt; should be your target.&lt;/p&gt;
+
+&lt;p&gt;There’s an example repo and associated Docker Hub image &lt;a href=&quot;https://github.com/raesene/alpine-noroot-containertools&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-noroot-containertools/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+</description>
+				<pubDate>Sun, 23 Jul 2017 13:15:39 +0100</pubDate>
+				<link>/blog/2017/07/23/network-tools-in-nonroot-docker-images/</link>
+				<guid isPermaLink="true">/blog/2017/07/23/network-tools-in-nonroot-docker-images/</guid>
+			</item>
+		
+			<item>
 				<title>Keeping your Docker builds fresh</title>
 				<description>&lt;p&gt;Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.&lt;/p&gt;
 
@@ -546,80 +569,6 @@ Error response from daemon: rpc error: code = 3 desc = A valid secret token is n
 				<pubDate>Sun, 19 Jun 2016 10:05:39 +0100</pubDate>
 				<link>/blog/2016/06/19/Docker-Swarm/</link>
 				<guid isPermaLink="true">/blog/2016/06/19/Docker-Swarm/</guid>
-			</item>
-		
-			<item>
-				<title>Burp Plugin for use with JWT Tokens</title>
-				<description>&lt;p&gt;One of the things that you get used to after using &lt;a href=&quot;https://portswigger.net/&quot;&gt;Burp&lt;/a&gt; for a while is that if there’s any area that it doesn’t have native functionality for, it’s possible to use Extender to code up your own.  I had cause to do a bit of this recently and as with the previous time I looked at this (&lt;a href=&quot;https://raesene.github.io/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/&quot;&gt;for passive scanner checks&lt;/a&gt;) there were some gaps in the documentation for doing this with JRuby, so I thought I’d write it up.&lt;/p&gt;
-
-&lt;p&gt;This time, I was looking to automate the process of getting a new JWT token as a session handling rule for an application that needed a new token with each request.  Burp has pretty good session handling rules, but AFAIK at the moment they don’t cover the scenario where you need to embed your value into an HTTP header (as you do with JWT tokens sometimes).&lt;/p&gt;
-
-&lt;p&gt;To do this what I did was write some code that implemented the ISessionHandlingAction interface using JRuby.  It’s a pretty simple interface, just two methods, so it wasn’t too tricky to get working.&lt;/p&gt;
-
-&lt;p&gt;The main action you need to look at is called &lt;code class=&quot;highlighter-rouge&quot;&gt;performAction&lt;/code&gt; which takes two parameters which represent the request to be modified and the results of any macros that have been run.  That second part is important as using a macro is how we’re going to get our token to inject into the request.&lt;/p&gt;
-
-&lt;p&gt;So first we set a couple of variables with the information from our two input requests.  We use these later on to get information about the requests that we need to extract data from them&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#This analyses the request that we're going to modify&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#This gets the first response from a macro item... should work for the basic case&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;macro_response_info&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;analyzeResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macroItems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The next bit is to get the token out of our macro response.  the idea of this process is that we use a burp macro to replay a request which generates a new token and then we extract it and insert it into new requests, so we’ll need that token.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Extract the JWT token from the macro response&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;macro_msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macroItems&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;macro_body_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macro_response_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getBodyOffset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;macro_body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;macro_msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body_offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;macro_body_string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;bytesToString&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;jwt_token&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macro_body_string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt_token&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;jwt&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Next up we need to ensure that any existing Authorization header is removed before we add our new one.  This code is a bit brittle at the moment as it doesn’t account for cases where you have other authorization headers you might want (e.g. an HTTP basic one) or cases where there are multiple headers to remove.&lt;/p&gt;
-
-&lt;p&gt;One thing I found a little tricky in this, coming from a ruby background, was the handling of removing an element from the array.  If you were doing this in ruby you might use &lt;code class=&quot;highlighter-rouge&quot;&gt;delete!&lt;/code&gt; to remove the element, but it’s important to note that the getHeaders call doesn’t return a ruby array, it returns a Java ArrayList which has a different set of methods altogether.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Get the headers from our base request&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getHeaders&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#we need a ref for the existing authorisation header if any to delete&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;''&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#So headers is an ArrayList so no ruby delete methods first iterate over and get our header&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;each&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;|&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=~&lt;/span&gt; &lt;span class=&quot;sr&quot;&gt;/Authorization: JWT/&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;head&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#then remove the header if it exists &lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;auth_to_delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;Then with our new JWT token in hand and any previous one removed we just add our token into the request and send it on its way&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;#Add in our new authorization header&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Authorization: JWT '&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jwt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#We need to get the body to add to our headers which is what the next three lines do&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;request_info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;getBodyOffset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;body_offset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#Now we can create our new message with the headers and body that we need&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;vi&quot;&gt;@helpers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;buildHttpMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#Lets just log something so we know it's doing something&lt;/span&gt;
-&lt;span class=&quot;vi&quot;&gt;@stdout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Changed a message&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#Set our Request to be the modified version from our code.&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;baseRequestResponse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;setRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Once we’ve got this plugin working, we can add it to a session handling rule in Burp’s project options.  You set the action to be “run macro” and then in macro handling there’s an option to invoke your extension after running the macro.  If you’ve loaded the plugin into burp ok, your plugin name should be on the drop down and you can insert it to have it run.&lt;/p&gt;
-
-&lt;p&gt;The final code is up on my &lt;a href=&quot;https://github.com/raesene/burp_sample_plugins/blob/master/test_header_injection.rb&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 19 Jun 2016 10:01:39 +0100</pubDate>
-				<link>/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</link>
-				<guid isPermaLink="true">/blog/2016/06/19/Burp-Plugin-JWT-Tokens/</guid>
 			</item>
 		
 	</channel>
