@@ -7,6 +7,140 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Linux Capabilities and when to drop all'</title>
+				<description>&lt;p&gt;Somewhat following on from my &lt;a href=&quot;https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/&quot;&gt;previous post&lt;/a&gt; about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-are-capabilities&quot;&gt;What are Capabilities?&lt;/h2&gt;
+
+&lt;p&gt;Linux capabilities have been around in the kernel for some time.  The idea is to break up the monolithic root privilege that Linux systems have had, so that smaller more specific privileges can be provided where they’re required.  This helps reduce the risk that by compromising a single process on a host an attacker is able to fully compromise it.&lt;/p&gt;
+
+&lt;p&gt;One point to make note of is, that capabilities are only needed to carry out privileged actions on a host.  If your process only needs to carry out actions that an ordinary user could without the use of sudo, su or setuid root binaries, then your process doesn’t need any capabilities assigned to it.&lt;/p&gt;
+
+&lt;p&gt;To provide a concrete example, take the &lt;code class=&quot;highlighter-rouge&quot;&gt;ping&lt;/code&gt; program which ships with most Linux disitributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not availble to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.&lt;/p&gt;
+
+&lt;h2 id=&quot;practical-use-of-capabilities&quot;&gt;Practical use of capabilities&lt;/h2&gt;
+
+&lt;p&gt;So how do we actually manipulate capabilites on a Linux system? The most basic way of handing this (without writing custom code) is to use the &lt;code class=&quot;highlighter-rouge&quot;&gt;getcap&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;setcap&lt;/code&gt; binaries which come with the libcap2-bin package on debian derived systems.&lt;/p&gt;
+
+&lt;p&gt;If you use getcap on a file which has capabilities, you’ll see something like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/usr/bin/arping = cap_net_raw+ep
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We can see here that the arping file has cap_net_raw with &lt;code class=&quot;highlighter-rouge&quot;&gt;+ep&lt;/code&gt; at the end of it, so what does that mean.  The e here refers to the effective capability of the file and the p to the permitted capability. Effectively for file capabilities the effective flag is needed where the binary isn’t “capability aware” i.e. it’s not written with capabilities in mind (which is usually the case).  For practical purposes if you’re assigning capabilities to files, you’ll use &lt;code class=&quot;highlighter-rouge&quot;&gt;+ep&lt;/code&gt; most of the time.&lt;/p&gt;
+
+&lt;p&gt;So if you want to assign a capability, for example to apply cap_net_raw to an nmap binary&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setcap cap_net_raw+ep /usr/bin/nmap
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;It’s important to note that you can’t set capabilities on symlinks, it has to be the binary, and also you can’t set capabilities on shell scripts (well unless you have a super-recent kernel)&lt;/p&gt;
+
+&lt;h2 id=&quot;some-more-background---inheritable-and-bounded&quot;&gt;Some More background - Inheritable and Bounded&lt;/h2&gt;
+
+&lt;p&gt;If you look at capability sets for files and processes, you’ll run across two additional terms which bear looking at, Inheritable and Bounded.&lt;/p&gt;
+
+&lt;p&gt;Inheritable capabilites are capabilites that can be passed from one program to another.&lt;/p&gt;
+
+&lt;p&gt;Bounded capabilities are, to quote the &lt;a href=&quot;https://linux.die.net/man/7/capabilities&quot;&gt;Man page for capabilities&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The capability bounding set acts as a limiting superset for the capabilities that a thread can add to its inheritable set using capset(2).
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;So they restrict which capabilities can be inherited by a process.&lt;/p&gt;
+
+&lt;h2 id=&quot;back-to-the-practical---auditing-capabilities&quot;&gt;Back to the practical - Auditing capabilities&lt;/h2&gt;
+
+&lt;p&gt;This is all well and good, but how do we audit capabilities?&lt;/p&gt;
+
+&lt;p&gt;there’s a number of ways of reviewing what capabilities a process or file has got.  From a low-level perspective, we can review the contents of /proc/[pid]/status.  This will contain some information that looks like this :-&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 0000000000000000
+CapPrm: 0000000000000000
+CapEff: 0000000000000000
+CapBnd: 0000003fffffffff
+CapAmb: 0000000000000000
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This set was for a user level process (using the command &lt;code class=&quot;highlighter-rouge&quot;&gt;cat /proc/self/status&lt;/code&gt;).  As you can see the CapPrm and CapEff are both all zero’s indicating that I don’t have any capabilities and assigned.&lt;/p&gt;
+
+&lt;p&gt;If I then switch to a root user using &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo bash&lt;/code&gt; and run the same command, I  get the following&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 0000000000000000
+CapPrm: 0000003fffffffff
+CapEff: 0000003fffffffff
+CapBnd: 0000003fffffffff
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;which is quite the difference, here CapPrm and CapEff have a lot more content as I’m a privileged user.&lt;/p&gt;
+
+&lt;p&gt;If we try the same in a Docker process using the command &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run alpine:latest cat /proc/self/status&lt;/code&gt; we get&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 00000000a80425fb
+CapPrm: 00000000a80425fb
+CapEff: 00000000a80425fb
+CapBnd: 00000000a80425fb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;which is quite different.  In this container we were running as root, so you might have guessed that we’d have the same permissions as we did in the root shell before. However as Docker limits the available default permissions we don’t get as much.&lt;/p&gt;
+
+&lt;h3 id=&quot;interpreting-capabilities&quot;&gt;Interpreting capabilities&lt;/h3&gt;
+
+&lt;p&gt;Of course these long hex strings aren’t exactly the most friendly way of viewing capabilities.  Luckily there are ways of making this a bit more readable.  if we use &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh&lt;/code&gt; (which comes with libcap2-bin on debian derived systems) we can work out what’s meant here.&lt;/p&gt;
+
+&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh --decode=0000003fffffffff&lt;/code&gt; returns&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000003fffffffff=cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,cap_wake_alarm,cap_block_suspend,37
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;So that shows that our root shell run outside basically had all the capabilities.  If we run &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh --decode=00000000a80425fb&lt;/code&gt; we can see what Docker provides by default&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x00000000a80425fb=cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_net_bind_service,cap_net_raw,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;which corresponds to the list in the &lt;a href=&quot;https://github.com/moby/moby/blob/master/oci/defaults.go#L14-L30&quot;&gt;source code&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;other-utilities&quot;&gt;Other Utilities&lt;/h3&gt;
+
+&lt;p&gt;There are some other utilities which are handy for doing things like auditing capabilities.  the &lt;a href=&quot;https://people.redhat.com/sgrubb/libcap-ng/index.html&quot;&gt;libcap-ng-utils&lt;/a&gt; package has the very handy &lt;code class=&quot;highlighter-rouge&quot;&gt;filecap&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;pscap&lt;/code&gt; programs which can be used to review capapbilties on all files and all processes on a system by default.  There’s also &lt;code class=&quot;highlighter-rouge&quot;&gt;captest&lt;/code&gt; which will review capabilities in the context of the current process.&lt;/p&gt;
+
+&lt;p&gt;Also if you’re running containers and want a nice quick way to assess capabilities amongst other things, you could use Jessie Frazelle’s &lt;a href=&quot;https://github.com/jessfraz/amicontained&quot;&gt;amicontained&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;capabilities-and-containers&quot;&gt;Capabilities and Containers&lt;/h3&gt;
+
+&lt;p&gt;So what has all this to do with Containers?  Well it’s worth noting what was mentioned early in this post which is, if you have a container which will run as a non-root user and which has no setuid or setgid root prgrams in it, you should be good to drop all capabilities.  This adds another layer of hardening to the container, which can be helpful in preventing container breakout issues.&lt;/p&gt;
+
+&lt;p&gt;If you’re running with root containers, then it’s well worth reviewing the default list of capabilities that is provided by your container runtime an ensuring that you’re happy that these are needed.&lt;/p&gt;
+
+&lt;p&gt;Specifically there are ones like CAP_NET_RAW in the default docker set which could be dangerous (see &lt;a href=&quot;https://www.nccgroup.trust/uk/our-research/abusing-privileged-and-unprivileged-linux-containers/&quot;&gt;here&lt;/a&gt; for more details)&lt;/p&gt;
+
+&lt;h3 id=&quot;capability-gotchas&quot;&gt;Capability Gotcha’s&lt;/h3&gt;
+
+&lt;p&gt;There are some gotcha’s to be aware of when using capabilities.  First up is that, to use file capabilities, the filesystem you’re running from needs to be capability aware.  A notable exception here is some versions of aufs that ship with some versions Debian and Ubuntu.  This can impact Docker installs, as they’ll use aufs by default.&lt;/p&gt;
+
+&lt;p&gt;Another one is that where you’re manipulating files you need to make sure that the tools you’re using understand capabilities.  For example when backing up files with tar, you need to use the following switches to make it all work.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;--xattrs               Enable extended attributes support
+--xattrs-exclude=MASK  specify the exclude pattern for xattr keys
+--xattrs-include=MASK  specify the include pattern for xattr keys
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In practice for tar you’ll likely want to use &lt;code class=&quot;highlighter-rouge&quot;&gt;--xattrs&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;--xatttrs-include=security.capability&lt;/code&gt; to make backups of files with capabilities.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 27 Aug 2017 22:00:39 +0100</pubDate>
+				<link>/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</link>
+				<guid isPermaLink="true">/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</guid>
+			</item>
+		
+			<item>
 				<title>Network Tools in Non-Root Docker Images</title>
 				<description>&lt;p&gt;As some environments which allow for Docker images to run (e.g. OpenShift Origin’s default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.&lt;/p&gt;
 
@@ -499,76 +633,6 @@ spec:
 				<pubDate>Sat, 23 Jul 2016 10:05:39 +0100</pubDate>
 				<link>/blog/2016/07/23/Docker-MacVLAN/</link>
 				<guid isPermaLink="true">/blog/2016/07/23/Docker-MacVLAN/</guid>
-			</item>
-		
-			<item>
-				<title>A couple of initial thoughts on Docker Swarm mode and 1.12</title>
-				<description>&lt;p&gt;It’s Dockercon time of year again, and of course you know what that means… loads of cool new features coming to the Docker ecosystem.  I’ve been (enviously) watching all the action remotely on twitter and various blogs and one of the features that jumped out at me was the new swarm mode for Docker engine. The idea of providing very easy to use clustering features for containerization is of course very attractive, but there are possible security concerns, both with encryption of traffic amongst swarm nodes and authentication/authorisation for systems joining the cluster.&lt;/p&gt;
-
-&lt;p&gt;All the demos from various blogs show the setup of the swarm being super-simple, with only a couple of commands needed to get going (for example &lt;a href=&quot;https://ordina-jworks.github.io/conference/2016/06/20/whats-new-in-docker-112.html&quot;&gt;this post&lt;/a&gt;)&lt;/p&gt;
-
-&lt;p&gt;So I thought this was worth a bit of investigation to see what’s happening under the covers.  I set-up a couple of VMs and installed docker 1.12 rc2 on both.&lt;/p&gt;
-
-&lt;h1 id=&quot;network-attack-surface&quot;&gt;Network Attack Surface&lt;/h1&gt;
-
-&lt;p&gt;Starting with the master node, after installing docker engine but before running &lt;code class=&quot;highlighter-rouge&quot;&gt;docker swarm init&lt;/code&gt; there are no network connections belonging to the docker process as, by default it only listens on the unix socket. After initializing the swarm, we can see they look like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112manager:~$ sudo netstat -tunap
-Active Internet connections (servers and established)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
-tcp        0      0 192.168.41.185:7946     0.0.0.0:*               LISTEN      1064/dockerd
-tcp6       0      0 :::2377                 :::*                    LISTEN      1064/dockerd
-tcp6       0      0 127.0.0.1:2377          127.0.0.1:58742         ESTABLISHED 1064/dockerd
-udp        0      0 192.168.41.185:7946     0.0.0.0:*                           1064/dockerd
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;from that we can see that running the swarm command adds some services listening on 7946/TCP and UDP and 2377/TCP.  From &lt;a href=&quot;https://docs.docker.com/engine/swarm/swarm-tutorial/&quot;&gt;the documentation&lt;/a&gt; we can see that these are used for cluster management and node communications.  This is kind of interesting from a security standpoint as it means that we have a network attack surface to look at, which for vanilla docker engine we didn’t.&lt;/p&gt;
-
-&lt;h1 id=&quot;lack-of-authentication&quot;&gt;(Lack) of Authentication&lt;/h1&gt;
-
-&lt;p&gt;Possibly more interesting, is how authentication for swarm nodes is set-up by default.&lt;/p&gt;
-
-&lt;p&gt;After we’ve got our swarm started, we can go to our worker node and just type &lt;code class=&quot;highlighter-rouge&quot;&gt;rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377&lt;/code&gt; and we’re joined to the swarm.  Indeed really easy.&lt;/p&gt;
-
-&lt;p&gt;From this the more security minded amongst you will have noticed something…. We weren’t asked for any credentials when joining the swarm!  So by default, anyone running docker-engine on a network that can contact the master can join the swarm and be assigned workloads as part of the swarm.&lt;/p&gt;
-
-&lt;p&gt;Whilst this is obviously a nice setup for ease of development, I’d strongly recommend changing the defaults here if you’re running this in production.  As expected from &lt;a href=&quot;https://docs.docker.com/engine/reference/commandline/swarm_init/&quot;&gt;the documentation&lt;/a&gt; there are options which can be run at swarm creation time to improve this situation.&lt;/p&gt;
-
-&lt;p&gt;Firstly the autoaccept policy of the swarm can be changed.  This determines whether a swarm will automatically add new nodes or whether a manager has to explicitly accept them.  We can change the auto-accept policy with a command to our existing swarm&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@docker112manager:/etc/systemd/network# docker swarm update --auto-accept none
-Swarm updated.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;After this if we try to join a node to a swarm we get this message&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
-Error response from daemon: Your node is in the process of joining the cluster but needs to be accepted by existing cluster member.
-To accept this node into cluster run &quot;docker node accept epy504pa1vr9oe4p3fvsp6fp7&quot; in an existing cluster manager. Use &quot;docker info&quot; command to see the current Swarm status of your node.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;The other option we have to improve the situation with regard to node authentication is to specify a secret required to joing the swarm.  To specify a secret you just add it to the init command or use swarm update. For example:-&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112manager:~$ docker swarm init --secret loremipsum123
-Swarm initialized: current node (0qkezlwlccd7wfuadshi77zsy) is now a manager.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;and then if you try to join this swarm without specifying the secret, Docker will throw an error&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
-Error response from daemon: rpc error: code = 3 desc = A valid secret token is necessary to join this cluster: invalid policy or secret
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Once you’re all setup with your secrets specified and your auto-accept policy set, you’re good to get started setting up services and deploying containers over the swarm.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 19 Jun 2016 10:05:39 +0100</pubDate>
-				<link>/blog/2016/06/19/Docker-Swarm/</link>
-				<guid isPermaLink="true">/blog/2016/06/19/Docker-Swarm/</guid>
 			</item>
 		
 	</channel>
