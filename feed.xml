@@ -7,7 +7,7 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>Linux Capabilities and when to drop all'</title>
+				<title>Linux Capabilities and when to drop all</title>
 				<description>&lt;p&gt;Somewhat following on from my &lt;a href=&quot;https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/&quot;&gt;previous post&lt;/a&gt; about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.&lt;/p&gt;
 
 &lt;h2 id=&quot;what-are-capabilities&quot;&gt;What are Capabilities?&lt;/h2&gt;
