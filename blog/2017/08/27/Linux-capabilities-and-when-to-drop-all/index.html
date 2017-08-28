@@ -201,9 +201,9 @@
 
 <p>Bounded capabilities are, to quote the <a href="https://linux.die.net/man/7/capabilities">Man page for capabilities</a></p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>The capability bounding set acts as a limiting superset for the capabilities that a thread can add to its inheritable set using capset(2).
-</code></pre>
-</div>
+<blockquote>
+  <p>The capability bounding set acts as a limiting superset for the capabilities that a thread can add to its inheritable set using capset(2).</p>
+</blockquote>
 
 <p>So they restrict which capabilities can be inherited by a process.</p>
 
@@ -262,6 +262,10 @@ CapBnd: 00000000a80425fb
 
 <p>which corresponds to the list in the <a href="https://github.com/moby/moby/blob/master/oci/defaults.go#L14-L30">source code</a>.</p>
 
+<h3 id="dangerous-capabilities">Dangerous Capabilities</h3>
+
+<p>So which of these capabilities are a concern from a security perspective?  Well to an extent that’s going to depend on how you’re using them.  However there are some good starting points to look at, firstly there’s <a href="https://forums.grsecurity.net/viewtopic.php?f=7&amp;t=2522">this post</a> from the grsecurity forum that goes into the risks of allowing various capabilities.  You can also look at the default list of capabilities that Docker allows (link above), as the ones they block are things that have been determined as dangerous in the context of containers.</p>
+
 <h3 id="other-utilities">Other Utilities</h3>
 
 <p>There are some other utilities which are handy for doing things like auditing capabilities.  the <a href="https://people.redhat.com/sgrubb/libcap-ng/index.html">libcap-ng-utils</a> package has the very handy <code class="highlighter-rouge">filecap</code> and <code class="highlighter-rouge">pscap</code> programs which can be used to review capapbilties on all files and all processes on a system by default.  There’s also <code class="highlighter-rouge">captest</code> which will review capabilities in the context of the current process.</p>
@@ -278,7 +282,7 @@ CapBnd: 00000000a80425fb
 
 <h3 id="capability-gotchas">Capability Gotcha’s</h3>
 
-<p>There are some gotcha’s to be aware of when using capabilities.  First up is that, to use file capabilities, the filesystem you’re running from needs to be capability aware.  A notable exception here is some versions of aufs that ship with some versions Debian and Ubuntu.  This can impact Docker installs, as they’ll use aufs by default.</p>
+<p>There are some gotcha’s to be aware of when using capabilities.  First up is that, to use file capabilities, the filesystem you’re running from needs have extended attribute (xattr) support.  A notable exception here is some versions of aufs that ship with some versions Debian and Ubuntu.  This can impact Docker installs, as they’ll use aufs by default.</p>
 
 <p>Another one is that where you’re manipulating files you need to make sure that the tools you’re using understand capabilities.  For example when backing up files with tar, you need to use the following switches to make it all work.</p>
 
