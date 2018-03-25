@@ -7,6 +7,106 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Some notes on Kubernetes Network Policies</title>
+				<description>&lt;p&gt;Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; are a useful security feature which allow for traffic into and (sometimes) out of pods to be restricted.&lt;/p&gt;
+
+&lt;p&gt;This is very useful if you want to add another layer of defence to your cluster and reduce the risk of attacks both on other services running on the cluster and also the control plane services like etcd and the Kubelet.&lt;/p&gt;
+
+&lt;p&gt;To make use of network policies, you need to have a k8s version that supports them (the Network Policy API hit stable in &lt;a href=&quot;http://blog.kubernetes.io/2017/06/kubernetes-1.7-security-hardening-stateful-application-extensibility-updates.html&quot;&gt;1.7&lt;/a&gt;).  You’ll also need a network plugin that supports Network Policies, in order for your policies to be effective.  Most of the major network plugins support network policies, however there are some irregularities to be aware of.&lt;/p&gt;
+
+&lt;p&gt;For example Weave doesn’t currently support egress policies at the moment (issue &lt;a href=&quot;https://github.com/weaveworks/weave/issues/2624&quot;&gt;here&lt;/a&gt;), so do check the support of your chosen plugin before starting :)&lt;/p&gt;
+
+&lt;h2 id=&quot;network-policy-concepts&quot;&gt;Network Policy Concepts&lt;/h2&gt;
+
+&lt;p&gt;Network policies are a lot like network ACLs or firewall rules, if you’re familiar with those.  Without any network policies in effect on a set of pods, there’s a “default allow” rule in place. However as soon as any network Policy applies to a given pod, that pod has a “default deny” setup applied, meaning you have to specify all the traffic desired for that pod once you’ve started implementing network policies on it.&lt;/p&gt;
+
+&lt;p&gt;There are two types of network policies that can be specified.  Ingress policies restrict traffic to set of pods, and egress policies restrict outbound traffic from a set of pods.&lt;/p&gt;
+
+&lt;h2 id=&quot;practical-examples&quot;&gt;Practical examples&lt;/h2&gt;
+
+&lt;p&gt;The Kubernetes documentation on &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; has some good examples of policies you might want to apply, and there’s also a &lt;a href=&quot;repo. on github&quot;&gt;repo. on github&lt;/a&gt; with some more examples, with a nice visualization of the effect of the policy, however lets cover one example that’s not covered in either of those resources.&lt;/p&gt;
+
+&lt;h2 id=&quot;denying-access-to-kubernetes-nodes&quot;&gt;Denying access to Kubernetes nodes&lt;/h2&gt;
+
+&lt;p&gt;One of the challenges I’ve seen in assessments of Kubernetes cluster security, when we work from a “compromised container” perspective, is that it’s possible to attack the underlying nodes and this exposes the control plane services to attack.  It’s not uncommon to see unauthenticated access to etcd or the Kubelet, and unauthorised access to those services is pretty bad for the overall security of the cluster.&lt;/p&gt;
+
+&lt;p&gt;So can we use network policies to prevent this?  The answer seems to be “yes, but with some side effects”.&lt;/p&gt;
+
+&lt;h3 id=&quot;test-cluster-setup&quot;&gt;Test cluster setup&lt;/h3&gt;
+
+&lt;p&gt;I’ve got a demo 3 node 1.9 cluster using Calico for the network plugin.  The host network is on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.111.0/24&lt;/code&gt; so the goal of my network policy is to restrict access to that network, whilst still allowing the pods to communicate with the rest of the world.&lt;/p&gt;
+
+&lt;p&gt;I’ve got a namespace setup for this test (netpol-test) and a sample alpine container running there, so we can check the results of our network policies.&lt;/p&gt;
+
+&lt;h3 id=&quot;basic-egress-restricting-policy&quot;&gt;Basic egress restricting policy&lt;/h3&gt;
+
+&lt;p&gt;So at a basic level we can use something like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: default-block
+  namespace: netpol-test
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 192.168.111.0/24
+  policyTypes:
+  - Egress
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace: netpol-test&lt;/code&gt; and then we’re using a blank pod selector &lt;code class=&quot;highlighter-rouge&quot;&gt;podSelector: {}&lt;/code&gt; to hit all the pods in that namespace.&lt;/p&gt;
+
+&lt;p&gt;Then we’re specifying an egress policy.  Network policies are all about allowing traffic after the initial “default deny” is in place, so we have to specify our restriction in a kind of back-handed way.&lt;/p&gt;
+
+&lt;p&gt;We allow all destinations with &lt;code class=&quot;highlighter-rouge&quot;&gt;cidr: 0.0.0.0/0&lt;/code&gt; and then block a specific network with the &lt;code class=&quot;highlighter-rouge&quot;&gt;except:&lt;/code&gt; block.&lt;/p&gt;
+
+&lt;p&gt;If you look at the effects before and after using something like nmap, you’ll see that ports like &lt;code class=&quot;highlighter-rouge&quot;&gt;10250/TCP&lt;/code&gt; which were accessible before applying the policy, are no longer visible afterwards.&lt;/p&gt;
+
+&lt;p&gt;So what about the side effects that I mentioned above?  Well when I was testing this network policy, I noticed that in addition to blocking access to the nodes directly (on 192.168.111.0/24) this policy also prevents access to the Kubernetes service, which in the case of this cluster is on 10.96.0.1:443.&lt;/p&gt;
+
+&lt;p&gt;This could be desirable from a security standpoint, as it’s blocking access to control plane services, but it is rather un-intuitive to have a completely different network blocked based on a network policy.&lt;/p&gt;
+
+&lt;h3 id=&quot;allowing-access-to-a-service&quot;&gt;Allowing access to a service&lt;/h3&gt;
+
+&lt;p&gt;So in this model where we’re using network policies to restrict control plane service access, the one service we may want to allow containers to speak to is the Kubernetes API.  As the access provided by network policies is cumulative, this is pretty straightforward.  Working with the same setup as the previous example, we can just apply something like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-api
+  namespace: netpol-test
+spec:
+  podSelector: {}
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 192.168.111.0/24
+    ports:
+    - protocol: TCP
+      port: 6443
+  policyTypes:
+  - Egress
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;and we’ll have access to the API service from pods in the &lt;code class=&quot;highlighter-rouge&quot;&gt;netpol-test&lt;/code&gt; namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This was just a brief introduction to Network policies in Kubernetes, there’s a lot more that can be done with them in terms of allowing access between specific pods and services.  Overall they’re a good layer of additional protection, and one that’s well worth considering for production clusters, although I have a feeling that if used heavily, management of the rulesets could get a bit complex…&lt;/p&gt;
+</description>
+				<pubDate>Sun, 25 Mar 2018 15:00:39 +0100</pubDate>
+				<link>/blog/2018/03/25/kubernetes-network-policies/</link>
+				<guid isPermaLink="true">/blog/2018/03/25/kubernetes-network-policies/</guid>
+			</item>
+		
+			<item>
 				<title>Linux Capabilities and when to drop all</title>
 				<description>&lt;p&gt;Somewhat following on from my &lt;a href=&quot;https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/&quot;&gt;previous post&lt;/a&gt; about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.&lt;/p&gt;
 
@@ -605,38 +705,6 @@ spec:
 				<pubDate>Sat, 08 Oct 2016 10:05:39 +0100</pubDate>
 				<link>/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/</link>
 				<guid isPermaLink="true">/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/</guid>
-			</item>
-		
-			<item>
-				<title>Docker 1.12 - Macvlan</title>
-				<description>&lt;p&gt;Another new cool facet of the 1.12 release of Docker Engine is that Macvlan and Ipvlan support is leaving experimental and is available for all users.  So now instead of the rather convoluted procedure I mentioned &lt;a href=&quot;https://raesene.github.io/blog/2016/02/07/Exploration-in-Docker-bridging/&quot;&gt;last time I looked at this&lt;/a&gt; we can now simplify the setup of containers attached to the same network as the host, removing the need for NAT translation from the container network to the host network.&lt;/p&gt;
-
-&lt;p&gt;An aside first is that it can get a little confusing with Docker’s naming as you may be thinking “hey I already have containers on the docker bridge isn’t that already like being connected to the host network?”.  Well as explained &lt;a href=&quot;http://hicu.be/docker-container-network-types&quot;&gt;here&lt;/a&gt; what docker calls “bridged” is really “NAT” and macvlan is what most people would think of as “bridged”!&lt;/p&gt;
-
-&lt;p&gt;Anyway, the first step in getting a container online directly with the host interface is to create a new macvlan network&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker network create -d macvlan --subnet=192.168.41.0/24 --gateway=192.168.41.1 --ip-range=192.168.41.128/26 -o parent=ens33 testnet
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;So in this example our host network’s subnet is 192.168.41.0/24 and our gateway is just the default gateway for that network.  Where it gets a little interesting is that we need to specify an ip range that docker can use to hand out to containers that connect to this network.  At the moment there’s no supported way to get containers connecting to a macvlan network to use the host network’s DHCP server so you need to either specify an &lt;code class=&quot;highlighter-rouge&quot;&gt;--ip-range &lt;/code&gt; with a range that’s available and doesn’t overlap with a DHCP scope on the host network or alternatively you can pass &lt;code class=&quot;highlighter-rouge&quot;&gt;--ip &amp;lt;address&amp;gt;&lt;/code&gt; to the individual &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; commands that we use to create containers on this network.&lt;/p&gt;
-
-&lt;p&gt;Once you’ve created the network it’s just a question of specifying the network to use in the docker run command, so something like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --network=testnet ubuntu:16.04 /bin/bash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;should give you a container, likely with an address of 192.168.41.128 in this case.&lt;/p&gt;
-
-&lt;p&gt;A couple of other points worth noting about macvlan support.  You can only have one macvlan or ipvlan network setup on a Docker engine instance at the moment (although obviously you can have multiple containers connected to it), and from the macvlan network, you won’t be able to contact the IP address of the host system.&lt;/p&gt;
-
-&lt;p&gt;For more reading on this topic there’s a great set of articles at hicu.be on &lt;a href=&quot;http://hicu.be/docker-networking-macvlan-bridge-mode-configuration&quot;&gt;macvlan networking&lt;/a&gt; and &lt;a href=&quot;http://hicu.be/bridge-vs-macvlan&quot;&gt;bridges vs macvlan&lt;/a&gt; amongst others.&lt;/p&gt;
-
-</description>
-				<pubDate>Sat, 23 Jul 2016 10:05:39 +0100</pubDate>
-				<link>/blog/2016/07/23/Docker-MacVLAN/</link>
-				<guid isPermaLink="true">/blog/2016/07/23/Docker-MacVLAN/</guid>
 			</item>
 		
 	</channel>

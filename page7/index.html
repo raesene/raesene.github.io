@@ -159,6 +159,38 @@
   <span class="post-date">
     
     October
+    25th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/10/25/creating_a_simp_1/">Creating a Simple Vulnerability Database  - Part 2</a>
+  </h2>
+
+  <div>
+    
+    
+    #{note_data[&#039;technical_notes&#039;]}
+eos
+end
+</pre>
+<p>This just puts together the body of the note description for each finding, as one long string.<br />
+There's obviously a lot more that could be done with this (like better error handling and writing tests) but with those files complete, the module should work ok and you should be able to import vulns from your database directly into Dradis using the "import note" feature.<br />
+I've put a copy of the code for the plugin up <a href="http://www.mccune.org.uk/code/simple_vulndb_import.tar.bz2">here</a>, in case it's helpful :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
     20th,
     
     2010
@@ -533,34 +565,6 @@ One of the things I have found about burp is that it's easy to miss functions th
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    31st,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/12/31/_and_were_back/">... And we're back</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So, we're back from a bit of an unscheduled break for my web server.  The hosting company had a bit of a problem with disks, so my VM has been out of action for a week or so.<br />
-Luckily, my backups worked pretty well so minimal content lost.  I'm using the rather unorthodox backup over SMTP, which seems to work pretty well for smaller files.  I knocked up a ruby class called <a href="http://wiki.mccune.org.uk/index.php/Ruby_Backup_Class">Rbackup</a> and just have a script running in cron nightly...<br />
-Actually had a trio of hardware failures over the festive period (2 hard disks and a graphics card), which just goes to show that checking backups (and restores!) is very important and not to be put off...</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -591,7 +595,7 @@ Actually had a trio of hardware failures over the festive period (2 hard disks a
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2017 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2018 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>
