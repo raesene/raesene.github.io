@@ -24,7 +24,7 @@
 
 &lt;h2 id=&quot;practical-examples&quot;&gt;Practical examples&lt;/h2&gt;
 
-&lt;p&gt;The Kubernetes documentation on &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; has some good examples of policies you might want to apply, and there’s also a &lt;a href=&quot;repo. on github&quot;&gt;repo. on github&lt;/a&gt; with some more examples, with a nice visualization of the effect of the policy, however lets cover one example that’s not covered in either of those resources.&lt;/p&gt;
+&lt;p&gt;The Kubernetes documentation on &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; has some good examples of policies you might want to apply, and there’s also a &lt;a href=&quot;https://github.com/ahmetb/kubernetes-network-policy-recipes&quot;&gt;repo. on github&lt;/a&gt; with some more examples, with a nice visualization of the effect of the policy, however lets cover one example that’s not covered in either of those resources.&lt;/p&gt;
 
 &lt;h2 id=&quot;denying-access-to-kubernetes-nodes&quot;&gt;Denying access to Kubernetes nodes&lt;/h2&gt;
 
