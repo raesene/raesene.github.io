@@ -14,7 +14,7 @@
 
 &lt;p&gt;To make use of network policies, you need to have a k8s version that supports them (the Network Policy API hit stable in &lt;a href=&quot;http://blog.kubernetes.io/2017/06/kubernetes-1.7-security-hardening-stateful-application-extensibility-updates.html&quot;&gt;1.7&lt;/a&gt;).  You’ll also need a network plugin that supports Network Policies, in order for your policies to be effective.  Most of the major network plugins support network policies, however there are some irregularities to be aware of.&lt;/p&gt;
 
-&lt;p&gt;For example Weave doesn’t currently support egress policies at the moment (issue &lt;a href=&quot;https://github.com/weaveworks/weave/issues/2624&quot;&gt;here&lt;/a&gt;), so do check the support of your chosen plugin before starting :)&lt;/p&gt;
+&lt;p&gt;For example Weave doesn’t currently support egress policies at the moment (issue &lt;a href=&quot;https://github.com/weaveworks/weave/issues/2624&quot;&gt;here&lt;/a&gt; ), so do check the support of your chosen plugin before starting :)&lt;/p&gt;
 
 &lt;h2 id=&quot;network-policy-concepts&quot;&gt;Network Policy Concepts&lt;/h2&gt;
 
