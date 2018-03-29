@@ -66,6 +66,8 @@
 
 &lt;p&gt;For persistent add those two environment variables into your WSL profile by modifying .bashrc or similar with those commands.&lt;/p&gt;
 
+&lt;p&gt;After this the only caveat is, that as you’re in Windows containers mode, you need to add &lt;code class=&quot;highlighter-rouge&quot;&gt;--platform linux&lt;/code&gt; to any Docker commands for linux containers that you run.&lt;/p&gt;
+
 &lt;p&gt;Thanks to &lt;a href=&quot;https://twitter.com/nunixtech&quot;&gt;Nuno Do Carmo&lt;/a&gt; this is just a modified version of a setup he described in the blog posts linked above.&lt;/p&gt;
 </description>
 				<pubDate>Thu, 29 Mar 2018 14:45:39 +0100</pubDate>
