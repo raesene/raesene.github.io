@@ -159,6 +159,43 @@
   <span class="post-date">
     
     May
+    18th,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="/blog/2013/05/18/your-framework-will-fail-you-part-2-network-controls/">Your Framework Will Fail You - Part 2 - Network Controls</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>This post is part of a series based on a presentation I did for the Scottish Ruby Conference in May 2013 (part 1 <a title="Scottish Ruby Conference Talk – Your Framework Will Fail You" href="http://blog.scotsts.com/?p=630">here</a>) which was around defense in depth and some of the controls companies should be looking at to help protect them when something goes wrong.</p>
+<p>The first segment to cover is Firewalling. Network firewalls get quite a bit of flack in the security world, mainly because people tend to rely too heavily on them for protection without really understanding where they are and are not useful.</p>
+<p>The "low-risk" setup option that I covered is around the use of egress filtering on firewalls.</p>
+<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet), to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
+<p>Setting a default deny on connections from trusted--&gt;untrusted networks can be a really useful control in making an attackers life more difficult for them and hindering their post exploitation activities. So in an e-commerce environment it might be possible to have rules on the firewall that restrict all servers from initiating any connections to the Internet except for a couple of hosts for package updates. This means that someone who has access to the server and who trys to connect to any other system on the Internet will get blocked.</p>
+<p>If you consider an attack on a web application, once the attacker has compromised a server (e.g. via SQL Injection or command injection) one of the first things they might try to do is make a connection back to a system under their control to download more tools and also to make a shell connection to the compromised system. So with egress filtering this could be considerably trickier to pull off.</p>
+<p>One thing if you do intend to do this is, I would recommend putting it in place when you're designing the network. Retro-fitting more restrictive firewall rules can be quite difficult as things like periodic connections that only happen once a month might not be noticed, leading to unexpected failures after the firewall rules have been put in place.</p>
+<p>The "high risk" setup option looking at the area of network segregation. One of the setups I've seen quite commonly is that only one firewall is used, with all Internet facing systems in a single DMZ and then potentially all back-end systems on either the Internal network or perhaps in another single DMZ network. It's a setup I call the "warm smarty" approach to security crunchy on the outside but soft and gooey once you get past the shell.</p>
+<p>The problem with this approach is that once an attacker has compromised a single server it's much easier for them to attack other systems in the environment and expand their access. The reality is that most internal networks are pretty easy for a dedicated attacker to compromise as there's always some system that doesn't get patched somewhere, so once they're in, it's pretty much game over.</p>
+<p>Addressing this isn't cheap or easy but effective network segmentation can make attackers lives much more difficult.</p>
+<p>There are a variety of approaches that can be used for network segmentation. One is to segment individual Internet facing applications so that they are in their own DMZ, this can reduce the risk of onwards compromise, although it does depend on the firewall ruleset being suitably restrictive.</p>
+<p>This approach obviously will increase management costs, for example requiring more management servers and potentially less automation of maintenance, so there is a trade-off between the desired level of security and the cost involved, but it's something that should be considered rather than just going for the default one firewall approach.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     13th,
     
     2013
@@ -456,36 +493,6 @@
 <p>MS have said that they are not going to fix it - which seems justifiable as they never recommended its use in the first place.</p>
 <p>I can't help wondering if all the sites we have seen that have used this have been back over their code and done their input validation properly this time.  Sadly I suspect that the answer to this is likely to be no in a large number of cases.</p>
 <p>This is a shame, because a lot of the problems are simply caused by developers accepting characters into fields where they simply don't have to.  For example - we see a lot of telephone number fields that only need to accept numerics that take '&lt;&gt;' and other dangerous characters.   And for the rest, simply encoding all user supplied content is not hard and protects against the vast majority of issues.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    20th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/01/20/old-browsers/">Old Browsers</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I am so sad - but while I had the old versions of Operating Systems fired up for my previous post - I couldn't resist having a look at some modern websites with the default browser that came with them.</p>
-<p>Specifically I looked at IE2 (NT 4), IE5 Windows 2000) and Netscape Communicator 4.76</p>
-<p>As might have been expected - IE2 didn't really work at all.  <a href="http://www.bbc.co.uk">www.bbc.co.uk</a> seemed to start loading up JavaScript and then did nothing as did <a href="http://www.google.com">www.google.com</a>.  <a href="http://www.wikipedia.org">www.wikipedia.org</a> and <a href="http://www.scotsts.com">www.scotsts.com</a> generated JavaScript errors but then showed a minimalist version of the page - as did <a href="http://www.microsoft.com">www.microsoft.com</a>.  The only site that actually worked properly was our old friend <a href="http://www.armory.com">www.armory.com</a> which says it is best viewed in 'any browser' and does what it says on the tin.  Netscape was about the same although it did make an attempt at Google's site.   Microsoft's site just crashed the browser.</p>
-<p>IE5 was a bit of a better story.  All the sites I originally tried actually loaded up.   I turned JavaScript error reporting off and all the pages I originally tried either work or sort of work.  By which I mean that a lot of them will load and are usable but don't look that nice.  www.facebook .com and <a href="http://www.twitter.com">www.twitter.com</a> will not load at all - but outside that I couldn't find anything that completely didn't work and <a href="http://www.google.com">www.google.com</a> scored some points by working natively with no problems at all and looking completely normal.  It actually was not quite as bad a browser as I thought it was going to be considering it is twelve years old and it is probably just about usable.  The security on it is going to be awful though.</p>
-<p>&nbsp;</p>
 
     
     
