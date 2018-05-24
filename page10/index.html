@@ -158,6 +158,36 @@
 
   <span class="post-date">
     
+    March
+    8th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/08/xss_in_rails/">XSS in Rails Applications</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I'm doing some research at the moment for a presentation I'm doing for the <a href="http://www.scotlandonrails.com/">Scotland on Rails</a> conference, later this month.  As part of that I've been downloading some sample Rails applications to get an idea of common security issues that I can discuss.<br />
+Interestingly on popular applications that I've downloaded so far, I'm 2 for 2 on the exact same problem.<br />
+Both of them have XSS vulnerabilities from the user--&gt;admin sides of the site.  So the end-user pages have output encoding to restrict XSS but the admin sections don't consistently provide the same protection.<br />
+It's also interesting that both applications seem to be relying on output encoding as a defence as opposed to input validation.  In my experience the best defence is a combination of the two...<br />
+Of course that leads to some potentially nasty exploits around stealing admin credentials from the site in question.  Hey looks like I'll have some stuff to talk about anyway :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     December
     22nd,
     
@@ -445,59 +475,6 @@ After all once users are set on the path of ignoring security it becomes pretty 
 Only thing is, what if you don't have access to the shell to do exactly that....? What if you don't even know you run debian Linux...?<br />
 Over the last several years there has been a proliferation of computing "appliances" which almost inevitably run a cut-down Linux underneath the main software stack and in many cases, that's going to be debian Linux.<br />
 The thing is, in some cases the vendor won't even explicitly mention what the underlying software is, so the end customer may be blissfully unaware that they have vulnerable machines...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    4th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/05/04/are_we_secure_y/">Are we Secure yet? (Part 1)</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>One of the questions that a Information Security person dreads most is someone from the business asking <strong>"Are we secure?"</strong>.<br />
-You can be torn between the urge to explain in detail why that question can't be easily answered and the details of the controls in place and residual risks (and sending them to sleep) or a flippant "yes" which may well come back to haunt you...<br />
-One of the reasons why the answer could be so long is the obvious question "Secure from what".  A set of controls which may be reasonable tight when faced with a non-targeted threat from malware may be totally inadequate against a motivated knowledgeable insider threat.<br />
-So, perhaps one way to help is to break down the "secure" question a bit in to categories of threat.<br />
-For example: -</p>
-<ul>
-<li> Non-Targeted Threats</li>
-<li> Internal Targeted Threats</li>
-<li> External Targeted Threats</li>
-</ul>
-<p>This way you can classify your controls as to how well they target each threat category, giving a better picture as to what level of risk your organisation is actually running.<br />
-<big>Non-Targeted Threats</big><br />
-First off is probably the easiest one, "Non-Targeted Threats".  This category includes a lot of the "traditional" threats to your security and is also probably the easiest one to mitigate, as the attacker isn't intelligently looking for a way to attack you they're just randomly interested in getting access to assets.<br />
-Examples of this category of threat are</p>
-<ul>
-<li> Malware - Most malware isn't targeted and is just looking to compromise a machine (any machine) for the purposes of using its resources or getting access to information held on it or entered into it (eg, users banking credentials).</li>
-<li> Laptop Thefts - The majority of laptop thefts are not targeted, they're just carried out by someone who sees the laptop as a portable asset that can be easily resold.</li>
-<li>Internet Attacks - A large portion of "script kiddy" style attacks again, aren't targeted at a particular company, they're just looking to compromise servers on the Internet for (mis)use.</li>
-</ul>
-<p>Looking at these sample threats, we can see that it's likely that more automated controls will be effective against them.  We don't need to be absolutely flawless in our execution of security to defeat them but we need to be "good enough" that the attack moves on to someone else.<br />
-So controls which are likely to be effective in this space could be :-</p>
-<ul>
-<li>A-V/Anti-Spyware - Whilst there's a diminishing return on these as attackers work harder to bypass them, signature based A-V still adds a lot of value in cutting out the "noise" of malware attacks</li>
-<li>Patching - Again we're not dealing with attackers who are likely to use a zero-day exploit here, so vendor patching will likely be an effective control to mitigate some of these threats.</li>
-<li>Laptop encryption - Whilst it could be argued that this isn't a perfect control (with the cold boot http://www.freedom-to-tinker.com/?p=1257 attacks that have emerged), it's likely to be an effective control for a random laptop theft.</li>
-<li>Network (and Web Application) Firewalls - Until recently you could have argued that non-targeted attacks rarely use application level techniques, the recent mass SQL Injection attack (doubtless the first of many) show that firewalling at the network and application level is necessary to keep you safe('ish) on the Internet.</li>
-</ul>
-<p>So far, so good.  Next up we'll look at the trickier area of Internal Targeted Threats.</p>
 
     
     

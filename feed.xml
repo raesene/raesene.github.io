@@ -7,6 +7,68 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Autiting Kubernetes Access Control</title>
+				<description>&lt;p&gt;A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.&lt;/p&gt;
+
+&lt;p&gt;However when it comes to completing this kind of review on a Kubernetes cluster, you’ll likely find it not as straight-forward as expected, due to k8s’ rather hands-off approach to identity management.&lt;/p&gt;
+
+&lt;p&gt;Similarly to areas such as Networking and Storage, k8s has taken the decision to delegate the matter of user identity management to largely external systems.  There is no standard user database in a cluster, and where you can find the information to review privileged access will largely depend on the configured authentication mechanisms.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-information-is-available&quot;&gt;What information is available?&lt;/h2&gt;
+
+&lt;p&gt;Assuming that you’re using RBAC (‘cause if you’re not it’s likely the answer to “who has cluster-admin rights?” is “All your authenticated users”) the information available is from a couple of different sources. &lt;code class=&quot;highlighter-rouge&quot;&gt;clusterroles&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;clusterrolebindings&lt;/code&gt; provide information on cluster level privileges and &lt;code class=&quot;highlighter-rouge&quot;&gt;roles&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;rolebindings&lt;/code&gt; serve the same purpose at the namespace level.&lt;/p&gt;
+
+&lt;p&gt;What you can get from the cluster is a list of the subjects that have a given role.  These can be either users, service accounts, or groups.  The main issue, in terms of determining the overall access to the cluster, comes from the inclusion of groups in that list of subjects, as group membership isn’t recorded anywhere within the cluster, it’s defined by the identity provider.&lt;/p&gt;
+
+&lt;p&gt;To make this possbly a little clearer, lets take a worked example.&lt;/p&gt;
+
+&lt;p&gt;The cluster role &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; is obviously pretty key as it has complete rights to the entire Kubernetes cluster.  On a standard kubeadm 1.9 cluster if you run the command&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get clusterrolebinding cluster-admin -o yaml&lt;/code&gt;  the output will look something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: &quot;true&quot;
+  creationTimestamp: 2018-01-10T21:03:11Z
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: cluster-admin
+  resourceVersion: &quot;94&quot;
+  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings/cluster-admin
+  uid: aa8f62e2-f649-11e7-8092-000c290b2418
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:masters
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The key point is the subjects section at the end where we can see that all members of the &lt;code class=&quot;highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group have the &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; role.  The membership of that group isn’t defined anywhere in your cluster.&lt;/p&gt;
+
+&lt;p&gt;It’s worth noting also that whilst tying up the identity of people with rights to your cluster is easier with Users and Service accounts than it is with groups, Kubernetes still relies on external systems to warrant these identities, so just ‘cause the cluster role binding says “User fred has a binding to the cluster-admin role”, it doesn’t actually have any way (within the cluster) of asserting who fred is.&lt;/p&gt;
+
+&lt;h2 id=&quot;so-how-do-i-audit-k8s-user-rights&quot;&gt;So how do I audit k8s user rights?&lt;/h2&gt;
+
+&lt;p&gt;Basically you’ll need to find out what authentication mechanisms are supported by the cluster, and then for each one, determine how group membership is defined and see if you can assemble a list of users that way.&lt;/p&gt;
+
+&lt;p&gt;For example, lets say the cluster is using client certificate authentication (a common option in many clusters).  As per  &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs&quot;&gt;the Kubernetes docs&lt;/a&gt; group memberships are defined in the CSR, so to review membership, you’ll need to grep. through all the CSRs (assuming there is a record of them) and pull out the group memberships that way.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Nothing in this post will come as any surprise to people who’ve been following Kubernetes security for a while now.  However as it grows in popularity and more large companies start rolling it out, issues like understanding who has rights to what will start becoming more important.&lt;/p&gt;
+</description>
+				<pubDate>Wed, 23 May 2018 20:45:39 +0100</pubDate>
+				<link>/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</link>
+				<guid isPermaLink="true">/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</guid>
+			</item>
+		
+			<item>
 				<title>WSL and Docker for Windows</title>
 				<description>&lt;p&gt;There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…&lt;/p&gt;
 
@@ -509,75 +571,6 @@ CapBnd: 00000000a80425fb
 				<pubDate>Sun, 02 Apr 2017 18:05:39 +0100</pubDate>
 				<link>/blog/2017/04/02/Kubernetes-Service-Tokens/</link>
 				<guid isPermaLink="true">/blog/2017/04/02/Kubernetes-Service-Tokens/</guid>
-			</item>
-		
-			<item>
-				<title>Kubernetes Attack Surface - cAdvisor</title>
-				<description>&lt;p&gt;So following on from my post about the &lt;a href=&quot;https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/&quot;&gt;kube-exploit&lt;/a&gt;, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.&lt;/p&gt;
-
-&lt;p&gt;So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.&lt;/p&gt;
-
-&lt;p&gt;This cluster has three nodes on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.233&lt;/code&gt; , &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.201&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.41.232&lt;/code&gt; so we can start with&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;nmap -sT -n -p- 192.168.41.201,232,233&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.&lt;/p&gt;
-
-&lt;p&gt;This provides quite a bit of information about the configuration of the cluster like a process list&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_processes.png&quot; alt=&quot;cadvisor process&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;and some details on the configuration of the docker daemon on the host&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/assets/media/cadvisor_docker.png&quot; alt=&quot;cadvisor docker&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to &lt;code class=&quot;highlighter-rouge&quot;&gt;http://192.168.41.233:4194/api/v2.0/spec?recursive=true&lt;/code&gt; and get output like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &quot;/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;: {
-        &quot;creation_time&quot;: &quot;2016-10-09T03:55:54.113949226+01:00&quot;,
-        &quot;aliases&quot;: [
-            &quot;k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de&quot;,
-            &quot;0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f&quot;
-        ],
-        &quot;namespace&quot;: &quot;docker&quot;,
-        &quot;labels&quot;: {
-            &quot;io.kubernetes.container.hash&quot;: &quot;27539310&quot;,
-            &quot;io.kubernetes.container.name&quot;: &quot;weave-npc&quot;,
-            &quot;io.kubernetes.container.restartCount&quot;: &quot;0&quot;,
-            &quot;io.kubernetes.container.terminationMessagePath&quot;: &quot;/dev/termination-log&quot;,
-            &quot;io.kubernetes.pod.name&quot;: &quot;weave-net-xf53p&quot;,
-            &quot;io.kubernetes.pod.namespace&quot;: &quot;kube-system&quot;,
-            &quot;io.kubernetes.pod.terminationGracePeriod&quot;: &quot;30&quot;,
-            &quot;io.kubernetes.pod.uid&quot;: &quot;af83b2df-8683-11e6-849b-000c29d33879&quot;
-        },
-        &quot;has_cpu&quot;: true,
-        &quot;cpu&quot;: {
-            &quot;limit&quot;: 10,
-            &quot;max_limit&quot;: 0,
-            &quot;mask&quot;: &quot;0-1&quot;
-        },
-        &quot;has_memory&quot;: true,
-        &quot;memory&quot;: {
-            &quot;limit&quot;: 9223372036854771712,
-            &quot;reservation&quot;: 9223372036854771712
-        },
-        &quot;has_custom_metrics&quot;: false,
-        &quot;has_network&quot;: false,
-        &quot;has_filesystem&quot;: true,
-        &quot;has_diskio&quot;: true,
-        &quot;image&quot;: &quot;weaveworks/weave-npc:1.7.0&quot;
-    },
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.&lt;/p&gt;
-
-&lt;p&gt;After noting this I had a look through the Kubernetes issue list and it looks like this is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/11710&quot;&gt;known issue&lt;/a&gt; but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.&lt;/p&gt;
-
-</description>
-				<pubDate>Fri, 14 Oct 2016 19:05:39 +0100</pubDate>
-				<link>/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/</link>
-				<guid isPermaLink="true">/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/</guid>
 			</item>
 		
 	</channel>

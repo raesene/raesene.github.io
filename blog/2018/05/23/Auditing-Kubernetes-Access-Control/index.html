@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - Service Tokens</title>
+	<title>Autiting Kubernetes Access Control</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - Service Tokens </h1>
+  <h1>Autiting Kubernetes Access Control </h1>
 </div>
 	
 <article>
@@ -157,30 +157,66 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   2nd,
+	   May 
+	   23rd,
 	     
-	   2017
+	   2018
 	 </span>
 	  <div class="article_body">
-	  <p>Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.</p>
+	  <p>A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.</p>
 
-<p>When pods are deployed to a cluster, in most default installs, the <a href="https://kubernetes.io/docs/admin/admission-controllers/">Admission Contoller</a> will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a <a href="https://kubernetes.io/docs/admin/service-accounts-admin/">Service Account</a> inside the containers that make up the pod.</p>
+<p>However when it comes to completing this kind of review on a Kubernetes cluster, you’ll likely find it not as straight-forward as expected, due to k8s’ rather hands-off approach to identity management.</p>
 
-<p>This service account includes a token which is mounted at a predictable location <code class="highlighter-rouge">/var/run/secrets/kubernetes.io/serviceaccount/token</code> .</p>
+<p>Similarly to areas such as Networking and Storage, k8s has taken the decision to delegate the matter of user identity management to largely external systems.  There is no standard user database in a cluster, and where you can find the information to review privileged access will largely depend on the configured authentication mechanisms.</p>
 
-<p>What’s interesting is that, by default unless <a href="https://kubernetes.io/docs/admin/authorization/rbac/">RBAC</a> is deployed, it’s likely that this token provides cluster admin privileges.</p>
+<h2 id="what-information-is-available">What information is available?</h2>
 
-<p>This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kubelet exploit</a> ).</p>
+<p>Assuming that you’re using RBAC (‘cause if you’re not it’s likely the answer to “who has cluster-admin rights?” is “All your authenticated users”) the information available is from a couple of different sources. <code class="highlighter-rouge">clusterroles</code> and <code class="highlighter-rouge">clusterrolebindings</code> provide information on cluster level privileges and <code class="highlighter-rouge">roles</code> and <code class="highlighter-rouge">rolebindings</code> serve the same purpose at the namespace level.</p>
 
-<p>If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of <a href="https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl">kubectl</a> and point it at your API Server with something like</p>
+<p>What you can get from the cluster is a list of the subjects that have a given role.  These can be either users, service accounts, or groups.  The main issue, in terms of determining the overall access to the cluster, comes from the inclusion of groups in that list of subjects, as group membership isn’t recorded anywhere within the cluster, it’s defined by the identity provider.</p>
 
-<p><code class="highlighter-rouge">./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]</code></p>
+<p>To make this possbly a little clearer, lets take a worked example.</p>
 
-<p>then try out some kubernetes commands…</p>
+<p>The cluster role <code class="highlighter-rouge">cluster-admin</code> is obviously pretty key as it has complete rights to the entire Kubernetes cluster.  On a standard kubeadm 1.9 cluster if you run the command</p>
 
-<p>Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.</p>
+<p><code class="highlighter-rouge">kubectl get clusterrolebinding cluster-admin -o yaml</code>  the output will look something like</p>
 
+<div class="highlighter-rouge"><pre class="highlight"><code>apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  creationTimestamp: 2018-01-10T21:03:11Z
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+  name: cluster-admin
+  resourceVersion: "94"
+  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings/cluster-admin
+  uid: aa8f62e2-f649-11e7-8092-000c290b2418
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:masters
+</code></pre>
+</div>
+
+<p>The key point is the subjects section at the end where we can see that all members of the <code class="highlighter-rouge">system:masters</code> group have the <code class="highlighter-rouge">cluster-admin</code> role.  The membership of that group isn’t defined anywhere in your cluster.</p>
+
+<p>It’s worth noting also that whilst tying up the identity of people with rights to your cluster is easier with Users and Service accounts than it is with groups, Kubernetes still relies on external systems to warrant these identities, so just ‘cause the cluster role binding says “User fred has a binding to the cluster-admin role”, it doesn’t actually have any way (within the cluster) of asserting who fred is.</p>
+
+<h2 id="so-how-do-i-audit-k8s-user-rights">So how do I audit k8s user rights?</h2>
+
+<p>Basically you’ll need to find out what authentication mechanisms are supported by the cluster, and then for each one, determine how group membership is defined and see if you can assemble a list of users that way.</p>
+
+<p>For example, lets say the cluster is using client certificate authentication (a common option in many clusters).  As per  <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs">the Kubernetes docs</a> group memberships are defined in the CSR, so to review membership, you’ll need to grep. through all the CSRs (assuming there is a record of them) and pull out the group memberships that way.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Nothing in this post will come as any surprise to people who’ve been following Kubernetes security for a while now.  However as it grows in popularity and more large companies start rolling it out, issues like understanding who has rights to what will start becoming more important.</p>
 
 	  </div>
 
@@ -206,7 +242,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - Service Tokens&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Autiting Kubernetes Access Control&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -234,10 +270,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/" title="Kubernetes Attack Surface - cAdvisor">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2018/03/29/WSL-And-Docker/" title="WSL and Docker for Windows">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
