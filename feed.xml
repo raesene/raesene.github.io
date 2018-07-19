@@ -7,7 +7,7 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>Autiting Kubernetes Access Control</title>
+				<title>Auditing Kubernetes Access Control</title>
 				<description>&lt;p&gt;A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.&lt;/p&gt;
 
 &lt;p&gt;However when it comes to completing this kind of review on a Kubernetes cluster, you’ll likely find it not as straight-forward as expected, due to k8s’ rather hands-off approach to identity management.&lt;/p&gt;
