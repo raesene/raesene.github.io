@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Exploring Kata Containers</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Exploring Kata Containers </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   July 
+	   23rd,
+	     
+	   2018
+	 </span>
+	  <div class="article_body">
+	  <p>This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">here</a>.</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p><a href="https://katacontainers.io/">Kata Containers</a> is a project to provide a container runtime which makes use of qemu virtualization to provide isolation for the contained processes.  At face value this seems a bit of an odd decision as generally companies have moved from virtualization based isolation to process based isolation with projects like Docker.</p>
+
+<p>However having the flexibility to run some workloads with additional isolation is a useful option, and it’s perfectly possible to have a single Docker engine instance which supports multiple container runtimes.</p>
+
+<h2 id="installation-notes">Installation Notes</h2>
+
+<p>The Kata container installation process is pretty straightfoward. I was installing on Ubuntu so followed the instructions <a href="https://github.com/kata-containers/documentation/blob/master/install/ubuntu-installation-guide.md">here</a>.  One first note is that 18.04 is supported even though the docs currently say 16.04 or 17.10.</p>
+
+<p>Once you’ve got the packages installed you need to configure the Docker daemon to use the new runtime.  Kata Containers provide some documentation on that <a href="https://github.com/kata-containers/documentation/blob/master/install/docker/ubuntu-docker-install.md">here</a> however I went a slightly different route.</p>
+
+<p>Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nt">"runtimes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"runsc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/local/bin/runsc"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"kata-runtime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/bin/kata-runtime"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.</p>
+
+<h2 id="usage">Usage</h2>
+
+<p>Once you’ve got it installed running a container with Kata Containers is as simple as adding <code class="highlighter-rouge">--runtime=kata-runtime</code> to the docker run command.  I think part of the allure of using something like Kata Containers is that you can still take advantage of the containerization workflows, without potentially reducing the security level that you’ve traditionally had with a VM based model.</p>
+
+<h2 id="notes">Notes</h2>
+
+<p>Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.</p>
+
+<p><strong>output of uname -a without kata containers</strong>
+<code class="highlighter-rouge">
+Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+</code></p>
+
+<p><strong>output of uname -a with kata containers</strong>
+<code class="highlighter-rouge">
+Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+</code></p>
+
+<p>Interestingly the text <strong>container</strong> in the kernel version could be a useful fingerprinting indicator.</p>
+
+<p>As with gVisor there’s a difference in the contents of <code class="highlighter-rouge">/proc</code> as well.  In a standard container I’m seeing 4700 entries against 2741 in the kata-containers version, so there’s likely some exploration there to see what’s different.</p>
+
+<p>Getting information about what Kata containers is up to seems easy enough. There’s a handy kata-env command that can be run <code class="highlighter-rouge">/usr/bin/kata-runtime kata-env</code> which outputs a load of useful information including things like what VM image is being used by qemu for the containers you are running.</p>
+
+<p>Each container you run up spawns a kata-shim, kata-proxy and qemu process, there’s details on exactly what each does in the project’s <a href="https://github.com/kata-containers/documentation/blob/master/architecture.md">architecture docs</a></p>
+
+<p><code class="highlighter-rouge">--privileged</code> doesn’t work under kata containers as with qemu isolation it doesn’t make a great deal of sense to have a privileged mode. Also <code class="highlighter-rouge">--net=host</code> doesn’t work and indeed it’ll hang the hosts network quite effectively if you try! <code class="highlighter-rouge">--pid=host</code> doesn’t work either, but at least it doesn’t crash the host :) There’s a document tracking limitations <a href="https://github.com/kata-containers/documentation/blob/master/Limitations.md">here</a></p>
+
+<h2 id="performance">Performance</h2>
+
+<p>I think it’s fair to say that there’s a bit of performance hit to using Kata Containers over standard Docker.  running an alpine:3.7 container using Docker shows an output from <code class="highlighter-rouge">sudo pmap -x [pid]</code> of 1.5MB . Running the same for kata containers and you get 3GB for the Qemu process and 600MB for the kata-shim process, so similar to what you’d see for VMs which is somewhat unsurprising.</p>
+
+<p>Whilst I’m sure that there’s going to be circumstances where that tradeoff will be worth it, that’s a pretty significant impact if you’re moving to containerization for the performance benefits.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Containers-ref">
+					Containers <span>(4)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring Kata Containers&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2018/07/22/exploring-gvisor/" title="Exploring gVisor">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2018 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -7,6 +7,78 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Exploring Kata Containers</title>
+				<description>&lt;p&gt;This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://katacontainers.io/&quot;&gt;Kata Containers&lt;/a&gt; is a project to provide a container runtime which makes use of qemu virtualization to provide isolation for the contained processes.  At face value this seems a bit of an odd decision as generally companies have moved from virtualization based isolation to process based isolation with projects like Docker.&lt;/p&gt;
+
+&lt;p&gt;However having the flexibility to run some workloads with additional isolation is a useful option, and it’s perfectly possible to have a single Docker engine instance which supports multiple container runtimes.&lt;/p&gt;
+
+&lt;h2 id=&quot;installation-notes&quot;&gt;Installation Notes&lt;/h2&gt;
+
+&lt;p&gt;The Kata container installation process is pretty straightfoward. I was installing on Ubuntu so followed the instructions &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/install/ubuntu-installation-guide.md&quot;&gt;here&lt;/a&gt;.  One first note is that 18.04 is supported even though the docs currently say 16.04 or 17.10.&lt;/p&gt;
+
+&lt;p&gt;Once you’ve got the packages installed you need to configure the Docker daemon to use the new runtime.  Kata Containers provide some documentation on that &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/install/docker/ubuntu-docker-install.md&quot;&gt;here&lt;/a&gt; however I went a slightly different route.&lt;/p&gt;
+
+&lt;p&gt;Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;runtimes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;runsc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;path&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/usr/local/bin/runsc&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;kata-runtime&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;path&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/usr/bin/kata-runtime&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.&lt;/p&gt;
+
+&lt;h2 id=&quot;usage&quot;&gt;Usage&lt;/h2&gt;
+
+&lt;p&gt;Once you’ve got it installed running a container with Kata Containers is as simple as adding &lt;code class=&quot;highlighter-rouge&quot;&gt;--runtime=kata-runtime&lt;/code&gt; to the docker run command.  I think part of the allure of using something like Kata Containers is that you can still take advantage of the containerization workflows, without potentially reducing the security level that you’ve traditionally had with a VM based model.&lt;/p&gt;
+
+&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;/h2&gt;
+
+&lt;p&gt;Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;output of uname -a without kata containers&lt;/strong&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;
+Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;output of uname -a with kata containers&lt;/strong&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;
+Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Interestingly the text &lt;strong&gt;container&lt;/strong&gt; in the kernel version could be a useful fingerprinting indicator.&lt;/p&gt;
+
+&lt;p&gt;As with gVisor there’s a difference in the contents of &lt;code class=&quot;highlighter-rouge&quot;&gt;/proc&lt;/code&gt; as well.  In a standard container I’m seeing 4700 entries against 2741 in the kata-containers version, so there’s likely some exploration there to see what’s different.&lt;/p&gt;
+
+&lt;p&gt;Getting information about what Kata containers is up to seems easy enough. There’s a handy kata-env command that can be run &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/bin/kata-runtime kata-env&lt;/code&gt; which outputs a load of useful information including things like what VM image is being used by qemu for the containers you are running.&lt;/p&gt;
+
+&lt;p&gt;Each container you run up spawns a kata-shim, kata-proxy and qemu process, there’s details on exactly what each does in the project’s &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/architecture.md&quot;&gt;architecture docs&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--privileged&lt;/code&gt; doesn’t work under kata containers as with qemu isolation it doesn’t make a great deal of sense to have a privileged mode. Also &lt;code class=&quot;highlighter-rouge&quot;&gt;--net=host&lt;/code&gt; doesn’t work and indeed it’ll hang the hosts network quite effectively if you try! &lt;code class=&quot;highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; doesn’t work either, but at least it doesn’t crash the host :) There’s a document tracking limitations &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/Limitations.md&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
+
+&lt;p&gt;I think it’s fair to say that there’s a bit of performance hit to using Kata Containers over standard Docker.  running an alpine:3.7 container using Docker shows an output from &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo pmap -x [pid]&lt;/code&gt; of 1.5MB . Running the same for kata containers and you get 3GB for the Qemu process and 600MB for the kata-shim process, so similar to what you’d see for VMs which is somewhat unsurprising.&lt;/p&gt;
+
+&lt;p&gt;Whilst I’m sure that there’s going to be circumstances where that tradeoff will be worth it, that’s a pretty significant impact if you’re moving to containerization for the performance benefits.&lt;/p&gt;
+</description>
+				<pubDate>Mon, 23 Jul 2018 18:45:39 +0100</pubDate>
+				<link>/blog/2018/07/23/exploring-kata/</link>
+				<guid isPermaLink="true">/blog/2018/07/23/exploring-kata/</guid>
+			</item>
+		
+			<item>
 				<title>Exploring gVisor</title>
 				<description>&lt;p&gt;As part of some talks I did for the recent NCC Con, I started looking at the &lt;a href=&quot;https://github.com/google/gvisor&quot;&gt;gVisor&lt;/a&gt; project from Google (nothing like having to write a presentation to provide motivation!).&lt;/p&gt;
 
@@ -573,41 +645,6 @@ CapBnd: 00000000a80425fb
 				<pubDate>Mon, 01 May 2017 15:15:39 +0100</pubDate>
 				<link>/blog/2017/05/01/Kubernetes-Security-etcd/</link>
 				<guid isPermaLink="true">/blog/2017/05/01/Kubernetes-Security-etcd/</guid>
-			</item>
-		
-			<item>
-				<title>Container Testing - A small tools container with SSH</title>
-				<description>&lt;p&gt;When you’re doing security testing of container environments one of the things that can be pretty useful is having a container with useful tools connected to the container network.  From there you can run network scans of the container network and also test the scenario of “malicious container”&lt;/p&gt;
-
-&lt;p&gt;There’s a couple of ways of achieving this goal. You could run a container interactively with something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run -i -t [image_name] /bin/sh&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;but one of the downsides of using a container like this is if you exit from the container, it’ll stop running, so ideally you want a container that’ll keep running and that you can connect to over the network.&lt;/p&gt;
-
-&lt;p&gt;One example of this approach is &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools/&quot;&gt;this image&lt;/a&gt; which has a couple of useful features.&lt;/p&gt;
-
-&lt;p&gt;Its based on alpine linux so the image is nice and small, and it runs an SSH daemon so that it’ll stay running and you can just connect in with SSH (assuming that you have a root from the location you start from to the container)&lt;/p&gt;
-
-&lt;p&gt;It also has a neat trick that I got from some &lt;a href=&quot;https://github.com/fedora-cloud/Fedora-Dockerfiles/blob/master/ssh/entrypoint.sh&quot;&gt;Fedora dockerfiles&lt;/a&gt; which is that it creates a random password each time you start an instance of the image.  This is a good thing (tm) as you don’t want a static password baked in to your image.&lt;/p&gt;
-
-&lt;p&gt;To use this approach just do something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker run -d raesene/alpine-containertools&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;then find out what IP address has been assigned to your container with&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect -f &quot;&quot; [container_name]&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and what the password that’s been generated with&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker logs [container_name]&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and you should be able to SSH in and get started with testing.  This image has some network tools like nmap and curl and also some container tools like the docker client, kubectl and etcdctl which is handy for checking whether you can get access to the ETCD database in a Kubernetes network.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 15 Apr 2017 13:35:39 +0100</pubDate>
-				<link>/blog/2017/04/15/Container-Testing-small-tools-container/</link>
-				<guid isPermaLink="true">/blog/2017/04/15/Container-Testing-small-tools-container/</guid>
 			</item>
 		
 	</channel>

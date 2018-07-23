@@ -158,6 +158,37 @@
 
   <span class="post-date">
     
+    July
+    1st,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/07/01/more_virtualiza/">More virtualization fun..</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's an interesting post at <a href="http://rationalsecurity.typepad.com/blog/2008/06/the-final-front.html">Hoffs blog</a> around virtualization and DMZs and to what level it's "ok" to virtualize a given DMZ environment, following on from a white paper by VMware on the subject<br />
+As Hoff mentions you need to understand the wider context in any risk assessment, but I actually think that in the scenarios that VMware have painted out, I'd agree with <a href="http://www.virtualization.info/2008/06/whitepaper-dmz-virtualization-with.html">Alessandro</a>, that the fully collapsed DMZs talked about in the paper are a no-no.<br />
+And there's a nice risk assessment reasoning here, it's not just a "ooh hypervisors scary" kind of reaction, honest :) ..<br />
+So here's how it works.  In the diagrams they've used they've laid out a picture of a number of security controls.  The main one being separate firewalls segregating the Internet from each of the DMZs in turn.  This would indicate to me that the risk assessment dictated that no one device should be a point of failure for the security being provided by the environment (a more cost effective, but traditionally seen as more risky design would be a single firewall with multiple interfaces, one for each network.)<br />
+So if we then introduce virtualization to this scenario then it seems that the option of a "partially collapsed" DMZ meets the security requirements as each DMZ has it's own VMware ESX instance and a compromise of the hypervisor won't result in a breach of DMZ segregation.<br />
+I think that in a lot of cases it's easy to look at virtualization as something new but it should be possible to look at the current risk appetite in an environment (are you using separate devices to segregate things, are you relying on VLAN tagging for separation) and then apply that to come up with the appropriate virtualization design.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     June
     23rd,
     
@@ -460,36 +491,6 @@ If you've got any events you'd like to get added to the calendar, just send an e
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    8th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/03/08/february_owasp/">February OWASP meeting</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>The February meeting of the <a href="http://www.owasp.org/index.php/Scotland">scottish OWASP chapter</a> went pretty well on the 28th.<br />
-We had Steve Moyle doing a presentation on Database security (slides can be found <a href="https://lists.owasp.org/pipermail/owasp-scotland/attachments/20080306/626374c3/attachment-0001.ppt"> here</a> )<br />
-I picked up some interesting ideas from his presentation.  Firstly the idea that relational databases have a fundamental flaw when it comes to security, which is that the channel used to control them and the channel used to access the information they contain, are the same.  This allows for someone who should only have access to information in the system to easily attack it as well.<br />
-The other thought which occurred to me when I was listening to the presentation was that any IDS/IPS style device which wants to block "malicious" traffic going to a system needs to parse the information it's seeing <i> in the same way as the protected system </i> otherwise there's a risk that quirks of rendering will introduce false positives or negatives.<br />
-It's something I was talking to a WAF vendor about recently, as I was asking them whether their product rendered JavaScript when looking for malicious traffic, as there's a specific problem with the idea of self-modifying JavaScript, looking innocuous in transit but then being malicious when executed</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -503,7 +504,7 @@ It's something I was talking to a WAF vendor about recently, as I was asking the
   
   
   <li>
-    <span class="page_number">Page: 11 of 49</span>
+    <span class="page_number">Page: 11 of 50</span>
   </li>
 
   
