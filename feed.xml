@@ -17,9 +17,11 @@
 &lt;h3 id=&quot;step-one---get-containerd&quot;&gt;Step one - Get Containerd&lt;/h3&gt;
 &lt;p&gt;First step is to get the containerd binaries, they’re available on the release page of the containerd github site &lt;a href=&quot;https://github.com/containerd/containerd/releases&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;tar -xzvf containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp bin/* /usr/local/bin/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;tar -xzvf containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp bin/* /usr/local/bin/&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;This should place the binaries in a location on the path.  In addition to the daemon files there’s a copy of the &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr&lt;/code&gt; binary which is used as a client.&lt;/p&gt;
 
@@ -27,24 +29,31 @@
 
 &lt;p&gt;We can get the runc binary from their Github page &lt;a href=&quot;https://github.com/opencontainers/runc/releases&quot;&gt;here&lt;/a&gt;.  We’ll get the AMD64 binary and put it in the same dir as the containerd files&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp runc.amd64 /usr/local/bin/runc&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo chmod +x /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp runc.amd64 /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo chmod +x /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;step-three---containerd-configuration&quot;&gt;Step three - Containerd configuration&lt;/h3&gt;
 
 &lt;p&gt;Now we’ll need to provide containerd some configuration and setup the systemd entry so that we can start it automatically on boot.  Containerd has a handy command for generating a default configuration , so we can use that.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;containerd config default &amp;gt; config.toml&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir /etc/containerd&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp config.toml /etc/containerd/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;containerd config default &amp;gt; config.toml&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir /etc/containerd&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp config.toml /etc/containerd/&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;Next up, setting up systemd.  The containerd project provides a systemd unit file on their github repo. so we can get that and use it.&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp containerd.service /etc/systemd/system&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl start containerd&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp containerd.service /etc/systemd/system&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl start containerd&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;If you want containerd to start on boot you can also add&lt;/p&gt;
 
