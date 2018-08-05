@@ -1,0 +1,64 @@
+<p>This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">here</a>.</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p><a href="https://katacontainers.io/">Kata Containers</a> is a project to provide a container runtime which makes use of qemu virtualization to provide isolation for the contained processes.  At face value this seems a bit of an odd decision as generally companies have moved from virtualization based isolation to process based isolation with projects like Docker.</p>
+
+<p>However having the flexibility to run some workloads with additional isolation is a useful option, and it’s perfectly possible to have a single Docker engine instance which supports multiple container runtimes.</p>
+
+<h2 id="installation-notes">Installation Notes</h2>
+
+<p>The Kata container installation process is pretty straightfoward. I was installing on Ubuntu so followed the instructions <a href="https://github.com/kata-containers/documentation/blob/master/install/ubuntu-installation-guide.md">here</a>.  One first note is that 18.04 is supported even though the docs currently say 16.04 or 17.10.</p>
+
+<p>Once you’ve got the packages installed you need to configure the Docker daemon to use the new runtime.  Kata Containers provide some documentation on that <a href="https://github.com/kata-containers/documentation/blob/master/install/docker/ubuntu-docker-install.md">here</a> however I went a slightly different route.</p>
+
+<p>Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="w">
+    </span><span class="nt">"runtimes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"runsc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/local/bin/runsc"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"kata-runtime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/bin/kata-runtime"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.</p>
+
+<h2 id="usage">Usage</h2>
+
+<p>Once you’ve got it installed running a container with Kata Containers is as simple as adding <code class="highlighter-rouge">--runtime=kata-runtime</code> to the docker run command.  I think part of the allure of using something like Kata Containers is that you can still take advantage of the containerization workflows, without potentially reducing the security level that you’ve traditionally had with a VM based model.</p>
+
+<h2 id="notes">Notes</h2>
+
+<p>Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.</p>
+
+<p><strong>output of uname -a without kata containers</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+</code></pre>
+</div>
+
+<p><strong>output of uname -a with kata containers</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+</code></pre>
+</div>
+
+<p>Interestingly the text <strong>container</strong> in the kernel version could be a useful fingerprinting indicator.</p>
+
+<p>As with gVisor there’s a difference in the contents of <code class="highlighter-rouge">/proc</code> as well.  In a standard container I’m seeing 4700 entries against 2741 in the kata-containers version, so there’s likely some exploration there to see what’s different.</p>
+
+<p>Getting information about what Kata containers is up to seems easy enough. There’s a handy kata-env command that can be run <code class="highlighter-rouge">/usr/bin/kata-runtime kata-env</code> which outputs a load of useful information including things like what VM image is being used by qemu for the containers you are running.</p>
+
+<p>Each container you run up spawns a kata-shim, kata-proxy and qemu process, there’s details on exactly what each does in the project’s <a href="https://github.com/kata-containers/documentation/blob/master/architecture.md">architecture docs</a></p>
+
+<p><code class="highlighter-rouge">--privileged</code> doesn’t work under kata containers as with qemu isolation it doesn’t make a great deal of sense to have a privileged mode. Also <code class="highlighter-rouge">--net=host</code> doesn’t work and indeed it’ll hang the hosts network quite effectively if you try! <code class="highlighter-rouge">--pid=host</code> doesn’t work either, but at least it doesn’t crash the host :) There’s a document tracking limitations <a href="https://github.com/kata-containers/documentation/blob/master/Limitations.md">here</a></p>
+
+<h2 id="performance">Performance</h2>
+
+<p>I think it’s fair to say that there’s a bit of performance hit to using Kata Containers over standard Docker.  running an alpine:3.7 container using Docker shows an output from <code class="highlighter-rouge">sudo pmap -x [pid]</code> of 1.5MB . Running the same for kata containers and you get 3GB for the Qemu process and 600MB for the kata-shim process, so similar to what you’d see for VMs which is somewhat unsurprising.</p>
+
+<p>Whilst I’m sure that there’s going to be circumstances where that tradeoff will be worth it, that’s a pretty significant impact if you’re moving to containerization for the performance benefits.</p>

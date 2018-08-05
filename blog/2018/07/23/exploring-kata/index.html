@@ -202,15 +202,15 @@
 
 <p>Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.</p>
 
-<p><strong>output of uname -a without kata containers</strong>
-<code class="highlighter-rouge">
-Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-</code></p>
+<p><strong>output of uname -a without kata containers</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+</code></pre>
+</div>
 
-<p><strong>output of uname -a with kata containers</strong>
-<code class="highlighter-rouge">
-Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-</code></p>
+<p><strong>output of uname -a with kata containers</strong></p>
+<div class="highlighter-rouge"><pre class="highlight"><code>Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+</code></pre>
+</div>
 
 <p>Interestingly the text <strong>container</strong> in the kernel version could be a useful fingerprinting indicator.</p>
 
@@ -237,7 +237,7 @@ Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_
 		  
 			 
 				<li><a href="/categories/index.html#Containers-ref">
-					Containers <span>(4)</span>
+					Containers <span>(5)</span>
 					
 				</a></li>
 			
@@ -283,7 +283,7 @@ Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_
 		  <li class="previous"><a href="/blog/2018/07/22/exploring-gvisor/" title="Exploring gVisor">&larr; Previous</a></li>
 		  
 		  
-			<li class="next disabled"><a>Next &rarr;</a>
+		  <li class="next"><a href="/blog/2018/08/05/Docker-Containers-Without-Docker/" title="Exploring Kata Containers">Next &rarr;</a></li>
 		  
 		</ul>
 

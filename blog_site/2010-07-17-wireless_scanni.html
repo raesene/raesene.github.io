@@ -1,0 +1,9 @@
+<p>I had some cause to do some wireless work recently, which got me interested in doing some more war-walking (and hey, the weathers actually been nice enough to make it pleasant recently).<br />
+It was interesting to see the density of wireless networks in the suburban area near where I live, a quick 30 minute walk can easily pick up several hundred APs.  Also some of the stats on encryption were interesting with about 25% of networks either using WEP or having no encryption at all, so still rich pickings there for anyone who wants free access or to attack some home networks directly.<br />
+I also did a bit of scanning with my N900 in Glasgow, near the apple store and noticed they've got an awful lot of clients connected to their unencrypted wireless networks there (~ 260 client spread over 3 APs), hope everyone is using VPNs or SSL only sites ;op<br />
+Also couldn't find something to do the analysis the way I was looking for it, so I knocked up a quick script in ruby to analyse the .netxml output files from kismet.<br />
+It's available <a href="http://www.mccune.org.uk/code/kis_analysis.rb"> here </a> .  It needs ruby, rubygems and nokogiri to work.  worth noting that on linux installs you'll need some xml parsing libraries installed before installing nokogiri (libxslt libxml2 libxml2-dev)<br />
+Basic syntax is very straightforward.<br />
+./kis_analysis.rb -f [netxml file] -r [report name]<br />
+you can add -g if you've got GPS data to add links from each network to a google maps point and -m to draw a map of all the networks seen.<br />
+Any feedback/comments welcome either on the blog or to rorym@nmrconsult.net</p>

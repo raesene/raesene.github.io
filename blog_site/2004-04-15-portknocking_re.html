@@ -1,0 +1,9 @@
+<p><a title="Slashdot | Port Knocking in Action" href="http://slashdot.org/article.pl?sid=04/04/14/1832222">Slashdot | Port Knocking in Action</a><br />
+there's a story on slashdot.org covering a port knocking proof of concept.  Ironically there's better links in one of the early comments than in the story itself!  I've made a list of them below for reference.<br />
+<a href="http://www.portknocking.org/view/">portknocking.org  </a><br />
+<a href="http://www.linuxjournal.com/article.php?sid=6811">An article at Linux Journal </a><br />
+<a href="http://www.linuxsecurity.com/articles/firewalls_article-7479.html"> An article at Linuxsecurity.com</a><br />
+<a href="http://librenix.com/?inode=4000"> A tutorial at Librenix</a><br />
+For those of you wondering "what the stuff is port knocking anyway?"  here's a definition I got from the UNIX FAQ at aplawrence.com<br />
+" Port knocking is a security technique to allow access to people who know the "secret knock". The basic idea is this: packets addressed to certain ports are silently ignored but are logged. If you contact the right series of ports in the right sequence, possibly with the additional condition of holding the ports open for a certain period of time, the firewall rules will be adjusted to allow you access.<br />
+The interesting things about this technique include the fact that you can obviously transmit information with the pattern or duration of the "knocks". That means that you could request that some other ip be allowed access, or just request that certain information be sent to you. Another interesting aspect is that because the packets are silently dropped, there's no way to scan a host and determine that it is using a port knocking technique. Even if you knew that it was using such a technique, but didn't know the algorithm, any brute force attempt would be effectively impossible"</p>

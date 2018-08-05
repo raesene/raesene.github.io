@@ -1,0 +1,45 @@
+<p>One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.</p>
+
+<p>Docker does this by attaching the container to a bridge on the host and setting up iptables NAT rules to allow traffic to flow from this bridged network to the wider external network.  There’s a couple of downsides to this approach.  Firstly you need to explicitly specify inbound ports at container launch time if you want to have server services receive connections.  When you do this, docker sets up port-forwarding to allow that traffic into the container.</p>
+
+<p>The problem with this approach is that if you’re running a service that sets ports up on the fly or which may change port during it’s runtime (e.g. metasploit) this is a bit on the inflexible side.</p>
+
+<p>The other downside is the use of NAT, which can cause issues with some networking tools that make a large number of network connections (e.g. nmap).</p>
+
+<p>One option to address this is to use the docker option <code class="highlighter-rouge">-net=host</code> which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.</p>
+
+<p>So ideally I’d like another option which provides no-NAT access to a container, ideally with an IP address on the host network subnet, with user namespaces enabled.  This is kind of similar to the VMWare Workstation/fusion setup with bridged networking.</p>
+
+<p>I had quite a dig around in the official docker documentation to see if this kind of setup is possible using in-built functionality and I didn’t see a way of doing this, so a little manual work is required. However I did find some interesting references to working out this kind of problem notably this <a href="https://stackoverflow.com/questions/25529386/how-can-i-set-a-static-ip-address-in-a-docker-container">StackOverflow post</a> and <a href="http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/">this</a> slightly older post on Docker networking.</p>
+
+<p>First in one shell we need to start our target container.  We use the option <code class="highlighter-rouge">--net=none</code> to setup the container without having docker do it’s usual network setup routines.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">docker run -it --net<span class="o">=</span>none --name<span class="o">=</span>nettest ubuntu:14.04 /bin/bash</code></pre></figure>
+
+<p>Next we need to create our virtual interface as below, I’ve called it <code class="highlighter-rouge">virtual0</code> , in my case <code class="highlighter-rouge">eno16777736</code> is the name of my host ethernet interface</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip link add virtual0 link eno16777736 <span class="nb">type </span>macvlan mode bridge</code></pre></figure>
+
+<p>After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">docker inspect --format <span class="s1">'{ { .State.Pid }}'</span> nettest</code></pre></figure>
+
+<p>Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo mkdir -p /var/run/netns
+sudo ln -s /proc/3463/ns/net /var/run/netns/3463
+sudo ip link <span class="nb">set </span>virtual0 netns 3463</code></pre></figure>
+
+<p>We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the <code class="highlighter-rouge">ip netns exec</code> command from the host</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip netns <span class="nb">exec </span>3463 ip link <span class="nb">set </span>virtual0 up</code></pre></figure>
+
+<p>and we can then assign a DHCP address from the host network DHCP server to the container</p>
+
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell">sudo ip netns <span class="nb">exec </span>3463 dhclient virtual0</code></pre></figure>
+
+<p>Obviously doing all this manually is likely to be a bit much trouble for most use-cases, but I think with a bit of automation it could come in handy for some tasks which need a bit more flexibility in networking than the default docker configuration.</p>
+
+<p><strong>Edit:</strong> I did find <a href="https://github.com/gopher-net/macvlan-docker-plugin">this project</a> which looks to address the same problem, but at the moment it doesn’t seem to work for me…</p>
+
+<p><strong>Edit2:</strong> Well that was quick. The problems I had with the macvlan docker plugin got fixed (thanks to @nerdalert), so for a faster/less manual solution to this problem I’d recommend having a look at the link in the first edit!</p>

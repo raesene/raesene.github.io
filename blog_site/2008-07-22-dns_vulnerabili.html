@@ -1,0 +1,7 @@
+<p>Well as I'm sure everyone is aware the details of the DNS flaw that <a href="http://www.doxpara.com">Dan Kaminsky</a> found have been disseminated round the 'net a bit early.<br />
+I'm not going to get into the politics of whether that's a good thing/bad thing or how urgent patching is as it's been done to death elsewhere...<br />
+I was thinking though about how it may be possible to mitigate this in other ways than patching...<br />
+Having heard the detailed explanation from matasano on the vulnerability,  wouldn't it be possible to mitigate this by changing the behaviour of the authoritative name server..?<br />
+If I'm understandning things correctly as the authoritative name server for a domain you'd see a whole load of requests for invalid subdomains to your domain (eg, AAAA.MYDOMAIN.COM AAAB.MYDOMAIN.COM) and usually you just respond with NXDOMAIN.  Now the attacker is relying on you responding NXDOMAIN so he can respond with the additional RR of your real website, say, WWW.MYDOMAIN.COM.<br />
+Would it be possible to change your behaviour to respond as the attacker would do with the RR for your valid hosts, so causing the caching DNS server to cache them on the first attempt and preventing the attacker from getting the incorrect entries in first..?  The attacker is relying on guessing port and transaction ID so won't get there in the first attempt, so it would seem that this would potentially mitigate the problem..<br />
+That said I'm no DNS expert so this may well be off base...</p>

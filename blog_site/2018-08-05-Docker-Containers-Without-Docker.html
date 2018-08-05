@@ -1,0 +1,65 @@
+<p>Following on from looking at <a href="https://raesene.github.io/blog/2018/07/23/exploring-kata/">katacontainers</a> and <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">gVisor</a>, I thoguht it might be interesting to look at the <a href="https://containerd.io/">containerd</a> project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.</p>
+
+<h2 id="installation-notes">Installation Notes</h2>
+
+<p>For this install we’re working from a default Ubuntu 18.04 server install.</p>
+
+<h3 id="step-one---get-containerd">Step one - Get Containerd</h3>
+<p>First step is to get the containerd binaries, they’re available on the release page of the containerd github site <a href="https://github.com/containerd/containerd/releases">here</a></p>
+
+<p><code class="highlighter-rouge">wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz</code>
+<code class="highlighter-rouge">tar -xzvf containerd-1.1.2.linux-amd64.tar.gz</code>
+<code class="highlighter-rouge">sudo cp bin/* /usr/local/bin/</code></p>
+
+<p>This should place the binaries in a location on the path.  In addition to the daemon files there’s a copy of the <code class="highlighter-rouge">ctr</code> binary which is used as a client.</p>
+
+<h3 id="step-two---get-runc">Step two - Get runc</h3>
+
+<p>We can get the runc binary from their Github page <a href="https://github.com/opencontainers/runc/releases">here</a>.  We’ll get the AMD64 binary and put it in the same dir as the containerd files</p>
+
+<p><code class="highlighter-rouge">wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64</code>
+<code class="highlighter-rouge">sudo cp runc.amd64 /usr/local/bin/runc</code>
+<code class="highlighter-rouge">sudo chmod +x /usr/local/bin/runc</code></p>
+
+<h3 id="step-three---containerd-configuration">Step three - Containerd configuration</h3>
+
+<p>Now we’ll need to provide containerd some configuration and setup the systemd entry so that we can start it automatically on boot.  Containerd has a handy command for generating a default configuration , so we can use that.</p>
+
+<p><code class="highlighter-rouge">containerd config default &gt; config.toml</code>
+<code class="highlighter-rouge">sudo mkdir /etc/containerd</code>
+<code class="highlighter-rouge">sudo cp config.toml /etc/containerd/</code></p>
+
+<p>Next up, setting up systemd.  The containerd project provides a systemd unit file on their github repo. so we can get that and use it.</p>
+
+<p><code class="highlighter-rouge">wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service</code>
+<code class="highlighter-rouge">sudo cp containerd.service /etc/systemd/system</code>
+<code class="highlighter-rouge">sudo systemctl daemon-reload</code>
+<code class="highlighter-rouge">sudo systemctl start containerd</code></p>
+
+<p>If you want containerd to start on boot you can also add</p>
+
+<p><code class="highlighter-rouge">sudo systemctl enable containerd</code></p>
+
+<h2 id="running-containers-with-containerd">Running containers with Containerd</h2>
+
+<p>If all has gone well we should now have a running containerd/runc setup, so next up is getting and running a container.  This is a little more involved than the easy Docker process, and there’s a couple of different command to know, but nothing too heavy.</p>
+
+<p>First up we can check that the client can connect to the daemon ok with <code class="highlighter-rouge">sudo ctr version</code> .  If this works, you should see something like</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Client:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+
+Server:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+</code></pre>
+</div>
+
+<p>Pulling an image is done with <code class="highlighter-rouge">ctr image pull</code>.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. <code class="highlighter-rouge">sudo ctr image pull registry.hub.docker.com/library/alpine:3.7</code> should download an Alpine 3.7 image.</p>
+
+<p>Next up we need to create a container.  This is done with <code class="highlighter-rouge">ctr container create</code> and you just pass the image and a name so something like <code class="highlighter-rouge">sudo ctr container create -t registry.hub.docker.com/library/alpine:3.7 myfirstcontainer</code> should work. One point to note is that we’re passing the <code class="highlighter-rouge">-t</code> switch here to provide a TTY to the container</p>
+
+<p>Now at this point you might be wondering “hey why am I not in my container?”.  In containerd land you need to start the task after creating the container, so <code class="highlighter-rouge">sudo ctr task start myfirstcontainer</code> should work and put you in your container.</p>
+
+<p>Looking around you’ll notice that whilst most things are similar to where you were running with docker, there are some differences, notably that you’ve got no networking past the <code class="highlighter-rouge">lo</code> interface. That’s provided by Docker.  You can work round this using <code class="highlighter-rouge">--net-host</code> on the container create statement to get access to the host’s network, but that’s a little hacky. Past that it should be possible to hook up other container networking solutions to this, but that’s a topic for another blog post!</p>

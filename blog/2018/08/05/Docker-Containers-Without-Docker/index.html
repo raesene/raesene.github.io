@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Exploring Kata Containers</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Exploring Kata Containers </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   August 
+	   5th,
+	   
+	   2018
+	 </span>
+	  <div class="article_body">
+	  <p>Following on from looking at <a href="https://raesene.github.io/blog/2018/07/23/exploring-kata/">katacontainers</a> and <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">gVisor</a>, I thoguht it might be interesting to look at the <a href="https://containerd.io/">containerd</a> project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.</p>
+
+<h2 id="installation-notes">Installation Notes</h2>
+
+<p>For this install we’re working from a default Ubuntu 18.04 server install.</p>
+
+<h3 id="step-one---get-containerd">Step one - Get Containerd</h3>
+<p>First step is to get the containerd binaries, they’re available on the release page of the containerd github site <a href="https://github.com/containerd/containerd/releases">here</a></p>
+
+<p><code class="highlighter-rouge">wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz</code>
+<code class="highlighter-rouge">tar -xzvf containerd-1.1.2.linux-amd64.tar.gz</code>
+<code class="highlighter-rouge">sudo cp bin/* /usr/local/bin/</code></p>
+
+<p>This should place the binaries in a location on the path.  In addition to the daemon files there’s a copy of the <code class="highlighter-rouge">ctr</code> binary which is used as a client.</p>
+
+<h3 id="step-two---get-runc">Step two - Get runc</h3>
+
+<p>We can get the runc binary from their Github page <a href="https://github.com/opencontainers/runc/releases">here</a>.  We’ll get the AMD64 binary and put it in the same dir as the containerd files</p>
+
+<p><code class="highlighter-rouge">wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64</code>
+<code class="highlighter-rouge">sudo cp runc.amd64 /usr/local/bin/runc</code>
+<code class="highlighter-rouge">sudo chmod +x /usr/local/bin/runc</code></p>
+
+<h3 id="step-three---containerd-configuration">Step three - Containerd configuration</h3>
+
+<p>Now we’ll need to provide containerd some configuration and setup the systemd entry so that we can start it automatically on boot.  Containerd has a handy command for generating a default configuration , so we can use that.</p>
+
+<p><code class="highlighter-rouge">containerd config default &gt; config.toml</code>
+<code class="highlighter-rouge">sudo mkdir /etc/containerd</code>
+<code class="highlighter-rouge">sudo cp config.toml /etc/containerd/</code></p>
+
+<p>Next up, setting up systemd.  The containerd project provides a systemd unit file on their github repo. so we can get that and use it.</p>
+
+<p><code class="highlighter-rouge">wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service</code>
+<code class="highlighter-rouge">sudo cp containerd.service /etc/systemd/system</code>
+<code class="highlighter-rouge">sudo systemctl daemon-reload</code>
+<code class="highlighter-rouge">sudo systemctl start containerd</code></p>
+
+<p>If you want containerd to start on boot you can also add</p>
+
+<p><code class="highlighter-rouge">sudo systemctl enable containerd</code></p>
+
+<h2 id="running-containers-with-containerd">Running containers with Containerd</h2>
+
+<p>If all has gone well we should now have a running containerd/runc setup, so next up is getting and running a container.  This is a little more involved than the easy Docker process, and there’s a couple of different command to know, but nothing too heavy.</p>
+
+<p>First up we can check that the client can connect to the daemon ok with <code class="highlighter-rouge">sudo ctr version</code> .  If this works, you should see something like</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Client:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+
+Server:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+</code></pre>
+</div>
+
+<p>Pulling an image is done with <code class="highlighter-rouge">ctr image pull</code>.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. <code class="highlighter-rouge">sudo ctr image pull registry.hub.docker.com/library/alpine:3.7</code> should download an Alpine 3.7 image.</p>
+
+<p>Next up we need to create a container.  This is done with <code class="highlighter-rouge">ctr container create</code> and you just pass the image and a name so something like <code class="highlighter-rouge">sudo ctr container create -t registry.hub.docker.com/library/alpine:3.7 myfirstcontainer</code> should work. One point to note is that we’re passing the <code class="highlighter-rouge">-t</code> switch here to provide a TTY to the container</p>
+
+<p>Now at this point you might be wondering “hey why am I not in my container?”.  In containerd land you need to start the task after creating the container, so <code class="highlighter-rouge">sudo ctr task start myfirstcontainer</code> should work and put you in your container.</p>
+
+<p>Looking around you’ll notice that whilst most things are similar to where you were running with docker, there are some differences, notably that you’ve got no networking past the <code class="highlighter-rouge">lo</code> interface. That’s provided by Docker.  You can work round this using <code class="highlighter-rouge">--net-host</code> on the container create statement to get access to the host’s network, but that’s a little hacky. Past that it should be possible to hook up other container networking solutions to this, but that’s a topic for another blog post!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Containers-ref">
+					Containers <span>(5)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring Kata Containers&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2018/07/23/exploring-kata/" title="Exploring Kata Containers">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2018 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

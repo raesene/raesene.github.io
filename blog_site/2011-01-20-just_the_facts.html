@@ -1,0 +1,7 @@
+<p>Sometimes when you're testing it's good to be able to quickly get a feel for where to focus your attention or to get an overview of all the ports you've got open, so you can be sure you investigate all of them.  Once you've done several scans as part of a job, you end up with a stack of nmap and nessus output files, and it can be hard to keep an eye on exactly what's been found so far, and it's good to have a way to just get the facts.<br />
+As a result a lot of testers will have scripts to help parse collate output from common tools like nmap.<br />
+They tend not to be the prettiest code in the universe or to produce lovely management friendly reports, but handy nonetheless.<br />
+Having set expectations about the quality of this code :)  Here's a couple of scripts which may come in useful for testers in managing some of those xml report files.<br />
+<a href="http://www.mccune.org.uk/code/nmapautoanalyzer.rb">NMAP Auto Analyzer</a> can parse a single nmap xml file or a directory of nmap xml files and provide a concise report on ports open across them.<br />
+<a href="http://www.mccune.org.uk/code/nessusautoanalyzer.rb">Nessus Auto Analyzer</a> somewhat unsurprisingly, does the same job for .nessus report files (v2 only at the moment)<br />
+Both have reasonable help files, so should be fairly straightforward to use, any questions/queries welcome either in comments or in e-mail (rorym at mccune dot org dot uk)</p>

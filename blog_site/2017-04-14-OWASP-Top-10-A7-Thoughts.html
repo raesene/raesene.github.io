@@ -1,0 +1,34 @@
+<p>The first release candidate of the new <a href="https://github.com/OWASP/Top10/blob/master/2017/OWASP%20Top%2010%20-%202017%20RC1-English.pdf">OWASP Top 10</a> got released last week and one of the changes in particular seems to be generating a lot of comment, so I thought I’d chip in too with some thoughts.</p>
+
+<p>The title of this one is “Insufficient Attack Protection” and at core I think its about applications actively protecting themselves from attack, which I think is a great idea.</p>
+
+<p>What I don’t think it’s about, and it might benefit from some clarifications in this regard, is a requirement for all applications to use a WAF or RASP.</p>
+
+<p>So why do I like this idea?  Well if you think about almost every application kind of has some attack protection already, with account lockout policies.  The application sees something which isn’t right, a login with the wrong password, and after a pre-determined number of incorrect attempts, it takes an action, perhaps locking the account, perhaps asking for additional details, perhaps alerting an administrator (maybe even all three!).</p>
+
+<p>So the concept in general is already in use, but I think a lot of applications would benefit from extending it.  For example if a user says that their first name is <code class="highlighter-rouge">&lt;script&gt;alert(1)&lt;/script&gt;</code> that’s almost definitely not true! It’s a pretty clear indication that someone is trying to attack your application and you can make that attackers life harder by restricting their access or taking some other action, depending on the context.</p>
+
+<p>Another one could be if there’s a dropdown in your application with 5 possible values and the form is submitted with something that’s not in that list.  An ordinary user pretty much won’t ever do this, so it’s an indication that someone is either editing the HTML before submission, or using a proxy to intercept and modify the request, both reasonable indications (in most cases) that something untoward is happening.</p>
+
+<p>These are pretty simplistic examples but luckily there’s a really cool OWASP project that goes into a ton more detail, <a href="https://www.owasp.org/index.php/OWASP_AppSensor_Project">OWASP Appsensor</a>.</p>
+
+<p>This kind of action can make automated attacks much harder to execute and also can provide excellent alerting for blue teams to work with, and I think that’s a big win.  One key aspect of this is that the detection and response is embedded into the application.  One problem with external add-ons is that they can lack context about what is and is not expected behaviour in an application, that kind of context only really exists within the application itself.</p>
+
+<p>Predictably and quite justifiably there have been a lot of concerns and questions raised about this suggested change.</p>
+
+<ul>
+  <li>
+    <p><strong>This will make Pentesters and Bug Bounty People’s lives harder</strong> .  Yep that one’s true, but then as pentesters and bug bounty researchers are pseudo bad guys, isn’t that really a good thing? Flippancy aside, I think that applications with a lot of active defence need to have test environments where this is disabled specifically to allow for automated testing. Some testing would occur there, and then when the final product is ready to be tested, you can enable the protections and check that they’re working ok.</p>
+  </li>
+  <li>
+    <p><strong>This is a mandate for WAF vendors</strong> I really hope not.  Sure some applications won’t be able to retro-fit controls, and might want to use a WAF.  But two things on that, one there are open source WAFs available and two, when the security industry started pushing 2FA harder, I don’t recall anyone saying that “hey this is just a vendor pitch for RSA tokens” and if they had, I wouldn’t have agreed with them either :)</p>
+  </li>
+  <li>
+    <p><strong>There’s no statistical evidence that this is a problem</strong> . I’m a bit torn on this one.  On the one hand that’s likely true and data based approaches are good.  On the other hand, how would you measure this?  No automated scanning tool is going to put “hey we didn’t get kicked out whilst testing” in their report is it?  I can only offer anecdotal evidence, that I only very very rarely see any kind of application active protection in play, so it’s definitely not commonly deployed.</p>
+  </li>
+  <li>
+    <p><strong>This isn’t a vulnerability</strong> .  Yep that’s true, but AFAICS this is a list of risks, not a list of vulnerabilities.  It may get used as a list of vulnerabilities, but on the title page it says risks :)</p>
+  </li>
+</ul>
+
+<p>Anyway, there’s still lots of discussions to be had on this one and the rest of the changes, before this years Top10 is finalized, so it’ll be interesting to see how it all shakes out.</p>

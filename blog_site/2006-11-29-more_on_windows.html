@@ -1,0 +1,3 @@
+<p><a title="" href="http://www.off-by-one.net/misc/cachedump.html"></a><br />
+hmm looks like it's not quite as bad as I thought it was.  After a bit more reading on the subject, the windows cached password is not just an NTLM hash, it's actually a salted hash, with the salt being the username.<br />
+So rainbow tables aren't really a practical attack for this, although it's interesting to note that there's a John the ripper plug-in for cachedump now which enables you to do dictionary based/brute-force attacks on retrieved credentials</p>

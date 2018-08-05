@@ -158,6 +158,39 @@
 
   <span class="post-date">
     
+    May
+    19th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/05/19/interesting_exa/">Interesting Example of Cloud Computing Risks</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the aspects of the move to cloud computing I find most interesting is the new and emergent risks that come with the move of services from a traditional networked IT environment, to being hosted "out in the open" of the cloud.<br />
+Whilst attention gets paid to some of the technical risks, I don't think there's been a lot of focus on some of the more procedural/human aspects of it.<br />
+One example is the visibility/effect of configuration mistakes.  In a traditional IT environment, mistakes can be partially contained by the network perimeter (albeit that containment is usually weaker than it used to be).<br />
+If someone makes an access control change which allows anonymous access to data, that mistake is likely only to be exploitable and visible to a limited group of people.<br />
+With the move to Cloud computing though, that same mistake could be instantly visible to the whole world and all it's attacker communities.<br />
+A really good example of this comes up in a vulnerability found by Jonathan Siegel (background story <a href="http://www.readwriteweb.com/cloud/2010/03/user-ignorance-causes-cloud-security-leak-accounts-passwords-revealed.php">here</a> and <a href="http://www.itworldcanada.com/news/cloud-consultant-wants-amazon-web-services-revamp/140391">here</a>).<br />
+In essence the problem seems to be that users of Amazon Web Services have made access control errors which set disk snapshots to be publicly available to everyone in a given region, and in the examples Jonathan gives this has included a database of user accounts for a web service and a full copy of a news services' web site.<br />
+So what would have likely been a relatively minor access control issue in an Internal network setup, becomes a situation where all the data in question should be considered compromised.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     April
     1st,
     
@@ -418,34 +451,6 @@ Essentially Dradis provides the base environment for users to work in, either fr
 What I've done is started to create templates for information that I need to collect during a test and areas to review, that way it reduces the number of times I get into writing the report and realised I've missed something ;o). Once you create the tree structure in Dradis, containing any information you want,  you can export it as a single file and then re-use it as a template on future tests (for example one for web application tests, one for infrastructure etc)<br />
 you can also import information from other tools (nmap, nikto, nessus and burp at the moment) into Dradis, meaning you've got a single place to view all the information relating to the test.<br />
 It's well worth a look, as it's under active development there are new features coming pretty frequently.  Also there are guides on the site for prospective developers and as it's all done in ruby it's nice and easy to start coding for!</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    11th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/09/11/owasp_scotland/">OWASP Scotland - September Meeting</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>The OWASP Scotland september meeting is all set for Tuesday the 15th of September.<br />
-We've got three good speakers lined up so, it's shaping up to be a good meeting.<br />
-More details <a href="http://www.owasp.org/index.php/Scotland#September_Chapter_Meeting"> here </a> .  Meeting is open to all, but if you're planning to come along, please RSVP to me at <a href="mailto:rorym@nmrconsult.net">this address</a>, so we can get an idea of numbers.</p>
 
     
     

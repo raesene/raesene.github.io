@@ -8,6 +8,79 @@
 		
 			<item>
 				<title>Exploring Kata Containers</title>
+				<description>&lt;p&gt;Following on from looking at &lt;a href=&quot;https://raesene.github.io/blog/2018/07/23/exploring-kata/&quot;&gt;katacontainers&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;gVisor&lt;/a&gt;, I thoguht it might be interesting to look at the &lt;a href=&quot;https://containerd.io/&quot;&gt;containerd&lt;/a&gt; project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.&lt;/p&gt;
+
+&lt;h2 id=&quot;installation-notes&quot;&gt;Installation Notes&lt;/h2&gt;
+
+&lt;p&gt;For this install we’re working from a default Ubuntu 18.04 server install.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-one---get-containerd&quot;&gt;Step one - Get Containerd&lt;/h3&gt;
+&lt;p&gt;First step is to get the containerd binaries, they’re available on the release page of the containerd github site &lt;a href=&quot;https://github.com/containerd/containerd/releases&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;tar -xzvf containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp bin/* /usr/local/bin/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This should place the binaries in a location on the path.  In addition to the daemon files there’s a copy of the &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr&lt;/code&gt; binary which is used as a client.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-two---get-runc&quot;&gt;Step two - Get runc&lt;/h3&gt;
+
+&lt;p&gt;We can get the runc binary from their Github page &lt;a href=&quot;https://github.com/opencontainers/runc/releases&quot;&gt;here&lt;/a&gt;.  We’ll get the AMD64 binary and put it in the same dir as the containerd files&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp runc.amd64 /usr/local/bin/runc&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo chmod +x /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;step-three---containerd-configuration&quot;&gt;Step three - Containerd configuration&lt;/h3&gt;
+
+&lt;p&gt;Now we’ll need to provide containerd some configuration and setup the systemd entry so that we can start it automatically on boot.  Containerd has a handy command for generating a default configuration , so we can use that.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;containerd config default &amp;gt; config.toml&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir /etc/containerd&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp config.toml /etc/containerd/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Next up, setting up systemd.  The containerd project provides a systemd unit file on their github repo. so we can get that and use it.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp containerd.service /etc/systemd/system&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;
+&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl start containerd&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you want containerd to start on boot you can also add&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl enable containerd&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;running-containers-with-containerd&quot;&gt;Running containers with Containerd&lt;/h2&gt;
+
+&lt;p&gt;If all has gone well we should now have a running containerd/runc setup, so next up is getting and running a container.  This is a little more involved than the easy Docker process, and there’s a couple of different command to know, but nothing too heavy.&lt;/p&gt;
+
+&lt;p&gt;First up we can check that the client can connect to the daemon ok with &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr version&lt;/code&gt; .  If this works, you should see something like&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Client:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+
+Server:
+  Version:  v1.1.2
+  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Pulling an image is done with &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr image pull&lt;/code&gt;.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr image pull registry.hub.docker.com/library/alpine:3.7&lt;/code&gt; should download an Alpine 3.7 image.&lt;/p&gt;
+
+&lt;p&gt;Next up we need to create a container.  This is done with &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr container create&lt;/code&gt; and you just pass the image and a name so something like &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr container create -t registry.hub.docker.com/library/alpine:3.7 myfirstcontainer&lt;/code&gt; should work. One point to note is that we’re passing the &lt;code class=&quot;highlighter-rouge&quot;&gt;-t&lt;/code&gt; switch here to provide a TTY to the container&lt;/p&gt;
+
+&lt;p&gt;Now at this point you might be wondering “hey why am I not in my container?”.  In containerd land you need to start the task after creating the container, so &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr task start myfirstcontainer&lt;/code&gt; should work and put you in your container.&lt;/p&gt;
+
+&lt;p&gt;Looking around you’ll notice that whilst most things are similar to where you were running with docker, there are some differences, notably that you’ve got no networking past the &lt;code class=&quot;highlighter-rouge&quot;&gt;lo&lt;/code&gt; interface. That’s provided by Docker.  You can work round this using &lt;code class=&quot;highlighter-rouge&quot;&gt;--net-host&lt;/code&gt; on the container create statement to get access to the host’s network, but that’s a little hacky. Past that it should be possible to hook up other container networking solutions to this, but that’s a topic for another blog post!&lt;/p&gt;
+</description>
+				<pubDate>Sun, 05 Aug 2018 12:10:39 +0100</pubDate>
+				<link>/blog/2018/08/05/Docker-Containers-Without-Docker/</link>
+				<guid isPermaLink="true">/blog/2018/08/05/Docker-Containers-Without-Docker/</guid>
+			</item>
+		
+			<item>
+				<title>Exploring Kata Containers</title>
 				<description>&lt;p&gt;This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
@@ -47,15 +120,15 @@
 
 &lt;p&gt;Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;output of uname -a without kata containers&lt;/strong&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;
-Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;output of uname -a without kata containers&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
-&lt;p&gt;&lt;strong&gt;output of uname -a with kata containers&lt;/strong&gt;
-&lt;code class=&quot;highlighter-rouge&quot;&gt;
-Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;output of uname -a with kata containers&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
 
 &lt;p&gt;Interestingly the text &lt;strong&gt;container&lt;/strong&gt; in the kernel version could be a useful fingerprinting indicator.&lt;/p&gt;
 
@@ -596,55 +669,6 @@ CapBnd: 00000000a80425fb
 				<pubDate>Sun, 09 Jul 2017 15:15:39 +0100</pubDate>
 				<link>/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</link>
 				<guid isPermaLink="true">/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</guid>
-			</item>
-		
-			<item>
-				<title>Kubernetes Attack Surface - etcd</title>
-				<description>&lt;p&gt;&lt;a href=&quot;https://coreos.com/etcd&quot;&gt;etcd&lt;/a&gt; is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.&lt;/p&gt;
-
-&lt;p&gt;So keeping access to this limited is pretty important for a secure cluster.  Depending on how your distribution of Kubernetes sets things up, there’s a number of different default configurations you might see.&lt;/p&gt;
-
-&lt;p&gt;Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.&lt;/p&gt;
-
-&lt;p&gt;However the problem with localhost binding only is that it doesn’t really allow for clustered etcd setups.  If you want to have multiple etcd databases to allow some redundancy you need to allow for communications between datastores.&lt;/p&gt;
-
-&lt;p&gt;In these cases port 2379/TCP and 2380/TCP are likely to be exposed on the network.  2379 is for client –&amp;gt; etcd communications, and 2380 is for communications between the different nodes in the etcd cluster.&lt;/p&gt;
-
-&lt;p&gt;Its at this point that you’ll want to be well acquainted with the CoreOS guidelines on &lt;a href=&quot;https://coreos.com/etcd/docs/latest/op-guide/security.html&quot;&gt;etcd security&lt;/a&gt;.  This lays out the options that are available.  Basically etcd uses client certificate authentication, but there’s a couple of important points to note&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;There’s no checking of information in the certificate CN or SAN fields, so any valid certificate will allow access. So its probably worth using a dedicated certificate authority for the etcd cluster, and not using certificate issued by another CA (such as the one you’re using for general Kubernetes setup).&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;With etcd and Kubernetes the setup is all or nothing, there’s no authorisation used, so be very careful with which clients are allowed access to the etcd datastore.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?&lt;/p&gt;
-
-&lt;p&gt;You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried with curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(&lt;/p&gt;
-
-&lt;p&gt;etcdctl can be acquired by downloading an etcd release like &lt;a href=&quot;https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz&quot;&gt;this one&lt;/a&gt; and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools/&quot;&gt;this image&lt;/a&gt; which has it already installed.&lt;/p&gt;
-
-&lt;p&gt;once you’ve got etcdctl installed, you can query the API with something like&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;etcdctl --endpoint=http://[etcd_server_ip]:2379 ls&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;If you get back &lt;code class=&quot;highlighter-rouge&quot;&gt;/registry&lt;/code&gt; you’re likely dealing with a v2 install (Kubernetes 1.5 or lower) and you can easily wander through and explore the config.  In particular the &lt;code class=&quot;highlighter-rouge&quot;&gt;/registry/secrets/default&lt;/code&gt; path is likely to be of interest as it may contain the default service token which can provide elevated rights to the cluster.&lt;/p&gt;
-
-&lt;p&gt;If you get back a blank line from the initial query its reasonably likely that you’ve got a v3 cluster and getting the data out is a bit different.&lt;/p&gt;
-
-&lt;p&gt;First up you need to let etcdctl know that you’re dealing with v3, so &lt;code class=&quot;highlighter-rouge&quot;&gt;export ETCDCTL_API=3&lt;/code&gt; is needed.&lt;/p&gt;
-
-&lt;p&gt;Once you’ve got that environment variable set, you should see a different set of etcdctl commands as being available, including &lt;code class=&quot;highlighter-rouge&quot;&gt;etcdctl snapshot save&lt;/code&gt; .  You can use this command to dump an instance of the etcd database to a file on disk.&lt;/p&gt;
-
-&lt;p&gt;This database is in the boltdb format, so it’s possible to read the file using something like &lt;a href=&quot;https://github.com/br0xen/boltbrowser&quot;&gt;boltbrowser&lt;/a&gt;.  Unfortunately the format of the data will be a bit broken as it’s serialized in proto format (more details in &lt;a href=&quot;https://github.com/coreos/etcd/issues/7723&quot;&gt;this github issue&lt;/a&gt;), but you can likely still extract some useful information, if that’s your goal.&lt;/p&gt;
-
-</description>
-				<pubDate>Mon, 01 May 2017 15:15:39 +0100</pubDate>
-				<link>/blog/2017/05/01/Kubernetes-Security-etcd/</link>
-				<guid isPermaLink="true">/blog/2017/05/01/Kubernetes-Security-etcd/</guid>
 			</item>
 		
 	</channel>

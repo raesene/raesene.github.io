@@ -1,0 +1,12 @@
+<p>Recently there have been some clarifications around a couple of sections of the PCI-DSS, in particular one on <a href="https://www.pcisecuritystandards.org/pdfs/infosupp_6_6_applicationfirewalls_codereviews.pdf">section 6.6 </a>.<br />
+This update has created some comment and articles but none of the ones I've read has focused on the main point, as far as I can see...<br />
+<b>Previously there were two options for satisfying Section 6.6</b></p>
+<ul>
+<li> A Code Review (either manual or tool assisted) of in-scope web applications, or</li>
+<li>Placement of an appropriately configured Web Application Firewall to protect the application</li>
+</ul>
+<p><b>Now (unless I'm reading this incorrectly) there's an additional one</b><br />
+Completion of a manual or assisted web application vulnerability review...<br />
+The confusing part is that this third option isn't split out but is listed under the "application code review" section.<br />
+My feeling is that this'll affect a lot of merchants (and vendors) if they were planning on either spending money on WAFs or Code reviews and will now use a standard web application review (which they may already be undertaking as part of other security work....)<br />
+Another interesting point which I don't know the answer to is whether a single review which covered both penetration testing techniques and web application assessment techniques could be used to satisfy 6.6 and 11.3...</p>

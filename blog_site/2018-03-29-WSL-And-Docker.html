@@ -1,0 +1,61 @@
+<p>There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…</p>
+
+<p><strong>First up</strong> - Install <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">WSL</a></p>
+
+<p><strong>Second up</strong> - Install Docker for Windows from <a href="https://store.docker.com/editions/community/docker-ce-desktop-windows">here</a>.  Stable channel should have all the features you need now, but if you want new stuff quicker, it could be worth using the edge channel.</p>
+
+<p><strong>Important 2.5 step</strong> - Once you’ve installed Docker for windows, you will need to change to “windows containers”, by right-clicking the tray icon and choosing “switch to windows containers”.  I tried this process without that set, and it didn’t seem to work.</p>
+
+<p><strong>Third up</strong> - Install the docker client binary inside WSL.  Don’t use the ubuntu/debian package Docker it’s not the right one at all.  Also I’d avoid the docker.io package as it’s very outdated.  Instead get a binary from the Docker site <a href="https://download.docker.com/linux/static/stable/x86_64/">here</a>, then extract the <code class="highlighter-rouge">docker</code> binary and copy to <code class="highlighter-rouge">/usr/local/bin</code> (or anywhere else on the path that you’d like to keep it)</p>
+
+<h2 id="the-insecure-way">The insecure way</h2>
+
+<p>At this point you can do this the insecure way and enable Docker to listen on a TCP port without SSL. There’s an option in Docker for Windows to allow it to listen purely on localhost, however I wouldn’t recommend this as any SSRF style attack on your laptop could result in bad times, as there is no authentication on Docker in this setup, so anyone who can hit the port can do bad things to your system.</p>
+
+<h2 id="the-not-horribly-insecure-way">The not horribly insecure way.</h2>
+
+<p>Largely based on <a href="http://wslcorsair.blogspot.co.uk/2018/02/secure-nested-lcow-part-2.html">this post</a> and <a href="http://wslcorsair.blogspot.co.uk/2018/02/secure-nested-lcow-part-3.html">this post</a> from <a href="https://twitter.com/nunixtech">Nuno Do Carmo</a>.  This is a bit more involved, but more secure.  Basically we’re going to configure the Docker daemon to listen on a TCP port but verifying the TLS certificate to provide a level of client authentication.  It’s worth noting that Docker’s authentication mechanism isn’t hugely sophisticated, it’s basically just based on “is this certificate signed by a CA I trust”, so it’s important not to use a CA that’s used for a lot of other things, or you could end up with a rather easy to bypass authentication check!</p>
+
+<h3 id="setup-ssltls-on-the-daemon">Setup SSL/TLS on the daemon</h3>
+
+<p>The first step is to configure our daemon to listen on TLS.  For that we’ll need some certificates.  So first check that you’ve got openssl installed in WSL, and if not <code class="highlighter-rouge">apt install openssl</code> should fix it.</p>
+
+<p>Then we’re largely going to follow <a href="https://docs.docker.com/engine/security/https/#create-a-ca-server-and-client-keys-with-openssl">this process</a>.</p>
+
+<p>In WSL, go to /mnt/c/ProgramData/Docker/</p>
+
+<p>then <code class="highlighter-rouge">mkdir certs</code> and <code class="highlighter-rouge">cd certs</code></p>
+
+<p>Then we’ll generate our CA Key with <code class="highlighter-rouge">openssl genrsa -aes256 -out ca-key.pem 4096</code>.  Set a decent passphrase that you won’t forget :)</p>
+
+<p>Then use <code class="highlighter-rouge">openssl req -new -x509 -days 3650 -key ca-key.pem -sha256 -out ca.pem</code> to generate the CA certificate.  Feel free to modify the days value up or down depending on how long you want it to be valid.</p>
+
+<p>It’ll ask you to fill in some values here, but for the purposes of Docker Authentication these don’t matter too much.</p>
+
+<p>Next step is <code class="highlighter-rouge">openssl genrsa -out server-key.pem 4096</code> to generate our server key.  We then need a CSR which we can generate with <code class="highlighter-rouge">openssl req -subj "/CN=127.0.0.1" -sha256 -new -key server-key.pem -out server.csr</code></p>
+
+<p>After that we need to specify some attributes <code class="highlighter-rouge">echo subjectAltName = IP:10.10.10.20,IP:127.0.0.1 &gt;&gt; extfile.cnf</code> is used to specify valid endpoint IPs.  So change 10.10.10.20 to any other interfaces you want the daemon to listen on.  If you only want localhost (which is all we need here), just remove 10.10.10.20 from the list.</p>
+
+<p>Then set <code class="highlighter-rouge">echo extendedKeyUsage = serverAuth &gt;&gt; extfile.cnf</code> and generate the signed certificate with <code class="highlighter-rouge">openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf</code></p>
+
+<p>After you’ve done this, you nee to tell the Docker daemon to use your new certificates.  This can be done by editing <code class="highlighter-rouge">C:\ProgramData\Docker\config\daemon.json</code> .  If this file doesn’t exist in that location, you’ve probably not switched to Windows containers, so do that before editing :)</p>
+
+<p>You’ll need to add the following elements to the JSON there <code class="highlighter-rouge">"hosts": ["tcp://127.0.0.1:2376","npipe://"],"tlsverify": true,"tlscacert": "c:\\ProgramData\\docker\\certs\\ca.pem", "tlscert": "c:\\ProgramData\\docker\\certs\\server-cert.pem", "tlskey": "c:\\ProgramData\\docker\\certs\\server-key.pem"</code></p>
+
+<p>At that point you should be able to re-start the docker daemon using the tray icon for Windows 10 and it’ll be listening on 127.0.0.1:2376</p>
+
+<h3 id="setup-ssltls-in-wsl">Setup SSL/TLS in WSL</h3>
+
+<p>Now we need to setup the client to authenticate to the server.</p>
+
+<p>back in <code class="highlighter-rouge">/mnt/c/ProgramData/Docker/certs/</code> create a key with <code class="highlighter-rouge">openssl genrsa -out key.pem 4096</code> , then generate a CSR with <code class="highlighter-rouge">openssl req -subj '/CN=client' -new -key key.pem -out client.csr</code>, add an extended attributes file with <code class="highlighter-rouge">echo extendedKeyUsage = clientAuth &gt;&gt; client-extfile.cnf</code> and generate the certificate with <code class="highlighter-rouge">openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile client-extfile.cnf</code>.</p>
+
+<p>Then create a .docker directory in your home directory and  copy key.pem, ca.pem and cert.pem into that directory.</p>
+
+<p>Then run <code class="highlighter-rouge">export DOCKER_HOST=tcp://127.0.0.1:2376</code> and <code class="highlighter-rouge">export DOCKER_TLS_VERIFY=1</code> and you should be able to do <code class="highlighter-rouge">docker info</code> and have it work!</p>
+
+<p>For persistent add those two environment variables into your WSL profile by modifying .bashrc or similar with those commands.</p>
+
+<p>After this the only caveat is, that as you’re in Windows containers mode, you need to add <code class="highlighter-rouge">--platform linux</code> to any Docker commands for linux containers that you run.</p>
+
+<p>Thanks to <a href="https://twitter.com/nunixtech">Nuno Do Carmo</a> this is just a modified version of a setup he described in the blog posts linked above.</p>

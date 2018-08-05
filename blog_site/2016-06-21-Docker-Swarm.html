@@ -1,0 +1,62 @@
+<p>It’s Dockercon time of year again, and of course you know what that means… loads of cool new features coming to the Docker ecosystem.  I’ve been (enviously) watching all the action remotely on twitter and various blogs and one of the features that jumped out at me was the new swarm mode for Docker engine. The idea of providing very easy to use clustering features for containerization is of course very attractive, but there are possible security concerns, both with encryption of traffic amongst swarm nodes and authentication/authorisation for systems joining the cluster.</p>
+
+<p>All the demos from various blogs show the setup of the swarm being super-simple, with only a couple of commands needed to get going (for example <a href="https://ordina-jworks.github.io/conference/2016/06/20/whats-new-in-docker-112.html">this post</a>)</p>
+
+<p>So I thought this was worth a bit of investigation to see what’s happening under the covers.  I set-up a couple of VMs and installed docker 1.12 rc2 on both.</p>
+
+<h1 id="network-attack-surface">Network Attack Surface</h1>
+
+<p>Starting with the master node, after installing docker engine but before running <code class="highlighter-rouge">docker swarm init</code> there are no network connections belonging to the docker process as, by default it only listens on the unix socket. After initializing the swarm, we can see they look like this</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112manager:~$ sudo netstat -tunap
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 192.168.41.185:7946     0.0.0.0:*               LISTEN      1064/dockerd
+tcp6       0      0 :::2377                 :::*                    LISTEN      1064/dockerd
+tcp6       0      0 127.0.0.1:2377          127.0.0.1:58742         ESTABLISHED 1064/dockerd
+udp        0      0 192.168.41.185:7946     0.0.0.0:*                           1064/dockerd
+</code></pre>
+</div>
+
+<p>from that we can see that running the swarm command adds some services listening on 7946/TCP and UDP and 2377/TCP.  From <a href="https://docs.docker.com/engine/swarm/swarm-tutorial/">the documentation</a> we can see that these are used for cluster management and node communications.  This is kind of interesting from a security standpoint as it means that we have a network attack surface to look at, which for vanilla docker engine we didn’t.</p>
+
+<h1 id="lack-of-authentication">(Lack) of Authentication</h1>
+
+<p>Possibly more interesting, is how authentication for swarm nodes is set-up by default.</p>
+
+<p>After we’ve got our swarm started, we can go to our worker node and just type <code class="highlighter-rouge">rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377</code> and we’re joined to the swarm.  Indeed really easy.</p>
+
+<p>From this the more security minded amongst you will have noticed something…. We weren’t asked for any credentials when joining the swarm!  So by default, anyone running docker-engine on a network that can contact the master can join the swarm and be assigned workloads as part of the swarm.</p>
+
+<p>Whilst this is obviously a nice setup for ease of development, I’d strongly recommend changing the defaults here if you’re running this in production.  As expected from <a href="https://docs.docker.com/engine/reference/commandline/swarm_init/">the documentation</a> there are options which can be run at swarm creation time to improve this situation.</p>
+
+<p>Firstly the autoaccept policy of the swarm can be changed.  This determines whether a swarm will automatically add new nodes or whether a manager has to explicitly accept them.  We can change the auto-accept policy with a command to our existing swarm</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>root@docker112manager:/etc/systemd/network# docker swarm update --auto-accept none
+Swarm updated.
+</code></pre>
+</div>
+
+<p>After this if we try to join a node to a swarm we get this message</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+Error response from daemon: Your node is in the process of joining the cluster but needs to be accepted by existing cluster member.
+To accept this node into cluster run "docker node accept epy504pa1vr9oe4p3fvsp6fp7" in an existing cluster manager. Use "docker info" command to see the current Swarm status of your node.
+</code></pre>
+</div>
+
+<p>The other option we have to improve the situation with regard to node authentication is to specify a secret required to joing the swarm.  To specify a secret you just add it to the init command or use swarm update. For example:-</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112manager:~$ docker swarm init --secret loremipsum123
+Swarm initialized: current node (0qkezlwlccd7wfuadshi77zsy) is now a manager.
+</code></pre>
+</div>
+
+<p>and then if you try to join this swarm without specifying the secret, Docker will throw an error</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+Error response from daemon: rpc error: code = 3 desc = A valid secret token is necessary to join this cluster: invalid policy or secret
+</code></pre>
+</div>
+
+<p>Once you’re all setup with your secrets specified and your auto-accept policy set, you’re good to get started setting up services and deploying containers over the swarm.</p>

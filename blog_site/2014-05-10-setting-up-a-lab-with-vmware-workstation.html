@@ -1,0 +1,35 @@
+<p>This took me a little while to track down all the piece so possibly worth a blog post (if for no other reason that so I can find it again).</p>
+
+<p>I’ve often thought that VMWare Workstation is under appreciated as a tool.  I’ve been using since v1 (must be about 15 years now) and it’s always been a key piece of software for me.  Although I know there are other alternatives none of them seem to combine the flexibility and stability of Workstation.</p>
+
+<p>So today I’m setting up a lab for a training course and I wanted a series of guest machines with the same build and different IP addresses (a pretty standard requirement for student machines for training courses) and I was looking for a way to automate the process of creating a clone, changing the clones IP address and then rebooting the box to get the new IP address in place (restarting networking would likely work as well here obv.)</p>
+
+<p>In looking for a solution I came across a part of VMWare Workstation that I’ve never come across before, <a href="https://www.vmware.com/pdf/vix162_vmrun_command.pdf">vmrun</a>.</p>
+
+<p>Basically vmrun lets you carry out various actions on a virtual machine from the command line.  This includes the obvious ones like starting/stopping/cloning but also includes runProgramInGuest which lets you pass commands to the guest OS, handy!</p>
+
+<p>so using a set of vmrun commands I came up with the following to automate the process</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws clone &lt;source_vmx_file&gt; &lt;destination_vmx_file&gt; linked
+</code></pre>
+</div>
+<p>This creates a linked clone of the VM.  You need to specify the actual vmx file rather than just the directory.  Worth noting that for the destination vmrun will create the parent directory for the vmx file as specified.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws start &lt;destination_vmx_file&gt; gui
+</code></pre>
+</div>
+<p>This starts your destination VM.  The option at the end can be gui or nogui, so if you like you can start up the VM with no gui, handy for a batch job or remote work.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /bin/sed -i "/address 192.168.41.98$/caddress 192.168.41.131" /etc/network/interfaces
+</code></pre>
+</div>
+<p>This is a quick oneliner to change the IP address on a debian based machine that has a static IP address set (NB this may well barf if there’s more that one address line in the file). The user and password here are the guest ones as vmrun is actually logging in to the box.  Also note that your user will either need to be root (in which case drop the sudo bit off) or have NOPASSWD sudo access.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /sbin/init 6
+</code></pre>
+</div>
+<p>This just reboots the box, you could also just bounce the network here of course.</p>
+
+<p>For my script running this on windows I also added a quick variable for the IP address so I can easily change it for different machines.</p>
+
+<p>Anyway nothing earth shaking here, but I’ll tell you if you’ve got 40 guest machines to set-up for a Lab something like this is v. handy!</p>

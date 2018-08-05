@@ -1,0 +1,5 @@
+<p>I'm doing some research at the moment for a presentation I'm doing for the <a href="http://www.scotlandonrails.com/">Scotland on Rails</a> conference, later this month.  As part of that I've been downloading some sample Rails applications to get an idea of common security issues that I can discuss.<br />
+Interestingly on popular applications that I've downloaded so far, I'm 2 for 2 on the exact same problem.<br />
+Both of them have XSS vulnerabilities from the user--&gt;admin sides of the site.  So the end-user pages have output encoding to restrict XSS but the admin sections don't consistently provide the same protection.<br />
+It's also interesting that both applications seem to be relying on output encoding as a defence as opposed to input validation.  In my experience the best defence is a combination of the two...<br />
+Of course that leads to some potentially nasty exploits around stealing admin credentials from the site in question.  Hey looks like I'll have some stuff to talk about anyway :)</p>

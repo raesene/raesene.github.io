@@ -1,0 +1,15 @@
+<p>Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.</p>
+
+<p>Luckily, one of the handy things that you can do with Docker is to have automated builds on Docker Hub.  This lets you create images based on a Github repository and have Docker manage the build process for you, and with a bit of scripting you can automate the update process so that your images stay nice and fresh and ready for use.</p>
+
+<p>To get this working for your build, go into the “build settings” tab on the Docker Hub page and scroll down to “Build Triggers”. If you click the “Activate Triggers” button Docker Hub will helpfully provide you with a token and trigger URL which can trigger your image to be rebuilt, and will also provide example curl commands to trigger the build.</p>
+
+<p>So for example for one of my images the curl request to trigger a build on it would look like this (with the [TOKEN] replaced with the trigger token for the build)</p>
+
+<p><code class="highlighter-rouge">curl -H "Content-Type: application/json" --data '{"build": true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/</code></p>
+
+<p>Now we have the method for updating our image, we just need to set up some mechanism for this to be carried out periodically.  The obvious way to do this is just to make use of a Linux host and cron but I’m sure there’s a variety of other ways of triggering an HTTP post on a regular basis.</p>
+
+<p>So just add your curl command to a crontab file somewhere and away you go.</p>
+
+<p>The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in <code class="highlighter-rouge">Settings--&gt;Notifications</code>.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.</p>

@@ -1,0 +1,31 @@
+<p>Since my <a href="https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/">last post</a> on this there have been quite a few conversations had on twitter and we’ve now got <a href="http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/">Kenna’s blog post</a> with additional details on their methodology.</p>
+
+<p>I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
+1. An asset has a known CVE open. 
+2. An attack come in that matches the signature for that CVE on that asset and 
+3. One or more IOCs are detected/correlated post attack
+</code></pre>
+</div>
+
+<p>The “mystery sauce” here is part 3 around IOCs to detect a successful exploit, as that’s tricky to do with a MiTM attack like the two FREAK CVEs.  Attackers who successfully exploited that may just intercept sensitive data from the connection and them misuse it elsewhere, which is virtually impossible to correlate.</p>
+
+<p>Kenna also provided some interesting graphs for these vulns <a href="http://www.stathat.com/s/4813HmgKhyPk">here</a> and <a href="http://www.stathat.com/s/YSHQp2H6OAin">here</a> which show large spikes of activity initially followed by periodic smaller spikes through the year.</p>
+
+<p>Now, to me, that doesn’t really seem to fit a real attack on this issue as I kind of doubt that many people have the ability to crack 800k even weak RSA keys at once, also if someone had compromised that volume of SSL connections in a short space of time you’d have thought there would’ve been some fallout from it…</p>
+
+<p>However, what it does match is someone running a scanning tool over the large parts of the Internet looking for this vulnerability.  A scanning tool for this will negotiate a connection using the weak RSA keys, that’s how they work.</p>
+
+<p>Looking at the graph for CVE-2015-0204, we can see a …. huge spike in activity around March 2015, when… the researchers for the FREAK attack did a large scan looking for the issue. Looking at the <a href="">Freak Attack</a> page we see a note</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
+</code></pre>
+</div>
+
+<p>indicating that they did a big scan in March 2015 which roughly correlates with the big spike in Kenna’s graph.  I’d also guess that a lot of other researchers would scan around that time as it was when the vulnerability was released.</p>
+
+<p>So whilst I can’t be really sure, if I was a betting man, I’d suggest that Kenna’s data doesn’t point to a sophisticated attacker exploiting an SSL MITM issue, but to a group of security researchers scanning a large number of sites after they had announced their vulnerability.</p>
+
+<p>The only mystery then is “what was the IOC seen on the affected hosts?”.</p>
+

@@ -1,0 +1,10 @@
+<p>I got a <a href="http://europe.nokia.com/find-products/devices/nokia-n900#/main/landing"> Nokia N900</a> the other week and I've started playing around with the software.<br />
+At heart it runs <a href="http://www.maemo.org">Maemo Linux</a> which is based on debian, so in theory any software that runs on debian should run on the phone !<br />
+Also unlike other smart phones which can be coaxed into running linux, the N900 has a shell out of the box and getting root access just requires a package install and issuing the "sudo gainroot" command.<br />
+So far I've found the ssh client pretty handy, and openvpn is available in the maemo-testing repository for all your vpn needs.<br />
+In terms of the hardware it's got a variety of interfaces which could be pretty cool for hacking testing.  There's wifi and GPS for war-driving/walking and obviously having 3G data is pretty useful when out and about :)<br />
+Getting software to run on it, isn't always quite as straightforward as just apt-get, as the repositories don't have the breadth of the debian ones yet.  So if it's not already available in maemo-extras/testing/devel then cross-compiling is the way to go.<br />
+The Cross-compile environment is reasonably straightforward to get <a href="http://www.forum.nokia.com/info/sw.nokia.com/id/c05693a1-265c-4c7f-a389-fc227db4c465/Maemo_5_SDK.html">set-up</a> and there's instructions on the maemo wiki for <a href="http://wiki.maemo.org/Documentation/Maemo_5_Developer_Guide/Packaging,_Deploying_and_Distributing#Making_Application_Packages">packaging apps</a><br />
+So far I've ported nmap 5.00 across to it, and that runs just fine, kismet seems to run ok but the default console colours make it a bit unreadable, so more work there.<br />
+Ruby 1.8.7 is available in the repositories and I've had Metasploit running (albeit a bit slowly).<br />
+All in all it's definitely smarter than your average smart phone!</p>

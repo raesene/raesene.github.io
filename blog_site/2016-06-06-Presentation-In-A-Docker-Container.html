@@ -1,0 +1,37 @@
+<p>I’ve been presenting a bit recently on <a href="http://www.docker.com">docker</a> and in an attempt to keep my presentation environment relatively simple, I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.</p>
+
+<p>After some looking around I settled on using <a href="https://github.com/dploeger/jekyll-revealjs">jekyll-revealjs</a> which combines <a href="https://jekyllrb.com/">Jekyll</a> publishing with the <a href="http://lab.hakim.se/reveal-js/#/">Reveal.JS</a> HTML/JS presentation framework.</p>
+
+<p>This turns out to have quite a nice workflow for creating presentations as all your content is a series of markdown files and you can just commit changes to a git repository, which makes updating and modifying content for your presentation very easy, basically anywhere with a text editor does the job.</p>
+
+<p>Also once your presentation is complete you can access from any machine with a browser, which removes the ties of having to run on a specific operating system with specific presentation software installed.</p>
+
+<p>All that said, one slight downside which occurred to me is that whilst editing the presentation is as simple as running a text editor, when you’re presenting you need a working jekyll environment with a valid ruby install and the attendant gems. This sounded like a classic case where …. you guessed it…. Docker comes in handy !</p>
+
+<p>So I turned my presentation into a docker container :)</p>
+
+<p>The Dockerfile to do this was really pretty straightforward</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>FROM jekyll/jekyll
+MAINTAINER Rory McCune &lt;rorym@mccune.org.uk&gt;
+RUN mkdir /presentation
+WORKDIR /presentation/
+ADD . /presentation/
+RUN chown -R 1000:1000 /presentation/*
+CMD ["jekyll", "serve", "-H", "0.0.0.0"]
+</code></pre>
+</div>
+
+<p>from the base jekyll install it basically just adds the git working directory to the image and runs jekyll to serve up the presentation.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.</p>
+
+<p>This is also a useful time to use a <code class="highlighter-rouge">.dockerignore</code> file to avoid the container getting all the git history which it doesn’t need</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>.git
+.gitignore
+README.md
+</code></pre>
+</div>
+
+<p>After that it’s just a questions of running the container and exposing the relevant port, and your presentation will run from any machine that has docker installed and a browser to view the content.</p>
+
+<p>In my case it’s let me have a backup of my talk sitting on a <a href="http://presentation.pwndland.uk">web server</a> in case of last minute laptop problems.  I may also have created a Kubernetes cluster to run it, but that’s a story for another blog post :)</p>

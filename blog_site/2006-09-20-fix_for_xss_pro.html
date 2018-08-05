@@ -1,0 +1,4 @@
+<p><a title="In_place_edit_for with validation and sanitization" href="http://trixnews.com/articles/2006/06/18/in_place_edit_for-with-validation-and-sanitization">In_place_edit_for with validation and sanitization</a><br />
+I've started having a look at my little rails app. I'm writing with a security persons hat on and one of the problems I've run into is that you can't by default use the h() function with an in place edit control.  So this link has a solution for that...<br />
+One quirk seemed to be when I put in the XSS code &lt;/span&gt;&lt;script&gt;alert("xss")&lt;/script&gt;&lt;span&gt; using in_place_edit it escapes it ok, but then each time I click into the field and then click ok it re-escapces the contents, giving an ever expanding field...<br />
+still main thing is it gets rid of the xss problem (well from a security point of view anyway)</p>
