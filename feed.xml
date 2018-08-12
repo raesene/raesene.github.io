@@ -16,12 +16,12 @@
 
 &lt;p&gt;If you do a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search&lt;/code&gt; for common security tools you get quite a few hit.  for example if you do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search metasploit&lt;/code&gt; you the a set of results with these at the top&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
-linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63                                      [OK]
-remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44                                      [OK]
-strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16                                      [OK]
-metasploitframework/metasploit-framework        metasploit-framework                            8                                       [OK]
-vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4                                       [OK]
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            DESCRIPTION                                     STARS  AUTOMATED
+linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63     [OK]
+remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44     [OK]
+strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16     [OK]
+metasploitframework/metasploit-framework        metasploit-framework                            8      [OK]
+vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4      [OK]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/div&gt;
 &lt;p&gt;The search function provides a metric in a number of “stars” which can provide an indication of which image is considered the most popular.&lt;/p&gt;
