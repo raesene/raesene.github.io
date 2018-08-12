@@ -159,6 +159,42 @@
   <span class="post-date">
     
     April
+    20th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="/blog/2005/04/20/sql_injection_r/">sql injection resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>ok recently I've been using SQL injection in some Penetration testing work I've been doing, so I thought it would be worth getting together all the links/White Papers I've been using/found useful.<br />
+Start off with two papers, which are more advanced but which have been the most useful one's I've found in the sense of having techniques I've used...<br />
+<a href="http://www.nextgenss.com/papers/advanced_sql_injection.pdf"> Advanced SQL Injection </a> and <a href="http://www.nextgenss.com/papers/more_advanced_sql_injection.pdf"> More Advanced SQL Injection </a> from NGS.  Both good papers and in the 1st there's a really handy methodology that you can follow through to iterate over the columns in a database table and then insert data into that table, amongst other things.<br />
+There's a good introduction to SQL injection <a href="http://www.securiteam.com/securityreviews/5DP0N1P76E.html"> here at securiteam </a> and another one <a href="http://www.unixwiz.net/techtips/sql-injection.html"> here at unixwiz </a><br />
+Some point that I've noticed from the testing I've done.<br />
+- If you get SQL error messages out of the database you're half way there.  Without them you're stuck trying to guess whether the data you've chucked at the system has caused it to barf in the right way or not...  (There are some techniques for this in the paper above, but I've not had much joy with them so far)<br />
+- If the web application you're looking at does intelligent escaping of quotes, you're probably only going to be able to attack numeric fields ('cause they don't typically put quotes round the input, thus no need to put one to inject your own SQL statements)<br />
+- understanding what the likely accounts and system tables are for a given DBMS is darned handy to expand the vulnerability.<br />
+Other Papers I've found handy<br />
+<a title="SQL Injection Signatures Evasion" href="http://www.imperva.com/application_defense_center/white_papers/sql_injection_signatures_evasion.html">SQL Injection Signatures Evasion</a><br />
+<a href="http://www.spidynamics.com/support/whitepapers/Blind_SQLInjection.pdf"> Blind SQL Injection </a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
     18th,
     
     2005
@@ -393,33 +429,6 @@ Which would be cool. one to look at anyway...</p>
     
     <p><a title="Ask me no secrets and I'll tell you no lies" href="http://arstechnica.com/news.ars/post/20050328-4743.html">Ask me no secrets and I'll tell you no lies</a><br />
 A write up at Arstechnica of another successful social engineering excercise in London....  of course there's the usual point about how much of the information gathered is actually accurate, but I think it's still a good example of why humans can, in many cases, be the weak link in a security solution.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    30th,
-    
-    2005
-  </span>
-
-  <h2>
-    <a href="/blog/2005/03/30/surftp_web_base/">publicly available FTP web interface</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Surftp - Web Based FTP" href="http://www.surftp.com/">Surftp - Web Based FTP</a><br />
-handy site for accessing FTP sites from locations where you only have HTTP access.  Of course, if you're paranoid like me then you wouldn't trust this service to transfer any sensitive data in the clear, as while they say they won't use any of the info. gained there's nothing to guarantee that..... (not that I'm implying they will, I'm just paranoid !!)</p>
 
     
     

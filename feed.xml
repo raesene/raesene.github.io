@@ -7,6 +7,46 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Docker Hub - Watch out for old images</title>
+				<description>&lt;p&gt;One of the key elements of the success of Docker is the availability of Docker Hub, which provides an effective “app store” of pre-build Docker images with a huge variety of pre-installed software.  Everything from Databases, to CRM software to hacking tools is easily available at the drop of a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;p&gt;However, like any user maintained repositorry, users need to be careful that what they’re using meets their needs.  Outside of the “official” Docker images, Docker themselves don’t take any responsibility for maintaining images pushed to Docker hub, so users are own their own to determine whether an image is secure and up to date.&lt;/p&gt;
+
+&lt;p&gt;It’s that second point that I wanted to touch on here, as I’d noticed it recently while working on a project to create &lt;a href=&quot;https://github.com/raesene/dockerized-security-tools&quot;&gt;Docker images for common security tools&lt;/a&gt; .&lt;/p&gt;
+
+&lt;p&gt;If you do a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search&lt;/code&gt; for common security tools you get quite a few hit.  for example if you do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search metasploit&lt;/code&gt; you the a set of results with these at the top&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
+linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63                                      [OK]
+remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44                                      [OK]
+strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16                                      [OK]
+metasploitframework/metasploit-framework        metasploit-framework                            8                                       [OK]
+vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4                                       [OK]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;The search function provides a metric in a number of “stars” which can provide an indication of which image is considered the most popular.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately what &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search&lt;/code&gt; doesn’t tell you is, when was this image last updated. In this case we can see the following results by checking on Docker hub&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            LAST UPDATED
+linuxkonsult/kali-metasploit                    2 years ago
+remnux/metasploit                               2 years ago
+strm/metasploit                                 9 months ago
+metasploitframework/metasploit-framework        3 days ago
+vulnerables/metasploit-vulnerability-emulator   9 months ago
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;So the obvious choice (well once you’ve checked Docker Hub) is the recent image, which also looks like it’s maintained by Rapid7 themselves, but if you’d chosen the “most popular” image you’d be well out of date.&lt;/p&gt;
+
+&lt;p&gt;In my case what I’m doing is creating images that I control and then using &lt;a href=&quot;https://flow.microsoft.com/en-us/&quot;&gt;Microsoft Flow&lt;/a&gt; to automate the process of weekly rebuilds (more information on the automated rebuild process &lt;a href=&quot;https://raesene.github.io/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/&quot;&gt;here&lt;/a&gt;).  Personally I think controlling your own images is worth the effort as then you’ve got more confidence on what’s included, and once you’ve got the automated rebuilds working, you’ve got a better level of confidence that you won’t be getting really outdated versions of the software.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 12 Aug 2018 12:10:39 +0100</pubDate>
+				<link>/blog/2018/08/12/Docker-Hub-Watch-Out-For-Old-Images/</link>
+				<guid isPermaLink="true">/blog/2018/08/12/Docker-Hub-Watch-Out-For-Old-Images/</guid>
+			</item>
+		
+			<item>
 				<title>Docker containers without Docker</title>
 				<description>&lt;p&gt;Following on from looking at &lt;a href=&quot;https://raesene.github.io/blog/2018/07/23/exploring-kata/&quot;&gt;katacontainers&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;gVisor&lt;/a&gt;, I thought it might be interesting to look at the &lt;a href=&quot;https://containerd.io/&quot;&gt;containerd&lt;/a&gt; project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.&lt;/p&gt;
 
@@ -655,29 +695,6 @@ CapBnd: 00000000a80425fb
 				<pubDate>Sun, 23 Jul 2017 13:15:39 +0100</pubDate>
 				<link>/blog/2017/07/23/network-tools-in-nonroot-docker-images/</link>
 				<guid isPermaLink="true">/blog/2017/07/23/network-tools-in-nonroot-docker-images/</guid>
-			</item>
-		
-			<item>
-				<title>Keeping your Docker builds fresh</title>
-				<description>&lt;p&gt;Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.&lt;/p&gt;
-
-&lt;p&gt;Luckily, one of the handy things that you can do with Docker is to have automated builds on Docker Hub.  This lets you create images based on a Github repository and have Docker manage the build process for you, and with a bit of scripting you can automate the update process so that your images stay nice and fresh and ready for use.&lt;/p&gt;
-
-&lt;p&gt;To get this working for your build, go into the “build settings” tab on the Docker Hub page and scroll down to “Build Triggers”. If you click the “Activate Triggers” button Docker Hub will helpfully provide you with a token and trigger URL which can trigger your image to be rebuilt, and will also provide example curl commands to trigger the build.&lt;/p&gt;
-
-&lt;p&gt;So for example for one of my images the curl request to trigger a build on it would look like this (with the [TOKEN] replaced with the trigger token for the build)&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;curl -H &quot;Content-Type: application/json&quot; --data '{&quot;build&quot;: true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Now we have the method for updating our image, we just need to set up some mechanism for this to be carried out periodically.  The obvious way to do this is just to make use of a Linux host and cron but I’m sure there’s a variety of other ways of triggering an HTTP post on a regular basis.&lt;/p&gt;
-
-&lt;p&gt;So just add your curl command to a crontab file somewhere and away you go.&lt;/p&gt;
-
-&lt;p&gt;The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in &lt;code class=&quot;highlighter-rouge&quot;&gt;Settings--&amp;gt;Notifications&lt;/code&gt;.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 09 Jul 2017 15:15:39 +0100</pubDate>
-				<link>/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</link>
-				<guid isPermaLink="true">/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/</guid>
 			</item>
 		
 	</channel>

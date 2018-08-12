@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Container Testing - A small tools container with SSH</title>
+	<title>Docker Hub - Watch out for old images</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Container Testing - A small tools container with SSH </h1>
+  <h1>Docker Hub - Watch out for old images </h1>
 </div>
 	
 <article>
@@ -157,39 +157,44 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   15th,
+	   August 
+	   12th,
 	   
-	   2017
+	   2018
 	 </span>
 	  <div class="article_body">
-	  <p>When you’re doing security testing of container environments one of the things that can be pretty useful is having a container with useful tools connected to the container network.  From there you can run network scans of the container network and also test the scenario of “malicious container”</p>
+	  <p>One of the key elements of the success of Docker is the availability of Docker Hub, which provides an effective “app store” of pre-build Docker images with a huge variety of pre-installed software.  Everything from Databases, to CRM software to hacking tools is easily available at the drop of a <code class="highlighter-rouge">docker run</code> command.</p>
 
-<p>There’s a couple of ways of achieving this goal. You could run a container interactively with something like</p>
+<p>However, like any user maintained repositorry, users need to be careful that what they’re using meets their needs.  Outside of the “official” Docker images, Docker themselves don’t take any responsibility for maintaining images pushed to Docker hub, so users are own their own to determine whether an image is secure and up to date.</p>
 
-<p><code class="highlighter-rouge">docker run -i -t [image_name] /bin/sh</code></p>
+<p>It’s that second point that I wanted to touch on here, as I’d noticed it recently while working on a project to create <a href="https://github.com/raesene/dockerized-security-tools">Docker images for common security tools</a> .</p>
 
-<p>but one of the downsides of using a container like this is if you exit from the container, it’ll stop running, so ideally you want a container that’ll keep running and that you can connect to over the network.</p>
+<p>If you do a <code class="highlighter-rouge">docker search</code> for common security tools you get quite a few hit.  for example if you do <code class="highlighter-rouge">docker search metasploit</code> you the a set of results with these at the top</p>
 
-<p>One example of this approach is <a href="https://hub.docker.com/r/raesene/alpine-containertools/">this image</a> which has a couple of useful features.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>NAME                                            DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
+linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63                                      [OK]
+remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44                                      [OK]
+strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16                                      [OK]
+metasploitframework/metasploit-framework        metasploit-framework                            8                                       [OK]
+vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4                                       [OK]
+</code></pre>
+</div>
+<p>The search function provides a metric in a number of “stars” which can provide an indication of which image is considered the most popular.</p>
 
-<p>Its based on alpine linux so the image is nice and small, and it runs an SSH daemon so that it’ll stay running and you can just connect in with SSH (assuming that you have a root from the location you start from to the container)</p>
+<p>Unfortunately what <code class="highlighter-rouge">docker search</code> doesn’t tell you is, when was this image last updated. In this case we can see the following results by checking on Docker hub</p>
 
-<p>It also has a neat trick that I got from some <a href="https://github.com/fedora-cloud/Fedora-Dockerfiles/blob/master/ssh/entrypoint.sh">Fedora dockerfiles</a> which is that it creates a random password each time you start an instance of the image.  This is a good thing (tm) as you don’t want a static password baked in to your image.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>NAME                                            LAST UPDATED
+linuxkonsult/kali-metasploit                    2 years ago
+remnux/metasploit                               2 years ago
+strm/metasploit                                 9 months ago
+metasploitframework/metasploit-framework        3 days ago
+vulnerables/metasploit-vulnerability-emulator   9 months ago
+</code></pre>
+</div>
 
-<p>To use this approach just do something like</p>
+<p>So the obvious choice (well once you’ve checked Docker Hub) is the recent image, which also looks like it’s maintained by Rapid7 themselves, but if you’d chosen the “most popular” image you’d be well out of date.</p>
 
-<p><code class="highlighter-rouge">docker run -d raesene/alpine-containertools</code></p>
-
-<p>then find out what IP address has been assigned to your container with</p>
-
-<p><code class="highlighter-rouge">docker inspect -f "" [container_name]</code></p>
-
-<p>and what the password that’s been generated with</p>
-
-<p><code class="highlighter-rouge">docker logs [container_name]</code></p>
-
-<p>and you should be able to SSH in and get started with testing.  This image has some network tools like nmap and curl and also some container tools like the docker client, kubectl and etcdctl which is handy for checking whether you can get access to the ETCD database in a Kubernetes network.</p>
+<p>In my case what I’m doing is creating images that I control and then using <a href="https://flow.microsoft.com/en-us/">Microsoft Flow</a> to automate the process of weekly rebuilds (more information on the automated rebuild process <a href="https://raesene.github.io/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/">here</a>).  Personally I think controlling your own images is worth the effort as then you’ve got more confidence on what’s included, and once you’ve got the automated rebuilds working, you’ve got a better level of confidence that you won’t be getting really outdated versions of the software.</p>
 
 	  </div>
 
@@ -215,7 +220,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Container Testing - A small tools container with SSH&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Docker Hub - Watch out for old images&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -243,10 +248,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2018/08/05/Docker-Containers-Without-Docker/" title="Docker containers without Docker">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2017/05/01/Kubernetes-Security-etcd/" title="Kubernetes Attack Surface - etcd">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

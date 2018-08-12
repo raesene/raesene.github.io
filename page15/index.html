@@ -159,6 +159,40 @@
   <span class="post-date">
     
     June
+    2nd,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/06/02/data_security_a/">Data security architecture Redux.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Re-reading my previous post <a href="http://raesene.dnsalias.net/blog/archives/000440.html"> on data-centric security</a> Hoff made the correct comment that I'd gone to the extreme end and it didn't quite flow from his post.<br />
+Fair point, I jumped a couple of hurdles a bit too quickly and it probably didn't make where I'm coming from clear, so I'll try and cover things a bit better now.<br />
+ok first basic point, I'm not a fan of *some* of the Jericho forums ideas (I like most of the others just fine, in principle anyway).  Specifically the DRM/acces to data bit.  In principle it sounds great, but I don't think that it's practible to implement in most organisations with their masses of un-organised data an ever increasing requirements for easier connectivity and data flow.<br />
+Now <a href="http://robnewby.blogspot.com/2007/06/kick-in-teeth.html">Rob</a> makes the point very forcefully that models like Bell LaPudala have described the kind of Mandatory Access Control world that DRM implements for quite some time.  Yep they have, but outside of miltiary or police environments I've never seen these implemented. My feeling is that the reason for this is that in these systems users need to be actively involved in data security, they need to classify information as it's created and they need to understand the requirements on them to maintain the classification of data.<br />
+I don't think that most corporates will buy into systems that work in that way.  I think that the overhead of training and maintaining systems that implement MAC is beyond what most companies want.<br />
+So .. am I anti-security?  Nope I'm extremely pro-security.  My feeling is however that the best way to implement security is in ways which it's invisable to users.  Every time you make ordinary business people think about security (eg, usernames/passwords) they try their darndest to bypass those requirements.<br />
+Personally I'm a great fan of network segregation and defence in depth at the network layer.  I  think that devices like the ones crossbeam produce are very useful in coming up with risk profiles, on a <b><i>network by network</i></b> basis rather than a data basis and managing traffic in that way.  The reason for this is that then the segregation and protections can be applied without the intervention of end-users and without them (hopefully) having to know about what security is in place.<br />
+So to use the phrase that I've seen in other blogs on this subject, I think that the "zones of trust" are a great idea, but the zone's shouldn't be based on the data that flows over them, but the user/machine that are used.  It's the idea of tagging all that data with the right tags and controlling it's flow that bugs me.<br />
+So that's where my points in the previous post came from, and I still reckon their correct.  Data tagging and parsing relies on the existance of standards and their uptake in the first instance and then users *actually using them* and personally I think that's not going to happen in general companies and therefore is not the best place to be focusing security effort...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
     1st,
     
     2007
@@ -413,40 +447,6 @@ The other thing I set-up for the first time the other night was <a href="http://
     <p><a title="TJX finds self at bottom of 300-bank pig pile | The Register" href="http://www.theregister.co.uk/2007/04/26/tjx_suit/">TJX finds self at bottom of 300-bank pig pile | The Register</a><br />
 I'm not usually a great fan of the sue someone every time something goes wrong mentality that some people and companies seem to have but this one could actually be good for security...<br />
 300 Banks suing TJX for the breach... If they win then I'd expect retailers to start taking security a fair bit more seriously as then there'll be some really serious consequences to losing control of your customers data...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    22nd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/04/22/a_difference_be/">A Difference between IT and Information Security</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've always found that there's a fair amount of confusion on what the difference between Information Security and IT Security is.<br />
-Whilst I don't know <b><i>THE</i></b> difference here's a difference.<br />
-IT Security is hard to comprehend but easy to implement, Information Security is easy to comprehend but hard to implement.<br />
-If you think about an IT task, say advising on the protection of a new web services link that your company will be sending information over from an IT Security and Information Security perspective the difference in comprehension may become clear.<br />
-From an IT Security perspective effectively advising on this requires that you understand how web services function, are aware of the standards in the area (which is complex in itself) understand how XML can be encrypted, what options there are for authentication the transfer and so on.  Now once you've comprehended that fully, actually implementing the appropriate protection should be <i>relatively</i> straightforward.<br />
-From an Information Security perspective all you really need to know is that web services are a means of transferring data from one party to another, and at that point all you may really care about is "is the information over the link appropriately protected and are participants in the link authenticated and authorised"<br />
-So where does the hard to implement bit come in?<br />
-Consider a typical Information Security task.  Many security standards have a concept that Information in a company should be classified at different levels and then handled differently based on those levels.  A typical classification scheme might have 3 or 4 different levels of marking and protection.<br />
-In terms of comprehending why you need to do it and even what needs to be done (marking requirements etc.) reasonably straightforward.  However implementing this kind of scheme is something that very few corporations have done effectively. The difficulties in training staff, and getting buy-in to what is additional work, from senior management are very tricky to do effectively...</p>
 
     
     
