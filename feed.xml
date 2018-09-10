@@ -7,6 +7,31 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes authentication woes and secret user database</title>
+				<description>&lt;p&gt;Based on the Kubernetes security reviews I’ve done, one of the most problematic areas for clusters is user authentication.  Whilst Kubernetes provides a wide range of options, it lacks the “traditional” user database that you might expect to see with a multi-user networked system.  Using external OIDC or webhook providers is often complex, so many clusters make use of the in-built authentication options which are :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Basic Authentication&lt;/li&gt;
+  &lt;li&gt;Token Authentication&lt;/li&gt;
+  &lt;li&gt;Certificate Authentication&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The first two get marked down as they involve storing credentials in the clear on the Kubernetes master nodes and require an API server re-start to update (not the best).&lt;/p&gt;
+
+&lt;p&gt;That leaves quite a few operators of Kubernetes clusters making use of certificate authentication, however this also has some security problems.  The lack of certificate revocation means that if one of your users loses their certificate (or leaves the organization) your only choice is to recreate the entire Certificate Authority (not a great experience)!  Also as new client certificates can be created outside of the Kubernetes API, there’s no effective tracking of user accounts, so you could (for example) have multiple users with the same username, making it tricky to accurately audit user actions.  Lastly the Kubernetes Controller Manager expects to have the Certificate Authority root online and accessible to be able to create new certificates, so it’s exposed to attackers who can get access to that directory on the Kubernetes API server.  This can be problematic as once they’ve got the root key, attackers can issue their own certificates providing persistent access to the cluster (for the lifetime of that key).&lt;/p&gt;
+
+&lt;p&gt;It was with this backdrop that I was interested to see on a recent review an install making a creative use of service account tokens.  Whilst these are intended for use by pod to communicate with the API server there’s nothing to stop you putting a service account token into your Kubeconfig files and using it for user authentication, giving you (effectively) a user database!&lt;/p&gt;
+
+&lt;p&gt;There are obvious advantages over certificate authentication in that you can revoke the secrets associated with a service account whenever you like and you can also provide individual tokens to individual users allowing for user auditing.&lt;/p&gt;
+
+&lt;p&gt;I’ll caveat this with a note of caution, which is that Kubernetes service accounts and tokens aren’t really designed to be a user database, and if your secrets are exposed then you risk attackers being able to impersonate your users!  Ideally in production clusters you should make use of external authentication options, which allow for better control of user accounts…&lt;/p&gt;
+</description>
+				<pubDate>Mon, 10 Sep 2018 18:10:39 +0100</pubDate>
+				<link>/blog/2018/09/10/Kubernetes-Secret-User-Database/</link>
+				<guid isPermaLink="true">/blog/2018/09/10/Kubernetes-Secret-User-Database/</guid>
+			</item>
+		
+			<item>
 				<title>Docker Hub - Watch out for old images</title>
 				<description>&lt;p&gt;One of the key elements of the success of Docker is the availability of Docker Hub, which provides an effective “app store” of pre-build Docker images with a huge variety of pre-installed software.  Everything from Databases, to CRM software to hacking tools is easily available at the drop of a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; command.&lt;/p&gt;
 
@@ -672,29 +697,6 @@ CapBnd: 00000000a80425fb
 				<pubDate>Sun, 27 Aug 2017 22:00:39 +0100</pubDate>
 				<link>/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</link>
 				<guid isPermaLink="true">/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</guid>
-			</item>
-		
-			<item>
-				<title>Network Tools in Non-Root Docker Images</title>
-				<description>&lt;p&gt;As some environments which allow for Docker images to run (e.g. OpenShift Origin’s default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.&lt;/p&gt;
-
-&lt;p&gt;Usually tools like nmap, tcpdump and ping will either need to be setuid root or be run as a user who has root level privileges, however with a bit of capabilities fiddling its relatively easy to get a container that doesn’t need that level of privilege.&lt;/p&gt;
-
-&lt;p&gt;The key is use use the &lt;code class=&quot;highlighter-rouge&quot;&gt;setcap&lt;/code&gt; utility to add the appropriate capability to your binaries, in this case CAP_NET_RAW.  CAP_NET_RAW is generally avaialable to containers as it’s on Docker’s default white list.&lt;/p&gt;
-
-&lt;p&gt;Once you’ve downloaded packages into the image, just use something like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;RUN setcap cap_net_raw+ep /usr/bin/nmap
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;to set the capability on that binary.  One trick to note is that setcap doesn’t work on symbolic links so you need to find the destination of any links before using it.  One example is that in Alpine based images, &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/ping&lt;/code&gt; is just a symlink to &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/busybox&lt;/code&gt; so if you want to enable CAP_NET_RAW in that setup &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/busybox&lt;/code&gt; should be your target.&lt;/p&gt;
-
-&lt;p&gt;There’s an example repo and associated Docker Hub image &lt;a href=&quot;https://github.com/raesene/alpine-noroot-containertools&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-noroot-containertools/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Sun, 23 Jul 2017 13:15:39 +0100</pubDate>
-				<link>/blog/2017/07/23/network-tools-in-nonroot-docker-images/</link>
-				<guid isPermaLink="true">/blog/2017/07/23/network-tools-in-nonroot-docker-images/</guid>
 			</item>
 		
 	</channel>
