@@ -7,6 +7,31 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Using 'Try with PWD' buttons to demonstrate apps</title>
+				<description>&lt;p&gt;I came across a very interesting post &lt;a href=&quot;https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94&quot;&gt;this morning&lt;/a&gt; on &lt;a href=&quot;https://labs.play-with-docker.com/&quot;&gt;using Play With Docker&lt;/a&gt; (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, &lt;a href=&quot;https://labs.play-with-k8s.com/&quot;&gt;Play with Kubernetes&lt;/a&gt;), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.&lt;/p&gt;
+
+&lt;p&gt;What I hadn’t realised before was that you can pass a Docker compose file in as a parameter to a PWD URL and have it automatically spin up an instance of that stack.  This model seems super-useful for trying out new applications in disposable environments and works well with web applications, as we’ll see.&lt;/p&gt;
+
+&lt;p&gt;So having read the post I thought I’d try adding a sample instance for my &lt;a href=&quot;https://github.com/raesene/dockerized-security-tools&quot;&gt;Dockerized Security Tools&lt;/a&gt; project.  From the tools I’ve got in there at the moment, the best candidate for a try out looked to be &lt;a href=&quot;https://dradisframework.com/ce/&quot;&gt;Dradis-CE&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I knocked up a very basic Docker compose file for it, and then put a button referencing it in the Readme, with this as the result.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/raesene/dockerized-security-tools/master/dradis/docker-compose.yml&quot;&gt;&lt;img src=&quot;https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png&quot; alt=&quot;Try in PWD&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;If you click that button and then login (you’ll need a Docker Hub account for this, but they’re free to create), PWD will launch the application.  The only other trick to trying it out is that you need to click a link in the PWD interface to access the exposed application.&lt;/p&gt;
+
+&lt;p&gt;There will be a grey oval next to the IP address at the top with the exposed port number (in this case 3000).  Clicking that link should take you into a running instance of Dradis! The first page load will be a little slow, but after that it should work just fine.&lt;/p&gt;
+
+&lt;p&gt;I could see this having a number of use cases, things like running up instances of &lt;a href=&quot;https://www.owasp.org/index.php/OWASP_Juice_Shop_Project&quot;&gt;OWASP Juice Shop&lt;/a&gt; to try out tools or similar.&lt;/p&gt;
+
+&lt;p&gt;The runtime is limited to four hours, but that should be plenty for a quick look round a tool to see what it’s like.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 21 Oct 2018 15:10:39 +0100</pubDate>
+				<link>/blog/2018/10/21/Try-With-PWD/</link>
+				<guid isPermaLink="true">/blog/2018/10/21/Try-With-PWD/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes authentication woes and secret user database</title>
 				<description>&lt;p&gt;Based on the Kubernetes security reviews I’ve done, one of the most problematic areas for clusters is user authentication.  Whilst Kubernetes provides a wide range of options, it lacks the “traditional” user database that you might expect to see with a multi-user networked system.  Using external OIDC or webhook providers is often complex, so many clusters make use of the in-built authentication options which are :-&lt;/p&gt;
 
@@ -41,26 +66,24 @@
 
 &lt;p&gt;If you do a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search&lt;/code&gt; for common security tools you get quite a few hit.  for example if you do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search metasploit&lt;/code&gt; you the a set of results with these at the top&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            DESCRIPTION                                     STARS  AUTOMATED
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            DESCRIPTION                                     STARS  AUTOMATED
 linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63     [OK]
 remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44     [OK]
 strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16     [OK]
 metasploitframework/metasploit-framework        metasploit-framework                            8      [OK]
 vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4      [OK]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;The search function provides a metric in a number of “stars” which can provide an indication of which image is considered the most popular.&lt;/p&gt;
 
 &lt;p&gt;Unfortunately what &lt;code class=&quot;highlighter-rouge&quot;&gt;docker search&lt;/code&gt; doesn’t tell you is, when was this image last updated. In this case we can see the following results by checking on Docker hub&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            LAST UPDATED
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME                                            LAST UPDATED
 linuxkonsult/kali-metasploit                    2 years ago
 remnux/metasploit                               2 years ago
 strm/metasploit                                 9 months ago
 metasploitframework/metasploit-framework        3 days ago
 vulnerables/metasploit-vulnerability-emulator   9 months ago
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;So the obvious choice (well once you’ve checked Docker Hub) is the recent image, which also looks like it’s maintained by Rapid7 themselves, but if you’d chosen the “most popular” image you’d be well out of date.&lt;/p&gt;
 
@@ -130,15 +153,14 @@ vulnerables/metasploit-vulnerability-emulator   9 months ago
 
 &lt;p&gt;First up we can check that the client can connect to the daemon ok with &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr version&lt;/code&gt; .  If this works, you should see something like&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Client:
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Client:
   Version:  v1.1.2
   Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
 
 Server:
   Version:  v1.1.2
   Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Pulling an image is done with &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr image pull&lt;/code&gt;.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr image pull registry.hub.docker.com/library/alpine:3.7&lt;/code&gt; should download an Alpine 3.7 image.&lt;/p&gt;
 
@@ -171,18 +193,17 @@ Server:
 
 &lt;p&gt;Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;runtimes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;runsc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;path&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/usr/local/bin/runsc&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;kata-runtime&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-            &lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&quot;path&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/usr/bin/kata-runtime&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+    &quot;runtimes&quot;: {
+        &quot;runsc&quot;: {
+            &quot;path&quot;: &quot;/usr/local/bin/runsc&quot;
+        },
+        &quot;kata-runtime&quot;: {
+            &quot;path&quot;: &quot;/usr/bin/kata-runtime&quot;
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.&lt;/p&gt;
 
@@ -195,14 +216,12 @@ Server:
 &lt;p&gt;Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;output of uname -a without kata containers&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;output of uname -a with kata containers&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Interestingly the text &lt;strong&gt;container&lt;/strong&gt; in the kernel version could be a useful fingerprinting indicator.&lt;/p&gt;
 
@@ -249,15 +268,13 @@ Server:
 
 &lt;p&gt;If you run &lt;code class=&quot;highlighter-rouge&quot;&gt;uname -a&lt;/code&gt; when running a gVisor container you get&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 903108eb81ab 3.11.10 #1 SMP Fri Nov 29 10:47:50 PST 2013 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 903108eb81ab 3.11.10 #1 SMP Fri Nov 29 10:47:50 PST 2013 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;On the same host running without gVisor I get&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 835730d3b41c 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 835730d3b41c 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;which is the same as my underlying host (as expected).  This could be useful for fingerprinting the runtime in use as I’d expect that all containers running a given gVisor version will return the same info. from uname regardless of the underlying system.&lt;/p&gt;
 
@@ -269,9 +286,8 @@ Server:
 
 &lt;p&gt;If you’re looking to tell whether containers on a host are using gVisor or runc, the following command should return the relevant information&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker inspect --format='' [container_name]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker inspect --format='' [container_name]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
 
@@ -279,9 +295,8 @@ Server:
 
 &lt;p&gt;The test I did was to run&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it alpine:3.7 /bin/ash
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it alpine:3.7 /bin/ash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;with gVisor and runc. If you do that and run &lt;code class=&quot;highlighter-rouge&quot;&gt;docker stats&lt;/code&gt; it shows the runc container using 1.16MiB of memory and the gVisor one using 84MiB ! Also there seems to be some constant CPU usage on the gVisor container, even though it’s just running an idling ash shell with nothing else happening.&lt;/p&gt;
 
@@ -350,7 +365,7 @@ Server:
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get clusterrolebinding cluster-admin -o yaml&lt;/code&gt;  the output will look something like&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: rbac.authorization.k8s.io/v1
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
@@ -370,8 +385,7 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:masters
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;The key point is the subjects section at the end where we can see that all members of the &lt;code class=&quot;highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group have the &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; role.  The membership of that group isn’t defined anywhere in your cluster.&lt;/p&gt;
 
@@ -497,7 +511,7 @@ subjects:
 
 &lt;p&gt;So at a basic level we can use something like this&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: default-block
@@ -512,8 +526,7 @@ spec:
         - 192.168.111.0/24
   policyTypes:
   - Egress
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace: netpol-test&lt;/code&gt; and then we’re using a blank pod selector &lt;code class=&quot;highlighter-rouge&quot;&gt;podSelector: {}&lt;/code&gt; to hit all the pods in that namespace.&lt;/p&gt;
 
@@ -531,7 +544,7 @@ spec:
 
 &lt;p&gt;So in this model where we’re using network policies to restrict control plane service access, the one service we may want to allow containers to speak to is the Kubernetes API.  As the access provided by network policies is cumulative, this is pretty straightforward.  Working with the same setup as the previous example, we can just apply something like this&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: allow-api
@@ -547,8 +560,7 @@ spec:
       port: 6443
   policyTypes:
   - Egress
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;and we’ll have access to the API service from pods in the &lt;code class=&quot;highlighter-rouge&quot;&gt;netpol-test&lt;/code&gt; namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!&lt;/p&gt;
 
@@ -559,144 +571,6 @@ spec:
 				<pubDate>Sun, 25 Mar 2018 15:00:39 +0100</pubDate>
 				<link>/blog/2018/03/25/kubernetes-network-policies/</link>
 				<guid isPermaLink="true">/blog/2018/03/25/kubernetes-network-policies/</guid>
-			</item>
-		
-			<item>
-				<title>Linux Capabilities and when to drop all</title>
-				<description>&lt;p&gt;Somewhat following on from my &lt;a href=&quot;https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/&quot;&gt;previous post&lt;/a&gt; about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-are-capabilities&quot;&gt;What are Capabilities?&lt;/h2&gt;
-
-&lt;p&gt;Linux capabilities have been around in the kernel for some time.  The idea is to break up the monolithic root privilege that Linux systems have had, so that smaller more specific privileges can be provided where they’re required.  This helps reduce the risk that by compromising a single process on a host an attacker is able to fully compromise it.&lt;/p&gt;
-
-&lt;p&gt;One point to make note of is, that capabilities are only needed to carry out privileged actions on a host.  If your process only needs to carry out actions that an ordinary user could without the use of sudo, su or setuid root binaries, then your process doesn’t need any capabilities assigned to it.&lt;/p&gt;
-
-&lt;p&gt;To provide a concrete example, take the &lt;code class=&quot;highlighter-rouge&quot;&gt;ping&lt;/code&gt; program which ships with most Linux disitributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not availble to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.&lt;/p&gt;
-
-&lt;h2 id=&quot;practical-use-of-capabilities&quot;&gt;Practical use of capabilities&lt;/h2&gt;
-
-&lt;p&gt;So how do we actually manipulate capabilites on a Linux system? The most basic way of handing this (without writing custom code) is to use the &lt;code class=&quot;highlighter-rouge&quot;&gt;getcap&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;setcap&lt;/code&gt; binaries which come with the libcap2-bin package on debian derived systems.&lt;/p&gt;
-
-&lt;p&gt;If you use getcap on a file which has capabilities, you’ll see something like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/usr/bin/arping = cap_net_raw+ep
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;We can see here that the arping file has cap_net_raw with &lt;code class=&quot;highlighter-rouge&quot;&gt;+ep&lt;/code&gt; at the end of it, so what does that mean.  The e here refers to the effective capability of the file and the p to the permitted capability. Effectively for file capabilities the effective flag is needed where the binary isn’t “capability aware” i.e. it’s not written with capabilities in mind (which is usually the case).  For practical purposes if you’re assigning capabilities to files, you’ll use &lt;code class=&quot;highlighter-rouge&quot;&gt;+ep&lt;/code&gt; most of the time.&lt;/p&gt;
-
-&lt;p&gt;So if you want to assign a capability, for example to apply cap_net_raw to an nmap binary&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setcap cap_net_raw+ep /usr/bin/nmap
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;It’s important to note that you can’t set capabilities on symlinks, it has to be the binary, and also you can’t set capabilities on shell scripts (well unless you have a super-recent kernel)&lt;/p&gt;
-
-&lt;h2 id=&quot;some-more-background---inheritable-and-bounded&quot;&gt;Some More background - Inheritable and Bounded&lt;/h2&gt;
-
-&lt;p&gt;If you look at capability sets for files and processes, you’ll run across two additional terms which bear looking at, Inheritable and Bounded.&lt;/p&gt;
-
-&lt;p&gt;Inheritable capabilites are capabilites that can be passed from one program to another.&lt;/p&gt;
-
-&lt;p&gt;Bounded capabilities are, to quote the &lt;a href=&quot;https://linux.die.net/man/7/capabilities&quot;&gt;Man page for capabilities&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;The capability bounding set acts as a limiting superset for the capabilities that a thread can add to its inheritable set using capset(2).&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;So they restrict which capabilities can be inherited by a process.&lt;/p&gt;
-
-&lt;h2 id=&quot;back-to-the-practical---auditing-capabilities&quot;&gt;Back to the practical - Auditing capabilities&lt;/h2&gt;
-
-&lt;p&gt;This is all well and good, but how do we audit capabilities?&lt;/p&gt;
-
-&lt;p&gt;there’s a number of ways of reviewing what capabilities a process or file has got.  From a low-level perspective, we can review the contents of /proc/[pid]/status.  This will contain some information that looks like this :-&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 0000000000000000
-CapPrm: 0000000000000000
-CapEff: 0000000000000000
-CapBnd: 0000003fffffffff
-CapAmb: 0000000000000000
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;This set was for a user level process (using the command &lt;code class=&quot;highlighter-rouge&quot;&gt;cat /proc/self/status&lt;/code&gt;).  As you can see the CapPrm and CapEff are both all zero’s indicating that I don’t have any capabilities and assigned.&lt;/p&gt;
-
-&lt;p&gt;If I then switch to a root user using &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo bash&lt;/code&gt; and run the same command, I  get the following&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 0000000000000000
-CapPrm: 0000003fffffffff
-CapEff: 0000003fffffffff
-CapBnd: 0000003fffffffff
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;which is quite the difference, here CapPrm and CapEff have a lot more content as I’m a privileged user.&lt;/p&gt;
-
-&lt;p&gt;If we try the same in a Docker process using the command &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run alpine:latest cat /proc/self/status&lt;/code&gt; we get&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;CapInh: 00000000a80425fb
-CapPrm: 00000000a80425fb
-CapEff: 00000000a80425fb
-CapBnd: 00000000a80425fb
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;which is quite different.  In this container we were running as root, so you might have guessed that we’d have the same permissions as we did in the root shell before. However as Docker limits the available default permissions we don’t get as much.&lt;/p&gt;
-
-&lt;h3 id=&quot;interpreting-capabilities&quot;&gt;Interpreting capabilities&lt;/h3&gt;
-
-&lt;p&gt;Of course these long hex strings aren’t exactly the most friendly way of viewing capabilities.  Luckily there are ways of making this a bit more readable.  if we use &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh&lt;/code&gt; (which comes with libcap2-bin on debian derived systems) we can work out what’s meant here.&lt;/p&gt;
-
-&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh --decode=0000003fffffffff&lt;/code&gt; returns&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000003fffffffff=cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,cap_wake_alarm,cap_block_suspend,37
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;So that shows that our root shell run outside basically had all the capabilities.  If we run &lt;code class=&quot;highlighter-rouge&quot;&gt;capsh --decode=00000000a80425fb&lt;/code&gt; we can see what Docker provides by default&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x00000000a80425fb=cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_net_bind_service,cap_net_raw,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;which corresponds to the list in the &lt;a href=&quot;https://github.com/moby/moby/blob/master/oci/defaults.go#L14-L30&quot;&gt;source code&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;dangerous-capabilities&quot;&gt;Dangerous Capabilities&lt;/h3&gt;
-
-&lt;p&gt;So which of these capabilities are a concern from a security perspective?  Well to an extent that’s going to depend on how you’re using them.  However there are some good starting points to look at, firstly there’s &lt;a href=&quot;https://forums.grsecurity.net/viewtopic.php?f=7&amp;amp;t=2522&quot;&gt;this post&lt;/a&gt; from the grsecurity forum that goes into the risks of allowing various capabilities.  You can also look at the default list of capabilities that Docker allows (link above), as the ones they block are things that have been determined as dangerous in the context of containers.&lt;/p&gt;
-
-&lt;h3 id=&quot;other-utilities&quot;&gt;Other Utilities&lt;/h3&gt;
-
-&lt;p&gt;There are some other utilities which are handy for doing things like auditing capabilities.  the &lt;a href=&quot;https://people.redhat.com/sgrubb/libcap-ng/index.html&quot;&gt;libcap-ng-utils&lt;/a&gt; package has the very handy &lt;code class=&quot;highlighter-rouge&quot;&gt;filecap&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;pscap&lt;/code&gt; programs which can be used to review capapbilties on all files and all processes on a system by default.  There’s also &lt;code class=&quot;highlighter-rouge&quot;&gt;captest&lt;/code&gt; which will review capabilities in the context of the current process.&lt;/p&gt;
-
-&lt;p&gt;Also if you’re running containers and want a nice quick way to assess capabilities amongst other things, you could use Jessie Frazelle’s &lt;a href=&quot;https://github.com/jessfraz/amicontained&quot;&gt;amicontained&lt;/a&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;capabilities-and-containers&quot;&gt;Capabilities and Containers&lt;/h3&gt;
-
-&lt;p&gt;So what has all this to do with Containers?  Well it’s worth noting what was mentioned early in this post which is, if you have a container which will run as a non-root user and which has no setuid or setgid root prgrams in it, you should be good to drop all capabilities.  This adds another layer of hardening to the container, which can be helpful in preventing container breakout issues.&lt;/p&gt;
-
-&lt;p&gt;If you’re running with root containers, then it’s well worth reviewing the default list of capabilities that is provided by your container runtime an ensuring that you’re happy that these are needed.&lt;/p&gt;
-
-&lt;p&gt;Specifically there are ones like CAP_NET_RAW in the default docker set which could be dangerous (see &lt;a href=&quot;https://www.nccgroup.trust/uk/our-research/abusing-privileged-and-unprivileged-linux-containers/&quot;&gt;here&lt;/a&gt; for more details)&lt;/p&gt;
-
-&lt;h3 id=&quot;capability-gotchas&quot;&gt;Capability Gotcha’s&lt;/h3&gt;
-
-&lt;p&gt;There are some gotcha’s to be aware of when using capabilities.  First up is that, to use file capabilities, the filesystem you’re running from needs have extended attribute (xattr) support.  A notable exception here is some versions of aufs that ship with some versions Debian and Ubuntu.  This can impact Docker installs, as they’ll use aufs by default.&lt;/p&gt;
-
-&lt;p&gt;Another one is that where you’re manipulating files you need to make sure that the tools you’re using understand capabilities.  For example when backing up files with tar, you need to use the following switches to make it all work.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;--xattrs               Enable extended attributes support
---xattrs-exclude=MASK  specify the exclude pattern for xattr keys
---xattrs-include=MASK  specify the include pattern for xattr keys
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In practice for tar you’ll likely want to use &lt;code class=&quot;highlighter-rouge&quot;&gt;--xattrs&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;--xatttrs-include=security.capability&lt;/code&gt; to make backups of files with capabilities.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 27 Aug 2017 22:00:39 +0100</pubDate>
-				<link>/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</link>
-				<guid isPermaLink="true">/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/</guid>
 			</item>
 		
 	</channel>

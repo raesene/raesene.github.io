@@ -171,26 +171,24 @@
 
 <p>If you do a <code class="highlighter-rouge">docker search</code> for common security tools you get quite a few hit.  for example if you do <code class="highlighter-rouge">docker search metasploit</code> you the a set of results with these at the top</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>NAME                                            DESCRIPTION                                     STARS  AUTOMATED
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME                                            DESCRIPTION                                     STARS  AUTOMATED
 linuxkonsult/kali-metasploit                    Kali base image with metasploit                 63     [OK]
 remnux/metasploit                               This Docker image encapsulates Metasploit Fr…   44     [OK]
 strm/metasploit                                 Metasploit image with steroids (nmap, tor an…   16     [OK]
 metasploitframework/metasploit-framework        metasploit-framework                            8      [OK]
 vulnerables/metasploit-vulnerability-emulator   Metasploit Vulnerable Services Emulator !       4      [OK]
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>The search function provides a metric in a number of “stars” which can provide an indication of which image is considered the most popular.</p>
 
 <p>Unfortunately what <code class="highlighter-rouge">docker search</code> doesn’t tell you is, when was this image last updated. In this case we can see the following results by checking on Docker hub</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>NAME                                            LAST UPDATED
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME                                            LAST UPDATED
 linuxkonsult/kali-metasploit                    2 years ago
 remnux/metasploit                               2 years ago
 strm/metasploit                                 9 months ago
 metasploitframework/metasploit-framework        3 days ago
 vulnerables/metasploit-vulnerability-emulator   9 months ago
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>So the obvious choice (well once you’ve checked Docker Hub) is the recent image, which also looks like it’s maintained by Rapid7 themselves, but if you’d chosen the “most popular” image you’d be well out of date.</p>
 

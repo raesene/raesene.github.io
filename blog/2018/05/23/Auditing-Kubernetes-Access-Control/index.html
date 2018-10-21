@@ -181,7 +181,7 @@
 
 <p><code class="highlighter-rouge">kubectl get clusterrolebinding cluster-admin -o yaml</code>  the output will look something like</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>apiVersion: rbac.authorization.k8s.io/v1
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
@@ -201,8 +201,7 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:masters
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The key point is the subjects section at the end where we can see that all members of the <code class="highlighter-rouge">system:masters</code> group have the <code class="highlighter-rouge">cluster-admin</code> role.  The membership of that group isn’t defined anywhere in your cluster.</p>
 

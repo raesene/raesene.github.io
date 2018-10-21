@@ -175,24 +175,20 @@
 
 <p>so using a set of vmrun commands I came up with the following to automate the process</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws clone &lt;source_vmx_file&gt; &lt;destination_vmx_file&gt; linked
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vmrun.exe -T ws clone &lt;source_vmx_file&gt; &lt;destination_vmx_file&gt; linked
+</code></pre></div></div>
 <p>This creates a linked clone of the VM.  You need to specify the actual vmx file rather than just the directory.  Worth noting that for the destination vmrun will create the parent directory for the vmx file as specified.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws start &lt;destination_vmx_file&gt; gui
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vmrun.exe -T ws start &lt;destination_vmx_file&gt; gui
+</code></pre></div></div>
 <p>This starts your destination VM.  The option at the end can be gui or nogui, so if you like you can start up the VM with no gui, handy for a batch job or remote work.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /bin/sed -i "/address 192.168.41.98$/caddress 192.168.41.131" /etc/network/interfaces
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /bin/sed -i "/address 192.168.41.98$/caddress 192.168.41.131" /etc/network/interfaces
+</code></pre></div></div>
 <p>This is a quick oneliner to change the IP address on a debian based machine that has a static IP address set (NB this may well barf if there’s more that one address line in the file). The user and password here are the guest ones as vmrun is actually logging in to the box.  Also note that your user will either need to be root (in which case drop the sudo bit off) or have NOPASSWD sudo access.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /sbin/init 6
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vmrun.exe -T ws -gu &lt;user&gt; -gp &lt;password&gt; runProgramInGuest &lt;destination_vmx_file&gt; /usr/bin/sudo /sbin/init 6
+</code></pre></div></div>
 <p>This just reboots the box, you could also just bounce the network here of course.</p>
 
 <p>For my script running this on windows I also added a quick variable for the IP address so I can easily change it for different machines.</p>

@@ -220,15 +220,14 @@
 
 <p>First up we can check that the client can connect to the daemon ok with <code class="highlighter-rouge">sudo ctr version</code> .  If this works, you should see something like</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Client:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Client:
   Version:  v1.1.2
   Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
 
 Server:
   Version:  v1.1.2
   Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Pulling an image is done with <code class="highlighter-rouge">ctr image pull</code>.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. <code class="highlighter-rouge">sudo ctr image pull registry.hub.docker.com/library/alpine:3.7</code> should download an Alpine 3.7 image.</p>
 

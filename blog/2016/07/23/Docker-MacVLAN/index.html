@@ -169,17 +169,15 @@
 
 <p>Anyway, the first step in getting a container online directly with the host interface is to create a new macvlan network</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker network create -d macvlan --subnet=192.168.41.0/24 --gateway=192.168.41.1 --ip-range=192.168.41.128/26 -o parent=ens33 testnet
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker network create -d macvlan --subnet=192.168.41.0/24 --gateway=192.168.41.1 --ip-range=192.168.41.128/26 -o parent=ens33 testnet
+</code></pre></div></div>
 
 <p>So in this example our host network’s subnet is 192.168.41.0/24 and our gateway is just the default gateway for that network.  Where it gets a little interesting is that we need to specify an ip range that docker can use to hand out to containers that connect to this network.  At the moment there’s no supported way to get containers connecting to a macvlan network to use the host network’s DHCP server so you need to either specify an <code class="highlighter-rouge">--ip-range </code> with a range that’s available and doesn’t overlap with a DHCP scope on the host network or alternatively you can pass <code class="highlighter-rouge">--ip &lt;address&gt;</code> to the individual <code class="highlighter-rouge">docker run</code> commands that we use to create containers on this network.</p>
 
 <p>Once you’ve created the network it’s just a question of specifying the network to use in the docker run command, so something like</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker run -it --network=testnet ubuntu:16.04 /bin/bash
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it --network=testnet ubuntu:16.04 /bin/bash
+</code></pre></div></div>
 
 <p>should give you a container, likely with an address of 192.168.41.128 in this case.</p>
 
@@ -197,7 +195,7 @@
 		  
 			 
 				<li><a href="/categories/index.html#Docker-ref">
-					Docker <span>(13)</span>
+					Docker <span>(14)</span>
 					
 				</a></li>
 			

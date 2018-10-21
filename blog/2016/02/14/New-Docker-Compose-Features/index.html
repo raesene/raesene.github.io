@@ -183,45 +183,45 @@
 
 <p>Once you know the name just do <code class="highlighter-rouge">docker inspect (name)</code> and copy the files from there to whereever you’re storing them.</p>
 
-<figure class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="s">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
+<figure class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
 
-<span class="s">services</span><span class="pi">:</span>
-  <span class="s">sectest</span><span class="pi">:</span> 
-    <span class="s">image</span><span class="pi">:</span> <span class="s">raesene/sectest</span> 
-    <span class="s">command</span><span class="pi">:</span> <span class="s">/bin/bash</span> 
-    <span class="s">links</span><span class="pi">:</span> 
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">sectest</span><span class="pi">:</span> 
+    <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/sectest</span> 
+    <span class="na">command</span><span class="pi">:</span> <span class="s">/bin/bash</span> 
+    <span class="na">links</span><span class="pi">:</span> 
     <span class="pi">-</span> <span class="s">dradis</span> 
     <span class="pi">-</span> <span class="s">openvas</span>
     <span class="pi">-</span> <span class="s">firefox</span>
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">data:/data</span>
-  <span class="s">dradis</span><span class="pi">:</span> 
-    <span class="s">image</span><span class="pi">:</span> <span class="s">raesene/auto-docker-dradis</span> 
-    <span class="s">expose</span><span class="pi">:</span> 
+  <span class="na">dradis</span><span class="pi">:</span> 
+    <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/auto-docker-dradis</span> 
+    <span class="na">expose</span><span class="pi">:</span> 
       <span class="pi">-</span> <span class="s2">"</span><span class="s">3000"</span>
-    <span class="s">command</span><span class="pi">:</span> <span class="s">bundle exec rails server</span> 
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="s">bundle exec rails server</span> 
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">data:/data</span>
-  <span class="s">openvas</span><span class="pi">:</span> 
-    <span class="s">image</span><span class="pi">:</span> <span class="s">mikesplain/openvas</span> 
-    <span class="s">expose</span><span class="pi">:</span> 
+  <span class="na">openvas</span><span class="pi">:</span> 
+    <span class="na">image</span><span class="pi">:</span> <span class="s">mikesplain/openvas</span> 
+    <span class="na">expose</span><span class="pi">:</span> 
       <span class="pi">-</span> <span class="s2">"</span><span class="s">443"</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">9390"</span>
       <span class="pi">-</span> <span class="s2">"</span><span class="s">9391"</span>
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">data:/data</span>
-  <span class="s">firefox</span><span class="pi">:</span>
-    <span class="s">image</span><span class="pi">:</span> <span class="s">jess/firefox</span>
-    <span class="s">links</span><span class="pi">:</span>
+  <span class="na">firefox</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">jess/firefox</span>
+    <span class="na">links</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">dradis</span>
       <span class="pi">-</span> <span class="s">openvas</span>
-    <span class="s">environment</span><span class="pi">:</span>
-      <span class="s">DISPLAY</span><span class="pi">:</span> <span class="s">$DISPLAY</span>
-    <span class="s">volumes</span><span class="pi">:</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="na">DISPLAY</span><span class="pi">:</span> <span class="s">$DISPLAY</span>
+    <span class="na">volumes</span><span class="pi">:</span>
       <span class="pi">-</span> <span class="s">/tmp/.X11-unix:/tmp/.X11-unix</span>
       <span class="pi">-</span> <span class="s">data:/data</span> 
-<span class="s">volumes</span><span class="pi">:</span>
-  <span class="s">data</span><span class="pi">:</span> <span class="pi">{}</span></code></pre></figure>
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">data</span><span class="pi">:</span> <span class="pi">{}</span></code></pre></figure>
 
 
 	  </div>
@@ -233,7 +233,7 @@
 		  
 			 
 				<li><a href="/categories/index.html#Docker-ref">
-					Docker <span>(13)</span>
+					Docker <span>(14)</span>
 					
 				</a></li>
 			

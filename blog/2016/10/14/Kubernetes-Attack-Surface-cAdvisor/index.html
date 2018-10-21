@@ -183,7 +183,7 @@
 
 <p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
         "creation_time": "2016-10-09T03:55:54.113949226+01:00",
         "aliases": [
             "k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de",
@@ -217,8 +217,7 @@
         "has_diskio": true,
         "image": "weaveworks/weave-npc:1.7.0"
     },
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.</p>
 

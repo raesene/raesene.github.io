@@ -173,29 +173,27 @@
 
 <p>So first we set a couple of variables with the information from our two input requests.  We use these later on to get information about the requests that we need to extract data from them</p>
 
-<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#This analyses the request that we're going to modify</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#This analyses the request that we're going to modify</span>
 <span class="n">request_info</span> <span class="o">=</span> <span class="vi">@helpers</span><span class="p">.</span><span class="nf">analyzeRequest</span><span class="p">(</span><span class="n">baseRequestResponse</span><span class="p">)</span>
 <span class="c1">#This gets the first response from a macro item... should work for the basic case</span>
 <span class="n">macro_response_info</span> <span class="o">=</span> <span class="vi">@helpers</span><span class="p">.</span><span class="nf">analyzeResponse</span><span class="p">(</span><span class="n">macroItems</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">getResponse</span><span class="p">())</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The next bit is to get the token out of our macro response.  the idea of this process is that we use a burp macro to replay a request which generates a new token and then we extract it and insert it into new requests, so we’ll need that token.</p>
 
-<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#Extract the JWT token from the macro response</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Extract the JWT token from the macro response</span>
 <span class="n">macro_msg</span> <span class="o">=</span> <span class="n">macroItems</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">getResponse</span><span class="p">()</span>
 <span class="n">macro_body_offset</span> <span class="o">=</span> <span class="n">macro_response_info</span><span class="p">.</span><span class="nf">getBodyOffset</span><span class="p">()</span>
-<span class="n">macro_body</span> <span class="o">=</span> <span class="n">macro_msg</span><span class="p">[</span><span class="n">macro_body_offset</span><span class="p">.</span><span class="nf">.</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">macro_body</span> <span class="o">=</span> <span class="n">macro_msg</span><span class="p">[</span><span class="n">macro_body_offset</span><span class="o">..-</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">macro_body_string</span> <span class="o">=</span> <span class="vi">@helpers</span><span class="p">.</span><span class="nf">bytesToString</span><span class="p">(</span><span class="n">macro_body</span><span class="p">)</span>
 <span class="n">jwt_token</span> <span class="o">=</span> <span class="no">JSON</span><span class="p">.</span><span class="nf">parse</span><span class="p">(</span><span class="n">macro_body_string</span><span class="p">)</span>
 <span class="n">jwt</span> <span class="o">=</span> <span class="n">jwt_token</span><span class="p">[</span><span class="s2">"jwt"</span><span class="p">]</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>Next up we need to ensure that any existing Authorization header is removed before we add our new one.  This code is a bit brittle at the moment as it doesn’t account for cases where you have other authorization headers you might want (e.g. an HTTP basic one) or cases where there are multiple headers to remove.</p>
 
 <p>One thing I found a little tricky in this, coming from a ruby background, was the handling of removing an element from the array.  If you were doing this in ruby you might use <code class="highlighter-rouge">delete!</code> to remove the element, but it’s important to note that the getHeaders call doesn’t return a ruby array, it returns a Java ArrayList which has a different set of methods altogether.</p>
 
-<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#Get the headers from our base request</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Get the headers from our base request</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="n">request_info</span><span class="p">.</span><span class="nf">getHeaders</span><span class="p">()</span>
 <span class="c1">#we need a ref for the existing authorisation header if any to delete</span>
 <span class="n">auth_to_delete</span> <span class="o">=</span> <span class="s1">''</span>
@@ -207,24 +205,22 @@
 <span class="k">end</span>
 <span class="c1">#then remove the header if it exists </span>
 <span class="n">headers</span><span class="p">.</span><span class="nf">remove</span><span class="p">(</span><span class="n">auth_to_delete</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 <p>Then with our new JWT token in hand and any previous one removed we just add our token into the request and send it on its way</p>
 
-<div class="language-ruby highlighter-rouge"><pre class="highlight"><code><span class="c1">#Add in our new authorization header</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Add in our new authorization header</span>
 <span class="n">headers</span><span class="p">.</span><span class="nf">add</span><span class="p">(</span><span class="s1">'Authorization: JWT '</span> <span class="o">+</span> <span class="n">jwt</span><span class="p">)</span>
 <span class="c1">#We need to get the body to add to our headers which is what the next three lines do</span>
 <span class="n">msg</span> <span class="o">=</span> <span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">getRequest</span><span class="p">()</span>
 <span class="n">body_offset</span> <span class="o">=</span> <span class="n">request_info</span><span class="p">.</span><span class="nf">getBodyOffset</span><span class="p">()</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="n">body_offset</span><span class="p">.</span><span class="nf">.</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="n">body_offset</span><span class="o">..-</span><span class="mi">1</span><span class="p">]</span>
 <span class="c1">#Now we can create our new message with the headers and body that we need</span>
 <span class="n">new_message</span> <span class="o">=</span> <span class="vi">@helpers</span><span class="p">.</span><span class="nf">buildHttpMessage</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
 <span class="c1">#Lets just log something so we know it's doing something</span>
 <span class="vi">@stdout</span><span class="p">.</span><span class="nf">println</span><span class="p">(</span><span class="s2">"Changed a message"</span><span class="p">)</span>
 <span class="c1">#Set our Request to be the modified version from our code.</span>
 <span class="n">baseRequestResponse</span><span class="p">.</span><span class="nf">setRequest</span><span class="p">(</span><span class="n">new_message</span><span class="p">)</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Once we’ve got this plugin working, we can add it to a session handling rule in Burp’s project options.  You set the action to be “run macro” and then in macro handling there’s an option to invoke your extension after running the macro.  If you’ve loaded the plugin into burp ok, your plugin name should be on the drop down and you can insert it to have it run.</p>
 

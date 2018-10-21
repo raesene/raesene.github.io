@@ -179,18 +179,17 @@
 
 <p>Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="w">
-    </span><span class="nt">"runtimes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"runsc"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/local/bin/runsc"</span><span class="w">
-        </span><span class="p">},</span><span class="w">
-        </span><span class="nt">"kata-runtime"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-            </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/usr/bin/kata-runtime"</span><span class="w">
-        </span><span class="p">}</span><span class="w">
-    </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+    "runtimes": {
+        "runsc": {
+            "path": "/usr/local/bin/runsc"
+        },
+        "kata-runtime": {
+            "path": "/usr/bin/kata-runtime"
+        }
+    }
+}
+</code></pre></div></div>
 
 <p>One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.</p>
 
@@ -203,14 +202,12 @@
 <p>Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.</p>
 
 <p><strong>output of uname -a without kata containers</strong></p>
-<div class="highlighter-rouge"><pre class="highlight"><code>Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+</code></pre></div></div>
 
 <p><strong>output of uname -a with kata containers</strong></p>
-<div class="highlighter-rouge"><pre class="highlight"><code>Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
+</code></pre></div></div>
 
 <p>Interestingly the text <strong>container</strong> in the kernel version could be a useful fingerprinting indicator.</p>
 
