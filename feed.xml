@@ -7,6 +7,36 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Docker 18.09 - Making WSL that much easier</title>
+				<description>&lt;p&gt;After a little delay Docker 18.09 got it’s final release this week.  This is a release I’ve been looking forward to for a while now, as it’s got a couple of cool new features, which should help in day-to-day usage of Docker.&lt;/p&gt;
+
+&lt;p&gt;The main one is the incorporation of remote connections to Docker Engine instances via SSH.  This means that, if you want to connect to a remote Docker Engine instance, instead of having to setup TLS certificate and modifying the configuration at the server-side, you can simply make a change on the client-side configuration and get easy remote access!&lt;/p&gt;
+
+&lt;p&gt;One of the places this is most useful is with WSL.  To take the basic case, say you’ve got a Linux VM on your host and you’d like to use WSL for Docker development and administration.  First up you’ll need to install the Docker client in WSL.  Fortunately another change that came along with 18.09 makes this easier for you.  There’s a new Client only deb file so you can just install that, rather than installing the server-side engine components.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo apt install -y docker-ce-cli
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;should do the job.  Now we need to tell our client where to connect.  For this we just need to modify the &lt;code class=&quot;highlighter-rouge&quot;&gt;DOCKER_HOST&lt;/code&gt; environment variable.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DOCKER_HOST=ssh://YOUR_HOSTNAME_OR_IP_HERE
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve got that configured, assuming that both client and server are running 18.09 or higher, things should just work!&lt;/p&gt;
+
+&lt;p&gt;A couple of tips to make things smoother :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.&lt;/li&gt;
+  &lt;li&gt;If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
+				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
+				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
+			</item>
+		
+			<item>
 				<title>Using 'Try with PWD' buttons to demonstrate apps</title>
 				<description>&lt;p&gt;I came across a very interesting post &lt;a href=&quot;https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94&quot;&gt;this morning&lt;/a&gt; on &lt;a href=&quot;https://labs.play-with-docker.com/&quot;&gt;using Play With Docker&lt;/a&gt; (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, &lt;a href=&quot;https://labs.play-with-k8s.com/&quot;&gt;Play with Kubernetes&lt;/a&gt;), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.&lt;/p&gt;
 
@@ -473,104 +503,6 @@ subjects:
 				<pubDate>Thu, 29 Mar 2018 14:45:39 +0100</pubDate>
 				<link>/blog/2018/03/29/WSL-And-Docker/</link>
 				<guid isPermaLink="true">/blog/2018/03/29/WSL-And-Docker/</guid>
-			</item>
-		
-			<item>
-				<title>Some notes on Kubernetes Network Policies</title>
-				<description>&lt;p&gt;Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; are a useful security feature which allow for traffic into and (sometimes) out of pods to be restricted.&lt;/p&gt;
-
-&lt;p&gt;This is very useful if you want to add another layer of defence to your cluster and reduce the risk of attacks both on other services running on the cluster and also the control plane services like etcd and the Kubelet.&lt;/p&gt;
-
-&lt;p&gt;To make use of network policies, you need to have a k8s version that supports them (the Network Policy API hit stable in &lt;a href=&quot;http://blog.kubernetes.io/2017/06/kubernetes-1.7-security-hardening-stateful-application-extensibility-updates.html&quot;&gt;1.7&lt;/a&gt;).  You’ll also need a network plugin that supports Network Policies, in order for your policies to be effective.  Most of the major network plugins support network policies, however there are some irregularities to be aware of.&lt;/p&gt;
-
-&lt;p&gt;For example Weave doesn’t currently support egress policies at the moment (issue &lt;a href=&quot;https://github.com/weaveworks/weave/issues/2624&quot;&gt;here&lt;/a&gt; ), so do check the support of your chosen plugin before starting :)&lt;/p&gt;
-
-&lt;h2 id=&quot;network-policy-concepts&quot;&gt;Network Policy Concepts&lt;/h2&gt;
-
-&lt;p&gt;Network policies are a lot like network ACLs or firewall rules, if you’re familiar with those.  Without any network policies in effect on a set of pods, there’s a “default allow” rule in place. However as soon as any network Policy applies to a given pod, that pod has a “default deny” setup applied, meaning you have to specify all the traffic desired for that pod once you’ve started implementing network policies on it.&lt;/p&gt;
-
-&lt;p&gt;There are two types of network policies that can be specified.  Ingress policies restrict traffic to set of pods, and egress policies restrict outbound traffic from a set of pods.&lt;/p&gt;
-
-&lt;h2 id=&quot;practical-examples&quot;&gt;Practical examples&lt;/h2&gt;
-
-&lt;p&gt;The Kubernetes documentation on &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; has some good examples of policies you might want to apply, and there’s also a &lt;a href=&quot;https://github.com/ahmetb/kubernetes-network-policy-recipes&quot;&gt;repo. on github&lt;/a&gt; with some more examples, with a nice visualization of the effect of the policy, however lets cover one example that’s not covered in either of those resources.&lt;/p&gt;
-
-&lt;h2 id=&quot;denying-access-to-kubernetes-nodes&quot;&gt;Denying access to Kubernetes nodes&lt;/h2&gt;
-
-&lt;p&gt;One of the challenges I’ve seen in assessments of Kubernetes cluster security, when we work from a “compromised container” perspective, is that it’s possible to attack the underlying nodes and this exposes the control plane services to attack.  It’s not uncommon to see unauthenticated access to etcd or the Kubelet, and unauthorised access to those services is pretty bad for the overall security of the cluster.&lt;/p&gt;
-
-&lt;p&gt;So can we use network policies to prevent this?  The answer seems to be “yes, but with some side effects”.&lt;/p&gt;
-
-&lt;h3 id=&quot;test-cluster-setup&quot;&gt;Test cluster setup&lt;/h3&gt;
-
-&lt;p&gt;I’ve got a demo 3 node 1.9 cluster using Calico for the network plugin.  The host network is on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.111.0/24&lt;/code&gt; so the goal of my network policy is to restrict access to that network, whilst still allowing the pods to communicate with the rest of the world.&lt;/p&gt;
-
-&lt;p&gt;I’ve got a namespace setup for this test (netpol-test) and a sample alpine container running there, so we can check the results of our network policies.&lt;/p&gt;
-
-&lt;h3 id=&quot;basic-egress-restricting-policy&quot;&gt;Basic egress restricting policy&lt;/h3&gt;
-
-&lt;p&gt;So at a basic level we can use something like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: default-block
-  namespace: netpol-test
-spec:
-  podSelector: {}
-  egress:
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 192.168.111.0/24
-  policyTypes:
-  - Egress
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with &lt;code class=&quot;highlighter-rouge&quot;&gt;namespace: netpol-test&lt;/code&gt; and then we’re using a blank pod selector &lt;code class=&quot;highlighter-rouge&quot;&gt;podSelector: {}&lt;/code&gt; to hit all the pods in that namespace.&lt;/p&gt;
-
-&lt;p&gt;Then we’re specifying an egress policy.  Network policies are all about allowing traffic after the initial “default deny” is in place, so we have to specify our restriction in a kind of back-handed way.&lt;/p&gt;
-
-&lt;p&gt;We allow all destinations with &lt;code class=&quot;highlighter-rouge&quot;&gt;cidr: 0.0.0.0/0&lt;/code&gt; and then block a specific network with the &lt;code class=&quot;highlighter-rouge&quot;&gt;except:&lt;/code&gt; block.&lt;/p&gt;
-
-&lt;p&gt;If you look at the effects before and after using something like nmap, you’ll see that ports like &lt;code class=&quot;highlighter-rouge&quot;&gt;10250/TCP&lt;/code&gt; which were accessible before applying the policy, are no longer visible afterwards.&lt;/p&gt;
-
-&lt;p&gt;So what about the side effects that I mentioned above?  Well when I was testing this network policy, I noticed that in addition to blocking access to the nodes directly (on 192.168.111.0/24) this policy also prevents access to the Kubernetes service, which in the case of this cluster is on 10.96.0.1:443.&lt;/p&gt;
-
-&lt;p&gt;This could be desirable from a security standpoint, as it’s blocking access to control plane services, but it is rather un-intuitive to have a completely different network blocked based on a network policy.&lt;/p&gt;
-
-&lt;h3 id=&quot;allowing-access-to-a-service&quot;&gt;Allowing access to a service&lt;/h3&gt;
-
-&lt;p&gt;So in this model where we’re using network policies to restrict control plane service access, the one service we may want to allow containers to speak to is the Kubernetes API.  As the access provided by network policies is cumulative, this is pretty straightforward.  Working with the same setup as the previous example, we can just apply something like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: allow-api
-  namespace: netpol-test
-spec:
-  podSelector: {}
-  egress:
-  - to:
-    - ipBlock:
-        cidr: 192.168.111.0/24
-    ports:
-    - protocol: TCP
-      port: 6443
-  policyTypes:
-  - Egress
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and we’ll have access to the API service from pods in the &lt;code class=&quot;highlighter-rouge&quot;&gt;netpol-test&lt;/code&gt; namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This was just a brief introduction to Network policies in Kubernetes, there’s a lot more that can be done with them in terms of allowing access between specific pods and services.  Overall they’re a good layer of additional protection, and one that’s well worth considering for production clusters, although I have a feeling that if used heavily, management of the rulesets could get a bit complex…&lt;/p&gt;
-</description>
-				<pubDate>Sun, 25 Mar 2018 15:00:39 +0100</pubDate>
-				<link>/blog/2018/03/25/kubernetes-network-policies/</link>
-				<guid isPermaLink="true">/blog/2018/03/25/kubernetes-network-policies/</guid>
 			</item>
 		
 	</channel>

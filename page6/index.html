@@ -159,6 +159,36 @@
   <span class="post-date">
     
     May
+    13th,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="/blog/2013/05/13/scottish-ruby-conference-talk-your-framework-will-fail-you/">Scottish Ruby Conference Talk - Your Framework Will Fail You</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I was presenting yesterday at the <a title="Scottish Ruby Conference" href="http://2013.scottishrubyconference.com/">Scottish Ruby Conference</a>, and given that the talk is relatively high-level as it covers a lot of ground, I thought it would be a good idea to do a series of blog posts to provide some more details and resources (link to the presentation <a title="Prezi - Your framework will fail you" href="http://prezi.com/c3d2qpsxgcdv/your-framework-will-fail-you/">here</a>.)</p>
+<p>The title of my talk was "Your framework will fail you". I had the idea for it when reading about some of the security bugs in Rails came up earlier in the year and led my to think some more about defence in depth. Anyone in security will know this as one of those things that we think is a good idea but which can be a bit of a hard sell as when someone pays for a security control (e.g. Anti-Virus, Firewall) it can be tricky to say "yep that will fail sometimes so we need to buy some other things as well".</p>
+<p>However if anything has been proven by the increase in public vulnerabilities, exploits and compromises, it is that all security controls fail and you will be well served by having a fall-back control or detective control to notice when the main one has failed.</p>
+<p>The way I structured the presentation was in two halves. The first looks at the important topics of threat modelling (e.g. who's going to attack you) and a bit about why defence in depth is important. After that it looks at various layers of a solution and talk about controls for a low-risk/budget scenario and a high-risk/budget one. The focus on the low risk option was to look at controls which can be put in easily/cheaply. They may not be super-effective all the time, but they have their uses. On the high-risk end I looked at things which can provide more protection but will take more resource to manage, alternative in some cases it's the same control as the low-risk version but with more time dedicated to managing it (e.g. a lot of the detective controls are only really good if well managed).</p>
+<p>The blog posts will be coming out every other day or so looking at the solution layers and hopefully I'll get to the end of the series without interruption :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     6th,
     
     2013
@@ -455,53 +485,6 @@
 <p>Specifically I looked at IE2 (NT 4), IE5 Windows 2000) and Netscape Communicator 4.76</p>
 <p>As might have been expected - IE2 didn't really work at all.  <a href="http://www.bbc.co.uk">www.bbc.co.uk</a> seemed to start loading up JavaScript and then did nothing as did <a href="http://www.google.com">www.google.com</a>.  <a href="http://www.wikipedia.org">www.wikipedia.org</a> and <a href="http://www.scotsts.com">www.scotsts.com</a> generated JavaScript errors but then showed a minimalist version of the page - as did <a href="http://www.microsoft.com">www.microsoft.com</a>.  The only site that actually worked properly was our old friend <a href="http://www.armory.com">www.armory.com</a> which says it is best viewed in 'any browser' and does what it says on the tin.  Netscape was about the same although it did make an attempt at Google's site.   Microsoft's site just crashed the browser.</p>
 <p>IE5 was a bit of a better story.  All the sites I originally tried actually loaded up.   I turned JavaScript error reporting off and all the pages I originally tried either work or sort of work.  By which I mean that a lot of them will load and are usable but don't look that nice.  www.facebook .com and <a href="http://www.twitter.com">www.twitter.com</a> will not load at all - but outside that I couldn't find anything that completely didn't work and <a href="http://www.google.com">www.google.com</a> scored some points by working natively with no problems at all and looking completely normal.  It actually was not quite as bad a browser as I thought it was going to be considering it is twelve years old and it is probably just about usable.  The security on it is going to be awful though.</p>
-<p>&nbsp;</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    20th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/01/20/windows-boot-times/">O/S Boot Times</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>We got a new Lenovo T430U yesterday and with its new SSD we discovered it boots from the BIOS to Windows 8 in three seconds.</p>
-<p>I remember corporate machines back in the 90s taking 20 minutes to boot - so I got to thinking - is the improvement the modern hardware or the modern OS - or a combination of the two.</p>
-<p>So in the interests of scientific enquiry I gave it a go and got the following results - all using VMware workstation on a Intel Core -5 CPU with 16G RAM.  I deliberately did not use VMware tools for any of them because they are not available for the older operating systems and do tend to speed things up.  I also compared this with Windows RT on my little Surface with its ARM processor and 2GB RAM, and also with the iPad, the Xbox and two different phones.</p>
-<p>&nbsp;</p>
-<p>Windows 7 Professional - 20 seconds</p>
-<p>Windows NT 4 Workstation - 18 seconds</p>
-<p>Windows Server 2000 - 22 seconds</p>
-<p>Windows 8 Enterprise - 6 seconds for a full restart or 4 seconds from the 'shutdown' state which is really a sort of suspend to disk.</p>
-<p>Ubuntu Linux was very slightly longer than Windows 8 at about 7 seconds - also way faster than it used to be.</p>
-<p>Mac Book Air 13" 2012 - 9 seconds - not bad either.</p>
-<p>&nbsp;</p>
-<p>I then had a look at our other leisure type devices which are largely ARM based and noted that on the whole they were a lot slower than the Intel based stuff - though of course they don't tend to be stuff you shut down that often in the normal run of things.</p>
-<p>Surface RT - 23 seconds</p>
-<p>IPad 3 - 31 seconds</p>
-<p>Nexus 7 - 46 seconds</p>
-<p>HTC 8X (Windows Phone 8) - 37 seconds</p>
-<p>iPhone 4S (iOS 6) - 29 seconds</p>
-<p>Xbox 360 (IBM Xenon Power PC processor) - 41 seconds</p>
-<p>Trouble with these devices it that it is impossible to known how much of it is the OS and how much the hardware.  For example on my 8X the Windows Phone boot screen only showed for one second - the rest was all the HTC logo.  I don't have my old Nokia 800 WP7 to hand - but I seem to remember that booted way quicker.</p>
-<p>There has obviously been a huge improvement between Windows 7 and 8 and between old and new versions of Linux, but also modern hardware boots old operating systems greatly faster than you would imagine.</p>
-<p>&nbsp;</p>
 <p>&nbsp;</p>
 
     
