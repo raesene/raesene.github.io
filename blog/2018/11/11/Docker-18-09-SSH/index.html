@@ -169,10 +169,12 @@
 
 <p>One of the places this is most useful is with WSL.  To take the basic case, say you’ve got a Linux VM on your host and you’d like to use WSL for Docker development and administration.  First up you’ll need to install the Docker client in WSL.  Fortunately another change that came along with 18.09 makes this easier for you.  There’s a new Client only deb file so you can just install that, rather than installing the server-side engine components.</p>
 
+<p>First step is to follow the <a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">Docker-CE installation instructions</a> down to the point of installing Docker, then instead of the usual <code class="highlighter-rouge">sudo apt install -y docker-ce</code> do</p>
+
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo apt install -y docker-ce-cli
 </code></pre></div></div>
 
-<p>should do the job.  Now we need to tell our client where to connect.  For this we just need to modify the <code class="highlighter-rouge">DOCKER_HOST</code> environment variable.</p>
+<p>Now we need to tell our client where to connect.  For this we just need to modify the <code class="highlighter-rouge">DOCKER_HOST</code> environment variable.</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DOCKER_HOST=ssh://YOUR_HOSTNAME_OR_IP_HERE
 </code></pre></div></div>
@@ -182,8 +184,12 @@
 <p>A couple of tips to make things smoother :-</p>
 
 <ul>
-  <li>This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.</li>
-  <li>If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.</li>
+  <li>
+    <p>This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.  You can also configure <code class="highlighter-rouge">.ssh/config</code> to specify what username to use, so as to avoid having to type it in every time.</p>
+  </li>
+  <li>
+    <p>If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.</p>
+  </li>
 </ul>
 
 	  </div>

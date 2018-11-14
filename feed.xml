@@ -14,10 +14,12 @@
 
 &lt;p&gt;One of the places this is most useful is with WSL.  To take the basic case, say you’ve got a Linux VM on your host and you’d like to use WSL for Docker development and administration.  First up you’ll need to install the Docker client in WSL.  Fortunately another change that came along with 18.09 makes this easier for you.  There’s a new Client only deb file so you can just install that, rather than installing the server-side engine components.&lt;/p&gt;
 
+&lt;p&gt;First step is to follow the &lt;a href=&quot;https://docs.docker.com/install/linux/docker-ce/ubuntu/&quot;&gt;Docker-CE installation instructions&lt;/a&gt; down to the point of installing Docker, then instead of the usual &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo apt install -y docker-ce&lt;/code&gt; do&lt;/p&gt;
+
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo apt install -y docker-ce-cli
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;should do the job.  Now we need to tell our client where to connect.  For this we just need to modify the &lt;code class=&quot;highlighter-rouge&quot;&gt;DOCKER_HOST&lt;/code&gt; environment variable.&lt;/p&gt;
+&lt;p&gt;Now we need to tell our client where to connect.  For this we just need to modify the &lt;code class=&quot;highlighter-rouge&quot;&gt;DOCKER_HOST&lt;/code&gt; environment variable.&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DOCKER_HOST=ssh://YOUR_HOSTNAME_OR_IP_HERE
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -27,8 +29,12 @@
 &lt;p&gt;A couple of tips to make things smoother :-&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.&lt;/li&gt;
-  &lt;li&gt;If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.&lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.  You can also configure &lt;code class=&quot;highlighter-rouge&quot;&gt;.ssh/config&lt;/code&gt; to specify what username to use, so as to avoid having to type it in every time.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.&lt;/p&gt;
+  &lt;/li&gt;
 &lt;/ul&gt;
 </description>
 				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
