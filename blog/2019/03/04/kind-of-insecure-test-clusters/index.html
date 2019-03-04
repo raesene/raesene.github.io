@@ -204,9 +204,7 @@ nodes:
 
 <p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="highlighter-rouge">docker0</code> interface.</p>
 
-<p>So you can get the IP address of that interface with something like</p>
-
-<p><code class="highlighter-rouge">docker inspect -f '\{\{range .NetworkSettings.Networks\}\}\{\{.IPAddress\}\}\{\{end\}\}' insecure-control-plane</code></p>
+<p>So you can get the IP address of that interface from <code class="highlighter-rouge">docker inspect insecure-control-plane</code></p>
 
 <p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="highlighter-rouge">172.17.0.3</code>)</p>
 
