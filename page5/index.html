@@ -158,6 +158,48 @@
 
   <span class="post-date">
     
+    November
+    2nd,
+    
+    2014
+  </span>
+
+  <h2>
+    <a href="/blog/2014/11/02/changing-times-end-of-sms-auth/">Changing Times - End of SMS Auth?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So like most things in security, decisions are made based on a set of assumptions, and it’s when these assumptions prove to be faulty that security can go quite badly wrong.</p>
+
+<p>I was thinking about a fairly common assumption recently in light of Apple’s new <a href="http://support.apple.com/en-us/HT6337">continuity</a> feature.  Over the last couple of years as the weaknesses in password based authentication models become ever more apparent, there’s obviously been a drive to improve authentication, and one method of doing this is through the use of different channels to send authentication tokens “out of band”.</p>
+
+<p>One of the more common methods of doing this is to send authentication tokens over SMS messages.  The theory is that this is a separate channel from the PC or tablet that is the primary device being used, so it should be harder for an attacker to compromise both channels, thereby improving security.</p>
+
+<p>For example if we have an attacker who has access to a users PC (for example having placed malware on it which steals passwords and other data entered there), the idea goes, by adding in SMS, we make it harder for the attacker to compromise the whole authentication mechanism.</p>
+
+<p>You can probably see, based on the starting paragraph, where this assumption is starting to fall down… With features like Continuity or, SMS to email applications or phone carriers who provide websites which allow for viewing and sending SMS messages, the barrier between these two channels is effectively pierced and SMS becomes much less useful as a second factor for authentication.</p>
+
+<p>Now if an attacker can compromise the PC, it’s quite likely that they’ll get access to the users SMS messages at the same time, with all that entails.</p>
+
+<p>Hopefully this line of thinking will penetrate with service operators and they’ll realise that if 2-factor/channel authentication is needed for their service, they’ll need to offer something more robustly separate.</p>
+
+<p>The other thing I thought this was an interesting illustration of, is that this to me is a good example of differing incentives in the security world.  Online service provides have the incentive for SMS messaging to be a good 2nd channel for authentication data as it’s something that almost all their subscribers already have access to, and it’s very cheap to use.</p>
+
+<p>On the other hand, mobile operators and mobile ecosystem providers have no such incentive.  Instead they’re working to make it easier for users to access all their information in a single place….</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     June
     8th,
     
@@ -422,43 +464,6 @@
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    18th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/05/18/your-framework-will-fail-you-part-2-network-controls/">Your Framework Will Fail You - Part 2 - Network Controls</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This post is part of a series based on a presentation I did for the Scottish Ruby Conference in May 2013 (part 1 <a title="Scottish Ruby Conference Talk – Your Framework Will Fail You" href="http://blog.scotsts.com/?p=630">here</a>) which was around defense in depth and some of the controls companies should be looking at to help protect them when something goes wrong.</p>
-<p>The first segment to cover is Firewalling. Network firewalls get quite a bit of flack in the security world, mainly because people tend to rely too heavily on them for protection without really understanding where they are and are not useful.</p>
-<p>The "low-risk" setup option that I covered is around the use of egress filtering on firewalls.</p>
-<p>One of the main limitations that I see on practical firewall deployments is that they don't take a "default deny" position for all interfaces. In the typical Internet facing firewall setup almost every one will have a default deny rule from the untrusted network (e.g. the Internet), to the more trusted network (e.g. An internal network) but in many cases the other direction (from internal to Internet) will have a default allow rule set-up.</p>
-<p>Setting a default deny on connections from trusted--&gt;untrusted networks can be a really useful control in making an attackers life more difficult for them and hindering their post exploitation activities. So in an e-commerce environment it might be possible to have rules on the firewall that restrict all servers from initiating any connections to the Internet except for a couple of hosts for package updates. This means that someone who has access to the server and who trys to connect to any other system on the Internet will get blocked.</p>
-<p>If you consider an attack on a web application, once the attacker has compromised a server (e.g. via SQL Injection or command injection) one of the first things they might try to do is make a connection back to a system under their control to download more tools and also to make a shell connection to the compromised system. So with egress filtering this could be considerably trickier to pull off.</p>
-<p>One thing if you do intend to do this is, I would recommend putting it in place when you're designing the network. Retro-fitting more restrictive firewall rules can be quite difficult as things like periodic connections that only happen once a month might not be noticed, leading to unexpected failures after the firewall rules have been put in place.</p>
-<p>The "high risk" setup option looking at the area of network segregation. One of the setups I've seen quite commonly is that only one firewall is used, with all Internet facing systems in a single DMZ and then potentially all back-end systems on either the Internal network or perhaps in another single DMZ network. It's a setup I call the "warm smarty" approach to security crunchy on the outside but soft and gooey once you get past the shell.</p>
-<p>The problem with this approach is that once an attacker has compromised a single server it's much easier for them to attack other systems in the environment and expand their access. The reality is that most internal networks are pretty easy for a dedicated attacker to compromise as there's always some system that doesn't get patched somewhere, so once they're in, it's pretty much game over.</p>
-<p>Addressing this isn't cheap or easy but effective network segmentation can make attackers lives much more difficult.</p>
-<p>There are a variety of approaches that can be used for network segmentation. One is to segment individual Internet facing applications so that they are in their own DMZ, this can reduce the risk of onwards compromise, although it does depend on the firewall ruleset being suitably restrictive.</p>
-<p>This approach obviously will increase management costs, for example requiring more management servers and potentially less automation of maintenance, so there is a trade-off between the desired level of security and the cost involved, but it's something that should be considered rather than just going for the default one firewall approach.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -489,7 +494,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2018 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

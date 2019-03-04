@@ -159,6 +159,39 @@
   <span class="post-date">
     
     December
+    22nd,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="/blog/2008/12/22/penetration_tes/">Penetration Test Scoping</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Got a reminder I've not blogged in a while, so here's the next part of what I was going to talk about..<br />
+So, following on from my <a href="http://www.mccune.org.uk/blog/000508.html">first post</a> in this series I thought I'd go on to talk about penetration test scoping.<br />
+Getting the scope right is one of the most important parts of a successful pen. test.  If you get the wrong scope it won't matter how brilliantly the test is executed or how great the report looks, because you won't have fulfilled the customers requirements.<br />
+Unfortunately in a lot of cases the customer doesn't actually know what they want, they may have heard that they need "one of those security test things", they may have auditors telling them they have to have one, or if you're lucky they may have an idea of what they're looking to achieve.<br />
+The best pen. tests have specific goals in mind, which allow specific tests to be scoped.  Most commonly a good scope will focus on the question "what's changed", along with a view of the level of security desirable for an application.<br />
+So a high risk new application on a new platform is likely to warrant a fairly heavy review (web application, possibly code review, likely config. security review of the operating system and other new components like firewalls or routers), whereas some new pages added to an existing application where it's purely static content, might not warrant a review at all (or a very quick sense check).<br />
+Ultimately there's going to be a trade-off between time spent and the level of assurance over security that's needed.  A full code-review/manual build review/architecture review of a new application is likely to provide the best level of assurance, but at a pretty high cost.  A "black box" vulnerability scan and web application test, will likely be quick and therefore cheaper, but will provide a lower level of assurance.<br />
+next time (hopefully sooner) I'll talk about some of the challenges in executing tests and touch on some of the gotchas that can cause problems</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
     14th,
     
     2008
@@ -472,34 +505,6 @@ So controls which are likely to be effective in this space could be :-</p>
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    30th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/04/30/the_dangers_of/">The dangers of jumping to conclusions</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've been reading quite a few posts about Microsofts COFEE toolkit which seems to be designed to help forensics investigators get evidence from (presumably windows based) PCs.<br />
-It's amazing to see how many sources on the Internet took the original article <a href="http://seattletimes.nwsource.com/html/microsoft/2004379751_msftlaw29.html">here</a> from the Seattle times and came to the conclusion that this was some magical box of tricks that would instantly bypass windows security, as opposed to just being a useful collection of forensics tools, examples of this response are <a href="http://gizmodo.com/385476/microsoft-cofee-wont-perk-you-up-but-it-will-instamagically-hack-your-computer">here</a>, <a href="http://artofinfosec.com/56/hackers-holy-grail-redefined-by-microsoft/">here</a>, <a href="http://reddit.com/info/6hj9y/comments/">here</a> and <a href="http://tech.slashdot.org/article.pl?sid=08/04/29/1441215"> here</a><br />
-Luckily someone at the Seattle Times did some follow-up with Microsoft to confirm that it's actually just a collection of forensics tools and doesn't bypass windows security <a href="http://blog.seattletimes.nwsource.com/techtracks/2008/04/looking_for_answers_on_microsofts_cofee_device.html"> here </a></p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -530,7 +535,7 @@ Luckily someone at the Seattle Times did some follow-up with Microsoft to confir
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2018 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

@@ -7,6 +7,64 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kind of Insecure Test Clusters</title>
+				<description>&lt;p&gt;One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).&lt;/p&gt;
+
+&lt;p&gt;For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.&lt;/p&gt;
+
+&lt;p&gt;So when I heard about &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; on an episode of Heptio’s &lt;a href=&quot;https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ&quot;&gt;TGIK&lt;/a&gt; I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.&lt;/p&gt;
+
+&lt;p&gt;Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.&lt;/p&gt;
+
+&lt;p&gt;What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.&lt;/p&gt;
+
+&lt;p&gt;Kind supports a &lt;code class=&quot;highlighter-rouge&quot;&gt;--config&lt;/code&gt; option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to &lt;a href=&quot;https://twitter.com/BenTheElder&quot;&gt;@BenTheElder&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/mauilion&quot;&gt;@mauillon&lt;/a&gt; for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.&lt;/p&gt;
+
+&lt;p&gt;The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.&lt;/p&gt;
+
+&lt;p&gt;To provide a concrete example, the config below will create a cluster with the insecure port running on the API server&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: Config
+apiVersion: kind.sigs.k8s.io/v1alpha2
+nodes:
+# the control plane node config
+- role: control-plane
+  # patch the generated kubeadm config with some extra settings
+  kubeadmConfigPatches:
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta1
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    apiServer:
+      extraArgs:
+        # Here the values must be in quotes, unlike the Kubeadm API examples
+        insecure-bind-address: &quot;0.0.0.0&quot;
+        insecure-port: &quot;8080&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve got kind installed and this is present as a YAML file you can just run&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kind --config insecure-port.yaml --name insecure create cluster&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker0&lt;/code&gt; interface.&lt;/p&gt;
+
+&lt;p&gt;So you can get the IP address of that interface with something like&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect -f '' insecure-control-plane&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is &lt;code class=&quot;highlighter-rouge&quot;&gt;172.17.0.3&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;curl http://172.17.0.3:8080/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github &lt;a href=&quot;https://github.com/raesene/kind-of-insecure&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+</description>
+				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
+				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
+				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
+			</item>
+		
+			<item>
 				<title>Docker 18.09 - Making WSL that much easier</title>
 				<description>&lt;p&gt;After a little delay Docker 18.09 got it’s final release this week.  This is a release I’ve been looking forward to for a while now, as it’s got a couple of cool new features, which should help in day-to-day usage of Docker.&lt;/p&gt;
 
@@ -440,75 +498,6 @@ subjects:
 				<pubDate>Wed, 23 May 2018 20:45:39 +0100</pubDate>
 				<link>/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</link>
 				<guid isPermaLink="true">/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</guid>
-			</item>
-		
-			<item>
-				<title>WSL and Docker for Windows</title>
-				<description>&lt;p&gt;There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;First up&lt;/strong&gt; - Install &lt;a href=&quot;https://docs.microsoft.com/en-us/windows/wsl/install-win10&quot;&gt;WSL&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Second up&lt;/strong&gt; - Install Docker for Windows from &lt;a href=&quot;https://store.docker.com/editions/community/docker-ce-desktop-windows&quot;&gt;here&lt;/a&gt;.  Stable channel should have all the features you need now, but if you want new stuff quicker, it could be worth using the edge channel.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Important 2.5 step&lt;/strong&gt; - Once you’ve installed Docker for windows, you will need to change to “windows containers”, by right-clicking the tray icon and choosing “switch to windows containers”.  I tried this process without that set, and it didn’t seem to work.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Third up&lt;/strong&gt; - Install the docker client binary inside WSL.  Don’t use the ubuntu/debian package Docker it’s not the right one at all.  Also I’d avoid the docker.io package as it’s very outdated.  Instead get a binary from the Docker site &lt;a href=&quot;https://download.docker.com/linux/static/stable/x86_64/&quot;&gt;here&lt;/a&gt;, then extract the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker&lt;/code&gt; binary and copy to &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/local/bin&lt;/code&gt; (or anywhere else on the path that you’d like to keep it)&lt;/p&gt;
-
-&lt;h2 id=&quot;the-insecure-way&quot;&gt;The insecure way&lt;/h2&gt;
-
-&lt;p&gt;At this point you can do this the insecure way and enable Docker to listen on a TCP port without SSL. There’s an option in Docker for Windows to allow it to listen purely on localhost, however I wouldn’t recommend this as any SSRF style attack on your laptop could result in bad times, as there is no authentication on Docker in this setup, so anyone who can hit the port can do bad things to your system.&lt;/p&gt;
-
-&lt;h2 id=&quot;the-not-horribly-insecure-way&quot;&gt;The not horribly insecure way.&lt;/h2&gt;
-
-&lt;p&gt;Largely based on &lt;a href=&quot;http://wslcorsair.blogspot.co.uk/2018/02/secure-nested-lcow-part-2.html&quot;&gt;this post&lt;/a&gt; and &lt;a href=&quot;http://wslcorsair.blogspot.co.uk/2018/02/secure-nested-lcow-part-3.html&quot;&gt;this post&lt;/a&gt; from &lt;a href=&quot;https://twitter.com/nunixtech&quot;&gt;Nuno Do Carmo&lt;/a&gt;.  This is a bit more involved, but more secure.  Basically we’re going to configure the Docker daemon to listen on a TCP port but verifying the TLS certificate to provide a level of client authentication.  It’s worth noting that Docker’s authentication mechanism isn’t hugely sophisticated, it’s basically just based on “is this certificate signed by a CA I trust”, so it’s important not to use a CA that’s used for a lot of other things, or you could end up with a rather easy to bypass authentication check!&lt;/p&gt;
-
-&lt;h3 id=&quot;setup-ssltls-on-the-daemon&quot;&gt;Setup SSL/TLS on the daemon&lt;/h3&gt;
-
-&lt;p&gt;The first step is to configure our daemon to listen on TLS.  For that we’ll need some certificates.  So first check that you’ve got openssl installed in WSL, and if not &lt;code class=&quot;highlighter-rouge&quot;&gt;apt install openssl&lt;/code&gt; should fix it.&lt;/p&gt;
-
-&lt;p&gt;Then we’re largely going to follow &lt;a href=&quot;https://docs.docker.com/engine/security/https/#create-a-ca-server-and-client-keys-with-openssl&quot;&gt;this process&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;In WSL, go to /mnt/c/ProgramData/Docker/&lt;/p&gt;
-
-&lt;p&gt;then &lt;code class=&quot;highlighter-rouge&quot;&gt;mkdir certs&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;cd certs&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Then we’ll generate our CA Key with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl genrsa -aes256 -out ca-key.pem 4096&lt;/code&gt;.  Set a decent passphrase that you won’t forget :)&lt;/p&gt;
-
-&lt;p&gt;Then use &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl req -new -x509 -days 3650 -key ca-key.pem -sha256 -out ca.pem&lt;/code&gt; to generate the CA certificate.  Feel free to modify the days value up or down depending on how long you want it to be valid.&lt;/p&gt;
-
-&lt;p&gt;It’ll ask you to fill in some values here, but for the purposes of Docker Authentication these don’t matter too much.&lt;/p&gt;
-
-&lt;p&gt;Next step is &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl genrsa -out server-key.pem 4096&lt;/code&gt; to generate our server key.  We then need a CSR which we can generate with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl req -subj &quot;/CN=127.0.0.1&quot; -sha256 -new -key server-key.pem -out server.csr&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;After that we need to specify some attributes &lt;code class=&quot;highlighter-rouge&quot;&gt;echo subjectAltName = IP:10.10.10.20,IP:127.0.0.1 &amp;gt;&amp;gt; extfile.cnf&lt;/code&gt; is used to specify valid endpoint IPs.  So change 10.10.10.20 to any other interfaces you want the daemon to listen on.  If you only want localhost (which is all we need here), just remove 10.10.10.20 from the list.&lt;/p&gt;
-
-&lt;p&gt;Then set &lt;code class=&quot;highlighter-rouge&quot;&gt;echo extendedKeyUsage = serverAuth &amp;gt;&amp;gt; extfile.cnf&lt;/code&gt; and generate the signed certificate with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;After you’ve done this, you nee to tell the Docker daemon to use your new certificates.  This can be done by editing &lt;code class=&quot;highlighter-rouge&quot;&gt;C:\ProgramData\Docker\config\daemon.json&lt;/code&gt; .  If this file doesn’t exist in that location, you’ve probably not switched to Windows containers, so do that before editing :)&lt;/p&gt;
-
-&lt;p&gt;You’ll need to add the following elements to the JSON there &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;hosts&quot;: [&quot;tcp://127.0.0.1:2376&quot;,&quot;npipe://&quot;],&quot;tlsverify&quot;: true,&quot;tlscacert&quot;: &quot;c:\\ProgramData\\docker\\certs\\ca.pem&quot;, &quot;tlscert&quot;: &quot;c:\\ProgramData\\docker\\certs\\server-cert.pem&quot;, &quot;tlskey&quot;: &quot;c:\\ProgramData\\docker\\certs\\server-key.pem&quot;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;At that point you should be able to re-start the docker daemon using the tray icon for Windows 10 and it’ll be listening on 127.0.0.1:2376&lt;/p&gt;
-
-&lt;h3 id=&quot;setup-ssltls-in-wsl&quot;&gt;Setup SSL/TLS in WSL&lt;/h3&gt;
-
-&lt;p&gt;Now we need to setup the client to authenticate to the server.&lt;/p&gt;
-
-&lt;p&gt;back in &lt;code class=&quot;highlighter-rouge&quot;&gt;/mnt/c/ProgramData/Docker/certs/&lt;/code&gt; create a key with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl genrsa -out key.pem 4096&lt;/code&gt; , then generate a CSR with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl req -subj '/CN=client' -new -key key.pem -out client.csr&lt;/code&gt;, add an extended attributes file with &lt;code class=&quot;highlighter-rouge&quot;&gt;echo extendedKeyUsage = clientAuth &amp;gt;&amp;gt; client-extfile.cnf&lt;/code&gt; and generate the certificate with &lt;code class=&quot;highlighter-rouge&quot;&gt;openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile client-extfile.cnf&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Then create a .docker directory in your home directory and  copy key.pem, ca.pem and cert.pem into that directory.&lt;/p&gt;
-
-&lt;p&gt;Then run &lt;code class=&quot;highlighter-rouge&quot;&gt;export DOCKER_HOST=tcp://127.0.0.1:2376&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;export DOCKER_TLS_VERIFY=1&lt;/code&gt; and you should be able to do &lt;code class=&quot;highlighter-rouge&quot;&gt;docker info&lt;/code&gt; and have it work!&lt;/p&gt;
-
-&lt;p&gt;For persistent add those two environment variables into your WSL profile by modifying .bashrc or similar with those commands.&lt;/p&gt;
-
-&lt;p&gt;After this the only caveat is, that as you’re in Windows containers mode, you need to add &lt;code class=&quot;highlighter-rouge&quot;&gt;--platform linux&lt;/code&gt; to any Docker commands for linux containers that you run.&lt;/p&gt;
-
-&lt;p&gt;Thanks to &lt;a href=&quot;https://twitter.com/nunixtech&quot;&gt;Nuno Do Carmo&lt;/a&gt; this is just a modified version of a setup he described in the blog posts linked above.&lt;/p&gt;
-</description>
-				<pubDate>Thu, 29 Mar 2018 14:45:39 +0100</pubDate>
-				<link>/blog/2018/03/29/WSL-And-Docker/</link>
-				<guid isPermaLink="true">/blog/2018/03/29/WSL-And-Docker/</guid>
 			</item>
 		
 	</channel>
