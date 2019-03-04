@@ -51,7 +51,7 @@ nodes:
 
 &lt;p&gt;So you can get the IP address of that interface with something like&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect -f '' insecure-control-plane&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect -f '\{\{range .NetworkSettings.Networks\}\}\{\{.IPAddress\}\}\{\{end\}\}' insecure-control-plane&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is &lt;code class=&quot;highlighter-rouge&quot;&gt;172.17.0.3&lt;/code&gt;)&lt;/p&gt;
 
