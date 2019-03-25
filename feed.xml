@@ -7,6 +7,76 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Traefiking in Presentations</title>
+				<description>&lt;p&gt;One of the common tasks in a containerized environment, where you could be running multiple applications in containers on a single host, is “what’s the best way to route traffic to my web applications”?&lt;/p&gt;
+
+&lt;p&gt;Whilst you could expose each application on a dedicated port, that’s not a great user experience.  A better idea is to make use of a reverse proxy (a.k.a ingress in Kubernetes-land) to route traffic to the correct container based on a set of rules.&lt;/p&gt;
+
+&lt;p&gt;Recently I noticed that &lt;a href=&quot;https://traefik.io/&quot;&gt;traefik&lt;/a&gt; had a new version on the horizon, so I decided to give it a spin.&lt;/p&gt;
+
+&lt;p&gt;My use case is pretty straightforward.  I’ve got a number of presentations that I’ve given over the last couple of years which are all bundled as Docker images (using &lt;a href=&quot;https://github.com/dploeger/jekyll-revealjs&quot;&gt;jekyll-revealjs&lt;/a&gt;). I like this method of writing presentations, as it lets me create the content in a series of markdown files, which are nice and easy to edit, and then bundle up the resulting presentation as a web application runnning in a Docker image, meaning it can be delivered from any Internet connected host.&lt;/p&gt;
+
+&lt;p&gt;Traefik configuration can be done using a Docker compose file, where labels in the service definition let traefik know how to route specific requests.  My planned layout was just to specify hosts on my domain (pwndland.uk) for each presentation.&lt;/p&gt;
+
+&lt;p&gt;The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using &lt;code class=&quot;highlighter-rouge&quot;&gt;expose&lt;/code&gt; statements, otherwise traefik wouldn’t know how to route traffic.&lt;/p&gt;
+
+&lt;p&gt;One note from a security perspective if you’re making use of Traefik, is that it&lt;/p&gt;
+
+&lt;p&gt;The configuration for my presentations ended up looking as below, and the presentations should be available on these URLS&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;http://ltdh.pwndland.uk/#/&quot;&gt;Le Tour Du Hack Presentation - A security Persons life or, “The art of being Cassandra”&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://kube.pwndland.uk/#/&quot;&gt;44Con March 2019 - Cloudy Clusters Catastrope?&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://container-runtime.pwndland.uk/#/&quot;&gt;Cloud Native Glasgow - Fistful of Container Runtimes&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://docker.pwndland.uk/#/&quot;&gt;BSides London 2016 - Docker - Security Myths, Security Legends&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.0 # The official v2.0 Traefik docker image
+    command: --providers.docker # Enables the web UI and tells Traefik to listen to docker
+    ports:
+      - &quot;80:80&quot;     # The HTTP port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+  ltdh:
+    image: raesene/ltdh_presentation
+    expose:
+      - &quot;4000&quot;
+    labels:
+      - &quot;traefik.http.routers.ltdh.rule=Host(`ltdh.pwndland.uk`)&quot;
+      - &quot;traefik.domain=`pwndland.uk`&quot;
+  kube:
+    image: raesene/kube2019pres
+    expose:
+      - &quot;4000&quot;
+    labels:
+      - &quot;traefik.http.routers.kube.rule=Host(`kube.pwndland.uk`)&quot;
+      - &quot;traefik.domain=`pwndland.uk`&quot;
+  container-runtime:
+    image: raesene/container-runtime-presentation
+    expose:
+      - &quot;4000&quot;
+    labels:
+      - &quot;traefik.http.routers.container-runtime.rule=Host(`container-runtime.pwndland.uk`)&quot;
+      - &quot;traefik.domain=`pwndland.uk`&quot;
+  docker:
+    image: raesene/bsides_presentation
+    expose:
+      - &quot;4000&quot;
+    labels:
+      - &quot;traefik.http.routers.docker.rule=Host(`docker.pwndland.uk`)&quot;
+      - &quot;traefik.domain=`pwndland.uk`&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
+				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
+				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
+			</item>
+		
+			<item>
 				<title>Kind of Insecure Test Clusters</title>
 				<description>&lt;p&gt;One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).&lt;/p&gt;
 
@@ -435,67 +505,6 @@ Server:
 				<pubDate>Thu, 19 Jul 2018 18:45:39 +0100</pubDate>
 				<link>/blog/2018/07/19/exploring-public-kubernetes-certificates/</link>
 				<guid isPermaLink="true">/blog/2018/07/19/exploring-public-kubernetes-certificates/</guid>
-			</item>
-		
-			<item>
-				<title>Auditing Kubernetes Access Control</title>
-				<description>&lt;p&gt;A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.&lt;/p&gt;
-
-&lt;p&gt;However when it comes to completing this kind of review on a Kubernetes cluster, you’ll likely find it not as straight-forward as expected, due to k8s’ rather hands-off approach to identity management.&lt;/p&gt;
-
-&lt;p&gt;Similarly to areas such as Networking and Storage, k8s has taken the decision to delegate the matter of user identity management to largely external systems.  There is no standard user database in a cluster, and where you can find the information to review privileged access will largely depend on the configured authentication mechanisms.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-information-is-available&quot;&gt;What information is available?&lt;/h2&gt;
-
-&lt;p&gt;Assuming that you’re using RBAC (‘cause if you’re not it’s likely the answer to “who has cluster-admin rights?” is “All your authenticated users”) the information available is from a couple of different sources. &lt;code class=&quot;highlighter-rouge&quot;&gt;clusterroles&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;clusterrolebindings&lt;/code&gt; provide information on cluster level privileges and &lt;code class=&quot;highlighter-rouge&quot;&gt;roles&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;rolebindings&lt;/code&gt; serve the same purpose at the namespace level.&lt;/p&gt;
-
-&lt;p&gt;What you can get from the cluster is a list of the subjects that have a given role.  These can be either users, service accounts, or groups.  The main issue, in terms of determining the overall access to the cluster, comes from the inclusion of groups in that list of subjects, as group membership isn’t recorded anywhere within the cluster, it’s defined by the identity provider.&lt;/p&gt;
-
-&lt;p&gt;To make this possbly a little clearer, lets take a worked example.&lt;/p&gt;
-
-&lt;p&gt;The cluster role &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; is obviously pretty key as it has complete rights to the entire Kubernetes cluster.  On a standard kubeadm 1.9 cluster if you run the command&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get clusterrolebinding cluster-admin -o yaml&lt;/code&gt;  the output will look something like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: &quot;true&quot;
-  creationTimestamp: 2018-01-10T21:03:11Z
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-  name: cluster-admin
-  resourceVersion: &quot;94&quot;
-  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings/cluster-admin
-  uid: aa8f62e2-f649-11e7-8092-000c290b2418
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: system:masters
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The key point is the subjects section at the end where we can see that all members of the &lt;code class=&quot;highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group have the &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; role.  The membership of that group isn’t defined anywhere in your cluster.&lt;/p&gt;
-
-&lt;p&gt;It’s worth noting also that whilst tying up the identity of people with rights to your cluster is easier with Users and Service accounts than it is with groups, Kubernetes still relies on external systems to warrant these identities, so just ‘cause the cluster role binding says “User fred has a binding to the cluster-admin role”, it doesn’t actually have any way (within the cluster) of asserting who fred is.&lt;/p&gt;
-
-&lt;h2 id=&quot;so-how-do-i-audit-k8s-user-rights&quot;&gt;So how do I audit k8s user rights?&lt;/h2&gt;
-
-&lt;p&gt;Basically you’ll need to find out what authentication mechanisms are supported by the cluster, and then for each one, determine how group membership is defined and see if you can assemble a list of users that way.&lt;/p&gt;
-
-&lt;p&gt;For example, lets say the cluster is using client certificate authentication (a common option in many clusters).  As per  &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs&quot;&gt;the Kubernetes docs&lt;/a&gt; group memberships are defined in the CSR, so to review membership, you’ll need to grep. through all the CSRs (assuming there is a record of them) and pull out the group memberships that way.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Nothing in this post will come as any surprise to people who’ve been following Kubernetes security for a while now.  However as it grows in popularity and more large companies start rolling it out, issues like understanding who has rights to what will start becoming more important.&lt;/p&gt;
-</description>
-				<pubDate>Wed, 23 May 2018 20:45:39 +0100</pubDate>
-				<link>/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</link>
-				<guid isPermaLink="true">/blog/2018/05/23/Auditing-Kubernetes-Access-Control/</guid>
 			</item>
 		
 	</channel>

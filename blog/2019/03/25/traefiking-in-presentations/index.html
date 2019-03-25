@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Set-up a Complete Security Test Environment with One Command and Docker Compose</title>
+	<title>Traefiking in Presentations</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Set-up a Complete Security Test Environment with One Command and Docker Compose </h1>
+  <h1>Traefiking in Presentations </h1>
 </div>
 	
 <article>
@@ -157,53 +157,74 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   August 
-	   15th,
+	   March 
+	   25th,
 	   
-	   2015
+	   2019
 	 </span>
 	  <div class="article_body">
-	  <p>Following on from my last post on <a href="http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/">Using Docker for Security Testing</a>, I thought it would be interesting to see if we can set-up an even more automated environment by using <a href="https://www.docker.com/docker-compose">Docker Compose</a>.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.</p>
+	  <p>One of the common tasks in a containerized environment, where you could be running multiple applications in containers on a single host, is “what’s the best way to route traffic to my web applications”?</p>
 
-<p>For the use case of Security Testing I was thinking it would be nice to have containers which provide a service that you connect to over a network port, for example <a href="http://dradisframework.org/">Dradis</a> or <a href="http://www.openvas.org/">OpenVAS</a>, alongside your main command line driven container which has tools that you’re more likely to use interactively on a test, for example <a href="https://nmap.org/">Nmap</a> or <a href="https://github.com/rapid7/metasploit-framework">Metasploit</a>.</p>
+<p>Whilst you could expose each application on a dedicated port, that’s not a great user experience.  A better idea is to make use of a reverse proxy (a.k.a ingress in Kubernetes-land) to route traffic to the correct container based on a set of rules.</p>
 
-<p>It turns out this is relatively straightforward using Docker Compose.  You can set-up a yml file with information on the containers you want to instantiate (the default name is docker-compose.yml) and then just spin that up with a single command.</p>
+<p>Recently I noticed that <a href="https://traefik.io/">traefik</a> had a new version on the horizon, so I decided to give it a spin.</p>
 
-<p>So for this setup the Docker Compose file looks like this</p>
+<p>My use case is pretty straightforward.  I’ve got a number of presentations that I’ve given over the last couple of years which are all bundled as Docker images (using <a href="https://github.com/dploeger/jekyll-revealjs">jekyll-revealjs</a>). I like this method of writing presentations, as it lets me create the content in a series of markdown files, which are nice and easy to edit, and then bundle up the resulting presentation as a web application runnning in a Docker image, meaning it can be delivered from any Internet connected host.</p>
 
-<figure class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="na">sectest</span><span class="pi">:</span>
-  <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/sectest</span>
-  <span class="na">command</span><span class="pi">:</span> <span class="s">/bin/bash</span>
-  <span class="na">links</span><span class="pi">:</span>
-     <span class="pi">-</span> <span class="s">dradis</span>
-     <span class="pi">-</span> <span class="s">openvas</span>
-<span class="na">dradis</span><span class="pi">:</span> 
-  <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/auto-docker-dradis</span>
-  <span class="na">ports</span><span class="pi">:</span> 
-      <span class="pi">-</span> <span class="s2">"</span><span class="s">3000:3000"</span>
-  <span class="na">command</span><span class="pi">:</span> <span class="s">bundle exec rails server</span>
-<span class="na">openvas</span><span class="pi">:</span>
-  <span class="na">image</span><span class="pi">:</span> <span class="s">mikesplain/openvas</span>
-  <span class="na">ports</span><span class="pi">:</span>
-      <span class="pi">-</span> <span class="s2">"</span><span class="s">443:443"</span>
-      <span class="pi">-</span> <span class="s2">"</span><span class="s">9390:9390"</span>
-      <span class="pi">-</span> <span class="s2">"</span><span class="s">9391:9391"</span></code></pre></figure>
+<p>Traefik configuration can be done using a Docker compose file, where labels in the service definition let traefik know how to route specific requests.  My planned layout was just to specify hosts on my domain (pwndland.uk) for each presentation.</p>
 
-<p>This file defines three containers that we’re going to use.  The first one is an instance of a basic Security Testing container that I created <a href="https://github.com/raesene/sectest">here</a>.  There’s nothing too major in there it just sets up some tools that I commonly use on reviews.  In that first stanza we specify that the dradis and openvas containers are linked to that one, which is relevant when we start things up.</p>
+<p>The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using <code class="highlighter-rouge">expose</code> statements, otherwise traefik wouldn’t know how to route traffic.</p>
 
-<p>In the next section we start up the dradis container and here it’s worth noting two points.  The first is the “ports” command.  This sets up port mappings so that the service will be visible on the docker host, which is where we’ll be connecting to it from.  The second thing to note is the “command” directive which just specifies what should be run when the container comes up.</p>
+<p>One note from a security perspective if you’re making use of Traefik, is that it</p>
 
-<p>In the third section we specify the openvas container and set-up some port mappings to expose the relevant ports to the host.</p>
+<p>The configuration for my presentations ended up looking as below, and the presentations should be available on these URLS</p>
 
-<p>Now we’ve got this file created we just need to start things up.  The command I’ve used for this is</p>
+<ul>
+  <li><a href="http://ltdh.pwndland.uk/#/">Le Tour Du Hack Presentation - A security Persons life or, “The art of being Cassandra”</a></li>
+  <li><a href="http://kube.pwndland.uk/#/">44Con March 2019 - Cloudy Clusters Catastrope?</a></li>
+  <li><a href="http://container-runtime.pwndland.uk/#/">Cloud Native Glasgow - Fistful of Container Runtimes</a></li>
+  <li><a href="http://docker.pwndland.uk/#/">BSides London 2016 - Docker - Security Myths, Security Legends</a></li>
+</ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker-compose run --service-ports sectest /bin/bash
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.0 # The official v2.0 Traefik docker image
+    command: --providers.docker # Enables the web UI and tells Traefik to listen to docker
+    ports:
+      - "80:80"     # The HTTP port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+  ltdh:
+    image: raesene/ltdh_presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.ltdh.rule=Host(`ltdh.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  kube:
+    image: raesene/kube2019pres
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.kube.rule=Host(`kube.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  container-runtime:
+    image: raesene/container-runtime-presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.container-runtime.rule=Host(`container-runtime.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  docker:
+    image: raesene/bsides_presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.docker.rule=Host(`docker.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
 </code></pre></div></div>
-
-<p>What this does is start-up the sectest container and any linked containers (which is why it was important to add those links in the docker-compose.yml file), also the –service-ports option is specified so that the ports will be exposed, and lastly we specify the commmand to run, in this case /bin/bash.</p>
-
-<p>If all goes well this should download and start-up all three containers and you should have a command prompt in the sectest container, along with started accessible services for the other two containers.</p>
-
 
 	  </div>
 
@@ -229,7 +250,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Set-up a Complete Security Test Environment with One Command and Docker Compose&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Traefiking in Presentations&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -257,10 +278,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2015/07/23/using-docker-for-security-testing/" title="Using Docker for Security Testing">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2019/03/04/kind-of-insecure-test-clusters/" title="Kind of Insecure Test Clusters">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2016/01/31/is-this-thing-on/" title="Is This Thing on ">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

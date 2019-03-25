@@ -159,6 +159,41 @@
   <span class="post-date">
     
     May
+    23rd,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="/blog/2013/05/23/windows-azure-backup/">Windows Azure Backup</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I just configured the preview version of Windows Azure Backup.  It is very nice looking and easy to use once you get it up and running - but the instructions to install it are difficult to find and a bit patchy.</p>
+<p>First you have to create a certificate for your vault.  You use a utility called makecert.exe which is part of the Windows SDK (the link in the documentation to TechNet doesn't work - so you can get it here.</p>
+<p><a href="http://msdn.microsoft.com/en-US/windows/desktop/aa904949">http://msdn.microsoft.com/en-US/windows/desktop/aa904949</a></p>
+<p>For reasons that are not clear to me the utility doesn't seem to be available as a standalone - but downloading just the tools part of the SDK contains it.</p>
+<p>Then the documentation that actually works is here (there are several wrong versions in different places dotted across their sites).</p>
+<p><a href="http://msdn.microsoft.com/en-us/library/windowsazure/dn169036.aspx">http://msdn.microsoft.com/en-us/library/windowsazure/dn169036.aspx</a></p>
+<p>The key thing is to follow the instructions exactly - you need <strong>both </strong>the .cer file and the .pfx file (the public and private keys).</p>
+<p>Once you have followed all the instructions and configured your vault you can go ahead with the local software install.  If you have had the Beta version of the agent installed, you need to uninstall it and then install the new one.  Once the software is installed and the agent started, you can then register your server - this took a few minutes to do on my machine - so be patient with it.</p>
+<p>Once all this is done - configuring your backup and restores is a snip.  I hope that when it comes out of preview the documentation is improved a bit.</p>
+<p>&nbsp;</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     18th,
     
     2013
@@ -461,38 +496,6 @@
 <p>Anyway – I think both Surfaces are really great.  If I were asked which one you should get then ideally I would say ‘both’.  Here is a picture of mine sitting next to each.</p>
 <p><a href="http://scotsts.files.wordpress.com/2013/03/wp_20130309_003.jpg"><img class="alignnone size-medium wp-image-601" alt="WP_20130309_003" src="http://scotsts.files.wordpress.com/2013/03/wp_20130309_003.jpg" width="320" height="168" /></a></p>
 <p>&nbsp;</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    10th,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="/blog/2013/02/10/request-validation-in-asp-net/">Request Validation in ASP.NET</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>We test a lot of ASP.NET web applications.  On about 40% of them, we notice when testing for cross-site scripting that the only thing protecting against it is the framework's own Request Validation.  In other words, when you enter a basic XSS vector - you get a Yellow Screen warning that your input has been blocked as potentially dangerous.</p>
-<p>This is all very well in its way - but for years we have been putting in our reports that relying on it is bad practice because it is a pretty crude control mechanism.  Firstly, it is pretty ugly and makes you think right from the start that the developer hasn't put much TLC into his product, and secondly and more importantly, Microsoft themselves do not recommend it as a substitute for a proper input validation method created within the application itself, as there is no way that the designers of the framework can predict what type of content an individual application will need to accept in a given field.</p>
-<p>So now there are XSS vectors that get round this - for example</p>
-<p>http://www.vulnerablesite.com/login.aspx?param=&lt;%tag style="xss:expression(alert(123))" &gt;</p>
-<p>MS have said that they are not going to fix it - which seems justifiable as they never recommended its use in the first place.</p>
-<p>I can't help wondering if all the sites we have seen that have used this have been back over their code and done their input validation properly this time.  Sadly I suspect that the answer to this is likely to be no in a large number of cases.</p>
-<p>This is a shame, because a lot of the problems are simply caused by developers accepting characters into fields where they simply don't have to.  For example - we see a lot of telephone number fields that only need to accept numerics that take '&lt;&gt;' and other dangerous characters.   And for the rest, simply encoding all user supplied content is not hard and protects against the vast majority of issues.</p>
 
     
     
