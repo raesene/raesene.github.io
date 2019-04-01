@@ -159,6 +159,35 @@
   <span class="post-date">
     
     July
+    26th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/07/26/preparing_for_d/">Preparing for Defcon</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I'm off to <a href="http://www.defcon.org/html/defcon-17/dc-17-index.html"> Defcon </a>and <a href="http://www.securitybsides.com/BSidesLasVegas">security BSides</a> next week, and I thought a couple of precautions were in order before I go...<br />
+1. Tunnel all traffic through SSH to a trusted host, instructions <a href="http://wiki.freaks-unidos.net/weblogs/azul/firefox-ssh-tunnel">here</a><br />
+2. Set iptables up to explicitly deny any traffic not travelling through the tunnel<br />
+3. Turn off any vaguely network related features on my iPhone!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
     15th,
     
     2009
@@ -527,44 +556,6 @@ One major example of this it Rails default protection mechanism from XSS which i
 There's a couple of potential ways for improving this situation with plugins.<br />
 The <a href="http://rubyforge.org/projects/safe-erb/">Safe ERB</a> plugin is designed to help developers by raising an exception when information pulled from an ActiveRecord model is displayed in a view without h() being used.<br />
 The other way to approach the problem of XSS is to validate input when it's passed to the application.  There are a number of Rails plugins which take this approach including  <a href="http://code.google.com/p/sanitizeparams/">Sanitize Params</a> and <a href="http://code.google.com/p/xssterminate/">XSS Terminate</a></p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    25th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/03/25/thoughts_on_sec/">Thoughts on Secure Data Handling in web applications...</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I had an interesting conversation/debate over on <a href="http://www.reddit.com/r/programming/comments/86kgp/xss_cross_site_scripting_prevention_cheat_sheet/c08g0ol?context=3">reddit</a> today on the topic of input handling and I thought it was worth posting up.<br />
-Essentially there are two approaches handling data in an web applications.<br />
-1. Carry out input validation as the data enters your application.  This can either be white-list (only allow "known good" data types), or black-list (try to block "known-bad" data types)<br />
-2.  Carry out output normalization on the data as it leaves your application.  Here you look to understand the special or "meta" characters for the type of system or data format that you are outputting to and ensure that the data is encoded or rendered in such a way that it can't have a negative effect on that output system.<br />
-So which of these approaches is better?  Well my view on that after my discussion is that they both have pros and cons, which need to be considered before making a choice.<br />
-<u><strong><big>Input Validation</big></strong></u></p>
-<p><b>Pros:</b> The advantage of white list input validation is that, in a lot of cases, you can relatively easily cut down the number of attacks that will be effective against an application with minimal effort.  For example if you're not taking in mark-up (eg, HTML) in any part of your application then stripping or blocking the &lt; and &gt; characters from your input will drastically reduce your exposure to Cross Site Scripting.  This is the approach that .NET request validation takes.</p>
-<p><b>Cons:</b>The problem with input validation is, it can never take account of all possibilities.  It's impossible to know when you take input into the application, how that data will be used and exactly where it will be processed in future, so there's always a risk that it will miss some class of character which turns out to be important to a given format</p>
-<p><u><strong><big>Output Normalization</big></strong></u></p>
-<p><b>Pros: </b>So essentially the opposite applies.  The advantage of output normalization is that it can take into consideration the exact nature of the system that the data is being passed to and can ensure that the data it's passing will not have a negative effect.  This kind of approach can be seen in HTML encoding function like h() in Ruby on Rails.</p>
-<p><b>Cons: </b>Essentially for me the major downside here is a practical one.  A security control that needs to be implemented many times to be effective is one that is likely to be forgotten and because under ordinary conditions the application is likely to behave perfectly even though the control isn't in place, a developer may well not notice the problem until it's too late.  You can see this kind of effect in a lot of web applications.  I've seen many cases where the obvious areas of the application (form fields) have been covered for things like Cross Site Scripting, but more obscure areas (drop-downs, cookies, HTTP headers) get missed out, either because the developer forgets, or because they don't realise that those areas of the application are susceptible to attack</p>
-<p>So which of these approaches would I recommend..... Well I'm a security person, so I'll say <b><i>Both</i></b> for defence in depth!<br />
-Beyond that I'd say that Input validation is a great first step and will cut down the practical attacks greatly, but if you're looking for a "perfect" approach then you'll need to add output normalization to the mix...</p>
 
     
     
