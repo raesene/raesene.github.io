@@ -41,7 +41,8 @@ spec:
       path: /
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Now to get root on your Kubernetes node you just need to run&lt;/p&gt;
+&lt;p&gt;Once you’ve got that as a file called say “noderoot.yml” , just run &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl create -f noderoot.yml&lt;/code&gt;
+then, to get root on your Kubernetes node you just need to run&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl exec -it noderootpod chroot /host&lt;/code&gt;&lt;/p&gt;
 
