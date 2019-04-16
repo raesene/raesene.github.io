@@ -163,23 +163,33 @@
 	   2019
 	 </span>
 	  <div class="article_body">
-	  <p>Authentication is an interesting area of Kubernetes security.  The built-in options for authenticating users to clusters are fairly limited. Basic Authentication and Token Authentication are generally considered to be a bad idea as they rely on cleartext credentials stored in files on disk on the API server(s) and require an API server restart when changing their contents, which is not exactly a scalable solution.</p>
+	  <h2 id="authentication-in-kubernetes">Authentication in Kubernetes</h2>
+
+<p>Authentication is an interesting area of Kubernetes security.  The built-in options for authenticating users to clusters are fairly limited. Basic Authentication and Token Authentication are generally considered to be a bad idea as they rely on cleartext credentials stored in files on disk on the API server(s) and require an API server restart when changing their contents, which is not exactly a scalable solution.</p>
 
 <p>This leaves client certificate authentication as the main default authentication mechanism and one that I see enabled in pretty much every cluster I look at.  Client certificate authentication also gets used for component to component authentication (e.g. to allow the Kubelet to authenticate to the API server).</p>
 
+<h2 id="client-certificate-authentication">Client Certificate Authentication</h2>
+
 <p>Client certificate authentication, however, presents it’s own set of security concerns and challenges. Securely managing the keys associated with certificate authorities can be a significant challenge, and with many clusters using 3 or more distinct CAs (before we even start talking about add-ons like istio) there’s quite a bit of scope for problems.  Kubernetes clusters will typically keep their CA certificates and keys online (i.e. they’re stored in the clear on disk on the API servers) as opposed to traditional PKI setups where a root CA key would never be held on a production system in the clear. In those more traditional setups the keys would either be stored in an HSM or kept offline and only used where needed to sign subordinate certificates.</p>
+
+<h2 id="ca-keys-or-golden-tickets">CA Keys or “Golden Tickets”</h2>
 
 <p>You can then combine that with the problem that CA keys tend to have a very long validity period (from a review of common cluster installers, 10 years is typical) and you realise that if an attacker can get access to those CA key files they can effectively have a “golden ticket” to maintain unauthorised access to the cluster for a very long time, as the CA keys can be used to create new user identities whenever they like.  This unauthorised access can happen in a number of ways, anything from a key mistakenly checked into source code control, or an attacker who can mount a volume from an API server component, could lead to leakage of a CA key.</p>
 
-<p>One  reason these attacks are possible is due to an important (and somewhat unintuitive) aspect of Kubernetes authentication which is that in general Kubernetes has no concept of a user database, it relies on the identity provided by the authentication mechanism, to determine who the user is and then matches this to RBAC bindings to provide rights to that user.</p>
+<p>One reason these attacks are possible is due to an important (and somewhat unintuitive) aspect of Kubernetes authentication which is that in general Kubernetes has no concept of a user database, it relies on the identity provided by the authentication mechanism, to determine who the user is and then matches this to RBAC bindings to provide rights to that user.</p>
 
 <p>In the case of certificate authentication this is done by looking at the <code class="highlighter-rouge">CN</code> and <code class="highlighter-rouge">O</code> fields of the client certificate as it’s presented to the API server.  A certificate which is signed by the appropriate CA is then given whatever rights that user identity correlates to.</p>
 
 <p>So an attacker with access to the CA key can just mint new user identities whenever it likes, and Kubernetes won’t complain, even if there’s another certificate with that identity.</p>
 
+<h2 id="certificate-revocation-or-lack-thereof">Certificate revocation (or lack thereof)</h2>
+
 <p>Another facet of client certificate authentication in Kubernetes which makes this problematic is that Kubernetes has no concept of certificate revocation.  So an attacker who mints a privileged client cert can continue to use this as long as the CA key doesn’t change, and as mentioned earlier, these are usually valid for 10 years.</p>
 
 <p>The only way to prevent this persistent access is to redeploy the entire certificate authority which, depending on the size of the cluster, could be tricky.</p>
+
+<h2 id="so-how-many-clusters-could-this-affect">So how many clusters could this affect?</h2>
 
 <p>One other facet of the way that Kubernetes is being commonly deployed which could make this an issue going forward is the number of clusters which have their API server components exposed on the Internet.  It’s relatively easy to search for Kubernetes clusters via search engines like Censys as they have common strings in their certificates.  A recent check showed that there are now over a million likely Kubernetes cluster servers on-line…</p>
 
