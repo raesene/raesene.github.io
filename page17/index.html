@@ -159,6 +159,44 @@
   <span class="post-date">
     
     March
+    26th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/03/26/when_free_softw/">When Free Software is a bad idea</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I've been looking at Oracle database security recently and one of the things I've come across has really surprised me.<br />
+Oracle release a free (as in beer) version of their database product <a href="http://www.oracle.com/technology/products/database/xe/index.html"> Oracle 10g XE </a><br />
+To quote their product page<br />
+<i>...Oracle Database XE is a great starter database for:<br />
+* Developers working on PHP, Java, .NET, XML, and Open Source applications<br />
+* DBAs who need a free, starter database for training and deployment<br />
+* Independent Software Vendors (ISVs) and hardware vendors who want a starter database to distribute free of charge<br />
+* Educational institutions and students who need a free database for their curriculum<br />
+</i><br />
+Yeah apart from one small problem.  There are <b> No </b> security patches available for this product !<br />
+So if you download and use this product in your open source application as described you're going to be left with a seriously insecure database given the number of vulnerabilities in Oracle 10GR2 which have been patched in the main product and not in this one.<br />
+Now according to <a href="http://www.petefinnigan.com/weblog/archives/00000973.htm">Pete Finnigan</a> Oracle are meant to be releasing updated versions of the database with security patches applied, but that doesn't seem to be happening on a regular basis (really it should be quarterly to keep up to date with the main product)<br />
+So if you're looking for a database for your new open source app. I'd think very carefully before using this one free or not!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     23rd,
     
     2007
@@ -429,34 +467,6 @@ Microsoft have done a huge amount of work on the security of their development p
 The reason this occurred to me is that the one vulnerability from this months set that affects Vista is in some of the A-V technology that they've acquired with companies like Sybari.<br />
 So every time Microsoft buys a company and integrates their products into the existing Microsoft ones they potentially introduce a load of new vulnerabilities in code that probably won't have been through the same rigours as the internally developed code.  This is especially relevant where they are integrating products in security sensitive areas of the operating system like A-V and Anti-Spyware.<br />
 Now Microsoft could of course re-write the codebase of any acquired technology before integrating it, but that would kinda' defeat the purpose of buying the company in the first place!</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    11th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/02/11/very_nasty_sola/">Very nasty solaris telnet bug</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There's some information on a very nasty Solaris telnet vulnerability over at the <a href="http://www.computerdefense.org/?p=258"> Computer Defense blog</a>.<br />
-Now hopefully this'll have limited impact 'cause all the solaris admins out there are running SSH already...<br />
-Doubt it though, I've heard quite a few unix/router guys argue against dropping telnet in the past, so there's probably quite a few boxes out there using it...</p>
 
     
     

@@ -159,6 +159,38 @@
   <span class="post-date">
     
     March
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/03/31/scotland_on_rai/">Scotland on Rails - Web Application Security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>It was the <a href="http://www.scotlandonrails.com">Scotland on Rails</a> 2009 conference on Friday/Saturday of last week.  A great couple of days with loads of interesting Ruby and Rails talks (I'm planning more of a recap once the videos are out)<br />
+I presented on Web Application Security (slides <a href="http://www.slideshare.net/raesene/web-appliction-security-scotland-on-rails-presentation"> here</a>), which seemed to go down reasonably well.<br />
+One of the main themes of my presentation was that, whilst Rails provides a variety of mechanisms to help developers to create secure applications, it still leaves a lot to the individual to think about, and relies on implementation of the protection that it provides.<br />
+One major example of this it Rails default protection mechanism from XSS which is the h() function.  This HTML encodes the contents of the argument passed to it.  This is an effective defense against XSS but relies on developers to use it consistently, which can be tricky to remember.<br />
+There's a couple of potential ways for improving this situation with plugins.<br />
+The <a href="http://rubyforge.org/projects/safe-erb/">Safe ERB</a> plugin is designed to help developers by raising an exception when information pulled from an ActiveRecord model is displayed in a view without h() being used.<br />
+The other way to approach the problem of XSS is to validate input when it's passed to the application.  There are a number of Rails plugins which take this approach including  <a href="http://code.google.com/p/sanitizeparams/">Sanitize Params</a> and <a href="http://code.google.com/p/xssterminate/">XSS Terminate</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     25th,
     
     2009
@@ -441,49 +473,6 @@ And there's a nice risk assessment reasoning here, it's not just a "ooh hypervis
 So here's how it works.  In the diagrams they've used they've laid out a picture of a number of security controls.  The main one being separate firewalls segregating the Internet from each of the DMZs in turn.  This would indicate to me that the risk assessment dictated that no one device should be a point of failure for the security being provided by the environment (a more cost effective, but traditionally seen as more risky design would be a single firewall with multiple interfaces, one for each network.)<br />
 So if we then introduce virtualization to this scenario then it seems that the option of a "partially collapsed" DMZ meets the security requirements as each DMZ has it's own VMware ESX instance and a compromise of the hypervisor won't result in a breach of DMZ segregation.<br />
 I think that in a lot of cases it's easy to look at virtualization as something new but it should be possible to look at the current risk appetite in an environment (are you using separate devices to segregate things, are you relying on VLAN tagging for separation) and then apply that to come up with the appropriate virtualization design.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    June
-    23rd,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/06/23/avoiding_contro/">Avoiding controls which are "designed to fail"</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>One of the great problems and frustrations of working in security is when those darned users don't follow the nice policies that people have spent so much time working on.<br />
-But here's the thing, <b>security professionals actually indoctrinate users not to follow policies!</b><br />
-How do they do this? Well people like following patterns, and so when the pattern "It's okay not to actually follow this" is established in relation to security , people will apply that pattern the next time they run into a security policy that's potentially difficult or hard to follow.<br />
-I'm sure there's a lot of security people saying "No idea what he's talking about, all my policies were made to be followed!"....<br />
-O'Rly..<br />
-Here's an example that I'll bet is familiar to a lot of people.  Password policy. Does anyone actually follow their companies password policy? I'll bet it looks something like</p>
-<ul>
-<li>Passwords must be 8 or more characters with upper, lower, numeric and special characters</li>
-<li>Passwords must not be based on dictionary words</li>
-<li>Passwords must be rotated every 30 days</li>
-<li>You must have a different password for every system (including not using the same passwords for personal websites</li>
-<li>Oh yeah and once you've got this list of 40 or so random strings that are really tricky to remember and you might not use very often, don't you dare write them down</li>
-</ul>
-<p>We're setting ourselves up for failure, and study after study shows that users will write down their passwords, or use sequences or many other tricks to make them more memorable.<br />
-This example (which may be a users main interaction with "security") sets the expectation that security policies can be ignored, because they're unrealistic.<br />
-So what's the answer..<br />
-Well when designing controls, I think that it's not enough to just look at the technical security properties in abstract.  We've got to consider the psychological/sociological elements of the people we're expecting to execute the controls, and maybe take a path that isn't the best abstract solution but may well be the one that will work best in real life...<br />
-After all once users are set on the path of ignoring security it becomes pretty difficult to get them back on the one true way!</p>
 
     
     

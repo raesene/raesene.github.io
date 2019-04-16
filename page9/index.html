@@ -158,6 +158,40 @@
 
   <span class="post-date">
     
+    March
+    26th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="/blog/2010/03/26/scottish_ruby_c_1/">Scottish Ruby Conference & Breaking things with Ruby</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Just had the first day of the <a href="http://www.scottishrubyconference.com">Scottish Ruby Conference</a>.  The venue was awesome, there'll doubtless be lots of good pictures up on places like flickr in due course, but here's a couple I snapped with my Nokia n900. The three track rooms were the <a href="http://www.mccune.org.uk/presentations/src_conference_hall.png">Conference Hall</a>, the <a href="http://www.mccune.org.uk/presentations/src_great_hall.png">Great Hall</a> and my personal favourite <a href="http://www.mccune.org.uk/presentations/src_new_library"> the "new" library</a>.<br />
+The talks were interesting as always, personal highlight for me had to be Jim Weirich managing to go from particle physics to functional programming seamlessly in a single talk!<br />
+my talk was on breaking things with ruby and was a pretty quick look at the world of penetration testing and some of the cool projects (primarily Metasploit) which use ruby in this area. My slides can be found <a href="http://www.mccune.org.uk/presentations/breaking-things-with-ruby.pdf">here</a> and if people are interested in more information on the topics I covered here's some good linkage to start with.<br />
+<strong><big>Metasploit</big></strong><br />
+<a href="http://www.metasploit.com">The Main Metasploit Website</a> . This is the best place to start.  There's also a wiki and source code repository on their redmine site <a href="http://www.metasploit.com/redmine/projects/framework/">here</a><br />
+<a href="http://www.offensive-security.com/metasploit-unleashed/">Metasploit Unleashed</a>. This is a free training course from Offensive Security which offers a good place to start with Metasploit, and covers a lot more ground than I could today.<br />
+Blog-wise there's a couple of places I consistently find good information on Metasploit.  <a href="http://carnal0wnage.attackresearch.com/">Carnal0wnage's blog</a> and the <a href="http://www.darkoperator.com/">Dark Operator</a> blogs have lots of posts on what can be done with Metasploit, as well as the <a href="http://blog.metasploit.com/">Official Metasploit Blog</a> of course.<br />
+Also on twitter following <a href="http://twitter.com/hdmoore">@hdmoore</a>, <a href="http://twitter.com/carnal0wnage">@carnal0wnage</a> and <a href="http://twitter.com/egyp7">@egyp7</a> is a good place to start.<br />
+Lastly if anyone's looking for videos demonstrating Metasploit, there's quite a few on <a href="http://www.securitytube.net">Security Tube</a> amongst other places.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     February
     15th,
     
@@ -424,42 +458,6 @@ So it's possible by parsing responses to figure out valid usernames for the serv
 A similar technique works with specification of passwords which would allow for brute-forcing those as well, (although that said the snmp tools try to stop people choosing passwords less than 8 characters, so unless a dictionary word is used it isn't too likely to be successful.<br />
 Additionally for people who're fond of metasploit, I've knocked up a very basic SNMPv3 scanner.  At the moment all it does it take a range of IP addresses and say whether a valid SNMPv3 packet provokes a response from the server, but could be handy.  it's <a href="http://www.mccune.org.uk/code/snmpv3.rb">here</a>.<br />
 There's some good references on setting up and using SNMPv3 <a href="http://www.sysadmin.md/snmpv3-users-cheatsheet.html">here</a>, <a href="http://tomclegg.net/snmpv3-cacti">here</a> and <a href="http://wmunguiam.blogspot.com/2009/07/howto-use-snmpv3-ubuntu.html">here</a>.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    August
-    9th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/08/09/defcon_17/">Defcon 17</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So I got across to Defcon this year (and of course security Bsides)<br />
-There were several interesting presentations , here's some notes on some of the ones that I got along to.  The CD is up at <a href="https://media.defcon.org/dc-17/DEFCON-17-CD.rar">defcon.org</a>, and you can get the slides for most of the presentations there.<br />
-SSL Talks - There were several presentations on ways to bypass or subvert SSL. From my point of view the drive was around 2 themes.  The difficulty in correctly parsing SSL certs due to the complexity of the relevant RFCs and also the weaknesses in the issuing processes of some CAs (which is exacerbated by the fact that any CA can issue a "valid" cert. for any domain).  Dan Kaminsky's white paper on the subject is <a href="http://www.ioactive.com/pdfs/PKILayerCake.pdf"> here</a>, Moxie's blackhat presentation is <a href="http://tinyurl.com/nyh462"> here </a> and Michael Zusmans' blackhat presentation is <a href="http://tinyurl.com/ll5nlq">here</a> (the defcon presentations are on the CD linked above).<br />
-Metasploit - The Metasploit team had a whole track to themselves on Saturday and there's a load of interesting stuff in there, basically looks like Metasploit will have some coverage for most types of assessment eventually, which is very handy!<br />
-Egypts presentation on client-side attacks with Metasploit had some great content on browser fingerprinting (not just relying on User-Agent) and client side attacks with Metasploit.<br />
-The Oracle presentation from mc and Chris Gates  had some good content on going through the steps of an Oracle attack purely using Metasploit (more information on this on CG's <a href="http://carnal0wnage.attackresearch.com">blog</a><br />
-Druid had a good talk on the war-dialer that he's added to the framework (unfortunately the slides for that one aren't on the CD, but I'd guess that they'll be around soon). Another interesting thing in the Metasploit track was the demos of the Mac OSX and POSIX versions of meterpreter which are both in active development.<br />
-Other Ruby Tools - There was a bit of a theme of ruby tools across some of the presentations.  In addition to all the Metasploit stuff, there was a mobile device fuzzer (although the website for it, www.fuzzit.com isn't up yet).  Also there was a good presentation on <a href="http://dradisframework.org"> Dradis </a>from etd , which is a Pen test management and reporting tool written in Ruby and Rails.<br />
-Password Cracking - There was a good presentation, from Matt Weir,  on approaches to password cracking, speeding up brute-force attacks and picking good dictionary files .  There's more informaton on this one on his <a href="http://reusablesec.blogspot.com/"> blog </a> as well as on the presentation slides.<br />
-Router Hacking - FX had some more information on how to create reliable exploits on Cisco devices and the difficulties in doing so (amazing to think that Cisco Maintain thousands of discreete monolithic router builds!).  Slides from the Blackhat presentation are <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-SLIDES.pdf"> here</a> and White paper <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-PAPER.pdf"> here </a><br />
-USB Hacking - Interesting presentation from a guy from <a href="http://labs.mwrinfosecurity.com/">MWR </a> on how they approached an assignment to assess the security of a USB device and the approaches to fuzzing that they took.  Slides are up on their site <a href="http://labs.mwrinfosecurity.com/files/Publications/mwri_usb-attacks-defcon17_2009-08-02.pdf"> here </a></p>
 
     
     

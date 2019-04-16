@@ -7,6 +7,35 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Certificate Authentication and the Golden Ticket at the heart of Kubernetes</title>
+				<description>&lt;p&gt;Authentication is an interesting area of Kubernetes security.  The built-in options for authenticating users to clusters are fairly limited. Basic Authentication and Token Authentication are generally considered to be a bad idea as they rely on cleartext credentials stored in files on disk on the API server(s) and require an API server restart when changing their contents, which is not exactly a scalable solution.&lt;/p&gt;
+
+&lt;p&gt;This leaves client certificate authentication as the main default authentication mechanism and one that I see enabled in pretty much every cluster I look at.  Client certificate authentication also gets used for component to component authentication (e.g. to allow the Kubelet to authenticate to the API server).&lt;/p&gt;
+
+&lt;p&gt;Client certificate authentication, however, presents it’s own set of security concerns and challenges. Securely managing the keys associated with certificate authorities can be a significant challenge, and with many clusters using 3 or more distinct CAs (before we even start talking about add-ons like istio) there’s quite a bit of scope for problems.  Kubernetes clusters will typically keep their CA certificates and keys online (i.e. they’re stored in the clear on disk on the API servers) as opposed to traditional PKI setups where a root CA key would never be held on a production system in the clear. In those more traditional setups the keys would either be stored in an HSM or kept offline and only used where needed to sign subordinate certificates.&lt;/p&gt;
+
+&lt;p&gt;You can then combine that with the problem that CA keys tend to have a very long validity period (from a review of common cluster installers, 10 years is typical) and you realise that if an attacker can get access to those CA key files they can effectively have a “golden ticket” to maintain unauthorised access to the cluster for a very long time, as the CA keys can be used to create new user identities whenever they like.  This unauthorised access can happen in a number of ways, anything from a key mistakenly checked into source code control, or an attacker who can mount a volume from an API server component, could lead to leakage of a CA key.&lt;/p&gt;
+
+&lt;p&gt;One  reason these attacks are possible is due to an important (and somewhat unintuitive) aspect of Kubernetes authentication which is that in general Kubernetes has no concept of a user database, it relies on the identity provided by the authentication mechanism, to determine who the user is and then matches this to RBAC bindings to provide rights to that user.&lt;/p&gt;
+
+&lt;p&gt;In the case of certificate authentication this is done by looking at the &lt;code class=&quot;highlighter-rouge&quot;&gt;CN&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;O&lt;/code&gt; fields of the client certificate as it’s presented to the API server.  A certificate which is signed by the appropriate CA is then given whatever rights that user identity correlates to.&lt;/p&gt;
+
+&lt;p&gt;So an attacker with access to the CA key can just mint new user identities whenever it likes, and Kubernetes won’t complain, even if there’s another certificate with that identity.&lt;/p&gt;
+
+&lt;p&gt;Another facet of client certificate authentication in Kubernetes which makes this problematic is that Kubernetes has no concept of certificate revocation.  So an attacker who mints a privileged client cert can continue to use this as long as the CA key doesn’t change, and as mentioned earlier, these are usually valid for 10 years.&lt;/p&gt;
+
+&lt;p&gt;The only way to prevent this persistent access is to redeploy the entire certificate authority which, depending on the size of the cluster, could be tricky.&lt;/p&gt;
+
+&lt;p&gt;One other facet of the way that Kubernetes is being commonly deployed which could make this an issue going forward is the number of clusters which have their API server components exposed on the Internet.  It’s relatively easy to search for Kubernetes clusters via search engines like Censys as they have common strings in their certificates.  A recent check showed that there are now over a million likely Kubernetes cluster servers on-line…&lt;/p&gt;
+
+&lt;p&gt;It’s worth noting that these problems are more of a concern in unmanaged Kubernetes clusters, where the operator is responsible for CA management.  The main managed clusters (GKE, AKS and EKS) don’t expose the CA keys to users of the cluster and GKE also offers the option to disable client certificate authentication all together, which is good as it’s not just a problem with CA keys, user kubeconfig files with client keys can also be a risk.&lt;/p&gt;
+</description>
+				<pubDate>Tue, 16 Apr 2019 12:10:39 +0100</pubDate>
+				<link>/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</link>
+				<guid isPermaLink="true">/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</guid>
+			</item>
+		
+			<item>
 				<title>The most pointess Kubernetes command ever</title>
 				<description>&lt;p&gt;Coming up for 4 years ago (a lifetime in Container land) Ian Miell wrote about &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;“The most pointless Docker Command Ever”&lt;/a&gt;.  This was a docker command that you could run and it would return you back as root on your host.&lt;/p&gt;
 
@@ -122,7 +151,7 @@ spec:
   &lt;li&gt;&lt;a href=&quot;http://docker.pwndland.uk/#/&quot;&gt;BSides London 2016 - Docker - Security Myths, Security Legends&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: &#39;3&#39;
 
 services:
   reverse-proxy:
@@ -162,7 +191,7 @@ services:
       - &quot;traefik.domain=`pwndland.uk`&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </description>
-				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
+				<pubDate>Mon, 25 Mar 2019 21:10:39 +0100</pubDate>
 				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
 				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
 			</item>
@@ -218,7 +247,7 @@ nodes:
 
 &lt;p&gt;I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github &lt;a href=&quot;https://github.com/raesene/kind-of-insecure&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 </description>
-				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
+				<pubDate>Mon, 04 Mar 2019 21:10:39 +0100</pubDate>
 				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
 				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
 			</item>
@@ -254,7 +283,7 @@ nodes:
   &lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
+				<pubDate>Sun, 11 Nov 2018 15:10:39 +0100</pubDate>
 				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
 				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
 			</item>
@@ -495,68 +524,6 @@ Server:
 				<pubDate>Mon, 23 Jul 2018 18:45:39 +0100</pubDate>
 				<link>/blog/2018/07/23/exploring-kata/</link>
 				<guid isPermaLink="true">/blog/2018/07/23/exploring-kata/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring gVisor</title>
-				<description>&lt;p&gt;As part of some talks I did for the recent NCC Con, I started looking at the &lt;a href=&quot;https://github.com/google/gvisor&quot;&gt;gVisor&lt;/a&gt; project from Google (nothing like having to write a presentation to provide motivation!).&lt;/p&gt;
-
-&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
-
-&lt;p&gt;gVisor is an alternate Container runtime which replaces runc in the Docker stack with their runsc component.  It takes an interesting approach to container isolation which promises good performance and enhanced isolation over the base Docker experience.  Google have implemented a number of Linux syscalls in Go, so that the process running in the container doesn’t directly need to communicate with the underlying Linux Kernel.  They have some more details on this on the &lt;a href=&quot;https://github.com/google/gvisor&quot;&gt;gVisor homepage&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;setup&quot;&gt;Setup&lt;/h2&gt;
-
-&lt;p&gt;The installation process is pretty straightforward, with a single binary to place on your Docker Engine host and then a quick modification to &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/docker/daemon.json&lt;/code&gt; to make the alternate runtime available.&lt;/p&gt;
-
-&lt;h2 id=&quot;usage&quot;&gt;Usage&lt;/h2&gt;
-
-&lt;p&gt;After that you can start containers with the &lt;code class=&quot;highlighter-rouge&quot;&gt;--runtime=runsc&lt;/code&gt; switch and they’ll make use it.  Notably it’s perfectly possible to run some containers on a host with standard Docker and others with gVisor at the same time.&lt;/p&gt;
-
-&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;/h2&gt;
-
-&lt;p&gt;Once you get up and running with a gVisor container, there’s a number of interesting things to note (well if you’re interested in how container runtimes work anyway).&lt;/p&gt;
-
-&lt;p&gt;First up the kernel version. Generally with Linux containers, the kernel version inside a container is the same as outside as the container makes use of the same underlying kernel when it’s operating.  However as gVisor is intercepting syscalls before they can get to the underlying Linux kernel, we see things slightly differently when it’s in use.&lt;/p&gt;
-
-&lt;p&gt;If you run &lt;code class=&quot;highlighter-rouge&quot;&gt;uname -a&lt;/code&gt; when running a gVisor container you get&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 903108eb81ab 3.11.10 #1 SMP Fri Nov 29 10:47:50 PST 2013 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;On the same host running without gVisor I get&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 835730d3b41c 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;which is the same as my underlying host (as expected).  This could be useful for fingerprinting the runtime in use as I’d expect that all containers running a given gVisor version will return the same info. from uname regardless of the underlying system.&lt;/p&gt;
-
-&lt;p&gt;Another place you’ll see a difference is in &lt;code class=&quot;highlighter-rouge&quot;&gt;/proc&lt;/code&gt; .  The gVisor project is working on exposing various pieces of informatio in proc (more information &lt;a href=&quot;https://github.com/google/gvisor/tree/master/pkg/sentry/fs/proc&quot;&gt;here&lt;/a&gt;) but at the moment there’s a lot less info. here than you would find normally in a Docker container (which has positives and negatives).  As a quick metric &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -laR&lt;/code&gt; in /proc produces 304 entries in a gVisor container against 4700 in a standard Docker one.&lt;/p&gt;
-
-&lt;p&gt;One side note from this is that as a result of this, tools like &lt;a href=&quot;https://github.com/genuinetools/amicontained&quot;&gt;amicontained&lt;/a&gt; can’t necessarily get the information they need to provide info about the security of the container, as they rely on reading information from files in /proc.&lt;/p&gt;
-
-&lt;p&gt;Another thing worth noting at this point is that gVisor is still relatively young as a project and does have bugs.  For example running &lt;code class=&quot;highlighter-rouge&quot;&gt;ls -laR | wc -l&lt;/code&gt; reliably hung in an alpine:3.7 container when I was testing.&lt;/p&gt;
-
-&lt;p&gt;If you’re looking to tell whether containers on a host are using gVisor or runc, the following command should return the relevant information&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker inspect --format='' [container_name]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
-
-&lt;p&gt;On the performance front, some very basic tests, show that there does appear to be some overhead in using gVisor, which may or may not be important to your usecase.&lt;/p&gt;
-
-&lt;p&gt;The test I did was to run&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it alpine:3.7 /bin/ash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;with gVisor and runc. If you do that and run &lt;code class=&quot;highlighter-rouge&quot;&gt;docker stats&lt;/code&gt; it shows the runc container using 1.16MiB of memory and the gVisor one using 84MiB ! Also there seems to be some constant CPU usage on the gVisor container, even though it’s just running an idling ash shell with nothing else happening.&lt;/p&gt;
-
-</description>
-				<pubDate>Sun, 22 Jul 2018 18:45:39 +0100</pubDate>
-				<link>/blog/2018/07/22/exploring-gvisor/</link>
-				<guid isPermaLink="true">/blog/2018/07/22/exploring-gvisor/</guid>
 			</item>
 		
 	</channel>
