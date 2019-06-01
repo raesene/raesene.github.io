@@ -46,7 +46,7 @@ CMD [&quot;/bin/bash&quot;]
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it nonewpriv
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;we get landed into a bash shell as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; at this point will make use root demonstrating that we’ve effectively escalated our privileges inside the container.&lt;/p&gt;
+&lt;p&gt;we get landed into a bash shell as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; at this point will make us root demonstrating that we’ve effectively escalated our privileges inside the container.&lt;/p&gt;
 
 &lt;p&gt;Now if we try launching the same container, but add the no-new-privileges flag&lt;/p&gt;
 
