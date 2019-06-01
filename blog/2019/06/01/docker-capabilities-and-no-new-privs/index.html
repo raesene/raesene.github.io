@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Network Tools in Non-Root Docker Images</title>
+	<title>Docker Capabilities and no-new-privileges</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Network Tools in Non-Root Docker Images </h1>
+  <h1>Docker Capabilities and no-new-privileges </h1>
 </div>
 	
 <article>
@@ -157,26 +157,60 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   July 
-	   23rd,
+	   June 
+	   1st,
 	     
-	   2017
+	   2019
 	 </span>
 	  <div class="article_body">
-	  <p>As some environments which allow for Docker images to run (e.g. OpenShift Origin’s default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.</p>
+	  <p>I’ve been looking for a way to explain an demonstrate the “no-new-privileges” option in Docker for a little while for my <a href="https://www.blackhat.com/us-19/training/schedule/#mastering-container-security-14020">training course</a> and recently came up with a way that should work, so thought it was worth a blog post.</p>
 
-<p>Usually tools like nmap, tcpdump and ping will either need to be setuid root or be run as a user who has root level privileges, however with a bit of capabilities fiddling its relatively easy to get a container that doesn’t need that level of privilege.</p>
+<h2 id="capabilities-and-docker">Capabilities and Docker</h2>
 
-<p>The key is use use the <code class="highlighter-rouge">setcap</code> utility to add the appropriate capability to your binaries, in this case CAP_NET_RAW.  CAP_NET_RAW is generally avaialable to containers as it’s on Docker’s default white list.</p>
+<p>First a little background.  Docker makes use of <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities</a> as one of the layers of security that it applies to all new containers. Capabilities are essentially pieces of the privileges that the <code class="highlighter-rouge">root</code> user gets on a Linux system.  They enable processes to perform some privileged operations without having the full power of that user, and are very useful to get away from the use of <code class="highlighter-rouge">setuid</code> binaries. Docker applies a restriction that when a new container is started, even if the root user is used, it won’t get all the capabilities of root, just a subset.</p>
 
-<p>Once you’ve downloaded packages into the image, just use something like</p>
+<p>An important point to note is that, if your process doesn’t need any “root-like” privileges, it shouldn’t need any capabilities, and processes started by ordinary users don’t generally get granted any capabilities.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN setcap cap_net_raw+ep /usr/bin/nmap
+<p>For more details on Docker and capabilities there’s a post <a href="https://raesene.github.io/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/">here</a> that goes into some more depth on the topic.</p>
+
+<h2 id="no-new-privileges">no-new-privileges</h2>
+
+<p>So where does no-new-privileges come into all this?  Well this is an option that can be passed as part of a <code class="highlighter-rouge">docker run</code> statement as a security option.  The Docker documentation on it says you can use it</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>If you want to prevent your container processes from gaining additional privileges
 </code></pre></div></div>
 
-<p>to set the capability on that binary.  One trick to note is that setcap doesn’t work on symbolic links so you need to find the destination of any links before using it.  One example is that in Alpine based images, <code class="highlighter-rouge">/bin/ping</code> is just a symlink to <code class="highlighter-rouge">/bin/busybox</code> so if you want to enable CAP_NET_RAW in that setup <code class="highlighter-rouge">/bin/busybox</code> should be your target.</p>
+<p>Basically if your container runs as a non-root user (as all good containers should) this can be used to stop processes inside the container from getting additional privileges.</p>
 
-<p>There’s an example repo and associated Docker Hub image <a href="https://github.com/raesene/alpine-noroot-containertools">here</a> and <a href="https://hub.docker.com/r/raesene/alpine-noroot-containertools/">here</a></p>
+<p>Here’s a practical example.  Say we have a Dockerfile that looks like this</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
+
+RUN cp /bin/bash /bin/setuidbash &amp;&amp; chmod 4755 /bin/setuidbash
+
+RUN useradd -ms /bin/bash newuser
+
+USER newuser
+
+CMD ["/bin/bash"]
+</code></pre></div></div>
+
+<p>We’ve got another bash shell which we’ve made setuid root, meaning that it can be used to get root level privileges (albeit still constrained by Docker’s default capability set).</p>
+
+<p>If we build this Dockerfile as <code class="highlighter-rouge">nonewpriv</code> then run</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it nonewpriv
+</code></pre></div></div>
+
+<p>we get landed into a bash shell as the <code class="highlighter-rouge">newuser</code> user.  Running <code class="highlighter-rouge">/bin/setuidbash -p</code> at this point will make use root demonstrating that we’ve effectively escalated our privileges inside the container.</p>
+
+<p>Now if we try launching the same container, but add the no-new-privileges flag</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it --security-opt=no-new-privileges:true nonewpriv
+</code></pre></div></div>
+
+<p>when we run <code class="highlighter-rouge">/bin/setuidbash -p</code> our escalation to root doesn’t work and our new bash shell stays running as the <code class="highlighter-rouge">newuser</code> user, foiling our privilege escalation attempt :)</p>
+
+<p>So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.</p>
 
 	  </div>
 
@@ -202,7 +236,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Network Tools in Non-Root Docker Images&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Docker Capabilities and no-new-privileges&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -230,10 +264,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/" title="Keeping your Docker builds fresh">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2019/04/16/kubernetes-certificate-auth-golden-key/" title="Certificate Authentication and the Golden Ticket at the heart of Kubernetes">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/" title="Linux Capabilities and when to drop all">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

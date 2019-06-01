@@ -7,6 +7,62 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Docker Capabilities and no-new-privileges</title>
+				<description>&lt;p&gt;I’ve been looking for a way to explain an demonstrate the “no-new-privileges” option in Docker for a little while for my &lt;a href=&quot;https://www.blackhat.com/us-19/training/schedule/#mastering-container-security-14020&quot;&gt;training course&lt;/a&gt; and recently came up with a way that should work, so thought it was worth a blog post.&lt;/p&gt;
+
+&lt;h2 id=&quot;capabilities-and-docker&quot;&gt;Capabilities and Docker&lt;/h2&gt;
+
+&lt;p&gt;First a little background.  Docker makes use of &lt;a href=&quot;http://man7.org/linux/man-pages/man7/capabilities.7.html&quot;&gt;capabilities&lt;/a&gt; as one of the layers of security that it applies to all new containers. Capabilities are essentially pieces of the privileges that the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user gets on a Linux system.  They enable processes to perform some privileged operations without having the full power of that user, and are very useful to get away from the use of &lt;code class=&quot;highlighter-rouge&quot;&gt;setuid&lt;/code&gt; binaries. Docker applies a restriction that when a new container is started, even if the root user is used, it won’t get all the capabilities of root, just a subset.&lt;/p&gt;
+
+&lt;p&gt;An important point to note is that, if your process doesn’t need any “root-like” privileges, it shouldn’t need any capabilities, and processes started by ordinary users don’t generally get granted any capabilities.&lt;/p&gt;
+
+&lt;p&gt;For more details on Docker and capabilities there’s a post &lt;a href=&quot;https://raesene.github.io/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/&quot;&gt;here&lt;/a&gt; that goes into some more depth on the topic.&lt;/p&gt;
+
+&lt;h2 id=&quot;no-new-privileges&quot;&gt;no-new-privileges&lt;/h2&gt;
+
+&lt;p&gt;So where does no-new-privileges come into all this?  Well this is an option that can be passed as part of a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; statement as a security option.  The Docker documentation on it says you can use it&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;If you want to prevent your container processes from gaining additional privileges
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Basically if your container runs as a non-root user (as all good containers should) this can be used to stop processes inside the container from getting additional privileges.&lt;/p&gt;
+
+&lt;p&gt;Here’s a practical example.  Say we have a Dockerfile that looks like this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
+
+RUN cp /bin/bash /bin/setuidbash &amp;amp;&amp;amp; chmod 4755 /bin/setuidbash
+
+RUN useradd -ms /bin/bash newuser
+
+USER newuser
+
+CMD [&quot;/bin/bash&quot;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We’ve got another bash shell which we’ve made setuid root, meaning that it can be used to get root level privileges (albeit still constrained by Docker’s default capability set).&lt;/p&gt;
+
+&lt;p&gt;If we build this Dockerfile as &lt;code class=&quot;highlighter-rouge&quot;&gt;nonewpriv&lt;/code&gt; then run&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it nonewpriv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;we get landed into a bash shell as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; at this point will make use root demonstrating that we’ve effectively escalated our privileges inside the container.&lt;/p&gt;
+
+&lt;p&gt;Now if we try launching the same container, but add the no-new-privileges flag&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --security-opt=no-new-privileges:true nonewpriv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;when we run &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; our escalation to root doesn’t work and our new bash shell stays running as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user, foiling our privilege escalation attempt :)&lt;/p&gt;
+
+&lt;p&gt;So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 01 Jun 2019 10:10:39 +0100</pubDate>
+				<link>/blog/2019/06/01/docker-capabilities-and-no-new-privs/</link>
+				<guid isPermaLink="true">/blog/2019/06/01/docker-capabilities-and-no-new-privs/</guid>
+			</item>
+		
+			<item>
 				<title>Certificate Authentication and the Golden Ticket at the heart of Kubernetes</title>
 				<description>&lt;h2 id=&quot;authentication-in-kubernetes&quot;&gt;Authentication in Kubernetes&lt;/h2&gt;
 
@@ -161,7 +217,7 @@ spec:
   &lt;li&gt;&lt;a href=&quot;http://docker.pwndland.uk/#/&quot;&gt;BSides London 2016 - Docker - Security Myths, Security Legends&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: &#39;3&#39;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
 
 services:
   reverse-proxy:
@@ -201,7 +257,7 @@ services:
       - &quot;traefik.domain=`pwndland.uk`&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </description>
-				<pubDate>Mon, 25 Mar 2019 21:10:39 +0100</pubDate>
+				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
 				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
 				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
 			</item>
@@ -257,7 +313,7 @@ nodes:
 
 &lt;p&gt;I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github &lt;a href=&quot;https://github.com/raesene/kind-of-insecure&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 </description>
-				<pubDate>Mon, 04 Mar 2019 21:10:39 +0100</pubDate>
+				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
 				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
 				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
 			</item>
@@ -293,7 +349,7 @@ nodes:
   &lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sun, 11 Nov 2018 15:10:39 +0100</pubDate>
+				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
 				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
 				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
 			</item>
@@ -465,75 +521,6 @@ Server:
 				<pubDate>Sun, 05 Aug 2018 12:10:39 +0100</pubDate>
 				<link>/blog/2018/08/05/Docker-Containers-Without-Docker/</link>
 				<guid isPermaLink="true">/blog/2018/08/05/Docker-Containers-Without-Docker/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring Kata Containers</title>
-				<description>&lt;p&gt;This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://katacontainers.io/&quot;&gt;Kata Containers&lt;/a&gt; is a project to provide a container runtime which makes use of qemu virtualization to provide isolation for the contained processes.  At face value this seems a bit of an odd decision as generally companies have moved from virtualization based isolation to process based isolation with projects like Docker.&lt;/p&gt;
-
-&lt;p&gt;However having the flexibility to run some workloads with additional isolation is a useful option, and it’s perfectly possible to have a single Docker engine instance which supports multiple container runtimes.&lt;/p&gt;
-
-&lt;h2 id=&quot;installation-notes&quot;&gt;Installation Notes&lt;/h2&gt;
-
-&lt;p&gt;The Kata container installation process is pretty straightfoward. I was installing on Ubuntu so followed the instructions &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/install/ubuntu-installation-guide.md&quot;&gt;here&lt;/a&gt;.  One first note is that 18.04 is supported even though the docs currently say 16.04 or 17.10.&lt;/p&gt;
-
-&lt;p&gt;Once you’ve got the packages installed you need to configure the Docker daemon to use the new runtime.  Kata Containers provide some documentation on that &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/install/docker/ubuntu-docker-install.md&quot;&gt;here&lt;/a&gt; however I went a slightly different route.&lt;/p&gt;
-
-&lt;p&gt;Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
-    &quot;runtimes&quot;: {
-        &quot;runsc&quot;: {
-            &quot;path&quot;: &quot;/usr/local/bin/runsc&quot;
-        },
-        &quot;kata-runtime&quot;: {
-            &quot;path&quot;: &quot;/usr/bin/kata-runtime&quot;
-        }
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.&lt;/p&gt;
-
-&lt;h2 id=&quot;usage&quot;&gt;Usage&lt;/h2&gt;
-
-&lt;p&gt;Once you’ve got it installed running a container with Kata Containers is as simple as adding &lt;code class=&quot;highlighter-rouge&quot;&gt;--runtime=kata-runtime&lt;/code&gt; to the docker run command.  I think part of the allure of using something like Kata Containers is that you can still take advantage of the containerization workflows, without potentially reducing the security level that you’ve traditionally had with a VM based model.&lt;/p&gt;
-
-&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;/h2&gt;
-
-&lt;p&gt;Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;output of uname -a without kata containers&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;output of uname -a with kata containers&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Interestingly the text &lt;strong&gt;container&lt;/strong&gt; in the kernel version could be a useful fingerprinting indicator.&lt;/p&gt;
-
-&lt;p&gt;As with gVisor there’s a difference in the contents of &lt;code class=&quot;highlighter-rouge&quot;&gt;/proc&lt;/code&gt; as well.  In a standard container I’m seeing 4700 entries against 2741 in the kata-containers version, so there’s likely some exploration there to see what’s different.&lt;/p&gt;
-
-&lt;p&gt;Getting information about what Kata containers is up to seems easy enough. There’s a handy kata-env command that can be run &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/bin/kata-runtime kata-env&lt;/code&gt; which outputs a load of useful information including things like what VM image is being used by qemu for the containers you are running.&lt;/p&gt;
-
-&lt;p&gt;Each container you run up spawns a kata-shim, kata-proxy and qemu process, there’s details on exactly what each does in the project’s &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/architecture.md&quot;&gt;architecture docs&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;--privileged&lt;/code&gt; doesn’t work under kata containers as with qemu isolation it doesn’t make a great deal of sense to have a privileged mode. Also &lt;code class=&quot;highlighter-rouge&quot;&gt;--net=host&lt;/code&gt; doesn’t work and indeed it’ll hang the hosts network quite effectively if you try! &lt;code class=&quot;highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; doesn’t work either, but at least it doesn’t crash the host :) There’s a document tracking limitations &lt;a href=&quot;https://github.com/kata-containers/documentation/blob/master/Limitations.md&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
-
-&lt;p&gt;I think it’s fair to say that there’s a bit of performance hit to using Kata Containers over standard Docker.  running an alpine:3.7 container using Docker shows an output from &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo pmap -x [pid]&lt;/code&gt; of 1.5MB . Running the same for kata containers and you get 3GB for the Qemu process and 600MB for the kata-shim process, so similar to what you’d see for VMs which is somewhat unsurprising.&lt;/p&gt;
-
-&lt;p&gt;Whilst I’m sure that there’s going to be circumstances where that tradeoff will be worth it, that’s a pretty significant impact if you’re moving to containerization for the performance benefits.&lt;/p&gt;
-</description>
-				<pubDate>Mon, 23 Jul 2018 18:45:39 +0100</pubDate>
-				<link>/blog/2018/07/23/exploring-kata/</link>
-				<guid isPermaLink="true">/blog/2018/07/23/exploring-kata/</guid>
 			</item>
 		
 	</channel>
