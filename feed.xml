@@ -14,7 +14,7 @@
 
 &lt;p&gt;To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit Framework&lt;/a&gt; and specifically, &lt;code class=&quot;highlighter-rouge&quot;&gt;exploit/multi/handler&lt;/code&gt;&lt;/p&gt;
 
-&lt;h2 id=&quot;step-1---create-the-payload&quot;&gt;Step 1 - Create the payload&lt;/h2&gt;
+&lt;h2 id=&quot;step-1-create-the-payload&quot;&gt;Step 1: Create the payload&lt;/h2&gt;
 
 &lt;p&gt;We need a Docker image that we can deploy to the cluster which will have our payload to connect back to the listener that we’re going to setup and will run on each node in the cluster.&lt;/p&gt;
 
@@ -70,7 +70,7 @@ CMD [&quot;/reverse_shell.elf&quot;]
 
 &lt;p&gt;At this point we can test our reverse shell on a single machine by setting up a Metasploit listener and check that all is well.&lt;/p&gt;
 
-&lt;h3 id=&quot;setting-up-metasploit-to-receive-our-shells&quot;&gt;Setting up Metasploit to receive our shells&lt;/h3&gt;
+&lt;h2 id=&quot;step-2-setting-up-metasploit-to-receive-our-shells&quot;&gt;Step 2: Setting up Metasploit to receive our shells&lt;/h2&gt;
 
 &lt;p&gt;On the pentester machine start-up the metasploit console with&lt;/p&gt;
 
@@ -102,7 +102,7 @@ set ExitOnSession false
 
 &lt;p&gt;Assuming that’s all working we’re ready to scale it up to our Kubernetes cluster&lt;/p&gt;
 
-&lt;h3 id=&quot;using-a-daemonset-to-compromise-a-cluster&quot;&gt;Using a Daemonset to compromise a cluster&lt;/h3&gt;
+&lt;h2 id=&quot;step-3-using-a-daemonset-to-compromise-a-cluster&quot;&gt;Step 3: Using a Daemonset to compromise a cluster&lt;/h2&gt;
 
 &lt;p&gt;So we want a workload which will run on every node in the cluster, and that’s exactly what a daemonset will do for us.  We’ll need a manifest that creates our daemonset and also we want it to expose the Docker socket so we can easily break out of each of our containers to the underlying host.&lt;/p&gt;
 
