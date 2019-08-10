@@ -212,6 +212,8 @@ CMD ["/bin/bash"]
 
 <p>So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.</p>
 
+<p><strong>Edit</strong> Just to add based on conversations on twitter following this post, it’s worth noting that you can achieve the same effect as <code class="highlighter-rouge">no-new-privileges</code>, if you want to run your container as a non-root user, by doing <code class="highlighter-rouge">cap-drop=all</code> as part of the run statement.  This has a similar effect in stopping the contained processes from gaining any Linux capabilities, and if your workloads support it, is a great idea for hardening your containers.</p>
+
 	  </div>
 
 		
@@ -221,7 +223,7 @@ CMD ["/bin/bash"]
 		  
 			 
 				<li><a href="/categories/index.html#Docker-ref">
-					Docker <span>(17)</span>
+					Docker <span>(18)</span>
 					
 				</a></li>
 			
@@ -267,7 +269,7 @@ CMD ["/bin/bash"]
 		  <li class="previous"><a href="/blog/2019/04/16/kubernetes-certificate-auth-golden-key/" title="Certificate Authentication and the Golden Ticket at the heart of Kubernetes">&larr; Previous</a></li>
 		  
 		  
-			<li class="next disabled"><a>Next &rarr;</a>
+		  <li class="next"><a href="/blog/2019/06/01/docker-reverse-shells/" title="Docker and Kubernetes Reverse shells">Next &rarr;</a></li>
 		  
 		</ul>
 
