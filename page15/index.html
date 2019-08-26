@@ -159,6 +159,37 @@
   <span class="post-date">
     
     August
+    16th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/08/16/saas_vendor_sec/">SaaS vendor security.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Rational Security: On-Demand SaaS Vendors Able to Secure Assets Better than Customers?" href="http://rationalsecurity.typepad.com/blog/2007/08/on-demand-saas-.html">Rational Security: On-Demand SaaS Vendors Able to Secure Assets Better than Customers?</a><br />
+An interesting post from Hoff on whether having data with SaaS vendors  may leave you more or less secure overall.<br />
+I've had a couple of experiences of this over the years and I'll say that  generally where I'm seeing data hosted out of the company using SaaS I tend to get less of a feeling of security rather than more.<br />
+A couple of reasons for this.  Using SaaS adds complexity to areas like leavers/movers/starters procedures as there's another notification point for these, and as we know most companies aren't perfect at leavers policies, so you can introduce risks that people who have left can still get access to company data.<br />
+Also there's no really good way to easily assure the 3rd parties security.  As Hoff alludes to, a lot of companies think SAS70 == Security, which just ain't the case (although it can be useful for getting assurance over the performance of some security related procedures).  So you're left with either engaging in a lengthy assurance process which probably isn't practical if you have a lot of SaaS vendors, or relying on a combination of Pen Test/SAS 70/contract.<br />
+Of course, this is complicated even more where the SaaS vendor outsources some of their  functions like site hosting, as then you have hierarchies of trust with each agent having similar difficulties in trying to assure the security of the companies they rely on.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
     15th,
     
     2007
@@ -404,37 +435,6 @@ Well I'm gong to try and answer Hoffs question on standards I think need to exis
 Anyway so we're tagging all our data. For that to happen I'm thinking that the tags need to be attached to each "document" that flows over the network.  Now we've got a wide variety of documents in place we've got all our MS office docs. we've got XML files we've got binary blobs from proprietary programs, we've got encrypted files.  Many of these have no native facility to insert any sort of metadata tag.  So without that how do we attach a meaningful tag to the data?  If we modify the document in infrastructure after it's been constructed our device which does this will need to understand every data/file format that we want to tag, and I think that's a very tricky thing to do.<br />
 So I think that in order to do this effectively you need a standard which all programs which construct documents will use to tag their data, so that all the infrastructure devices can read those tags and act on them...<br />
 Now the question I've got for Hoff is ... transparent to users.. how will that happen and the tags will still be meaningful to the business?  To do that it seems to me that the device/network will need to make assumptions about the appropriate tags for all of a users data?  From my experience users will create and process documents at a variety of sensitivities and classifications in a given day, and the only person who understands the significance of their documents is the user themselves.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    June
-    2nd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/06/02/comment_on_comm/">Comment on comment about comm.... ah you get the picture</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="IT Security, the view from here: Comment on comment about comments." href="http://robnewby.blogspot.com/2007/06/comment-on-comment-about-comments.html">IT Security, the view from here: Comment on comment about comments.</a><br />
-ok I think that Rob and I will need to agree to disagree about this. I think that I've been talking at cross-purposes with him a bit initially here but I will say that I probably still don't agree with him.<br />
-The idea of data classification is a great one, in theory, but I've just not seen companies be able to implement and manage it at all well.  The main problem is the support of products.  That's got to be in place before you can begin to classify your data properly (in my opinion) and unless it's an industry standard in the early days it can't work as you'll not be able to apply it across all information repositories, at which point you've got holes in the protection provided.<br />
-In addition to support of products is user buy-in.  What's the selling point to an end-user department in a corporate for the additional overhead for them to classify all their documents?<br />
-On the point that Rob makes, about DRM not being involved in data centric security.  Well, sounds like my misunderstanding.  From reading the Jericho stuff which mentions DRM in it's "commandments" about data-centric security and Hoff mentioned it in his oringial post, so I obviously got the wrong end of the stick, although without DRM I'm kinda curious about how you stop a system which either doesn't understand your classification or deliberately tries to bypass it from reading data to which it's not entitled...<br />
-To close on this a couple of experiences I've had with Data classification and marking.  I wrote some policies for a UK corporate on this a couple of years back and I remember going round the table and everyone adding stuff in about double-enveloping and all that other good information marking stuff, and just hitting intractable problems about things like how you classify data on things like E-Mail and MS Word which realistically everyone uses and also realising that to make this work is to ask a lot from a load of users who don't and don't want to understand anything about security.  Now maybe products will come along which make this all really easy and transparent to the users but, well I remain to be convinced...</p>
 
     
     

