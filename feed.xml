@@ -12,7 +12,7 @@
 
 &lt;p&gt;To do this we use “runners” which are essentially execution environments (e.g. a Virtual Machine) that runs our tests or other actions.&lt;/p&gt;
 
-&lt;p&gt;Of course what do pentesters thing, seeing the idea that someone’s going to let me execute commands somewhere… “hey can I get a shell on that?” :)&lt;/p&gt;
+&lt;p&gt;Of course what do pentesters think, seeing the idea that someone’s going to let me execute commands somewhere… “hey can I get a shell on that?” :)&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/antitree/status/1164193020612423680?s=20&quot;&gt;Antitree got there first on twitter&lt;/a&gt; but I thought it could be fun to walk through the process in a little more detail than twitter’s format allows.&lt;/p&gt;
 
