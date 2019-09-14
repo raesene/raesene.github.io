@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Auditing Kubernetes Access Control</title>
+	<title>Kubernetes Security Lab with Kind and Ansible</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Auditing Kubernetes Access Control </h1>
+  <h1>Kubernetes Security Lab with Kind and Ansible </h1>
 </div>
 	
 <article>
@@ -157,65 +157,28 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   May 
-	   23rd,
-	     
-	   2018
+	   September 
+	   14th,
+	   
+	   2019
 	 </span>
 	  <div class="article_body">
-	  <p>A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.</p>
+	  <p>Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the synatax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.</p>
 
-<p>However when it comes to completing this kind of review on a Kubernetes cluster, you’ll likely find it not as straight-forward as expected, due to k8s’ rather hands-off approach to identity management.</p>
+<p>In the past I’ve looked at using <a href="https://kind.sigs.k8s.io">kind</a> for this (with <a href="https://raesene.github.io/blog/2019/03/04/kind-of-insecure-test-clusters/">kind of insecure</a>).  This works pretty well, but there are some limitations on what we can do in terms of setting up vulnerable environments with just kind on it’s own.</p>
 
-<p>Similarly to areas such as Networking and Storage, k8s has taken the decision to delegate the matter of user identity management to largely external systems.  There is no standard user database in a cluster, and where you can find the information to review privileged access will largely depend on the configured authentication mechanisms.</p>
+<p>Adding a configuration management tool to the mix can let us easily create more complex test environments.  Enter <a href="https://www.ansible.com/">Ansible</a> which works pretty well for this application. It doesn’t require any server infrastructure, which is good for this kind of setup, and it’s possible to define a Docker container as the host for applying the actions to via a playbook.</p>
 
-<h2 id="what-information-is-available">What information is available?</h2>
+<h2 id="kube-security-lab">Kube Security Lab</h2>
 
-<p>Assuming that you’re using RBAC (‘cause if you’re not it’s likely the answer to “who has cluster-admin rights?” is “All your authenticated users”) the information available is from a couple of different sources. <code class="highlighter-rouge">clusterroles</code> and <code class="highlighter-rouge">clusterrolebindings</code> provide information on cluster level privileges and <code class="highlighter-rouge">roles</code> and <code class="highlighter-rouge">rolebindings</code> serve the same purpose at the namespace level.</p>
+<p>So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it <a href="https://github.com/raesene/kube_security_lab">here</a></p>
 
-<p>What you can get from the cluster is a list of the subjects that have a given role.  These can be either users, service accounts, or groups.  The main issue, in terms of determining the overall access to the cluster, comes from the inclusion of groups in that list of subjects, as group membership isn’t recorded anywhere within the cluster, it’s defined by the identity provider.</p>
+<p>The idea is that the <code class="highlighter-rouge">client-machine.yml</code> playbook can be used to spin up a container with client tools installed (it’s just an instance of <a href="https://hub.docker.com/r/raesene/alpine-containertools">this image</a> at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.</p>
 
-<p>To make this possbly a little clearer, lets take a worked example.</p>
+<p>In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!</p>
 
-<p>The cluster role <code class="highlighter-rouge">cluster-admin</code> is obviously pretty key as it has complete rights to the entire Kubernetes cluster.  On a standard kubeadm 1.9 cluster if you run the command</p>
+<p>There’s a starter set of playbooks up now, and I’ll plan to expand this as I get more ideas.  Also there should be walkthroughs for each of the clusters, in case people want the cheat sheet version :)</p>
 
-<p><code class="highlighter-rouge">kubectl get clusterrolebinding cluster-admin -o yaml</code>  the output will look something like</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: "true"
-  creationTimestamp: 2018-01-10T21:03:11Z
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-  name: cluster-admin
-  resourceVersion: "94"
-  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings/cluster-admin
-  uid: aa8f62e2-f649-11e7-8092-000c290b2418
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: system:masters
-</code></pre></div></div>
-
-<p>The key point is the subjects section at the end where we can see that all members of the <code class="highlighter-rouge">system:masters</code> group have the <code class="highlighter-rouge">cluster-admin</code> role.  The membership of that group isn’t defined anywhere in your cluster.</p>
-
-<p>It’s worth noting also that whilst tying up the identity of people with rights to your cluster is easier with Users and Service accounts than it is with groups, Kubernetes still relies on external systems to warrant these identities, so just ‘cause the cluster role binding says “User fred has a binding to the cluster-admin role”, it doesn’t actually have any way (within the cluster) of asserting who fred is.</p>
-
-<h2 id="so-how-do-i-audit-k8s-user-rights">So how do I audit k8s user rights?</h2>
-
-<p>Basically you’ll need to find out what authentication mechanisms are supported by the cluster, and then for each one, determine how group membership is defined and see if you can assemble a list of users that way.</p>
-
-<p>For example, lets say the cluster is using client certificate authentication (a common option in many clusters).  As per  <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs">the Kubernetes docs</a> group memberships are defined in the CSR, so to review membership, you’ll need to grep. through all the CSRs (assuming there is a record of them) and pull out the group memberships that way.</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>Nothing in this post will come as any surprise to people who’ve been following Kubernetes security for a while now.  However as it grows in popularity and more large companies start rolling it out, issues like understanding who has rights to what will start becoming more important.</p>
 
 	  </div>
 
@@ -241,7 +204,7 @@ subjects:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Auditing Kubernetes Access Control&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Security Lab with Kind and Ansible&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -269,10 +232,10 @@ subjects:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2018/03/29/WSL-And-Docker/" title="WSL and Docker for Windows">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2019/08/25/shells-in-gh-actions/" title="Shells in Github Actions">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2018/07/19/exploring-public-kubernetes-certificates/" title="Exploring Public Kuberetes Certificates">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

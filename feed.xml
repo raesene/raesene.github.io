@@ -7,6 +7,30 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes Security Lab with Kind and Ansible</title>
+				<description>&lt;p&gt;Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the synatax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.&lt;/p&gt;
+
+&lt;p&gt;In the past I’ve looked at using &lt;a href=&quot;https://kind.sigs.k8s.io&quot;&gt;kind&lt;/a&gt; for this (with &lt;a href=&quot;https://raesene.github.io/blog/2019/03/04/kind-of-insecure-test-clusters/&quot;&gt;kind of insecure&lt;/a&gt;).  This works pretty well, but there are some limitations on what we can do in terms of setting up vulnerable environments with just kind on it’s own.&lt;/p&gt;
+
+&lt;p&gt;Adding a configuration management tool to the mix can let us easily create more complex test environments.  Enter &lt;a href=&quot;https://www.ansible.com/&quot;&gt;Ansible&lt;/a&gt; which works pretty well for this application. It doesn’t require any server infrastructure, which is good for this kind of setup, and it’s possible to define a Docker container as the host for applying the actions to via a playbook.&lt;/p&gt;
+
+&lt;h2 id=&quot;kube-security-lab&quot;&gt;Kube Security Lab&lt;/h2&gt;
+
+&lt;p&gt;So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it &lt;a href=&quot;https://github.com/raesene/kube_security_lab&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The idea is that the &lt;code class=&quot;highlighter-rouge&quot;&gt;client-machine.yml&lt;/code&gt; playbook can be used to spin up a container with client tools installed (it’s just an instance of &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;this image&lt;/a&gt; at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.&lt;/p&gt;
+
+&lt;p&gt;In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!&lt;/p&gt;
+
+&lt;p&gt;There’s a starter set of playbooks up now, and I’ll plan to expand this as I get more ideas.  Also there should be walkthroughs for each of the clusters, in case people want the cheat sheet version :)&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 14 Sep 2019 17:10:39 +0100</pubDate>
+				<link>/blog/2019/09/14/kube-security-lab/</link>
+				<guid isPermaLink="true">/blog/2019/09/14/kube-security-lab/</guid>
+			</item>
+		
+			<item>
 				<title>Shells in Github Actions</title>
 				<description>&lt;p&gt;I recently got my beta invite to the awesome &lt;a href=&quot;https://github.com/features/actions&quot;&gt;Github Actions&lt;/a&gt; feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.&lt;/p&gt;
 
@@ -741,31 +765,6 @@ nodes:
 				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
 				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
 				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
-			</item>
-		
-			<item>
-				<title>Using 'Try with PWD' buttons to demonstrate apps</title>
-				<description>&lt;p&gt;I came across a very interesting post &lt;a href=&quot;https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94&quot;&gt;this morning&lt;/a&gt; on &lt;a href=&quot;https://labs.play-with-docker.com/&quot;&gt;using Play With Docker&lt;/a&gt; (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, &lt;a href=&quot;https://labs.play-with-k8s.com/&quot;&gt;Play with Kubernetes&lt;/a&gt;), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.&lt;/p&gt;
-
-&lt;p&gt;What I hadn’t realised before was that you can pass a Docker compose file in as a parameter to a PWD URL and have it automatically spin up an instance of that stack.  This model seems super-useful for trying out new applications in disposable environments and works well with web applications, as we’ll see.&lt;/p&gt;
-
-&lt;p&gt;So having read the post I thought I’d try adding a sample instance for my &lt;a href=&quot;https://github.com/raesene/dockerized-security-tools&quot;&gt;Dockerized Security Tools&lt;/a&gt; project.  From the tools I’ve got in there at the moment, the best candidate for a try out looked to be &lt;a href=&quot;https://dradisframework.com/ce/&quot;&gt;Dradis-CE&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;I knocked up a very basic Docker compose file for it, and then put a button referencing it in the Readme, with this as the result.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/raesene/dockerized-security-tools/master/dradis/docker-compose.yml&quot;&gt;&lt;img src=&quot;https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png&quot; alt=&quot;Try in PWD&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;If you click that button and then login (you’ll need a Docker Hub account for this, but they’re free to create), PWD will launch the application.  The only other trick to trying it out is that you need to click a link in the PWD interface to access the exposed application.&lt;/p&gt;
-
-&lt;p&gt;There will be a grey oval next to the IP address at the top with the exposed port number (in this case 3000).  Clicking that link should take you into a running instance of Dradis! The first page load will be a little slow, but after that it should work just fine.&lt;/p&gt;
-
-&lt;p&gt;I could see this having a number of use cases, things like running up instances of &lt;a href=&quot;https://www.owasp.org/index.php/OWASP_Juice_Shop_Project&quot;&gt;OWASP Juice Shop&lt;/a&gt; to try out tools or similar.&lt;/p&gt;
-
-&lt;p&gt;The runtime is limited to four hours, but that should be plenty for a quick look round a tool to see what it’s like.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 21 Oct 2018 15:10:39 +0100</pubDate>
-				<link>/blog/2018/10/21/Try-With-PWD/</link>
-				<guid isPermaLink="true">/blog/2018/10/21/Try-With-PWD/</guid>
 			</item>
 		
 	</channel>
