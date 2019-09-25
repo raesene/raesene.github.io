@@ -7,6 +7,47 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Container Image Squatting in a Multi-Registry World</title>
+				<description>&lt;p&gt;I’ve been starting to have a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.&lt;/p&gt;
+
+&lt;p&gt;One of the more fixed things in the Docker landscape is how it address container image registries. Docker hub is hard coded in the source code of Docker as the default registry, so that if you do something like &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull nginx&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; it will assume that you’re looking for these images on Docker Hub.  If you want to pull from an alternate registry, you need to provide the hostname and port of that registry server.&lt;/p&gt;
+
+&lt;p&gt;This behaviour appears to have been a source of frustration for other organizations in the container ecosystem, so it’s not really a surprise to find that it works differently when you use other tools, like podman.&lt;/p&gt;
+
+&lt;p&gt;What podman does is allow users to specify their registry search order via a configuration file stored at &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/containers/registries.conf&lt;/code&gt;. On a CentOS8 install the default registry search order is this&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[registries.search]
+registries = ['registry.redhat.io', 'quay.io', 'docker.io']
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From that, we can see that both Redhat’s registry and Quay come in before Docker.&lt;/p&gt;
+
+&lt;p&gt;This has a potentially interesting side effect from a security perspective, which is, if a user requests an image without specifying the host name and port of the registry, they could get the wrong image.&lt;/p&gt;
+
+&lt;p&gt;To give an example. On Docker hub there’s an image I have with some container tooling called &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;alpine-containertools&lt;/a&gt;.  As an experiment I tried creating the same image name with totally different content on Quay.io which is &lt;a href=&quot;https://quay.io/repository/raesene/alpine-containertools&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;So if you use podman and run &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; you’re going to get the wrong image.&lt;/p&gt;
+
+&lt;p&gt;This could lead to attackers essentially squatting on common Docker Hub accounts to try and trick users into pulling malicious images.  A process made somewhat easier by the fact that you can register organization names on Quay.io (for example, I registered &lt;a href=&quot;https://quay.io/organization/nccgroup&quot;&gt;nccgroup&lt;/a&gt;).&lt;/p&gt;
+
+&lt;h2 id=&quot;what-can-you-do-about-this&quot;&gt;What can you do about this?&lt;/h2&gt;
+
+&lt;p&gt;Well if you’re planning to adopt podman there’s a couple of things you could do to mitigate this risk&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Change the search order in registries.conf to have &lt;code class=&quot;highlighter-rouge&quot;&gt;docker.io&lt;/code&gt; first, which essentially restores the default behaviour (although it could still produce unexpected results if you misspell your pull request)&lt;/li&gt;
+  &lt;li&gt;Remove the other registries from the file altogether (which essentially makes the behaviour the same as Docker)&lt;/li&gt;
+  &lt;li&gt;Ensure that you’ve registered any names you use on Docker Hub on Quay.io (this only works where you’re pulling Docker Hub images from accounts you control, but of course who pulls Docker Hub images from accounts they don’t control!)&lt;/li&gt;
+  &lt;li&gt;Use FQDNs for all your &lt;code class=&quot;highlighter-rouge&quot;&gt;pull&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;run&lt;/code&gt; statements, essentially bypassing the search order.&lt;/li&gt;
+  &lt;li&gt;Make use of image signing to check that the image pulled is the same as that which was expected.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>Wed, 25 Sep 2019 18:10:39 +0100</pubDate>
+				<link>/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</link>
+				<guid isPermaLink="true">/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes Security Lab with Kind and Ansible</title>
 				<description>&lt;p&gt;Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.&lt;/p&gt;
 
@@ -729,42 +770,6 @@ nodes:
 				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
 				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
 				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
-			</item>
-		
-			<item>
-				<title>Docker 18.09 - Making WSL that much easier</title>
-				<description>&lt;p&gt;After a little delay Docker 18.09 got it’s final release this week.  This is a release I’ve been looking forward to for a while now, as it’s got a couple of cool new features, which should help in day-to-day usage of Docker.&lt;/p&gt;
-
-&lt;p&gt;The main one is the incorporation of remote connections to Docker Engine instances via SSH.  This means that, if you want to connect to a remote Docker Engine instance, instead of having to setup TLS certificate and modifying the configuration at the server-side, you can simply make a change on the client-side configuration and get easy remote access!&lt;/p&gt;
-
-&lt;p&gt;One of the places this is most useful is with WSL.  To take the basic case, say you’ve got a Linux VM on your host and you’d like to use WSL for Docker development and administration.  First up you’ll need to install the Docker client in WSL.  Fortunately another change that came along with 18.09 makes this easier for you.  There’s a new Client only deb file so you can just install that, rather than installing the server-side engine components.&lt;/p&gt;
-
-&lt;p&gt;First step is to follow the &lt;a href=&quot;https://docs.docker.com/install/linux/docker-ce/ubuntu/&quot;&gt;Docker-CE installation instructions&lt;/a&gt; down to the point of installing Docker, then instead of the usual &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo apt install -y docker-ce&lt;/code&gt; do&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo apt install -y docker-ce-cli
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now we need to tell our client where to connect.  For this we just need to modify the &lt;code class=&quot;highlighter-rouge&quot;&gt;DOCKER_HOST&lt;/code&gt; environment variable.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DOCKER_HOST=ssh://YOUR_HOSTNAME_OR_IP_HERE
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve got that configured, assuming that both client and server are running 18.09 or higher, things should just work!&lt;/p&gt;
-
-&lt;p&gt;A couple of tips to make things smoother :-&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;This works best if your usernames are the same on both client and host, as SSH will assume that that’s the username to use.  You can also configure &lt;code class=&quot;highlighter-rouge&quot;&gt;.ssh/config&lt;/code&gt; to specify what username to use, so as to avoid having to type it in every time.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;If you’re using password based login for the remote server, you’re going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Sun, 11 Nov 2018 14:10:39 +0000</pubDate>
-				<link>/blog/2018/11/11/Docker-18-09-SSH/</link>
-				<guid isPermaLink="true">/blog/2018/11/11/Docker-18-09-SSH/</guid>
 			</item>
 		
 	</channel>

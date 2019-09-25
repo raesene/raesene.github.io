@@ -159,6 +159,53 @@
   <span class="post-date">
     
     May
+    12th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/12/some_metasploit_1/">Raesene's Ramblings</a>
+  </h2>
+
+  <div>
+    
+    
+    ---
+layout: post
+title: Some Metasploit and Oracle Notes - Part 2
+date: 2009-05-12 20:41:55.000000000 +01:00
+categories:
+- Metasploit
+- Penetration Testing
+tags: []
+status: publish
+type: post
+published: true
+---<br />
+SCOTT                          CONNECT                     NO  YES NO<br />
+<b>SCOTT                          DBA                               NO  YES NO</b><br />
+SCOTT                          RESOURCE                   NO  YES NO<br />
+</i><br />
+It's worth noting that some of these Oracle modules (there's 9 in the current Metasploit svn versions) have required privilege levels (dbms_cdc_publish for example in a vanilla 10GR2 setup needs EXECUTE_CATALOG_ROLE to run which only SYS and users with the DBA role have...), so it's worth trying out several to fit different scenarios...<br />
+So here we are with DBA, which to be honest for a lot attackers is all that's needed.  The data in the database is likely to be the "crown jewels" which the attackers looking for, but hey we can go further with the wonders of Metasploit and execute code on the underlying operating system...</p>
+<p><b>5. Leverage Oracles functionality to get access to the underlying operating system</b><br />
+So at the moment I don't see a metasploit option for doing this in *nix (there's a win32 command execution module on <a href="http://www.metasploit.com/users/mc/oracle/win32exec.rb">mc's </a>page), however that's not a serious problem as it turns out the nice guys at Oracle provide ways to do this easily.</p>
+<p>A quick google around revealed <a href="http://www.oracle.com/technology/tech/java/jsp/pdf/calling_shell_commands_from_plsql_1.1.pdf">this paper</a> from Oracle on command execution from a database user and from my running of it, it works fine (although requires creation of new database objects so best suited to an environment that can be rolled back easily...).<br />
+So there you go, from nothing to OS access in 5 easy steps, courtesy of Metasploit...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     10th,
     
     2009
@@ -527,39 +574,6 @@ The best pen. tests have specific goals in mind, which allow specific tests to b
 So a high risk new application on a new platform is likely to warrant a fairly heavy review (web application, possibly code review, likely config. security review of the operating system and other new components like firewalls or routers), whereas some new pages added to an existing application where it's purely static content, might not warrant a review at all (or a very quick sense check).<br />
 Ultimately there's going to be a trade-off between time spent and the level of assurance over security that's needed.  A full code-review/manual build review/architecture review of a new application is likely to provide the best level of assurance, but at a pretty high cost.  A "black box" vulnerability scan and web application test, will likely be quick and therefore cheaper, but will provide a lower level of assurance.<br />
 next time (hopefully sooner) I'll talk about some of the challenges in executing tests and touch on some of the gotchas that can cause problems</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    14th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="/blog/2008/12/14/what_is_penetra/">What is Penetration Testing?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I'm planning to do a series of posts about penetration testing over the next couple of weeks so I thought I should start in the obvious place of defining what it actually is.<br />
-You'd think this would be relatively straightforward, but the term "penetration testing" is mis-used all over the place.  Some people use it to refer to vulnerability assessment, some people use it to refer to Web Application Security Assessment, and a lot of business people use it to refer generically to any and all security assessment activity.<br />
-So what actually is it?  Well for me, a penetration test is a scenario based assessment where the tester will actually try to exploit security vulnerabilities in a system or systems (depending on the scope) and then leverage those exploited vulnerabilities to gain further access to systems within the scope of the assessment which may be accessible after exploiting the initial vulnerability.<br />
-So that's what it is, why is it important to use the term correctly?<br />
-Well, different security assessment types have different characteristics and provide the owner of the system with different levels of assurance, so it's important to make sure everyone's talking about the same thing.<br />
-For example, vulnerability assessment is typically primarily tool based (eg, Nessus), focuses on networking/Operating System/maybe database level problems and doesn't usually exploit the vulnerabilities found.  Pretty low risk to the systems under test (usually) but won't provide definite confirmation of problems and typically doesn't look at web applications, so it won't cover all the attack surface of a typical web application exposed over the Internet.<br />
-So if someone calls a vulnerability assessment a penetration test (and this is pretty common, in my experience) there's a good chance that someone's going to be disappointed in the results...<br />
-From the definition I used there's a couple of areas that can be very important to define correctly when conducting a test, so next time, I'm planning to go over some of the common problems and misconceptions in scoping penetration tests.</p>
 
     
     
