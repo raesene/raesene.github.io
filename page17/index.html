@@ -165,6 +165,41 @@
   </span>
 
   <h2>
+    <a href="/blog/2007/05/19/owasp_conferenc/">OWASP Conference Milan</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well the OWASP conference in Milan was really great.  There was a large number of good presentations and lots of interesting chat. Also got to meet quite a few people I only know from their blogs.<br />
+First day was the SOA and Web services Security training from <a href="http://1raindrop.typepad.com/1_raindrop/">Gunnar Peterson</a>.  Whilst there was a lot of information to absorb in one day, it was very good and left me with some key things to take away like the importance of using XML Security gateways in enterprise web services, some risks which apply to webservices that are different to those faced by usual web apps. like XDOS and that MQ only provides authorization not authentication !<br />
+On the first evening we got free food and drink courtesy of the nice people at <a href="http://www.breach.com/"> Breach Security </a> and I had some interesting chats with Alex Lucas on cool home computing setups amongst others.<br />
+The second day was the first of the conference proper (<a href="http://www.owasp.org/index.php/6th_OWASP_AppSec_Conference_-_Italy_2007/Agenda"> agenda</a>) .  Hopefully all the slide decks will be up and linked from that page fairly soon...  There was lots of interesting stuff, probably the most interesting (or perhaps scary) of the day for me was <a href="http://www.gnucitizen.org/">PDP Architects</a> presentation on advanced  web hacking (slides from this one are <a href="http://www.gnucitizen.org/projects/6th-owasp-conference/">here</a>) .  It was a really interesting look at what some of the new services that are available on the 'net like Yahoo Pipes and tinyURL can be used for by malicious parties.  Unfortunately the dark angel of demos was around and Yahoo Pipes was down during the presentation but I imagine it'll be up again soon....<br />
+Dinner on the second day was the conference one at Ristorante Why Not and again loads of interesting chat was had.  I was sat next to Simon Roses Femerling, lead on the <a href="http://www.owasp.org/index.php/Category:OWASP_Pantera_Web_Assessment_Studio_Project"> Pantera Project</a> and had some interesting chats about what's next for that project.  It actually cleared up for me what the goals of the project are.  Pantera (at the moment) seems primarily geared at gathering information on the site under analysis rather than automatically handling XSS testing or the like.<br />
+Unfortunately I was pretty tired by the end of the meal (they have quite leisurely dining in Italy) and missed the first appearance by the OWASP band! However there's pictures <a href="http://www.owasp.org/index.php/OWASP_Band"> here </a><br />
+Day Three had some more great talks and more stuff that I really should look at when I get the task.  There was information on the newly revamped <a href="http://www.owasp.org/index.php/Category:OWASP_Testing_Project"> OWASP testing guide </a> which sounds like a really good basis for web testing methodologies now.<br />
+There was also a madcap spin through the expanded OWASP project list from Dinis Cruz where we got a flavour for the variety of projects now undertaken by OWASP.  One thing that sprang to mind while I was listening to this was that perhaps OWASP need to enforce some kind of naming convention on their projects as at the moment some of the names aren't really very descriptive of what the project does which can lead to some confusion<br />
+Day Three ended up with the panel discussing <b><i>"What is needed to fix web app sec vulnerabilities once and for all?"</i></b> . The main suggestions surrounded re-vamping the underlying protocols and technologies (eg, HTTP 2.0) to embed security and also encouraging development framework usage so that individual developers find it easier to write secure applications.  Ultimately though it seems that the conclusion was that the current crop of web application vulnerabilities will be with us for some time and there are no easy fixes...<br />
+All in all a great conference, I'll definitely hope to get back next year.  The talks were all pretty good and also there were loads of interesting people to meet and put faces to blogs...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    19th,
+    
+    2007
+  </span>
+
+  <h2>
     <a href="/blog/2007/05/19/back_in_more_th/">back.. in more than one sense of the word</a>
   </h2>
 
@@ -429,42 +464,6 @@ Point 2 - Monitor Content in motion.  Now here's where I start getting a bit cyn
 </ul>
 <p>to be fair to them points 3, 4 and 5 are pretty reasonable, IT Security best practice.<br />
 point 6 Centralize your intellectual property data - Just not practical for most companies.  Companies at the moment are looking to make working more and more flexible and information easier to access.  The idea of putting it in one big vault so it can be protected just ain't gonna fly.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    15th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="/blog/2007/03/15/post_21/">Pen Testing A go go</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Lots of interesting chat on the reasons to Pen Test, or not from various blogs starting over here <a href="http://informationsecurity.techtarget.com/magItem/0,291266,sid42_gci1245619_idx2,00.html"> at techtarget</a> then rapidly spreading out over the blogosphere (hate that word but it's the only one going) <a href="http://www.matasano.com/log/719/more-on-pen-testing-2/">to Matasano</a> <a href="http://mcwresearch.com/archives/438">mcwresearch</a>, <a href="http://securityincite.com/blog/mike-rothman/the-daily-incite-march-15-2007">Security Incite</a> and in a bit of a divergence from topic <a href="http://layer8.itsecuritygeek.com/index/layer8/comments/ways-to-annoy-your-pentester/"> layer 8 </a><br />
-And what does all this tell us.... Well there's a lot of confusion around what a penetration test is and at lot of divergence over the value they provide.<br />
-So anyway here's my 0.02 on the subject.  Penetration tests are not a good way to prove the security of a system, if possible and the application is under your control go for developing good secure coding standards and develop a good Security Development lifecycle including elements like threat modeling.<br />
-However in the real world, life doesn't work like that all the time, you'll get applications which are legacy and may not have been securely developed, you'll get 3rd party applications that you've no idea how they've been developed, and at times like that a penetration test is a reasonable way of getting some level of assurance that they're reasonably secure, and there probably aren't any glaring holes there.<br />
-A couple of other points that emerged from all this reading is</p>
-<ul>
-<li>I definitely agree with Marcus Ranum that the PCI in particular look like a penetration testers (and code reviewers) full employment act.  Every website that processes cardholder data (and that's a lot of sites) needs an annual penetration test and code review (unless they're using a web application firewall)</li>
-<li>I definitely don't agree with Bruce schneier's point about using penetration testing to identify items on the SANS top 20 list.  For that if I've got any access to the systems I'd much prefer a patch management and security policy compliance tool, 'cause they're way less hit and miss than a penetration test </li>
-<li> Dave G at Matasano's probably right about a lot of bad penetration tests, although I think a lot of the problem is people not understanding what they're being sold (ie running nessus on someone's site is <b>not</b> a penetration test.  Perhaps what's needed is a well accepted certification for penetration testers in different technologies like <a href="http://www.it-observer.com/articles.php?id=1308"> Nick Baskett talks about.</a>  </li>
-<li>Michael at mcwresearch's got an excellent point about using successful penetration tests as a marketing point. I'm constantly surprised at how many companies who are selling web based products, haven't had any penetration testing done</li>
-</ul>
 
     
     

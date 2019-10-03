@@ -7,6 +7,60 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Accessing Cluster IPs from the Outside</title>
+				<description>&lt;p&gt;This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a &lt;a href=&quot;https://tgik.io&quot;&gt;TGIK&lt;/a&gt; episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.&lt;/p&gt;
+
+&lt;p&gt;When you run Kubernetes services, generally they are of type “ClusterIP” which means they get assigned a fixed IP address inside the cluster, but this IP address isn’t visible externally (it’s not designed for external users to contact the service, that’s what Ingress resources or NodeIP services are for).&lt;/p&gt;
+
+&lt;p&gt;However, given the way Kubernetes works, it’s possible to access these service IP addresses by the simple expedient of …. Adding a route to them :)  Essentially Kubernetes nodes are Linux routers and kube-proxy will direct traffic for us and doesn’t generally care what generated that traffic.&lt;/p&gt;
+
+&lt;p&gt;Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface &lt;code class=&quot;highlighter-rouge&quot;&gt;ens33&lt;/code&gt; with an IP address of &lt;code class=&quot;highlighter-rouge&quot;&gt;172.16.198.131&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
+
+Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:51 BST
+Nmap scan report for 10.105.140.70
+Host is up.
+
+PORT     STATE    SERVICE
+3000/tcp filtered ppp
+
+Nmap done: 1 IP address (1 host up) scanned in 2.04 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo ip route add 10.96.0.0/12 via 172.16.198.131
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now if we retry the same command&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
+
+Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:53 BST
+Nmap scan report for 10.105.140.70
+Host is up (0.00074s latency).
+
+PORT     STATE SERVICE
+3000/tcp open  ppp
+
+Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Our port is open :)&lt;/p&gt;
+
+&lt;p&gt;So we can interrogate any service in that network from outside the cluster (and without any rights to the cluster!) without restriction.&lt;/p&gt;
+
+&lt;p&gt;From a security point, the important thing to take away here is, don’t assume that services are protected because they’re not hooked into an ingress, if an attacker can route traffic to the cluster, they can just do this to see those IP addresses.&lt;/p&gt;
+</description>
+				<pubDate>Thu, 03 Oct 2019 18:10:39 +0100</pubDate>
+				<link>/blog/2019/10/03/accessing-cluster-ips-from-the-outside/</link>
+				<guid isPermaLink="true">/blog/2019/10/03/accessing-cluster-ips-from-the-outside/</guid>
+			</item>
+		
+			<item>
 				<title>Container Image Squatting in a Multi-Registry World</title>
 				<description>&lt;p&gt;I’ve been starting to have a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.&lt;/p&gt;
 
@@ -714,62 +768,6 @@ services:
 				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
 				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
 				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
-			</item>
-		
-			<item>
-				<title>Kind of Insecure Test Clusters</title>
-				<description>&lt;p&gt;One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).&lt;/p&gt;
-
-&lt;p&gt;For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.&lt;/p&gt;
-
-&lt;p&gt;So when I heard about &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; on an episode of Heptio’s &lt;a href=&quot;https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ&quot;&gt;TGIK&lt;/a&gt; I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.&lt;/p&gt;
-
-&lt;p&gt;Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.&lt;/p&gt;
-
-&lt;p&gt;What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.&lt;/p&gt;
-
-&lt;p&gt;Kind supports a &lt;code class=&quot;highlighter-rouge&quot;&gt;--config&lt;/code&gt; option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to &lt;a href=&quot;https://twitter.com/BenTheElder&quot;&gt;@BenTheElder&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/mauilion&quot;&gt;@mauillon&lt;/a&gt; for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.&lt;/p&gt;
-
-&lt;p&gt;The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.&lt;/p&gt;
-
-&lt;p&gt;To provide a concrete example, the config below will create a cluster with the insecure port running on the API server&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: &quot;0.0.0.0&quot;
-        insecure-port: &quot;8080&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve got kind installed and this is present as a YAML file you can just run&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kind --config insecure-port.yaml --name insecure create cluster&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker0&lt;/code&gt; interface.&lt;/p&gt;
-
-&lt;p&gt;So you can get the IP address of that interface from &lt;code class=&quot;highlighter-rouge&quot;&gt;docker inspect insecure-control-plane&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is &lt;code class=&quot;highlighter-rouge&quot;&gt;172.17.0.3&lt;/code&gt;)&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;curl http://172.17.0.3:8080/&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github &lt;a href=&quot;https://github.com/raesene/kind-of-insecure&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Mon, 04 Mar 2019 20:10:39 +0000</pubDate>
-				<link>/blog/2019/03/04/kind-of-insecure-test-clusters/</link>
-				<guid isPermaLink="true">/blog/2019/03/04/kind-of-insecure-test-clusters/</guid>
 			</item>
 		
 	</channel>
