@@ -10,7 +10,7 @@
 				<title>Accessing Cluster IPs from the Outside</title>
 				<description>&lt;p&gt;This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a &lt;a href=&quot;https://tgik.io&quot;&gt;TGIK&lt;/a&gt; episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.&lt;/p&gt;
 
-&lt;p&gt;When you run Kubernetes services, generally they are of type “ClusterIP” which means they get assigned a fixed IP address inside the cluster, but this IP address isn’t visible externally (it’s not designed for external users to contact the service, that’s what Ingress resources or NodeIP services are for).&lt;/p&gt;
+&lt;p&gt;When you run Kubernetes services, generally they are of type “ClusterIP” which means they get assigned a fixed IP address inside the cluster, but this IP address isn’t visible externally (it’s not designed for external users to contact the service, that’s what Ingress resources or NodePort services are for).&lt;/p&gt;
 
 &lt;p&gt;However, given the way Kubernetes works, it’s possible to access these service IP addresses by the simple expedient of …. Adding a route to them :)  Essentially Kubernetes nodes are Linux routers and kube-proxy will direct traffic for us and doesn’t generally care what generated that traffic.&lt;/p&gt;
 
