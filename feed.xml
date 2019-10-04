@@ -18,6 +18,8 @@
 
 &lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by &lt;a href=&quot;https://twitter.com/TinkerFairy_Net&quot;&gt;@TinkerFairy_Net&lt;/a&gt;) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.&lt;/p&gt;
 
+&lt;p&gt;One other point about the command below is that you need the &lt;code class=&quot;highlighter-rouge&quot;&gt;-Pn&lt;/code&gt; switch to disable nmap’s Ping scanning which it usually does to determine if a host is live.  Service IPs aren’t real machines, so they won’t respond on any port other than the service one.&lt;/p&gt;
+
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
 
 Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:51 BST
