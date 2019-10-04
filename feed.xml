@@ -16,7 +16,7 @@
 
 &lt;p&gt;Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface &lt;code class=&quot;highlighter-rouge&quot;&gt;ens33&lt;/code&gt; with an IP address of &lt;code class=&quot;highlighter-rouge&quot;&gt;172.16.198.131&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered.&lt;/p&gt;
+&lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by &lt;a href=&quot;https://twitter.com/TinkerFairy_Net&quot;&gt;@TinkerFairy_Net&lt;/a&gt;) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
 
@@ -30,10 +30,12 @@ PORT     STATE    SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 2.04 seconds
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address&lt;/p&gt;
+&lt;p&gt;So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address.&lt;/p&gt;
 
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo ip route add 10.96.0.0/12 via 172.16.198.131
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This change essentially tells our client machine that there’s another router on the network and that for traffic in the range &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; it should send the packets to our Kubernetes cluster node for onwards transmission.&lt;/p&gt;
 
 &lt;p&gt;Now if we retry the same command&lt;/p&gt;
 
