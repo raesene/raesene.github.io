@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>From Stackoverflow to CVE, with some laughs along the way</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>From Stackoverflow to CVE, with some laughs along the way </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   15th,
+	   
+	   2019
+	 </span>
+	  <div class="article_body">
+	  <h2 id="discovery">Discovery</h2>
+
+<p>A couple of weeks ago I was on Stackoverflow and noticed an <a href="https://stackoverflow.com/questions/58129150/security-yaml-bomb-user-can-restart-kube-api-by-sending-configmap/58133282#58133282">interesting post</a> with one of my watched tags. The post described a problem where the user had submitted a YAML manifest to their Kubernetes server and caused very high CPU/memory usage, indicating that there could be an application Denial of service issue.</p>
+
+<p>The YAML posted was a lightly modified version of the YAML bomb example on this <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">Wikipedia page</a> about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.</p>
+
+<p>A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in <code class="highlighter-rouge">kubectl</code> and not server-side.  After conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When <code class="highlighter-rouge">kubectl</code> was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using <code class="highlighter-rouge">curl</code> the YAML could be passed directly to the API server causing the YAML to be parsed server-side.</p>
+
+<p>Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests, however the example given did require the attacker to be able to create <code class="highlighter-rouge">configMap</code> objects on the server, which reduced the number of potential attackers considerably.</p>
+
+<p>However, some more investigation did show that, under some circumstances, it was possible to pass YAML to the server as an unauthenticated user, which makes the issue more serious, especially if your Kubernetes cluster is exposed to the Internet.  This is a (somewhat surprisingly) common configuration, with over 200,000 Kubernetes servers being internet facing (based on statistics from <a href="https://www.binaryedge.io/">Binary Edge</a>).</p>
+
+<p>After the <a href="https://github.com/kubernetes/kubernetes/issues/83253">issue</a> had been reported to the Kubernetes security team they quickly had a CVE assigned and arranged for patch releases to be created which are dropping today.</p>
+
+<h2 id="mitigation">Mitigation</h2>
+
+<p>There are a couple of mitigations that can be applied to avoid this being an issue for your Kubernetes cluster.  Firstly, ensure that you apply the available patches or, if you are using a managed Kubernetes distribution, ensure that your vendor has patched the issue.</p>
+
+<p>Secondly, consider whether your Kubernetes server needs to be directly exposed to the Internet, or whether access to it can be restricted using firewalling or placing it behind a bastion host or VPN.</p>
+
+<p>Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the <code class="highlighter-rouge">system:unauthenticated</code> user or setting <code class="highlighter-rouge">--anonymous-auth=false</code> on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.</p>
+
+<h2 id="underlying-library---a-tale-of-differing-perspectives">Underlying library - A tale of differing perspectives</h2>
+
+<p>After looking at the Kubernetes perspective, I thought it would be interesting to dig down to where this issue originated, to see if it may have a wider impact.</p>
+
+<p>The affected code comes from the <a href="https://github.com/go-yaml/yaml">go-yaml</a> library.  I reported the issue to the Go security team and they got in touch with the library author.  A fix, which already existed in a later version of the library, was quickly put in place for the v2 one (which was used by Kubernetes). However at this point an interesting difference of opinion cropped up.</p>
+
+<p>I suggested raising a CVE for this issue to help awareness for downstream projects.  The author felt that, as the original code was compliant with the YAML specification, this was unnecessary and the Go security team felt that it wasn’t their role to assign one.</p>
+
+<p>Both of these positions make sense, when considered from their respective positions. But, this causes quite a serious problem from a security community perspective.</p>
+
+<p>The problem is that CVEs are used by most software security tools as flags to indicate “this library needs to be upgraded”. Without a CVE it’s very likely that automated software scanning tools (that are used in many enterprises for software vulnerability management) won’t flag this issue, and that unless teams manually review the changelogs of all their dependencies (a large task) they’ll be unaware of the potential risk.</p>
+
+<p>The library in question is heavily used in the Go community, with around 36000 code references on Github alone, and presumably a lot of use elsewhere as YAML is a common format in the Cloud Native space where Go is often used.</p>
+
+<p>It also raises the possibility of confusion if the Kubernetes CVE is used as an ersatz stand-in for a library one.  It’s already possible to see other projects which use the library referencing the Kubernetes CVE as a driver for updating their library version, which would seem very odd if you don’t know the back-story.</p>
+
+<p>This is also an example of a possible expectation’s gap between different groups.  The enterprise IT/Security communities might be expecting the CVE databases to be the canonical source of vulnerabilities that they can use to prioritise software and library upgrades but if the software development communities don’t see the necessity of always assigning a CVE, that expectation won’t hold…</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(14)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=From Stackoverflow to CVE, with some laughs along the way&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2019/10/03/accessing-cluster-ips-from-the-outside/" title="Accessing Cluster IPs from the Outside">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

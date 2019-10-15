@@ -7,6 +7,53 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>From Stackoverflow to CVE, with some laughs along the way</title>
+				<description>&lt;h2 id=&quot;discovery&quot;&gt;Discovery&lt;/h2&gt;
+
+&lt;p&gt;A couple of weeks ago I was on Stackoverflow and noticed an &lt;a href=&quot;https://stackoverflow.com/questions/58129150/security-yaml-bomb-user-can-restart-kube-api-by-sending-configmap/58133282#58133282&quot;&gt;interesting post&lt;/a&gt; with one of my watched tags. The post described a problem where the user had submitted a YAML manifest to their Kubernetes server and caused very high CPU/memory usage, indicating that there could be an application Denial of service issue.&lt;/p&gt;
+
+&lt;p&gt;The YAML posted was a lightly modified version of the YAML bomb example on this &lt;a href=&quot;https://en.wikipedia.org/wiki/Billion_laughs_attack&quot;&gt;Wikipedia page&lt;/a&gt; about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.&lt;/p&gt;
+
+&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side.  After conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using &lt;code class=&quot;highlighter-rouge&quot;&gt;curl&lt;/code&gt; the YAML could be passed directly to the API server causing the YAML to be parsed server-side.&lt;/p&gt;
+
+&lt;p&gt;Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests, however the example given did require the attacker to be able to create &lt;code class=&quot;highlighter-rouge&quot;&gt;configMap&lt;/code&gt; objects on the server, which reduced the number of potential attackers considerably.&lt;/p&gt;
+
+&lt;p&gt;However, some more investigation did show that, under some circumstances, it was possible to pass YAML to the server as an unauthenticated user, which makes the issue more serious, especially if your Kubernetes cluster is exposed to the Internet.  This is a (somewhat surprisingly) common configuration, with over 200,000 Kubernetes servers being internet facing (based on statistics from &lt;a href=&quot;https://www.binaryedge.io/&quot;&gt;Binary Edge&lt;/a&gt;).&lt;/p&gt;
+
+&lt;p&gt;After the &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/83253&quot;&gt;issue&lt;/a&gt; had been reported to the Kubernetes security team they quickly had a CVE assigned and arranged for patch releases to be created which are dropping today.&lt;/p&gt;
+
+&lt;h2 id=&quot;mitigation&quot;&gt;Mitigation&lt;/h2&gt;
+
+&lt;p&gt;There are a couple of mitigations that can be applied to avoid this being an issue for your Kubernetes cluster.  Firstly, ensure that you apply the available patches or, if you are using a managed Kubernetes distribution, ensure that your vendor has patched the issue.&lt;/p&gt;
+
+&lt;p&gt;Secondly, consider whether your Kubernetes server needs to be directly exposed to the Internet, or whether access to it can be restricted using firewalling or placing it behind a bastion host or VPN.&lt;/p&gt;
+
+&lt;p&gt;Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the &lt;code class=&quot;highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; user or setting &lt;code class=&quot;highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.&lt;/p&gt;
+
+&lt;h2 id=&quot;underlying-library---a-tale-of-differing-perspectives&quot;&gt;Underlying library - A tale of differing perspectives&lt;/h2&gt;
+
+&lt;p&gt;After looking at the Kubernetes perspective, I thought it would be interesting to dig down to where this issue originated, to see if it may have a wider impact.&lt;/p&gt;
+
+&lt;p&gt;The affected code comes from the &lt;a href=&quot;https://github.com/go-yaml/yaml&quot;&gt;go-yaml&lt;/a&gt; library.  I reported the issue to the Go security team and they got in touch with the library author.  A fix, which already existed in a later version of the library, was quickly put in place for the v2 one (which was used by Kubernetes). However at this point an interesting difference of opinion cropped up.&lt;/p&gt;
+
+&lt;p&gt;I suggested raising a CVE for this issue to help awareness for downstream projects.  The author felt that, as the original code was compliant with the YAML specification, this was unnecessary and the Go security team felt that it wasn’t their role to assign one.&lt;/p&gt;
+
+&lt;p&gt;Both of these positions make sense, when considered from their respective positions. But, this causes quite a serious problem from a security community perspective.&lt;/p&gt;
+
+&lt;p&gt;The problem is that CVEs are used by most software security tools as flags to indicate “this library needs to be upgraded”. Without a CVE it’s very likely that automated software scanning tools (that are used in many enterprises for software vulnerability management) won’t flag this issue, and that unless teams manually review the changelogs of all their dependencies (a large task) they’ll be unaware of the potential risk.&lt;/p&gt;
+
+&lt;p&gt;The library in question is heavily used in the Go community, with around 36000 code references on Github alone, and presumably a lot of use elsewhere as YAML is a common format in the Cloud Native space where Go is often used.&lt;/p&gt;
+
+&lt;p&gt;It also raises the possibility of confusion if the Kubernetes CVE is used as an ersatz stand-in for a library one.  It’s already possible to see other projects which use the library referencing the Kubernetes CVE as a driver for updating their library version, which would seem very odd if you don’t know the back-story.&lt;/p&gt;
+
+&lt;p&gt;This is also an example of a possible expectation’s gap between different groups.  The enterprise IT/Security communities might be expecting the CVE databases to be the canonical source of vulnerabilities that they can use to prioritise software and library upgrades but if the software development communities don’t see the necessity of always assigning a CVE, that expectation won’t hold…&lt;/p&gt;
+</description>
+				<pubDate>Tue, 15 Oct 2019 18:10:39 +0100</pubDate>
+				<link>/blog/2019/10/15/From-stackoverflow-to-CVE/</link>
+				<guid isPermaLink="true">/blog/2019/10/15/From-stackoverflow-to-CVE/</guid>
+			</item>
+		
+			<item>
 				<title>Accessing Cluster IPs from the Outside</title>
 				<description>&lt;p&gt;This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a &lt;a href=&quot;https://tgik.io&quot;&gt;TGIK&lt;/a&gt; episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.&lt;/p&gt;
 
@@ -702,76 +749,6 @@ spec:
 				<pubDate>Mon, 01 Apr 2019 19:10:39 +0100</pubDate>
 				<link>/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</link>
 				<guid isPermaLink="true">/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</guid>
-			</item>
-		
-			<item>
-				<title>Traefiking in Presentations</title>
-				<description>&lt;p&gt;One of the common tasks in a containerized environment, where you could be running multiple applications in containers on a single host, is “what’s the best way to route traffic to my web applications”?&lt;/p&gt;
-
-&lt;p&gt;Whilst you could expose each application on a dedicated port, that’s not a great user experience.  A better idea is to make use of a reverse proxy (a.k.a ingress in Kubernetes-land) to route traffic to the correct container based on a set of rules.&lt;/p&gt;
-
-&lt;p&gt;Recently I noticed that &lt;a href=&quot;https://traefik.io/&quot;&gt;traefik&lt;/a&gt; had a new version on the horizon, so I decided to give it a spin.&lt;/p&gt;
-
-&lt;p&gt;My use case is pretty straightforward.  I’ve got a number of presentations that I’ve given over the last couple of years which are all bundled as Docker images (using &lt;a href=&quot;https://github.com/dploeger/jekyll-revealjs&quot;&gt;jekyll-revealjs&lt;/a&gt;). I like this method of writing presentations, as it lets me create the content in a series of markdown files, which are nice and easy to edit, and then bundle up the resulting presentation as a web application runnning in a Docker image, meaning it can be delivered from any Internet connected host.&lt;/p&gt;
-
-&lt;p&gt;Traefik configuration can be done using a Docker compose file, where labels in the service definition let traefik know how to route specific requests.  My planned layout was just to specify hosts on my domain (pwndland.uk) for each presentation.&lt;/p&gt;
-
-&lt;p&gt;The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using &lt;code class=&quot;highlighter-rouge&quot;&gt;expose&lt;/code&gt; statements, otherwise traefik wouldn’t know how to route traffic.&lt;/p&gt;
-
-&lt;p&gt;One note from a security perspective if you’re making use of Traefik, is that it&lt;/p&gt;
-
-&lt;p&gt;The configuration for my presentations ended up looking as below, and the presentations should be available on these URLS&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;http://ltdh.pwndland.uk/#/&quot;&gt;Le Tour Du Hack Presentation - A security Persons life or, “The art of being Cassandra”&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;http://kube.pwndland.uk/#/&quot;&gt;44Con March 2019 - Cloudy Clusters Catastrope?&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;http://container-runtime.pwndland.uk/#/&quot;&gt;Cloud Native Glasgow - Fistful of Container Runtimes&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;http://docker.pwndland.uk/#/&quot;&gt;BSides London 2016 - Docker - Security Myths, Security Legends&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;version: '3'
-
-services:
-  reverse-proxy:
-    image: traefik:v2.0 # The official v2.0 Traefik docker image
-    command: --providers.docker # Enables the web UI and tells Traefik to listen to docker
-    ports:
-      - &quot;80:80&quot;     # The HTTP port
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
-  ltdh:
-    image: raesene/ltdh_presentation
-    expose:
-      - &quot;4000&quot;
-    labels:
-      - &quot;traefik.http.routers.ltdh.rule=Host(`ltdh.pwndland.uk`)&quot;
-      - &quot;traefik.domain=`pwndland.uk`&quot;
-  kube:
-    image: raesene/kube2019pres
-    expose:
-      - &quot;4000&quot;
-    labels:
-      - &quot;traefik.http.routers.kube.rule=Host(`kube.pwndland.uk`)&quot;
-      - &quot;traefik.domain=`pwndland.uk`&quot;
-  container-runtime:
-    image: raesene/container-runtime-presentation
-    expose:
-      - &quot;4000&quot;
-    labels:
-      - &quot;traefik.http.routers.container-runtime.rule=Host(`container-runtime.pwndland.uk`)&quot;
-      - &quot;traefik.domain=`pwndland.uk`&quot;
-  docker:
-    image: raesene/bsides_presentation
-    expose:
-      - &quot;4000&quot;
-    labels:
-      - &quot;traefik.http.routers.docker.rule=Host(`docker.pwndland.uk`)&quot;
-      - &quot;traefik.domain=`pwndland.uk`&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-</description>
-				<pubDate>Mon, 25 Mar 2019 20:10:39 +0000</pubDate>
-				<link>/blog/2019/03/25/traefiking-in-presentations/</link>
-				<guid isPermaLink="true">/blog/2019/03/25/traefiking-in-presentations/</guid>
 			</item>
 		
 	</channel>

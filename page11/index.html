@@ -158,6 +158,33 @@
 
   <span class="post-date">
     
+    July
+    15th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/07/15/oracle_mixin_hi/">Oracle Mixin hits Metasploit trunk</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The oracle mix-in is now in metasploit trunk so should be a snap to get working.  Installation instructions are up <a href="https://metasploit.com/trac/wiki/OracleUsage">here</a>.<br />
+Especially note the requirements for specific versions of the dbi and oci8 gems, later versions don't always work as expected with some of the oracle exploit plugins.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     May
     27th,
     
@@ -538,36 +565,6 @@ So which of these approaches is better?  Well my view on that after my discussio
 <p><b>Cons: </b>Essentially for me the major downside here is a practical one.  A security control that needs to be implemented many times to be effective is one that is likely to be forgotten and because under ordinary conditions the application is likely to behave perfectly even though the control isn't in place, a developer may well not notice the problem until it's too late.  You can see this kind of effect in a lot of web applications.  I've seen many cases where the obvious areas of the application (form fields) have been covered for things like Cross Site Scripting, but more obscure areas (drop-downs, cookies, HTTP headers) get missed out, either because the developer forgets, or because they don't realise that those areas of the application are susceptible to attack</p>
 <p>So which of these approaches would I recommend..... Well I'm a security person, so I'll say <b><i>Both</i></b> for defence in depth!<br />
 Beyond that I'd say that Input validation is a great first step and will cut down the practical attacks greatly, but if you're looking for a "perfect" approach then you'll need to add output normalization to the mix...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    8th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="/blog/2009/03/08/xss_in_rails/">XSS in Rails Applications</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I'm doing some research at the moment for a presentation I'm doing for the <a href="http://www.scotlandonrails.com/">Scotland on Rails</a> conference, later this month.  As part of that I've been downloading some sample Rails applications to get an idea of common security issues that I can discuss.<br />
-Interestingly on popular applications that I've downloaded so far, I'm 2 for 2 on the exact same problem.<br />
-Both of them have XSS vulnerabilities from the user--&gt;admin sides of the site.  So the end-user pages have output encoding to restrict XSS but the admin sections don't consistently provide the same protection.<br />
-It's also interesting that both applications seem to be relying on output encoding as a defence as opposed to input validation.  In my experience the best defence is a combination of the two...<br />
-Of course that leads to some potentially nasty exploits around stealing admin credentials from the site in question.  Hey looks like I'll have some stuff to talk about anyway :)</p>
 
     
     
