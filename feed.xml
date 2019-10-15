@@ -14,7 +14,7 @@
 
 &lt;p&gt;The YAML posted was a lightly modified version of the YAML bomb example on this &lt;a href=&quot;https://en.wikipedia.org/wiki/Billion_laughs_attack&quot;&gt;Wikipedia page&lt;/a&gt; about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.&lt;/p&gt;
 
-&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side, so it would seem like a major issue.&lt;/p&gt;
+&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side, so it wouldn’t seem like a major issue.&lt;/p&gt;
 
 &lt;p&gt;That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using &lt;code class=&quot;highlighter-rouge&quot;&gt;curl&lt;/code&gt; the YAML could be passed directly to the API server causing the YAML to be parsed server-side.&lt;/p&gt;
 

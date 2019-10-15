@@ -169,7 +169,7 @@
 
 <p>The YAML posted was a lightly modified version of the YAML bomb example on this <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">Wikipedia page</a> about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.</p>
 
-<p>A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in <code class="highlighter-rouge">kubectl</code> and not server-side, so it would seem like a major issue.</p>
+<p>A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in <code class="highlighter-rouge">kubectl</code> and not server-side, so it wouldn’t seem like a major issue.</p>
 
 <p>That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When <code class="highlighter-rouge">kubectl</code> was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using <code class="highlighter-rouge">curl</code> the YAML could be passed directly to the API server causing the YAML to be parsed server-side.</p>
 
