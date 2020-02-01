@@ -165,6 +165,35 @@
   </span>
 
   <h2>
+    <a href="/blog/2006/09/20/fix_for_xss_pro/">Fix for XSS problems wih in_place_edit</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="In_place_edit_for with validation and sanitization" href="http://trixnews.com/articles/2006/06/18/in_place_edit_for-with-validation-and-sanitization">In_place_edit_for with validation and sanitization</a><br />
+I've started having a look at my little rails app. I'm writing with a security persons hat on and one of the problems I've run into is that you can't by default use the h() function with an in place edit control.  So this link has a solution for that...<br />
+One quirk seemed to be when I put in the XSS code &lt;/span&gt;&lt;script&gt;alert("xss")&lt;/script&gt;&lt;span&gt; using in_place_edit it escapes it ok, but then each time I click into the field and then click ok it re-escapces the contents, giving an ever expanding field...<br />
+still main thing is it gets rid of the xss problem (well from a security point of view anyway)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    20th,
+    
+    2006
+  </span>
+
+  <h2>
     <a href="/blog/2006/09/20/tutorial_on_pag/">Tutorial on pagination and sorting</a>
   </h2>
 
@@ -422,33 +451,6 @@ One thing is that there are... a lot... of upcoming books for rails as it's pret
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    2nd,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="/blog/2006/09/02/nice_forum_base/">Nice Forum Based interfact to the rails mailing list</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Nabble - Ruby on Rails forum" href="http://www.nabble.com/Ruby-on-Rails-f13830.html">Nabble - Ruby on Rails forum</a><br />
-Subject say it all really.  I much prefer forum based interfaces to these things rather than looking at the usual web-based mailing list interfaces...</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -479,7 +481,7 @@ Subject say it all really.  I much prefer forum based interfaces to these things
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2019 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

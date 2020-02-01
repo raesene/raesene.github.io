@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Comparing Docker and Podman - Basic Operations</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Comparing Docker and Podman - Basic Operations </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   February 
+	   1st,
+	     
+	   2020
+	 </span>
+	  <div class="article_body">
+	  <h1 id="introduction">Introduction</h1>
+
+<p>I’ve been meaning to take more of a look at <a href="https://podman.io/">podman</a> for a while. This is a Redhat backed project which provides an alternative to Docker for local operation of containers.  One of it’s big selling points over the current versions of Docker is the ability to run containers as an ordinary user, without needing access to a daemon process running as root (it’s worth noting that Docker are <a href="https://docs.docker.com/engine/security/rootless/">working on</a> ‘rootless’ mode too)</p>
+
+<p>What I thought would be useful would be to compare the two with common use-cases and see some of what’s going on under the hood.  Both projects use <a href="https://github.com/opencontainers/runc">runc</a> as the underlying tool for launching containers, but the higher level components are quite different.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>For these tests I installed Docker-CE on Ubuntu 18.04.3, following the Docker install process <a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">here</a> and installed Docker 19.03.5. For podman I made use of the Ubuntu installation instructions <a href="https://podman.io/getting-started/installation">here</a> using the packages provided by the <a href="https://kubic.opensuse.org/">kubic project</a> I installed Podman version 1.7.0.</p>
+
+<p>I was pleasantly surprised to find that it’s possible to have both podman and Docker installed on the same host using this method, the deb’s provided didn’t clash at all with regards to dependencies.</p>
+
+<h2 id="initial-post-installation">Initial Post Installation</h2>
+
+<p>After installation, with Docker there are two daemon processes running, containerd and dockerd.  With podman, as expected, there are no long running processes initially.  One thing I did notice, which was unexpected was that after running the <code class="highlighter-rouge">podman info</code> command, a podman process was left running on the host.</p>
+
+<h2 id="image-storage">Image storage</h2>
+
+<p>The Docker daemon stores all the files related to it in <code class="highlighter-rouge">/var/lib/docker</code> which obviously won’t make sense for a container tool that’s running for the individual user.  Podman stores its files at <code class="highlighter-rouge">/home/$USER/.local/share/containers/storage</code> .  One point that could be relevant here for some use cases is that this will mean that if you have multiple users on a host running containers, each user will pull and store their own copy of all images, which would take some additional storage</p>
+
+<h2 id="basic-commands">Basic commands</h2>
+
+<p>Running a basic interactive container with <code class="highlighter-rouge">podman run -it ubuntu:18.04 /bin/bash</code> works as expected and lands you in a “root” shell inside the container.  One interesting point is that, on Ubuntu, podman defaults to requesting images from Docker Hub first, although it does support a registry search order.  This is an important point for security as having a different search order for container images could result in unexpected behaviour (more details on this <a href="https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/">here</a> and <a href="https://github.com/containers/libpod/issues/4549">here</a>)</p>
+
+<h2 id="processes-behind-the-scenes">Processes behind the scenes</h2>
+
+<p>What’s happening behind the scenes for this command is quite interesting.  There’s a couple of processes being used to manage our ubuntu container.  A <a href="https://github.com/rootless-containers/slirp4netns">slirp4netns</a> process is running.  This is a tool which helps networking work in unprivileged containers.</p>
+
+<p>There’s also a <a href="https://github.com/containers/conmon">conmon</a> process running, which is another helper process.</p>
+
+<p>These two processes are used for every container, so if you run 10 containers, you’ll get 20 supporting processes.</p>
+
+<p>Comparing this to Docker, conmon seems to be the equivalent of the <code class="highlighter-rouge">containerd-shim</code> process that runs with every container and there’s no <code class="highlighter-rouge">slirp4netns</code> equivalent needed as Docker is running with <code class="highlighter-rouge">root</code> privileges.</p>
+
+<h2 id="namespaces">Namespaces</h2>
+
+<p>Docker uses Linux namespaces to provide an isolated environment for contained processes, and as they both use <code class="highlighter-rouge">runc</code> under the covers, it’s not too surprising to see that <code class="highlighter-rouge">podman</code> is similar. There are some differences though that are worth noting.  Running <code class="highlighter-rouge">lsns</code> on a host running an ubuntu container via podman we can see the following</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>4026532621 user        4  1352 rorym            podman
+4026532622 mnt         2  1352 rorym            podman
+4026532624 net         1  1479 rorym            /bin/bash
+4026532679 mnt         1  1479 rorym            /bin/bash
+4026532680 mnt         1  1465 rorym            /usr/bin/slirp4netns --disable-host-loopback --mtu 65520 --e
+4026532681 uts         1  1479 rorym            /bin/bash
+4026532682 ipc         1  1479 rorym            /bin/bash
+4026532683 pid         1  1479 rorym            /bin/bash
+</code></pre></div></div>
+
+<p>Running <code class="highlighter-rouge">lsns</code> on a Docker container doing using the same image and command we get</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>4026532626 mnt         1  1932 root             /bin/bash
+4026532627 uts         1  1932 root             /bin/bash
+4026532628 ipc         1  1932 root             /bin/bash
+4026532629 pid         1  1932 root             /bin/bash
+4026532631 net         1  1932 root             /bin/bash
+</code></pre></div></div>
+
+<p>The podman list includes a user namespace which isn’t too surprising as we’re running as an ordinary user, but appear to be the <code class="highlighter-rouge">root</code> user inside the container.  What is interesting is that there’s a single user namespace which is attached to the podman process, rather than it being directly attached to the container.  Also we can see that there’s a mnt namespace for slirp4netns.</p>
+
+<h2 id="capabilities">Capabilities</h2>
+
+<p>By default, Docker containers get a set of capabilities, which can allow them to execute operations which require root privileges.  While podman is running as an ordinary user and making use of user namespaces, it does still use capabilities, but unlike Docker they only allow privileges within the user namespace and not over the entire host.</p>
+
+<p>Running <code class="highlighter-rouge">pscap</code> under podman shows the following lines relevant to podman</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1     1352  rorym       podman pause      full
+1     1465  rorym       slirp4netns       net_bind_service
+1     1468  rorym       conmon            full
+1468  1479  rorym       bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
+</code></pre></div></div>
+
+<p>For Docker we get :-</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>978   1913  root        containerd-shim   full
+1913  1932  root        bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
+</code></pre></div></div>
+
+<p>The key difference being the 4 processes running for podman are all in a user namespace.</p>
+
+<h2 id="apparmor">AppArmor</h2>
+
+<p>Docker provides a default AppArmor policy which restricts the contained process.  Looking at the podman setup, there doesn’t appear to be an apparmor policy getting enabled by default.  Running <code class="highlighter-rouge">aa-status</code> shows 0 processes in enforce mode.</p>
+
+<h2 id="seccomp">Seccomp</h2>
+
+<p>Docker also uses a <a href="https://www.kernel.org/doc/html/v4.16/userspace-api/seccomp_filter.html">seccomp-bpf</a> filter to restrict calls to specific syscalls.  Looking at the <code class="highlighter-rouge">bash</code> process running under Podman, we can see that there is also a Seccomp profile attached there</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cat /proc/1479/status | grep Seccomp
+Seccomp:	2
+</code></pre></div></div>
+
+<h2 id="limitations-of-rootless-containers">Limitations of rootless containers</h2>
+
+<p>With the use of rootless containers, there does come some limitations/complications.  There are some things that won’t work in rootless mode.  Things like not being able to bind ports &lt; 1024 make sense as this is a feature generally restricted for the root user.  However, some of the other items that are root only might be a surprise like network management.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>It’s clear that the podman ecosystem is coming along quite well and that, for a lot of use cases, it could be used by developers on local machines to avoid the overhead and security risk of running a root daemon to allow for container use.  There are some limitations, but those seem to be more about the inherent limits of running as an unprivileged user than anything else.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Docker-ref">
+					Docker <span>(20)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Comparing Docker and Podman - Basic Operations&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2019/10/15/From-stackoverflow-to-CVE/" title="From Stackoverflow to CVE, with some laughs along the way">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

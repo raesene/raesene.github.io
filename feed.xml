@@ -7,6 +7,112 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Comparing Docker and Podman - Basic Operations</title>
+				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;I’ve been meaning to take more of a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; for a while. This is a Redhat backed project which provides an alternative to Docker for local operation of containers.  One of it’s big selling points over the current versions of Docker is the ability to run containers as an ordinary user, without needing access to a daemon process running as root (it’s worth noting that Docker are &lt;a href=&quot;https://docs.docker.com/engine/security/rootless/&quot;&gt;working on&lt;/a&gt; ‘rootless’ mode too)&lt;/p&gt;
+
+&lt;p&gt;What I thought would be useful would be to compare the two with common use-cases and see some of what’s going on under the hood.  Both projects use &lt;a href=&quot;https://github.com/opencontainers/runc&quot;&gt;runc&lt;/a&gt; as the underlying tool for launching containers, but the higher level components are quite different.&lt;/p&gt;
+
+&lt;h2 id=&quot;installation&quot;&gt;Installation&lt;/h2&gt;
+
+&lt;p&gt;For these tests I installed Docker-CE on Ubuntu 18.04.3, following the Docker install process &lt;a href=&quot;https://docs.docker.com/install/linux/docker-ce/ubuntu/&quot;&gt;here&lt;/a&gt; and installed Docker 19.03.5. For podman I made use of the Ubuntu installation instructions &lt;a href=&quot;https://podman.io/getting-started/installation&quot;&gt;here&lt;/a&gt; using the packages provided by the &lt;a href=&quot;https://kubic.opensuse.org/&quot;&gt;kubic project&lt;/a&gt; I installed Podman version 1.7.0.&lt;/p&gt;
+
+&lt;p&gt;I was pleasantly surprised to find that it’s possible to have both podman and Docker installed on the same host using this method, the deb’s provided didn’t clash at all with regards to dependencies.&lt;/p&gt;
+
+&lt;h2 id=&quot;initial-post-installation&quot;&gt;Initial Post Installation&lt;/h2&gt;
+
+&lt;p&gt;After installation, with Docker there are two daemon processes running, containerd and dockerd.  With podman, as expected, there are no long running processes initially.  One thing I did notice, which was unexpected was that after running the &lt;code class=&quot;highlighter-rouge&quot;&gt;podman info&lt;/code&gt; command, a podman process was left running on the host.&lt;/p&gt;
+
+&lt;h2 id=&quot;image-storage&quot;&gt;Image storage&lt;/h2&gt;
+
+&lt;p&gt;The Docker daemon stores all the files related to it in &lt;code class=&quot;highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt; which obviously won’t make sense for a container tool that’s running for the individual user.  Podman stores its files at &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/$USER/.local/share/containers/storage&lt;/code&gt; .  One point that could be relevant here for some use cases is that this will mean that if you have multiple users on a host running containers, each user will pull and store their own copy of all images, which would take some additional storage&lt;/p&gt;
+
+&lt;h2 id=&quot;basic-commands&quot;&gt;Basic commands&lt;/h2&gt;
+
+&lt;p&gt;Running a basic interactive container with &lt;code class=&quot;highlighter-rouge&quot;&gt;podman run -it ubuntu:18.04 /bin/bash&lt;/code&gt; works as expected and lands you in a “root” shell inside the container.  One interesting point is that, on Ubuntu, podman defaults to requesting images from Docker Hub first, although it does support a registry search order.  This is an important point for security as having a different search order for container images could result in unexpected behaviour (more details on this &lt;a href=&quot;https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/containers/libpod/issues/4549&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
+
+&lt;h2 id=&quot;processes-behind-the-scenes&quot;&gt;Processes behind the scenes&lt;/h2&gt;
+
+&lt;p&gt;What’s happening behind the scenes for this command is quite interesting.  There’s a couple of processes being used to manage our ubuntu container.  A &lt;a href=&quot;https://github.com/rootless-containers/slirp4netns&quot;&gt;slirp4netns&lt;/a&gt; process is running.  This is a tool which helps networking work in unprivileged containers.&lt;/p&gt;
+
+&lt;p&gt;There’s also a &lt;a href=&quot;https://github.com/containers/conmon&quot;&gt;conmon&lt;/a&gt; process running, which is another helper process.&lt;/p&gt;
+
+&lt;p&gt;These two processes are used for every container, so if you run 10 containers, you’ll get 20 supporting processes.&lt;/p&gt;
+
+&lt;p&gt;Comparing this to Docker, conmon seems to be the equivalent of the &lt;code class=&quot;highlighter-rouge&quot;&gt;containerd-shim&lt;/code&gt; process that runs with every container and there’s no &lt;code class=&quot;highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; equivalent needed as Docker is running with &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; privileges.&lt;/p&gt;
+
+&lt;h2 id=&quot;namespaces&quot;&gt;Namespaces&lt;/h2&gt;
+
+&lt;p&gt;Docker uses Linux namespaces to provide an isolated environment for contained processes, and as they both use &lt;code class=&quot;highlighter-rouge&quot;&gt;runc&lt;/code&gt; under the covers, it’s not too surprising to see that &lt;code class=&quot;highlighter-rouge&quot;&gt;podman&lt;/code&gt; is similar. There are some differences though that are worth noting.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a host running an ubuntu container via podman we can see the following&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532621 user        4  1352 rorym            podman
+4026532622 mnt         2  1352 rorym            podman
+4026532624 net         1  1479 rorym            /bin/bash
+4026532679 mnt         1  1479 rorym            /bin/bash
+4026532680 mnt         1  1465 rorym            /usr/bin/slirp4netns --disable-host-loopback --mtu 65520 --e
+4026532681 uts         1  1479 rorym            /bin/bash
+4026532682 ipc         1  1479 rorym            /bin/bash
+4026532683 pid         1  1479 rorym            /bin/bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a Docker container doing using the same image and command we get&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532626 mnt         1  1932 root             /bin/bash
+4026532627 uts         1  1932 root             /bin/bash
+4026532628 ipc         1  1932 root             /bin/bash
+4026532629 pid         1  1932 root             /bin/bash
+4026532631 net         1  1932 root             /bin/bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The podman list includes a user namespace which isn’t too surprising as we’re running as an ordinary user, but appear to be the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user inside the container.  What is interesting is that there’s a single user namespace which is attached to the podman process, rather than it being directly attached to the container.  Also we can see that there’s a mnt namespace for slirp4netns.&lt;/p&gt;
+
+&lt;h2 id=&quot;capabilities&quot;&gt;Capabilities&lt;/h2&gt;
+
+&lt;p&gt;By default, Docker containers get a set of capabilities, which can allow them to execute operations which require root privileges.  While podman is running as an ordinary user and making use of user namespaces, it does still use capabilities, but unlike Docker they only allow privileges within the user namespace and not over the entire host.&lt;/p&gt;
+
+&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;pscap&lt;/code&gt; under podman shows the following lines relevant to podman&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1     1352  rorym       podman pause      full
+1     1465  rorym       slirp4netns       net_bind_service
+1     1468  rorym       conmon            full
+1468  1479  rorym       bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For Docker we get :-&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;978   1913  root        containerd-shim   full
+1913  1932  root        bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The key difference being the 4 processes running for podman are all in a user namespace.&lt;/p&gt;
+
+&lt;h2 id=&quot;apparmor&quot;&gt;AppArmor&lt;/h2&gt;
+
+&lt;p&gt;Docker provides a default AppArmor policy which restricts the contained process.  Looking at the podman setup, there doesn’t appear to be an apparmor policy getting enabled by default.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;aa-status&lt;/code&gt; shows 0 processes in enforce mode.&lt;/p&gt;
+
+&lt;h2 id=&quot;seccomp&quot;&gt;Seccomp&lt;/h2&gt;
+
+&lt;p&gt;Docker also uses a &lt;a href=&quot;https://www.kernel.org/doc/html/v4.16/userspace-api/seccomp_filter.html&quot;&gt;seccomp-bpf&lt;/a&gt; filter to restrict calls to specific syscalls.  Looking at the &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt; process running under Podman, we can see that there is also a Seccomp profile attached there&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat /proc/1479/status | grep Seccomp
+Seccomp:	2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;limitations-of-rootless-containers&quot;&gt;Limitations of rootless containers&lt;/h2&gt;
+
+&lt;p&gt;With the use of rootless containers, there does come some limitations/complications.  There are some things that won’t work in rootless mode.  Things like not being able to bind ports &amp;lt; 1024 make sense as this is a feature generally restricted for the root user.  However, some of the other items that are root only might be a surprise like network management.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;It’s clear that the podman ecosystem is coming along quite well and that, for a lot of use cases, it could be used by developers on local machines to avoid the overhead and security risk of running a root daemon to allow for container use.  There are some limitations, but those seem to be more about the inherent limits of running as an unprivileged user than anything else.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 01 Feb 2020 11:10:39 +0000</pubDate>
+				<link>/blog/2020/02/01/Comparing-Docker-And-Podman/</link>
+				<guid isPermaLink="true">/blog/2020/02/01/Comparing-Docker-And-Podman/</guid>
+			</item>
+		
+			<item>
 				<title>From Stackoverflow to CVE, with some laughs along the way</title>
 				<description>&lt;h2 id=&quot;discovery&quot;&gt;Discovery&lt;/h2&gt;
 
@@ -660,97 +766,6 @@ CMD [&quot;/bin/bash&quot;]
 				<pubDate>Tue, 16 Apr 2019 12:10:39 +0100</pubDate>
 				<link>/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</link>
 				<guid isPermaLink="true">/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</guid>
-			</item>
-		
-			<item>
-				<title>The most pointess Kubernetes command ever</title>
-				<description>&lt;p&gt;Coming up for 4 years ago (a lifetime in Container land) Ian Miell wrote about &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;“The most pointless Docker Command Ever”&lt;/a&gt;.  This was a docker command that you could run and it would return you back as root on your host.&lt;/p&gt;
-
-&lt;p&gt;Far from being useless, this is one of my favourite Docker commands, either to demonstrate to people why things like mounting &lt;code class=&quot;highlighter-rouge&quot;&gt;docker.sock&lt;/code&gt; inside a container is dangerous, or for using as part of security tests where I can create containers, and I’d like to get to the underlying host easily.&lt;/p&gt;
-
-&lt;p&gt;I was thinking today, I wonder what this would look like in Kubernetes…? So I create a quick pod YAML file to test.  You can use this YAML to demonstrate the risks of allowing users to create pods on your cluster, without PodSecurityPolicy setup (of course, I’m sure &lt;strong&gt;all&lt;/strong&gt; production clusters have a PodSecurityPolicy….. right?).&lt;/p&gt;
-
-&lt;p&gt;The YAML is pretty simple, it basically creates a privileged container based on the &lt;code class=&quot;highlighter-rouge&quot;&gt;busybox&lt;/code&gt; image and sets it in an endless loop, waiting for a connection, whilst also setting up the appropriate security flags to make the pod privileged, and also mounting the root directory of the underlying host into &lt;code class=&quot;highlighter-rouge&quot;&gt;/host&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
-kind: Pod
-metadata:
-  name: noderootpod
-  labels:
-spec:
-  hostNetwork: true
-  hostPID: true
-  hostIPC: true
-  containers:
-  - name: noderootpod
-    image: busybox
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - mountPath: /host
-      name: noderoot
-    command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;--&quot; ]
-    args: [ &quot;while true; do sleep 30; done;&quot; ]
-  volumes:
-  - name: noderoot
-    hostPath:
-      path: /
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve got that as a file called say “noderoot.yml” , just run &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl create -f noderoot.yml&lt;/code&gt;
-then, to get root on your Kubernetes node you just need to run&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl exec -it noderootpod chroot /host&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;and Hey Presto, you’ll be the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user on the host :)&lt;/p&gt;
-
-&lt;p&gt;Of course, you’re thinking, “that only does one random node” and you’d be right.  To get root shells on all the nodes, what you need is a DaemonSet, which will schedule a Pod onto every node in the cluster.&lt;/p&gt;
-
-&lt;p&gt;The YAML for this is a little more complex, but the essence is the same&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: noderootpod
-  labels:
-spec:
-  selector:
-    matchLabels:
-      name: noderootdaemon
-  template:
-    metadata:
-      labels:
-        name: noderootdaemon
-    spec:
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      hostNetwork: true
-      hostPID: true
-      hostIPC: true
-      containers:
-      - name: noderootpod
-        image: busybox
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /host
-          name: noderoot
-        command: [ &quot;/bin/sh&quot;, &quot;-c&quot;, &quot;--&quot; ]
-        args: [ &quot;while true; do sleep 30; done;&quot; ]
-      volumes:
-      - name: noderoot
-        hostPath:
-          path: /
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once that’s run just do a &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl get po&lt;/code&gt; to see your list of pods to choose from, and run the same &lt;code class=&quot;highlighter-rouge&quot;&gt;chroot /host&lt;/code&gt; command on one to get that root on the host feeling…&lt;/p&gt;
-
-&lt;p&gt;If you’ve made it all the way to the bottom of this post, I’ll briefly pimp out my &lt;a href=&quot;https://www.blackhat.com/us-19/training/schedule/index.html#mastering-container-security-140201547156094&quot;&gt;Mastering Container Security&lt;/a&gt; course, which I’m running at Black Hat USA this year, where we’ll be covering this and much much more container security goodness :)&lt;/p&gt;
-</description>
-				<pubDate>Mon, 01 Apr 2019 19:10:39 +0100</pubDate>
-				<link>/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</link>
-				<guid isPermaLink="true">/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/</guid>
 			</item>
 		
 	</channel>
