@@ -7,6 +7,55 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>More Podman - Rootfull containers, Networking and processes</title>
+				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;This is a follow on from my &lt;a href=&quot;https://raesene.github.io/blog/2020/02/01/Comparing-Docker-And-Podman/&quot;&gt;previous post&lt;/a&gt; which started looking at how podman varies from running local containers with Docker.&lt;/p&gt;
+
+&lt;p&gt;One point that was raised after that post, was that podman can run containers as root as well, and that’s an interesting area to explore.&lt;/p&gt;
+
+&lt;h2 id=&quot;running-podman-as-root&quot;&gt;Running podman as root&lt;/h2&gt;
+
+&lt;p&gt;So we can use &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo&lt;/code&gt; on an ubuntu host to run podman containers as the root user. There’s a couple of reasons you might want to do this.  First up would be that you need access to functions that are not available to your standard user (for example binding ports &amp;lt; 1024), another could be down to the differences in network behaviour between rootless and rootfull containers.&lt;/p&gt;
+
+&lt;p&gt;One thing you’ll notice immediately when using sudo to run podman containers is that, you’re not sharing any container images with your ordinary user, so it’ll pull down images that aren’t present for the root user.&lt;/p&gt;
+
+&lt;p&gt;Unlike Docker there’s no shared system level image repository, by default, so it will go and retrieve images where needed.&lt;/p&gt;
+
+&lt;h2 id=&quot;difference-in-networking---rootless-vs-rootfull&quot;&gt;Difference in networking - rootless v.s. rootfull&lt;/h2&gt;
+
+&lt;p&gt;Another area where there are some notable differences between rootless and rootfull containers under podman is in networking.  As mentioned last time rootless containers use &lt;code class=&quot;highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; to provide containers an IP address.  This is quite a different model to the Docker bridge, with a couple of practical effects.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;There’s no shared network for rootless containers.  Each one is plumbed into a &lt;code class=&quot;highlighter-rouge&quot;&gt;tap&lt;/code&gt; interface which is then networked out to the host by slirp4netns.  So if you start two containers in rootless mode, by default, they can’t talk directly to each other without exposing ports on the host.&lt;/li&gt;
+  &lt;li&gt;All your containers get the same IP address.  On the installation I’m using they all get &lt;code class=&quot;highlighter-rouge&quot;&gt;10.0.2.100&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;By comparison, if you run containers rootfully, the networking looks much more similar to the default Docker configuration. Containers will get an individual IP address, and will be able to communicate with other containers on the bridge network that they’ve been connected to.&lt;/p&gt;
+
+&lt;h2 id=&quot;podman-networking---usable-macvlan&quot;&gt;Podman Networking - Usable MacVLAN&lt;/h2&gt;
+
+&lt;p&gt;Anyone who’s dug around in Docker networking for a while, will likely have come across the MacVLAN network type.  This is kind of like a VMWare Workstation/Fusion bridge network, where the container gets placed on the the same network as the host, getting rid of the need for explicit port forwarding.&lt;/p&gt;
+
+&lt;p&gt;The downside to Docker’s implementation has always been that there’s no support for DHCP with MacVLAN, so you need to have a ranges of IP addresses to assign to the container that aren’t going to be used elsewhere.&lt;/p&gt;
+
+&lt;p&gt;When I was looking round Podman’s networking options, I noticed that there’s a plug-in that can allow Rootfull podman containers to do something similar, but with DHCP support.  This basically follows &lt;a href=&quot;https://www.redhat.com/sysadmin/leasing-ips-podman&quot;&gt;this post&lt;/a&gt; on the Redhat blog, but there’s a couple of details that worked differently on the system I was running on.&lt;/p&gt;
+
+&lt;p&gt;After creating a network config, as mentioned in the post you start the DHCP plug-in.  On ubuntu this is in &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/cni/bind&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/libexec/cni&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;You can then run a container attached to that network and it’ll get an IP address on the same LAN as your host.  In my set-up this took a couple of seconds to do and you get some “network is down” messages as it’s starting, which can be a bit disconcerting, but it does work!&lt;/p&gt;
+
+&lt;h2 id=&quot;rootless-containers---and-user-sessions&quot;&gt;Rootless containers - and user sessions&lt;/h2&gt;
+
+&lt;p&gt;One thing I noted whilst using Podman this week, which was a surprise to me was that containers launched by a user survive that user logging out and back in again. I had assumed that the container would come under the user session that launched them, and so would be terminated when the user logged out, however that’s not what happens, the container will keep running and be available when you log back in, which is handy.&lt;/p&gt;
+
+</description>
+				<pubDate>Sun, 23 Feb 2020 11:10:39 +0000</pubDate>
+				<link>/blog/2020/02/23/More-Podman/</link>
+				<guid isPermaLink="true">/blog/2020/02/23/More-Podman/</guid>
+			</item>
+		
+			<item>
 				<title>Comparing Docker and Podman - Basic Operations</title>
 				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
 
@@ -102,6 +151,8 @@ Seccomp:	2
 &lt;h2 id=&quot;limitations-of-rootless-containers&quot;&gt;Limitations of rootless containers&lt;/h2&gt;
 
 &lt;p&gt;With the use of rootless containers, there does come some limitations/complications.  There are some things that won’t work in rootless mode.  Things like not being able to bind ports &amp;lt; 1024 make sense as this is a feature generally restricted for the root user.  However, some of the other items that are root only might be a surprise like network management.&lt;/p&gt;
+
+&lt;p&gt;As Dan Walsh &lt;a href=&quot;https://twitter.com/rhatdan/status/1225797102820716544&quot;&gt;points out&lt;/a&gt; podman can also run containers as root, and that’s something I’ll explore more in the &lt;a href=&quot;https://raesene.github.io/blog/2020/02/23/More-Podman/&quot;&gt;next post&lt;/a&gt;&lt;/p&gt;
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
@@ -727,45 +778,6 @@ CMD [&quot;/bin/bash&quot;]
 				<pubDate>Sat, 01 Jun 2019 10:10:39 +0100</pubDate>
 				<link>/blog/2019/06/01/docker-capabilities-and-no-new-privs/</link>
 				<guid isPermaLink="true">/blog/2019/06/01/docker-capabilities-and-no-new-privs/</guid>
-			</item>
-		
-			<item>
-				<title>Certificate Authentication and the Golden Ticket at the heart of Kubernetes</title>
-				<description>&lt;h2 id=&quot;authentication-in-kubernetes&quot;&gt;Authentication in Kubernetes&lt;/h2&gt;
-
-&lt;p&gt;Authentication is an interesting area of Kubernetes security.  The built-in options for authenticating users to clusters are fairly limited. Basic Authentication and Token Authentication are generally considered to be a bad idea as they rely on cleartext credentials stored in files on disk on the API server(s) and require an API server restart when changing their contents, which is not exactly a scalable solution.&lt;/p&gt;
-
-&lt;p&gt;This leaves client certificate authentication as the main default authentication mechanism and one that I see enabled in pretty much every cluster I look at.  Client certificate authentication also gets used for component to component authentication (e.g. to allow the Kubelet to authenticate to the API server).&lt;/p&gt;
-
-&lt;h2 id=&quot;client-certificate-authentication&quot;&gt;Client Certificate Authentication&lt;/h2&gt;
-
-&lt;p&gt;Client certificate authentication, however, presents it’s own set of security concerns and challenges. Securely managing the keys associated with certificate authorities can be a significant challenge, and with many clusters using 3 or more distinct CAs (before we even start talking about add-ons like istio) there’s quite a bit of scope for problems.  Kubernetes clusters will typically keep their CA certificates and keys online (i.e. they’re stored in the clear on disk on the API servers) as opposed to traditional PKI setups where a root CA key would never be held on a production system in the clear. In those more traditional setups the keys would either be stored in an HSM or kept offline and only used where needed to sign subordinate certificates.&lt;/p&gt;
-
-&lt;h2 id=&quot;ca-keys-or-golden-tickets&quot;&gt;CA Keys or “Golden Tickets”&lt;/h2&gt;
-
-&lt;p&gt;You can then combine that with the problem that CA keys tend to have a very long validity period (from a review of common cluster installers, 10 years is typical) and you realise that if an attacker can get access to those CA key files they can effectively have a “golden ticket” to maintain unauthorised access to the cluster for a very long time, as the CA keys can be used to create new user identities whenever they like.  This unauthorised access can happen in a number of ways, anything from a key mistakenly checked into source code control, or an attacker who can mount a volume from an API server component, could lead to leakage of a CA key.&lt;/p&gt;
-
-&lt;p&gt;One reason these attacks are possible is due to an important (and somewhat unintuitive) aspect of Kubernetes authentication which is that in general Kubernetes has no concept of a user database, it relies on the identity provided by the authentication mechanism, to determine who the user is and then matches this to RBAC bindings to provide rights to that user.&lt;/p&gt;
-
-&lt;p&gt;In the case of certificate authentication this is done by looking at the &lt;code class=&quot;highlighter-rouge&quot;&gt;CN&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;O&lt;/code&gt; fields of the client certificate as it’s presented to the API server.  A certificate which is signed by the appropriate CA is then given whatever rights that user identity correlates to.&lt;/p&gt;
-
-&lt;p&gt;So an attacker with access to the CA key can just mint new user identities whenever it likes, and Kubernetes won’t complain, even if there’s another certificate with that identity.&lt;/p&gt;
-
-&lt;h2 id=&quot;certificate-revocation-or-lack-thereof&quot;&gt;Certificate revocation (or lack thereof)&lt;/h2&gt;
-
-&lt;p&gt;Another facet of client certificate authentication in Kubernetes which makes this problematic is that Kubernetes has no concept of certificate revocation.  So an attacker who mints a privileged client cert can continue to use this as long as the CA key doesn’t change, and as mentioned earlier, these are usually valid for 10 years.&lt;/p&gt;
-
-&lt;p&gt;The only way to prevent this persistent access is to redeploy the entire certificate authority which, depending on the size of the cluster, could be tricky.&lt;/p&gt;
-
-&lt;h2 id=&quot;so-how-many-clusters-could-this-affect&quot;&gt;So how many clusters could this affect?&lt;/h2&gt;
-
-&lt;p&gt;One other facet of the way that Kubernetes is being commonly deployed which could make this an issue going forward is the number of clusters which have their API server components exposed on the Internet.  It’s relatively easy to search for Kubernetes clusters via search engines like Censys as they have common strings in their certificates.  A recent check showed that there are now over a million likely Kubernetes cluster servers on-line…&lt;/p&gt;
-
-&lt;p&gt;It’s worth noting that these problems are more of a concern in unmanaged Kubernetes clusters, where the operator is responsible for CA management.  The main managed clusters (GKE, AKS and EKS) don’t expose the CA keys to users of the cluster and GKE also offers the option to disable client certificate authentication all together, which is good as it’s not just a problem with CA keys, user kubeconfig files with client keys can also be a risk.&lt;/p&gt;
-</description>
-				<pubDate>Tue, 16 Apr 2019 12:10:39 +0100</pubDate>
-				<link>/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</link>
-				<guid isPermaLink="true">/blog/2019/04/16/kubernetes-certificate-auth-golden-key/</guid>
 			</item>
 		
 	</channel>

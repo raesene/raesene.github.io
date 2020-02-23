@@ -258,6 +258,8 @@ Seccomp:	2
 
 <p>With the use of rootless containers, there does come some limitations/complications.  There are some things that won’t work in rootless mode.  Things like not being able to bind ports &lt; 1024 make sense as this is a feature generally restricted for the root user.  However, some of the other items that are root only might be a surprise like network management.</p>
 
+<p>As Dan Walsh <a href="https://twitter.com/rhatdan/status/1225797102820716544">points out</a> podman can also run containers as root, and that’s something I’ll explore more in the <a href="https://raesene.github.io/blog/2020/02/23/More-Podman/">next post</a></p>
+
 <h1 id="conclusion">Conclusion</h1>
 
 <p>It’s clear that the podman ecosystem is coming along quite well and that, for a lot of use cases, it could be used by developers on local machines to avoid the overhead and security risk of running a root daemon to allow for container use.  There are some limitations, but those seem to be more about the inherent limits of running as an unprivileged user than anything else.</p>
@@ -317,7 +319,7 @@ Seccomp:	2
 		  <li class="previous"><a href="/blog/2019/10/15/From-stackoverflow-to-CVE/" title="From Stackoverflow to CVE, with some laughs along the way">&larr; Previous</a></li>
 		  
 		  
-			<li class="next disabled"><a>Next &rarr;</a>
+		  <li class="next"><a href="/blog/2020/02/23/More-Podman/" title="More Podman - Rootfull containers, Networking and processes">Next &rarr;</a></li>
 		  
 		</ul>
 
