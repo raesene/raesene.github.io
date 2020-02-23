@@ -37,11 +37,11 @@
 
 &lt;p&gt;Anyone who’s dug around in Docker networking for a while, will likely have come across the MacVLAN network type.  This is kind of like a VMWare Workstation/Fusion bridge network, where the container gets placed on the the same network as the host, getting rid of the need for explicit port forwarding.&lt;/p&gt;
 
-&lt;p&gt;The downside to Docker’s implementation has always been that there’s no support for DHCP with MacVLAN, so you need to have a ranges of IP addresses to assign to the container that aren’t going to be used elsewhere.&lt;/p&gt;
+&lt;p&gt;The downside to Docker’s implementation has always been that there’s no support for DHCP with MacVLAN, so you need to have a range of IP addresses to assign to the container that aren’t going to be used elsewhere.&lt;/p&gt;
 
 &lt;p&gt;When I was looking round Podman’s networking options, I noticed that there’s a plug-in that can allow Rootfull podman containers to do something similar, but with DHCP support.  This basically follows &lt;a href=&quot;https://www.redhat.com/sysadmin/leasing-ips-podman&quot;&gt;this post&lt;/a&gt; on the Redhat blog, but there’s a couple of details that worked differently on the system I was running on.&lt;/p&gt;
 
-&lt;p&gt;After creating a network config, as mentioned in the post you start the DHCP plug-in.  On ubuntu this is in &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/cni/bind&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/libexec/cni&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;After creating a network config, as mentioned in the post you start the DHCP plug-in.  On ubuntu this is in &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/cni/bin&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/libexec/cni&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;You can then run a container attached to that network and it’ll get an IP address on the same LAN as your host.  In my set-up this took a couple of seconds to do and you get some “network is down” messages as it’s starting, which can be a bit disconcerting, but it does work!&lt;/p&gt;
 
