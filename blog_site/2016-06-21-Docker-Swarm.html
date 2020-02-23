@@ -8,15 +8,14 @@
 
 <p>Starting with the master node, after installing docker engine but before running <code class="highlighter-rouge">docker swarm init</code> there are no network connections belonging to the docker process as, by default it only listens on the unix socket. After initializing the swarm, we can see they look like this</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112manager:~$ sudo netstat -tunap
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rorym@docker112manager:~$ sudo netstat -tunap
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
 tcp        0      0 192.168.41.185:7946     0.0.0.0:*               LISTEN      1064/dockerd
 tcp6       0      0 :::2377                 :::*                    LISTEN      1064/dockerd
 tcp6       0      0 127.0.0.1:2377          127.0.0.1:58742         ESTABLISHED 1064/dockerd
 udp        0      0 192.168.41.185:7946     0.0.0.0:*                           1064/dockerd
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>from that we can see that running the swarm command adds some services listening on 7946/TCP and UDP and 2377/TCP.  From <a href="https://docs.docker.com/engine/swarm/swarm-tutorial/">the documentation</a> we can see that these are used for cluster management and node communications.  This is kind of interesting from a security standpoint as it means that we have a network attack surface to look at, which for vanilla docker engine we didn’t.</p>
 
@@ -32,31 +31,27 @@ udp        0      0 192.168.41.185:7946     0.0.0.0:*                           
 
 <p>Firstly the autoaccept policy of the swarm can be changed.  This determines whether a swarm will automatically add new nodes or whether a manager has to explicitly accept them.  We can change the auto-accept policy with a command to our existing swarm</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>root@docker112manager:/etc/systemd/network# docker swarm update --auto-accept none
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@docker112manager:/etc/systemd/network# docker swarm update --auto-accept none
 Swarm updated.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>After this if we try to join a node to a swarm we get this message</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
 Error response from daemon: Your node is in the process of joining the cluster but needs to be accepted by existing cluster member.
 To accept this node into cluster run "docker node accept epy504pa1vr9oe4p3fvsp6fp7" in an existing cluster manager. Use "docker info" command to see the current Swarm status of your node.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The other option we have to improve the situation with regard to node authentication is to specify a secret required to joing the swarm.  To specify a secret you just add it to the init command or use swarm update. For example:-</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112manager:~$ docker swarm init --secret loremipsum123
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rorym@docker112manager:~$ docker swarm init --secret loremipsum123
 Swarm initialized: current node (0qkezlwlccd7wfuadshi77zsy) is now a manager.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>and then if you try to join this swarm without specifying the secret, Docker will throw an error</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>rorym@docker112worker1:~$ docker swarm join 192.168.41.185:2377
 Error response from daemon: rpc error: code = 3 desc = A valid secret token is necessary to join this cluster: invalid policy or secret
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Once you’re all setup with your secrets specified and your auto-accept policy set, you’re good to get started setting up services and deploying containers over the swarm.</p>

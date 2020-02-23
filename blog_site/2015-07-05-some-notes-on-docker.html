@@ -8,9 +8,8 @@
 
 <p>If you do one of the canonical examples that’s provided in many tutorials</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker run -t -i ubuntu:latest /bin/bash
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -t -i ubuntu:latest /bin/bash
+</code></pre></div></div>
 
 <p>You get an interactive shell prompt in a docker container.  If you exit that process you go back to the host and if you repeat the command you get another instance of the container, with none of the files you created in the first one.</p>
 
@@ -18,27 +17,24 @@
 
 <p>To get back into a container instance you’ve used previously you need to get the name or ID first.  To do that use</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker ps -a
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker ps -a
+</code></pre></div></div>
 
 <p>which will list all the container instances you’ve ever run on that system and it’ll look something like</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONTAINER ID        IMAGE                        COMMAND                CREATED             STATUS                      PORTS                    NAMES
 39c1e5cf8319        raesene/auto-docker-dradis   "bundle exec rails s   47 minutes ago      Up 47 minutes               0.0.0.0:3000-&gt;3000/tcp   cranky_kilby
 e529903a3183        raesene/auto-docker-dradis   "bundle exec rails s   55 minutes ago                                                           compassionate_yonath
 f084aaca32ee        raesene/dradisframework      "bundle exec rails s   24 hours ago        Exited (0) 47 minutes ago                            agitated_ptolemy
 8a8f7b95082a        2bfb337a0aa8                 "bundle exec rails s   24 hours ago        Exited (0) 24 hours ago                              fervent_hopper
 8a2a0046b769        ruby:latest                  "/bin/bash"            24 hours ago        Exited (0) 24 hours ago                         	 compassionate_goodall
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>from that you can see each container has an ID (the first column) and a name (the last column).  You can restart the container using either of those.  For example to restart the container with the name compassionate_goodall to get some files off it, you’d use</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>docker start compassionate_goodall
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker start compassionate_goodall
 docker attach compassionate_goodall
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="docker-hub-build-options">docker hub build options</h2>
 

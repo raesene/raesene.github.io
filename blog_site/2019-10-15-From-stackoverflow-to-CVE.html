@@ -1,0 +1,41 @@
+<h2 id="discovery">Discovery</h2>
+
+<p>A couple of weeks ago I was on Stackoverflow and noticed an <a href="https://stackoverflow.com/questions/58129150/security-yaml-bomb-user-can-restart-kube-api-by-sending-configmap/58133282#58133282">interesting post</a> with one of my watched tags. The post described a problem where the user had submitted a YAML manifest to their Kubernetes server and caused very high CPU/memory usage, indicating that there could be an application Denial of service issue.</p>
+
+<p>The YAML posted was a lightly modified version of the YAML bomb example on this <a href="https://en.wikipedia.org/wiki/Billion_laughs_attack">Wikipedia page</a> about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.</p>
+
+<p>A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in <code class="highlighter-rouge">kubectl</code> and not server-side, so it wouldn’t seem like a major issue.</p>
+
+<p>That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When <code class="highlighter-rouge">kubectl</code> was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using <code class="highlighter-rouge">curl</code> the YAML could be passed directly to the API server causing the YAML to be parsed server-side.</p>
+
+<p>Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests and Brad checked that this could also impact cloud hosted versions. The example given did require the attacker to be able to create <code class="highlighter-rouge">configMap</code> objects on the server, which reduced the number of potential attackers considerably, so this would be an moderately serious issue but not too bad, as it required an authenticated user.</p>
+
+<p>After that though, some more investigation did show that, under some circumstances, it was possible to pass YAML to the server as an unauthenticated user, which makes the issue more serious, especially if your Kubernetes cluster is exposed to the Internet.  This is a (somewhat surprisingly) common configuration, with over 200,000 Kubernetes servers being internet facing (based on statistics from <a href="https://www.binaryedge.io/">Binary Edge</a>).  It won’t always be the case that older clusters are vulnerable (as it depends on the exact configuration) but it’s more likely.</p>
+
+<p>After the <a href="https://github.com/kubernetes/kubernetes/issues/83253">issue</a> had been reported to the Kubernetes security team they quickly had a CVE assigned and arranged for patch releases to be created which are dropping today, covering versions 1.13 and up.</p>
+
+<h2 id="mitigation">Mitigation</h2>
+
+<p>There are a couple of mitigations that can be applied to avoid this being an issue for your Kubernetes cluster.  Firstly, ensure that you apply the available patches or, if you are using a managed Kubernetes distribution, ensure that your vendor has patched the issue.</p>
+
+<p>Secondly, consider whether your Kubernetes server needs to be directly exposed to the Internet, or whether access to it can be restricted using firewalling or placing it behind a bastion host or VPN.</p>
+
+<p>Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server, although care is needed here as some monitoring tools require unauthenticated access to some endpoints.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the <code class="highlighter-rouge">system:unauthenticated</code> user or setting <code class="highlighter-rouge">--anonymous-auth=false</code> on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.</p>
+
+<h2 id="underlying-library---a-tale-of-differing-perspectives">Underlying library - A tale of differing perspectives</h2>
+
+<p>After looking at the Kubernetes perspective, I thought it would be interesting to dig down to where this issue originated, to see if it may have a wider impact.</p>
+
+<p>The affected code comes from the <a href="https://github.com/go-yaml/yaml">go-yaml</a> library.  I reported the issue to the Go security team and they got in touch with the library author.  A fix, which already existed in a later version of the library, was quickly put in place for the v2 one (which was used by Kubernetes). However at this point an interesting difference of opinion cropped up.</p>
+
+<p>I suggested raising a CVE for this issue to help awareness for downstream projects.  The author felt that, as the original code was compliant with the YAML specification, this was unnecessary and the Go security team felt that it wasn’t their role to assign one.</p>
+
+<p>Both of these positions make sense, when considered from their respective positions. But, this causes quite a serious problem from a security community perspective.</p>
+
+<p>The problem is that CVEs are used by most software security tools as flags to indicate “this library needs to be upgraded”. Without a CVE it’s very likely that automated software scanning tools (that are used in many enterprises for software vulnerability management) won’t flag this issue, and that unless teams manually review the changelogs of all their dependencies (a large task) they’ll be unaware of the potential risk.</p>
+
+<p>The library in question is heavily used in the Go community, with around 36000 code references on Github alone, and presumably a lot of use elsewhere as YAML is a common format in the Cloud Native space where Go is often used.</p>
+
+<p>It also raises the possibility of confusion if the Kubernetes CVE is used as an ersatz stand-in for a library one.  It’s already possible to see other projects which use the library referencing the Kubernetes CVE as a driver for updating their library version, which would seem very odd if you don’t know the back-story.</p>
+
+<p>This is also an example of a possible expectations gap between different groups.  The enterprise IT/Security communities might be expecting the CVE databases to be the canonical source of vulnerabilities that they can use to prioritise software and library upgrades but if the software development communities don’t see the necessity of always assigning a CVE, that expectation won’t hold…</p>

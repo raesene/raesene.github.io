@@ -32,7 +32,7 @@
 
 <p>So at a basic level we can use something like this</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>kind: NetworkPolicy
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: default-block
@@ -47,8 +47,7 @@ spec:
         - 192.168.111.0/24
   policyTypes:
   - Egress
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with <code class="highlighter-rouge">namespace: netpol-test</code> and then we’re using a blank pod selector <code class="highlighter-rouge">podSelector: {}</code> to hit all the pods in that namespace.</p>
 
@@ -66,7 +65,7 @@ spec:
 
 <p>So in this model where we’re using network policies to restrict control plane service access, the one service we may want to allow containers to speak to is the Kubernetes API.  As the access provided by network policies is cumulative, this is pretty straightforward.  Working with the same setup as the previous example, we can just apply something like this</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>kind: NetworkPolicy
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: allow-api
@@ -82,8 +81,7 @@ spec:
       port: 6443
   policyTypes:
   - Egress
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>and we’ll have access to the API service from pods in the <code class="highlighter-rouge">netpol-test</code> namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!</p>
 

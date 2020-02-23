@@ -1,0 +1,33 @@
+<p>I’ve been starting to have a look at <a href="https://podman.io/">podman</a> recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.</p>
+
+<p>One of the more fixed things in the Docker landscape is how it address container image registries. Docker hub is hard coded in the source code of Docker as the default registry, so that if you do something like <code class="highlighter-rouge">docker pull nginx</code> or <code class="highlighter-rouge">docker pull raesene/alpine-containertools</code> it will assume that you’re looking for these images on Docker Hub.  If you want to pull from an alternate registry, you need to provide the hostname and port of that registry server.</p>
+
+<p>This behaviour appears to have been a source of frustration for other organizations in the container ecosystem, so it’s not really a surprise to find that it works differently when you use other tools, like podman.</p>
+
+<p>What podman does is allow users to specify their registry search order via a configuration file stored at <code class="highlighter-rouge">/etc/containers/registries.conf</code>. On a CentOS8 install the default registry search order is this</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[registries.search]
+registries = ['registry.redhat.io', 'quay.io', 'docker.io']
+</code></pre></div></div>
+
+<p>From that, we can see that both Redhat’s registry and Quay come in before Docker.</p>
+
+<p>This has a potentially interesting side effect from a security perspective, which is, if a user requests an image without specifying the host name and port of the registry, they could get the wrong image.</p>
+
+<p>To give an example. On Docker hub there’s an image I have with some container tooling called <a href="https://hub.docker.com/r/raesene/alpine-containertools">alpine-containertools</a>.  As an experiment I tried creating the same image name with totally different content on Quay.io which is <a href="https://quay.io/repository/raesene/alpine-containertools">here</a>.</p>
+
+<p>So if you use podman and run <code class="highlighter-rouge">docker pull raesene/alpine-containertools</code> you’re going to get the wrong image.</p>
+
+<p>This could lead to attackers essentially squatting on common Docker Hub accounts to try and trick users into pulling malicious images.  A process made somewhat easier by the fact that you can register organization names on Quay.io (for example, I registered <a href="https://quay.io/organization/nccgroup">nccgroup</a>).</p>
+
+<h2 id="what-can-you-do-about-this">What can you do about this?</h2>
+
+<p>Well if you’re planning to adopt podman there’s a couple of things you could do to mitigate this risk</p>
+
+<ul>
+  <li>Change the search order in registries.conf to have <code class="highlighter-rouge">docker.io</code> first, which essentially restores the default behaviour (although it could still produce unexpected results if you misspell your pull request)</li>
+  <li>Remove the other registries from the file altogether (which essentially makes the behaviour the same as Docker)</li>
+  <li>Ensure that you’ve registered any names you use on Docker Hub on Quay.io (this only works where you’re pulling Docker Hub images from accounts you control, but of course who pulls Docker Hub images from accounts they don’t control!)</li>
+  <li>Use FQDNs for all your <code class="highlighter-rouge">pull</code> or <code class="highlighter-rouge">run</code> statements, essentially bypassing the search order.</li>
+  <li>Make use of image signing to check that the image pulled is the same as that which was expected.</li>
+</ul>

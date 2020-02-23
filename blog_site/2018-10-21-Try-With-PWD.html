@@ -1,0 +1,17 @@
+<p>I came across a very interesting post <a href="https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94">this morning</a> on <a href="https://labs.play-with-docker.com/">using Play With Docker</a> (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, <a href="https://labs.play-with-k8s.com/">Play with Kubernetes</a>), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.</p>
+
+<p>What I hadn’t realised before was that you can pass a Docker compose file in as a parameter to a PWD URL and have it automatically spin up an instance of that stack.  This model seems super-useful for trying out new applications in disposable environments and works well with web applications, as we’ll see.</p>
+
+<p>So having read the post I thought I’d try adding a sample instance for my <a href="https://github.com/raesene/dockerized-security-tools">Dockerized Security Tools</a> project.  From the tools I’ve got in there at the moment, the best candidate for a try out looked to be <a href="https://dradisframework.com/ce/">Dradis-CE</a>.</p>
+
+<p>I knocked up a very basic Docker compose file for it, and then put a button referencing it in the Readme, with this as the result.</p>
+
+<p><a href="https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/raesene/dockerized-security-tools/master/dradis/docker-compose.yml"><img src="https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png" alt="Try in PWD" /></a></p>
+
+<p>If you click that button and then login (you’ll need a Docker Hub account for this, but they’re free to create), PWD will launch the application.  The only other trick to trying it out is that you need to click a link in the PWD interface to access the exposed application.</p>
+
+<p>There will be a grey oval next to the IP address at the top with the exposed port number (in this case 3000).  Clicking that link should take you into a running instance of Dradis! The first page load will be a little slow, but after that it should work just fine.</p>
+
+<p>I could see this having a number of use cases, things like running up instances of <a href="https://www.owasp.org/index.php/OWASP_Juice_Shop_Project">OWASP Juice Shop</a> to try out tools or similar.</p>
+
+<p>The runtime is limited to four hours, but that should be plenty for a quick look round a tool to see what it’s like.</p>
