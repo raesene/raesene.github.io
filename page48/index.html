@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    22nd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/22/online_portscan/">Online Portscan</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SecuriScan Security Test" href="http://scan.myipis.com/">SecuriScan Security Test</a><br />
+A online portscanner, to go with <a href="http://grc.com"> grc's shields up </a> and the less flashy <a href="http://crypto.yashy.com"> one over at yashy.com</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    22nd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/22/spyware_in_the/">Spyware in the corporation</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>An interesting article over at computerworld <a title="Spyware in the office - Computerworld" href="http://www.computerworld.com/securitytopics/security/story/0,10801,92554,00.html">Spyware in the office </a>.<br />
+The existance of spyware on corporate networks is definately not a good thing.  Apart from the obvious reasons or potential leaks of confidential information or excess traffic being generated, there is the problem that deploying code on a complex platform could cause other, business critical, applications to stop working...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    22nd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/22/encrpyted_mail/">Encrpyted mail that doesn't interfere with A-V</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Over at ZDNet there's an article <a title="PGP software gains antivirus defense - News - ZDNet" href="http://zdnet.com.com/2100-1105_2-5191597.html">PGP software gains antivirus defense </a>.<br />
+This capability is very useful, getting round one of the problems of encrypted mail, which is that the content is hidden from any security or other inspection mechanisms, like A-V.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    15th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/15/portknocking_re/">Portknocking resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Slashdot | Port Knocking in Action" href="http://slashdot.org/article.pl?sid=04/04/14/1832222">Slashdot | Port Knocking in Action</a><br />
+there's a story on slashdot.org covering a port knocking proof of concept.  Ironically there's better links in one of the early comments than in the story itself!  I've made a list of them below for reference.<br />
+<a href="http://www.portknocking.org/view/">portknocking.org  </a><br />
+<a href="http://www.linuxjournal.com/article.php?sid=6811">An article at Linux Journal </a><br />
+<a href="http://www.linuxsecurity.com/articles/firewalls_article-7479.html"> An article at Linuxsecurity.com</a><br />
+<a href="http://librenix.com/?inode=4000"> A tutorial at Librenix</a><br />
+For those of you wondering "what the stuff is port knocking anyway?"  here's a definition I got from the UNIX FAQ at aplawrence.com<br />
+" Port knocking is a security technique to allow access to people who know the "secret knock". The basic idea is this: packets addressed to certain ports are silently ignored but are logged. If you contact the right series of ports in the right sequence, possibly with the additional condition of holding the ports open for a certain period of time, the firewall rules will be adjusted to allow you access.<br />
+The interesting things about this technique include the fact that you can obviously transmit information with the pattern or duration of the "knocks". That means that you could request that some other ip be allowed access, or just request that certain information be sent to you. Another interesting aspect is that because the packets are silently dropped, there's no way to scan a host and determine that it is using a port knocking technique. Even if you knew that it was using such a technique, but didn't know the algorithm, any brute force attempt would be effectively impossible"</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    15th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/15/security_white/">Security White Paper Site</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Dana Epp's ramblings at the Sanctuary : Securitydocs.com: The Information security library for the infosec pro" href="http://silverstr.ufies.org/blog/archives/000582.html">Dana Epp's ramblings at the Sanctuary : Securitydocs.com: The Information security library for the infosec pro</a><br />
+There's a handy link to a site called securitydocs.com over at Dana Epp's Blog, for a site which collates security white papers.<br />
+Quite a few of the random ones I looked at were from the SANS reading room (in itself an excellent resource).</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/14/linux_forensics/">Linux forensics</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Dana Epp's ramblings at the Sanctuary : Forensic Analysis of a Live Linux System" href="http://silverstr.ufies.org/blog/archives/000580.html">Dana Epp's ramblings at the Sanctuary : Forensic Analysis of a Live Linux System</a><br />
+There's a post referring on to an intereting set of presentations about Linux Forensics over at Dana Epp's Blog...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/14/cisco_asleap_at/">Cisco... Asleap at the wheel?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I was pointed to this interesting sourceforge project by another Rory... <a title="asleap home page" href="http://asleap.sourceforge.net/">asleap home page</a><br />
+It's a piece of software which exposes the weaknesses in Cisco's LEAP protocol....  This is the second thing I've seen recently regarding lack of security in Ciscos products recently... odd for a vendor with a relatively good reputation for security...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/14/uk_companies_so/">UK companies... some way to go on security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="UK firms failing security challenge - ZDNet UK News" href="http://news.zdnet.co.uk/0,39020330,39151496,00.htm">UK firms failing security challenge - ZDNet UK News</a><br />
+This is one of the stories that always emerge when the large consultancy companies do their annual security surveys.  In amongst alot of stats there are some meaningful pieces of information.  This story focuses on the state of wireless security (poor).<br />
+I'm not at all suprised that 50+% of companies haven't deployed security on their wireless LANS, however it is very worrying as they are essentially allowing the man on the street (literrally) to wander into their corporate LAN without any restriction.<br />
+Given that most companies practice the "warm smarty" method of network security (crunchy on the outside, soft and squishy on the inside), this is especially worrying.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    14th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/14/ms_april_securi/">MS April Security Vulns... how many are there?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well the April Microsoft patches came out today, and depending what article you read about it there are either 4 <a href="http://www.securityfocus.com/news/8441">[securityfocus.com]</a> or 20 <a href="http://www.nwfusion.com/news/2004/0413microissue.html?fsrc=rss-security">[nwfusion.com] </a>.<br />
+The cynic in me would say that this was Microsoft trying to keep the apparent number of vulnerabilities in Windows down and I reckon that for certain industry analysts and studies it might well work, as if you don't go into the technical detail of the vulnerability it's not apparent that more than one flaw is getting fixed by each patch.<br />
+What I actually find more concerning is that several of the vulns appear to affect Windows 2003/Windows XP.  I think that this shows that Microsoft has a very long road ahead of it to improve the security of its products.  As whilst it may be ensuring the quality of all new code that is produced, there is obviously a lot of legacy code that will be causing problems for some time to come.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
+    10th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/04/10/interesting_ema/">Interesting e-mail attack</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Over at the <a title="New Scientist" href="http://www.newscientist.com/news/news.jsp?id=ns99994858">New Scientist</a> there's an interesting note for an attack on a mail server.<br />
+I always find attacke like this interesting asa they're essentially a case of mis-use of a protocol.  Also given that tthe return of undeliverable e-mail is usually taken as a given on the Internet and it becomes unlikely that this kind of DoS attack will be going away anytime soon.</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page47">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 48 of 52</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page49">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

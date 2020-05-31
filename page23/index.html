@@ -158,124 +158,22 @@
 
   <span class="post-date">
     
-    May
-    31st,
+    September
+    26th,
     
-    2020
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/">Custom Pentest Distributions using WSL2</a>
+    <a href="/blog/2006/09/26/seriously_cool/">Seriously Cool - Easy IE on linux</a>
   </h2>
 
   <div>
     
     
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    23rd,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="/blog/2020/02/23/More-Podman/">More Podman - Rootfull containers, Networking and processes</a>
-  </h2>
-
-  <div>
-    
-    
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    1st,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="/blog/2020/02/01/Comparing-Docker-And-Podman/">Comparing Docker and Podman - Basic Operations</a>
-  </h2>
-
-  <div>
-    
-    
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    15th,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/10/15/From-stackoverflow-to-CVE/">From Stackoverflow to CVE, with some laughs along the way</a>
-  </h2>
-
-  <div>
-    
-    
-    <h2 id="discovery">Discovery</h2>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    3rd,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/10/03/accessing-cluster-ips-from-the-outside/">Accessing Cluster IPs from the Outside</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
+    <p><a title="IEs 4 Linux - Internet Explorers for Linux" href="http://www.tatanka.com.br/ies4linux/index-en.html">IEs 4 Linux - Internet Explorers for Linux</a><br />
+Now this is mega-cool.  an Easy script to download and install IE on a Linux box...<br />
+This definately removes one of my few remaining reasons to ever boot into a windows VM.</p>
 
     
     
@@ -289,19 +187,132 @@
   <span class="post-date">
     
     September
-    25th,
+    26th,
     
-    2019
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2019/09/25/typosquatting-in-a-multi-registry-world/">Container Image Squatting in a Multi-Registry World</a>
+    <a href="/blog/2006/09/26/xsrf_example/">XSRF example</a>
   </h2>
 
   <div>
     
     
-    <p>I’ve been starting to have a look at <a href="https://podman.io/">podman</a> recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.</p>
+    <p><a title="Google Cross-site Request Forgery" href="http://blog.outer-court.com/archive/2006-09-25-n38.html">Google Cross-site Request Forgery</a><br />
+Cross Site Request Forgery is one of those vulnerability classes that can be a bit tricky to explain, so it's always nice to find a decent live example.  This one's pretty harmless, just changes your google languange preferences, but I reckon that we'll see a real growth in this kind of problem over the next couple of years as "the bad guys"(tm) keep looking for innovative new ways to attack web apps.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    20th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/09/20/fix_for_xss_pro/">Fix for XSS problems wih in_place_edit</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="In_place_edit_for with validation and sanitization" href="http://trixnews.com/articles/2006/06/18/in_place_edit_for-with-validation-and-sanitization">In_place_edit_for with validation and sanitization</a><br />
+I've started having a look at my little rails app. I'm writing with a security persons hat on and one of the problems I've run into is that you can't by default use the h() function with an in place edit control.  So this link has a solution for that...<br />
+One quirk seemed to be when I put in the XSS code &lt;/span&gt;&lt;script&gt;alert("xss")&lt;/script&gt;&lt;span&gt; using in_place_edit it escapes it ok, but then each time I click into the field and then click ok it re-escapces the contents, giving an ever expanding field...<br />
+still main thing is it gets rid of the xss problem (well from a security point of view anyway)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    20th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/09/20/tutorial_on_pag/">Tutorial on pagination and sorting</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>&lt;a title=&quot;How to paginate, sort and search a table with Ajax and Rails </p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    19th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/09/19/malware_to_defe/">Malware to defeat virtual keyboards</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Banking Trojan Captures User's Screen in Video Clip" href="http://blog.hispasec.com/virustotal/8">Banking Trojan Captures User's Screen in Video Clip</a><br />
+A good write-up and video of malware designed to capture information from users using virtual keyboards.<br />
+It's just another indication that banks and other E-Commerce sites will need to come up with something more robust if they really want to make phishing impractical for attackers...<br />
+Personally I'd be interested to try a combination of RSA SecureID and Intrusion detection/prevention.<br />
+It works like this.  the SecureID forces an attacker to do an in-line attack 'cause they've only got a less than 60 second window to use the credentials successfully, and this should increase the visibility of the traffic patterns.  For example if you've got 10 users who've always come from different UK based IP addresses in the past, and suddenly they're all coming from the same non-UK based ip address, then that could be a good time to block the session.<br />
+It would be difficult to tune, but I think once you'd baselined users it would be possible to build up a reasonable enough pattern to allow for some form of anomoly detection.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
+    15th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/09/15/handy_rake_refe/">Handy Rake Reference Sheet</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Rails Rake Tasks Reference" href="http://www.rubyonrailsblog.com/articles/2006/09/14/rails-rake-tasks-reference">Rails Rake Tasks Reference</a></p>
 
     
     
@@ -317,17 +328,18 @@
     September
     14th,
     
-    2019
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2019/09/14/kube-security-lab/">Kubernetes Security Lab with Kind and Ansible</a>
+    <a href="/blog/2006/09/14/sortable_tables/">sortable tables in rails</a>
   </h2>
 
   <div>
     
     
-    <p>Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.</p>
+    <p><a title="sorttable: Make all your tables sortable" href="http://www.kryogenix.org/code/browser/sorttable/">sorttable: Make all your tables sortable</a><br />
+This looks like an interesting enhancement for rails.  Unfortunately it doesn't seem to play too friendly with my AJAX updated table.  It works when I first load the page, but then if I refresh the div with the table in it the sortability vanishes...</p>
 
     
     
@@ -340,20 +352,21 @@
 
   <span class="post-date">
     
-    August
-    25th,
+    September
+    14th,
     
-    2019
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2019/08/25/shells-in-gh-actions/">Shells in Github Actions</a>
+    <a href="/blog/2006/09/14/quick_presentat/">Quick presentation on REST</a>
   </h2>
 
   <div>
     
     
-    <p>I recently got my beta invite to the awesome <a href="https://github.com/features/actions">Github Actions</a> feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.</p>
+    <p><a title="10 Minutes REST" href="http://www.monkeyhelper.com/downloads/s5-monkeyhelper-rest/">10 Minutes REST</a><br />
+Decent explicable presentation on the REST architecture for web application development.  From what I've seen so far, the URI style fits in well with the way Rails apps work by default, which is nice..</p>
 
     
     
@@ -366,20 +379,23 @@
 
   <span class="post-date">
     
-    August
-    10th,
+    September
+    11th,
     
-    2019
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/">Making it Rain shells in Kubernetes</a>
+    <a href="/blog/2006/09/11/new_version_of/">New Version of Radrails out</a>
   </h2>
 
   <div>
     
     
-    <p>Following on from the <a href="https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/">last post</a> in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.</p>
+    <p><a title="RadRails: A free and open source Ruby on Rails IDE" href="http://www.radrails.org/">RadRails: A free and open source Ruby on Rails IDE</a><br />
+Looks like a new version of my rails IDE of choice is out.<br />
+I'm not usually a great fan of IDE's for development, but I must admit that I'm liking working in radrails quite a lot.<br />
+There's several fetures which I like, the subversion integration is cool (I only discovered this by mistake, but still...) and having the generators in the IDE is also very handy.  Another small, but useful feature is the server support where it'll recognise that you've got multiple apps in your workspace and start them on separate ports...</p>
 
     
     
@@ -392,20 +408,21 @@
 
   <span class="post-date">
     
-    August
-    9th,
+    September
+    8th,
     
-    2019
+    2006
   </span>
 
   <h2>
-    <a href="/blog/2019/08/09/docker-reverse-shells/">Docker and Kubernetes Reverse shells</a>
+    <a href="/blog/2006/09/08/pontentially_ha/">Pontentially handy tool for webservices work</a>
   </h2>
 
   <div>
     
     
-    <p>A handy technique for any pentester is the ability to create a reverse shell. This allows for a variety of cases where you want to get access to restricted environments or want to extract information from a remote system.</p>
+    <p><a title="SIFT - Information Security Services" href="http://www.sift.com.au/73/0/tools.htm">SIFT - Information Security Services</a><br />
+This tool takes an interesting approach to helping with web services security reviews. It looks for methods which may serve up sensitive information but which are not published into the WSDL...</p>
 
     
     
@@ -418,18 +435,20 @@
 <ul class="pager"> 
 
   
-  <li class="previous disabled">
-    <a>&larr; Newer</a>
+  <li class="previous">
+    
+    <a href="/page22">&larr; Newer</a>
+    
   </li>
   
   
   <li>
-    <span class="page_number">Page: 1 of 52</span>
+    <span class="page_number">Page: 23 of 52</span>
   </li>
 
   
   <li class="next">
-    <a href="/page2">Older &rarr;</a>
+    <a href="/page24">Older &rarr;</a>
   </li>
   
 

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
+    20th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/10/20/reducing_attack/">Reducing Attack Surface</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a link to a very interesting over at Michael Howard's blog commenting that the <a title="Security issue of MSDN is out today" href="http://blogs.msdn.com/michael_howard/archive/2004/10/19/244642.aspx">Security issue of MSDN is out today</a>.<br />
+The article linked from the posting is very interesting as well in that it talks about reducing attack surface.<br />
+On the whole, I'm really happy that this is getting focus from a company like Microsoft, because if anyone can make developers sit up and listen it's Microsoft (commercial one's 'cause they're all involved with Microsoft somehow, and Open Source one's 'cause if nothing else they'll be out to try and prove that they do it better than Microsoft ;op)<br />
+However that said I think that there's something missing from Microsofts definitions of how to reduce attack surface.  In the article they mention 3 ways of helping to reduce attack surface<br />
+* Reduce the amount of code executing by default<br />
+* Reduce the volume of code that is accessible to untrusted users by default<br />
+* Limit the damage if the code is exploited<br />
+However I think they're should be a fourth, although it primarily relates to operating systems, it could also apply to other software.<br />
+* Reduce the amount of code installed.<br />
+This is important especially on operating systems the more code that is installed the higher the likelihood that some of it will have security vulnerabilities (especially if you follow the oft-quoted truism that there will be 1 security related problem in every 1000 lines of code).<br />
+I think this is important at the moment as you see both Microsoft and the Linux distribtution vendors shipping more and more code with their operating systems and the default install sizes going up and up.  Well if nothing else that just causes a nasty patch management problem as, the more code you have deployed the more you have to patch..<br />
+I could follow on to a rant about the relative ease of removing unneeded software from servers (cough cough web browser cough cough), but I think I'll leave that for another day...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
+    20th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/10/20/and_now_im_back/">And now I'm back....</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well it's taken far longer than it should have to get this up and running again, but I've had some issues getting everything setup at the new house (and indeed this is still running through a bit of a hack, using Dynamic DNS, some redirection and some port forwarding.....<br />
+but t'was getting annoying not having this here, so I thought it better to get it up and running in this way rather than wait for the complete solution, as a result the domain name's not the same as was, so it'll be a little while before it's all working properly....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    11th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/07/11/interruptions_t/">Interruptions to blogging.....</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The blog's been a bit erratic over the last couple of weeks as I've been out of town and we've had the odd power problem (good excuse for buying a UPS!!)<br />
+Anyway I'm moving house this week so unless I get a chance to move the DNS temporarily and put the blog on a hosted site somewhere I'll be out for a couple more weeks while I get access set up at the new house........</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    29th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/29/interesting_art_2/">Interesting article on Packet crafting</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SecurityFocus HOME Infocus: Packet Crafting for Firewall &amp; IDS Audits" href="http://www.securityfocus.com/infocus/1787">SecurityFocus HOME Infocus: Packet Crafting for Firewall &amp; IDS Audits (Pa</a><br />
+An interesting 1st part in a series of articles looking at packet crafting....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    26th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/26/a_real_good_exa/">A real good example why relying on users is a bad idea</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a report on an interesting survey over <a title="NMA To Go" href="http://www.newmediazero.com/lo-fi/story.asp?id=248445">here</a>, stating that 85% of users asked would open an attachment from a friend or collegue ! No wonder spam and virii are still doing well.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    26th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/26/interesting_pos/">Interesting Post on MS & Least privilege</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Dana Epp's ramblings at the Sanctuary : Microsoft, You're not setting a very good example. I am disappointed." href="http://silverstr.ufies.org/blog/archives/000640.html">Dana Epp's ramblings at the Sanctuary : Microsoft, You're not setting a very good example. I am disappointed.</a><br />
+An interesting post on Dana Epp's blog talking about running as least privilege (or in this example not) in Windows (also you can read the odd comments from someone I can only assume was trolling ?!)<br />
+It's real nice to see that the windows world is moving more towards the UNIX paradigm of not running as root unless you have to.  I hope this will have a positive effect for end users too... Less of the frustration when being told that you have to be an administrator to install a media player !!! (apple quicktime in this example) would be nice....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    24th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/24/another_antiphi/">Another anti-phishing initiative</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's an article about a <a title="MasterCard program combats phishing, black market" href="http://www.nwfusion.com/news/2004/0622masteprogr.html?fsrc=rss-security">MasterCard program which combats phishing</a>.  I've got to say that I'm not that impressed by this kind of approach to combating phishing.<br />
+If what's in the article is accurate it basically amounts to looking through content from the entire Internet for potential phishing scams and then shutting them down when they're found..... This approach just strikes me as far to reactionary and prone to missing things.  I would expect that currently a phishing scam will make most of it's money in the first 24 hours of its operation and I'll be a little suprised if Mastercards approach will be effective in shutting down these scams in that time frame.<br />
+There are other ways to combat this kind of attack (I linked to one <a href="http://www.nmrcon.net/archives/000026.html"> before </a>).  Another option would be 2-stage authentication by the service provider, where the user enters initial credentials, then the site responds with a secret (be it a phrase, word or fact about the users account) and asks for a secondary authentication.  In this model the phisher will be able to get the inital credentials but will have a significantly lower rate at getting the secondary ones (of course some social engineering would still get some credentials out of people I'm sure)<br />
+Personally I think that this kind of system, or more probably, some form of 2-factor authentication will be the best way to combat these attacks.  If running around stomping on sites as they popped up worked well, I'm sure we'd have considerably less SPAM and Virii doing the rounds......</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    24th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/24/outsourcing_mai/">Outsourcing mail security, hmmm...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>In an article over at Yahoo we're told <a title="Yahoo! News - Mail Security Service Model Marches On" href="http://story.news.yahoo.com/news?tmpl=story&amp;cid=1738&amp;ncid=1208&amp;e=1&amp;u=/zd/20040624/tc_zd/130172"> Mail Security Service Model Marches On</a>.  Its interesting as there definately is an interesting proposition on outsourcing things like management of e-mail security.  However I must say, I'd not be too comfortable outsourcing something as critical as e-mail without some very good assurances and SLA's surrounding it.<br />
+for example I'd hate to be the e-mail admin who has to troubleshoot their mail delivery when I didn't control the whole path for the mail out to the recipient, especially if there's a possibility of false positives as there is with many e-mail spam/virus management packages.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    22nd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/22/security_manage/">Security managers in court?!</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Now I'll start this post with the obligatory IANAL, but there's a story over at Security pipeline, which seems to be saying that <a href="http://nwc.securitypipeline.com/showArticle.jhtml?articleID=22100927"> Security Managers Could Face Court Penalties</a> for poor security or for making lists of top measures that companies should follow and then not implementing them all...<br />
+I've got to say that the examples sound a bit over dramatised to me, but it's an interesting theory from the point of view of convincing management of the importance of being seen to be proactive in the field of InfoSec...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
+    22nd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="/blog/2004/06/22/slashdot_story/">Slashdot story on Cool DNS tricks...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a href="http://slashdot.org/article.pl?sid=04/06/21/2225217">Slashdot | Dan Kaminsky Suggests Having Fun with DNS</a><br />
+There's a story over at slashdot covers a presentation from Dan Kaminsky (of <a href="http://www.doxpara.com/read.php/code/paketto.html"> paketto Keiretsu </a> fame) covering some... very interesting ideas about using DNS as a communications channel for arbitrary data (in a similar fashion to things like <a href="http://www.nocrew.org/software/httptunnel.html">httptunnel</a> ).<br />
+Cool stuff this 'cause it drives home the point that it is wrong to think of a network service as just a means of transferring a specific type of data, as many can transfer any type of data you like , it's just usually used for a given type of data.  Which does make the point that traditional security measures like firewalls become a lot less effective as soon as you allow even on protocol across them....<br />
+One other thing that occured to me when reading the slides about transmitting ISO images using TXT records, is I wonder what would happen if you caused a caching DNS server to run out of disk space by requesting lots of these records...<br />
+I would hope that it would just start purging the records in oldest first order, but I suppose it might DoS some servers...</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page42">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 43 of 52</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page44">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    26th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/08/26/testing_snmpv3/">Testing SNMPv3</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>After encountering some SNMPv3 servers recently and looking into the differences from a pen. test perspective, I thought it may be worth a quick write-up.<br />
+SNMPv1 and v2 do not respond when traffic is sent their way unless there is a valid community string in the message, a fact used by scanners like <a href="http://labs.portcullis.co.uk/application/onesixtyone/"> onesixtyone </a>.  So traditionally the theory is unless there's a known community string, the service running has a vulnerability or you can get in-line to sniff traffic, there's not a lot to get from SNMP services.<br />
+Turns out that SNMPv3 behaves differently from v1 and v2.  Firstly the notion of using community strings for authentication is gone, replaced by username/passwords.  Second the traffic can be encrypted to limit sniffing opportunites.<br />
+However it's not all bad from a testers perspective! unlike earlier versions SNMPv3 will respond to correctly formatted requests and provide some information about itself as part of the reply.  This allows confirmation of the servers existence.<br />
+To get these responses there's a couple of different tools we can use.  <a href="http://nmap.org/">Nmap</a> with version detection will confirm that a SNMPv3 service is running and looking at the traffic in wireshark <span class="mt-enclosure mt-enclosure-image" style="display:inline;"><img alt="wireshark-nmap-snmpv3.png" src="http://www.mccune.org.uk/blog/wireshark-nmap-snmpv3.png" width="866" height="802" class="mt-image-center" style="text-align:center;display:block;margin:0 auto 20px;" /></span><br />
+From this there's a couple of interesting pieces of information.  The Engine Enterprise ID field seems to identify the server type that's running, net-snmp in this case and the msgAuthoritativeEngineTime parameter shows the time in seconds since the service was started (according to <a href="http://www.cisco.com/web/about/ac123/ac147/archived_issues/ipj_1-3/snmpv3.html"> this page</a> ).<br />
+In addition to using nmap, it's possible to use the inbuilt snmp tools to get some information out of the service including possible username enumeration and brute-force password attacks.<br />
+Issuing the snmpwalk command with an invalid username like so:<br />
+<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "invaliduser" 192.168.207.142 IF-MIB::ifName</b><br />
+provides the response <b><i>snmpwalk: Unknown user name</i></b><br />
+but if we use a valid username and no password like so:<br />
+<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "snmpUser" 192.168.207.142 IF-MIB::ifName</b><br />
+we get <b><i>Error in packet. Reason: authorizationError (access denied to that object)</i></b><br />
+So it's possible by parsing responses to figure out valid usernames for the service.<br />
+<b>Update : </b>  Here's a ruby script (should work on linux with snmp tools and ruby installed) which iterates over a list of usernames and a list of IPs and attempts to guess whether the username is valid or not <a href="http://www.mccune.org.uk/code/snmpv3enum.rb">snmpv3enum.rb</a><br />
+A similar technique works with specification of passwords which would allow for brute-forcing those as well, (although that said the snmp tools try to stop people choosing passwords less than 8 characters, so unless a dictionary word is used it isn't too likely to be successful.<br />
+Additionally for people who're fond of metasploit, I've knocked up a very basic SNMPv3 scanner.  At the moment all it does it take a range of IP addresses and say whether a valid SNMPv3 packet provokes a response from the server, but could be handy.  it's <a href="http://www.mccune.org.uk/code/snmpv3.rb">here</a>.<br />
+There's some good references on setting up and using SNMPv3 <a href="http://www.sysadmin.md/snmpv3-users-cheatsheet.html">here</a>, <a href="http://tomclegg.net/snmpv3-cacti">here</a> and <a href="http://wmunguiam.blogspot.com/2009/07/howto-use-snmpv3-ubuntu.html">here</a>.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    9th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/08/09/defcon_17/">Defcon 17</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I got across to Defcon this year (and of course security Bsides)<br />
+There were several interesting presentations , here's some notes on some of the ones that I got along to.  The CD is up at <a href="https://media.defcon.org/dc-17/DEFCON-17-CD.rar">defcon.org</a>, and you can get the slides for most of the presentations there.<br />
+SSL Talks - There were several presentations on ways to bypass or subvert SSL. From my point of view the drive was around 2 themes.  The difficulty in correctly parsing SSL certs due to the complexity of the relevant RFCs and also the weaknesses in the issuing processes of some CAs (which is exacerbated by the fact that any CA can issue a "valid" cert. for any domain).  Dan Kaminsky's white paper on the subject is <a href="http://www.ioactive.com/pdfs/PKILayerCake.pdf"> here</a>, Moxie's blackhat presentation is <a href="http://tinyurl.com/nyh462"> here </a> and Michael Zusmans' blackhat presentation is <a href="http://tinyurl.com/ll5nlq">here</a> (the defcon presentations are on the CD linked above).<br />
+Metasploit - The Metasploit team had a whole track to themselves on Saturday and there's a load of interesting stuff in there, basically looks like Metasploit will have some coverage for most types of assessment eventually, which is very handy!<br />
+Egypts presentation on client-side attacks with Metasploit had some great content on browser fingerprinting (not just relying on User-Agent) and client side attacks with Metasploit.<br />
+The Oracle presentation from mc and Chris Gates  had some good content on going through the steps of an Oracle attack purely using Metasploit (more information on this on CG's <a href="http://carnal0wnage.attackresearch.com">blog</a><br />
+Druid had a good talk on the war-dialer that he's added to the framework (unfortunately the slides for that one aren't on the CD, but I'd guess that they'll be around soon). Another interesting thing in the Metasploit track was the demos of the Mac OSX and POSIX versions of meterpreter which are both in active development.<br />
+Other Ruby Tools - There was a bit of a theme of ruby tools across some of the presentations.  In addition to all the Metasploit stuff, there was a mobile device fuzzer (although the website for it, www.fuzzit.com isn't up yet).  Also there was a good presentation on <a href="http://dradisframework.org"> Dradis </a>from etd , which is a Pen test management and reporting tool written in Ruby and Rails.<br />
+Password Cracking - There was a good presentation, from Matt Weir,  on approaches to password cracking, speeding up brute-force attacks and picking good dictionary files .  There's more informaton on this one on his <a href="http://reusablesec.blogspot.com/"> blog </a> as well as on the presentation slides.<br />
+Router Hacking - FX had some more information on how to create reliable exploits on Cisco devices and the difficulties in doing so (amazing to think that Cisco Maintain thousands of discreete monolithic router builds!).  Slides from the Blackhat presentation are <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-SLIDES.pdf"> here</a> and White paper <a href="http://www.blackhat.com/presentations/bh-usa-09/LINDNER/BHUSA09-Lindner-RouterExploit-PAPER.pdf"> here </a><br />
+USB Hacking - Interesting presentation from a guy from <a href="http://labs.mwrinfosecurity.com/">MWR </a> on how they approached an assignment to assess the security of a USB device and the approaches to fuzzing that they took.  Slides are up on their site <a href="http://labs.mwrinfosecurity.com/files/Publications/mwri_usb-attacks-defcon17_2009-08-02.pdf"> here </a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    26th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/07/26/preparing_for_d/">Preparing for Defcon</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I'm off to <a href="http://www.defcon.org/html/defcon-17/dc-17-index.html"> Defcon </a>and <a href="http://www.securitybsides.com/BSidesLasVegas">security BSides</a> next week, and I thought a couple of precautions were in order before I go...<br />
+1. Tunnel all traffic through SSH to a trusted host, instructions <a href="http://wiki.freaks-unidos.net/weblogs/azul/firefox-ssh-tunnel">here</a><br />
+2. Set iptables up to explicitly deny any traffic not travelling through the tunnel<br />
+3. Turn off any vaguely network related features on my iPhone!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    15th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/07/15/oracle_mixin_hi/">Oracle Mixin hits Metasploit trunk</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The oracle mix-in is now in metasploit trunk so should be a snap to get working.  Installation instructions are up <a href="https://metasploit.com/trac/wiki/OracleUsage">here</a>.<br />
+Especially note the requirements for specific versions of the dbi and oci8 gems, later versions don't always work as expected with some of the oracle exploit plugins.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    27th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/27/scotland_on_rai_1/">Scotland on Rails Videos online</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>All the Scotland on Rails videos are now online <a href="http://www.engineyard.com/community/scotland-on-rails/">here</a> courtesy of the nice folks at Engine Yard.<br />
+The video for my presentation is <a href="http://scotland-on-rails.s3.amazonaws.com/2B07_RoryMcCune-SOR.mp4">here</a> , slides are on slideshare over <a href="http://www.slideshare.net/raesene/web-appliction-security-scotland-on-rails-presentation">here</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    12th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/12/some_metasploit_1/">Raesene's Ramblings</a>
+  </h2>
+
+  <div>
+    
+    
+    ---
+layout: post
+title: Some Metasploit and Oracle Notes - Part 2
+date: 2009-05-12 20:41:55.000000000 +01:00
+categories:
+- Metasploit
+- Penetration Testing
+tags: []
+status: publish
+type: post
+published: true
+---<br />
+SCOTT                          CONNECT                     NO  YES NO<br />
+<b>SCOTT                          DBA                               NO  YES NO</b><br />
+SCOTT                          RESOURCE                   NO  YES NO<br />
+</i><br />
+It's worth noting that some of these Oracle modules (there's 9 in the current Metasploit svn versions) have required privilege levels (dbms_cdc_publish for example in a vanilla 10GR2 setup needs EXECUTE_CATALOG_ROLE to run which only SYS and users with the DBA role have...), so it's worth trying out several to fit different scenarios...<br />
+So here we are with DBA, which to be honest for a lot attackers is all that's needed.  The data in the database is likely to be the "crown jewels" which the attackers looking for, but hey we can go further with the wonders of Metasploit and execute code on the underlying operating system...</p>
+<p><b>5. Leverage Oracles functionality to get access to the underlying operating system</b><br />
+So at the moment I don't see a metasploit option for doing this in *nix (there's a win32 command execution module on <a href="http://www.metasploit.com/users/mc/oracle/win32exec.rb">mc's </a>page), however that's not a serious problem as it turns out the nice guys at Oracle provide ways to do this easily.</p>
+<p>A quick google around revealed <a href="http://www.oracle.com/technology/tech/java/jsp/pdf/calling_shell_commands_from_plsql_1.1.pdf">this paper</a> from Oracle on command execution from a database user and from my running of it, it works fine (although requires creation of new database objects so best suited to an environment that can be rolled back easily...).<br />
+So there you go, from nothing to OS access in 5 easy steps, courtesy of Metasploit...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    10th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/10/some_metasploit/">Some Metasploit and Oracle Notes - Part 1</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Todays fun with Metasploit is exploiting Oracle...  There's lots of good information on this on the <a href="http://carnal0wnage.blogspot.com">Carnal 0wnage</a> blog and the metasploit page for <a href="http://metasploit.com/users/mc/">mc</a>.<br />
+First things first, we'll need the relevant ruby modules (dbi and oci8) installed and working for some of this.<br />
+dbi can be installed using the usual 'sudo gem install dbi' but oci8 has some more prerequisites and steps to get working.  The best thing to do is follow the instructions <a href="http://ruby-oci8.rubyforge.org/en/InstallForInstantClient.html">here </a>.  As a note you'll probably want to add the LD_LIBRARY_PATH to your bash profile to avoid setting it manually every time you want to use it (in Ubuntu this can be done system wide in /etc/bash.bashrc)<br />
+Once you've done that it should be possible to make basic connections to oracle from ruby ok...<br />
+So on to what Metasploit can do for you in a test with Oracle systems..  This walkthrough is heavily based on this video <a href="http://carnal0wnage.blogspot.com/2009/02/attacking-oracle-with-metasploit.html">here</a> from shmoocon this year.<br />
+One set of rough steps for converting "hmm there's an oracle system here" to "w00t I've got admin access to the server" might be</p>
+<ol>
+<li>Discover the version of Oracle Running</li>
+<li>Find out what the SID of the database is</li>
+<li>Get valid credentials to the database</li>
+<li>Escalate those credentials to DBA level access</li>
+<li>Leverage Oracles functionality to get access to the underlying operating system</li>
+<li>...</li>
+<li>Profit!!</li>
+</ol>
+<p>Luckily Metasploit can help us with pretty much all of this....</p>
+<p><b>1. Discover the version of Oracle running on the server</b><br />
+This is very useful as it allows for targeting of exploits (no point in trying use an exploit for something that's been patched on the target).  </p>
+<p>From msfconsole</p>
+<pre>use auxiliary/scanner/oracle/tnslsnr_version </pre>
+<pre>set RHOSTS [your_target_ip_here]
+run </pre>
+<p>from this you should see something like</p>
+<pre>[*] Host 192.168.1.203 is running: Linux: Version 10.2.0.1.0 - Production
+[*] Auxiliary module execution completed
+</pre>
+<p>which tells us we've got 10gR2 on Linux running.</p>
+<p><b>2. Find out what the SID of the database is</b><br />
+In order to connect to the database we're going to need to know what the SID is.  Pre 10GR2 we could just use the metasploit sid_enum module (in auxiliary/scanner/oracle) to find this but after that we'll need to brute-force it.  Not to worry there's a module for that too :)</p>
+<p>As of 3.3-dev 6537 the sid_brute module doesn't appear to be included, but it can be downloaded from <a href="http://metasploit.com/users/mc/oracle/sid_brute.rb">mc's page</a>.  For this module you'll also need a list of common SIDs for Oracle.  One of those can be found on the<a href="http://www.red-database-security.com/scripts/sid.txt"> Red Database Security</a> site.<br />
+so once you've put the sid_brute module in the right place (I used modules/auxiliary/scanner/oracle) and your sid.txt file somewhere (I used the default from the module of data/exploits) you can do the following...</p>
+<pre> use auxiliary/scanner/oracle/sid_brute</pre>
+<pre> set RHOST [your_target_ip_here]</pre>
+<p>and hopefully you'll get some output like</p>
+<pre>[*] Found SID 'ORCL' for host 192.168.1.203.</pre>
+<p>So we've now got the SID of the database, on to usernames and passwords.</p>
+<p><b>3. Get valid credentials to the database</b><br />
+Now Oracle databases are pretty notorious for having a wide range of default usernames and passwords installed on them.  This isn't so true for modern releases but if your're running against older releases, it's well worth checking. </p>
+<p>So to do this we'll need the brute_login metasploit module and a list of usernames and passwords.  The module again can be found on <a href="http://metasploit.com/users/mc/oracle/brute_login.rb">mc's page</a> and the canonical list of Oracle usernames and passwords is on <a href="http://www.petefinnigan.com/default/oracle_default_passwords.csv">Pete Finnigans</a> site.</p>
+<p>Also we'll need to get the oracle mixin at this point from <a href="http://metasploit.com/users/mc/oracle/oracle.rb">here</a> and copy that to lib/msf/core/exploit/ .  Now at this point I was getting a module loading error but reading <a href="http://carnal0wnage.blogspot.com/2008/11/oracle-pwnage-with-metasploit-oracle.html">this</a> and <a href="http://carnal0wnage.blogspot.com/2008/08/metasploit-and-file-format-bugs.html">this</a> led me to the idea of modifying the brute_login.rb file adding</p>
+<pre>require 'msf/core/exploit/oracle'</pre>
+<p>to the top of the file (just under the other requires) to get it all loaded up ok (also found out that a lot of this ground's been covered before but hey :) ! )</p>
+<p>So with those saved in appropriate places (same as last time) we can see what's there</p>
+<pre>use auxiliary/scanner/oracle/brute_login </pre>
+<pre> set RHOST [your_target_ip_here]
+run</pre>
+<p>Now wtih any luck you'll get a file called oracle_success.log popping up in the data/exploits directory which will contain some entries like this</p>
+<pre>Found user/pass of: SCOTT/TIGER on 192.168.1.203...</pre>
+<p>which tells us the creds we need to make a valid connection and move on to the next stage.<br />
+So now we've got a valid account on the database, but it's not got that magic DBA level of privilege<br />
+Next time I'll follow-up on using metasploit to get down the OS</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    7th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/07/tonights_metasp/">Tonights Metasploit links</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Been taking a look at another one of the newer Metasploit features tonight.  WMAP is looking to integrate web application scanning functionality into Metasploit.  There's a couple of good overviews <a href="http://trac.metasploit.com/browser/framework3/trunk/documentation/wmap.txt">Here</a>, <a href="http://www.vulnerabilityassessment.co.uk/wmap_meta.htm">Here</a>  and <a href="http://darkoperator.blogspot.com/2008/10/metasploit-wmap-web-attack-and.html">Here</a><br />
+Getting it up and running is a little bit finicky at the moment, as you need to used a patched copy of <a href="http://code.google.com/p/ratproxy/">ratproxy</a> to collect the base URLs for the scanner (quick note is that my fairly new Ubuntu Intrepid install was missing libssl-dev which is a pre-requisite for compiling ratproxy so worth checking for if you get make errors when setting it up).<br />
+Once you've gathered URLs and fed them in to the database getting the scanner to start running is straightforward (examples in the links at the top so I won't go into it).  From an initial look, some of the plugins seem to do some directory/file brute-forcing which can take ages to run, but if it's going on too long you can use CTRL-C to interrupt just that plug-in and Metasploit will catch the interrupt gracefully and move on to the next directory or plugin...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    5th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/05/more_metasploit/">More metasploit resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So another night of metasploitage, and some good additional info<br />
+<b>Pivoting</b></p>
+<ul>
+<li><a href="http://www.indepthdefense.com/2009/02/reverse-pivots-with-metasploit-how-not.html">Good write-up on some of the challenges with pivoting</a></li>
+<li><a href="http://ne0matrix.blogspot.com/2009/05/demo-video-meterpreter-pivot-attack.html">Greate Demo video of using pivoting to attack a host indirectly</a></li>
+<li><a href="http://vimeo.com/3446123">Another good video demo of pivoting, but without the cool tunes :) </a></li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    4th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="/blog/2009/05/04/metasploit_reso/">Metasploit Resources</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So I've been playing a bit with Metasploit over the holiday weekend (hey what are days off for..), and as usual when researching stuff, I've come across a load of links I don't want to lose track of, so I'll put them up here, may be useful to someone else as well..<br />
+I'll refrain from the really obvious linking to the project homepage, as if you're looking for metasploit links, I'd guess you've found it already :)<br />
+<b>Pre-Exploitation Information</b></p>
+<ul>
+<li><a href="http://synjunkie.blogspot.com/2008/10/metasploit-payloads-msfpayload.html"> Good set of examples for using msfpayload to create executable payloads</a></li>
+<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/creating-malicious-executables-using-metasploit">More msfpayload information</a></li>
+<li><a href="http://www.darkoperator.com/blog/2009/4/25/evil-packaging-on-osx-with-xcode-and-metasploit.html">Interesting worked example of msfpayload setup on osx</a></li>
+<li><a href="http://www.gamelinux.org/?cat=17">Interesting write-up on eval_php for for webserver compromise</a></li>
+</ul>
+<p><b>Post-Exploitation (meterpreter and the like) Information</b></p>
+<ul>
+<li><a href="http://carnal0wnage.blogspot.com/2009/04/more-on-working-with-incognito-and.html">Post on meterpreter usage</a>.  Has some interesting points on what can be done with Meterpreter.</li>
+<li><a href="http://www.kecoak-elektronik.net/log/2009/03/01/fun-and-profit-with-meterpreter/"> Interesting post on using meterpreter again</a> Some information on using meterpreter scripts like killav to stop exploits being detected, and timestomp to make discovery harder.</li>
+<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/post-exploitation-activities"> Article from the Metasploit wikibook on post-exploitation activities</a></li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page10">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 11 of 52</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page12">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

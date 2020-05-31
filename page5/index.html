@@ -158,20 +158,46 @@
 
   <span class="post-date">
     
-    May
-    31st,
+    April
+    30th,
     
-    2020
+    2016
   </span>
 
   <h2>
-    <a href="/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/">Custom Pentest Distributions using WSL2</a>
+    <a href="/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/">Verizon DBIR, Vulnerabilities and Cold Fusion</a>
   </h2>
 
   <div>
     
     
-    <h1 id="introduction">Introduction</h1>
+    <p>So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opportunity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issue is available on the <a href="https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/">OSVDB Blog</a>.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    6th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="/blog/2016/03/06/The-Dangers-Of-Docker.sock/">The Dangers of Docker.sock</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.</p>
 
     
     
@@ -185,149 +211,97 @@
   <span class="post-date">
     
     February
-    23rd,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="/blog/2020/02/23/More-Podman/">More Podman - Rootfull containers, Networking and processes</a>
-  </h2>
-
-  <div>
-    
-    
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    1st,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="/blog/2020/02/01/Comparing-Docker-And-Podman/">Comparing Docker and Podman - Basic Operations</a>
-  </h2>
-
-  <div>
-    
-    
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    15th,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/10/15/From-stackoverflow-to-CVE/">From Stackoverflow to CVE, with some laughs along the way</a>
-  </h2>
-
-  <div>
-    
-    
-    <h2 id="discovery">Discovery</h2>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    3rd,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/10/03/accessing-cluster-ips-from-the-outside/">Accessing Cluster IPs from the Outside</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    25th,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/09/25/typosquatting-in-a-multi-registry-world/">Container Image Squatting in a Multi-Registry World</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I’ve been starting to have a look at <a href="https://podman.io/">podman</a> recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
     14th,
     
-    2019
+    2016
   </span>
 
   <h2>
-    <a href="/blog/2019/09/14/kube-security-lab/">Kubernetes Security Lab with Kind and Ansible</a>
+    <a href="/blog/2016/02/14/New-Docker-Compose-Features/">New Docker Compose Features</a>
   </h2>
 
   <div>
     
     
-    <p>Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.</p>
+    <p>Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for <a href="https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/">pen testing</a> one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    February
+    7th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="/blog/2016/02/07/Exploration-in-Docker-bridging/">Exploration in Docker Bridging</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    February
+    4th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="/blog/2016/02/04/Docker-User-Namespaces/">Docker 1.10 Notes - User Namespaces</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    31st,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="/blog/2016/01/31/is-this-thing-on/">Is This Thing on </a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the perenial problems of being an infrequent blogger is of course, you forget exactly how you used to do things…</p>
 
     
     
@@ -341,19 +315,19 @@
   <span class="post-date">
     
     August
-    25th,
+    15th,
     
-    2019
+    2015
   </span>
 
   <h2>
-    <a href="/blog/2019/08/25/shells-in-gh-actions/">Shells in Github Actions</a>
+    <a href="/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/">Set-up a Complete Security Test Environment with One Command and Docker Compose</a>
   </h2>
 
   <div>
     
     
-    <p>I recently got my beta invite to the awesome <a href="https://github.com/features/actions">Github Actions</a> feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.</p>
+    <p>Following on from my last post on <a href="http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/">Using Docker for Security Testing</a>, I thought it would be interesting to see if we can set-up an even more automated environment by using <a href="https://www.docker.com/docker-compose">Docker Compose</a>.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.</p>
 
     
     
@@ -366,20 +340,20 @@
 
   <span class="post-date">
     
-    August
-    10th,
+    July
+    23rd,
     
-    2019
+    2015
   </span>
 
   <h2>
-    <a href="/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/">Making it Rain shells in Kubernetes</a>
+    <a href="/blog/2015/07/23/using-docker-for-security-testing/">Using Docker for Security Testing</a>
   </h2>
 
   <div>
     
     
-    <p>Following on from the <a href="https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/">last post</a> in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.</p>
+    <p>Following on from my <a href="http://raesene.github.io/blog/2015/07/05/some-notes-on-docker/">previous post</a> about Docker, I’ve been giving some thoughts to how I could make use of this in my day-to-day work of security testing.</p>
 
     
     
@@ -392,20 +366,46 @@
 
   <span class="post-date">
     
-    August
-    9th,
+    July
+    5th,
     
-    2019
+    2015
   </span>
 
   <h2>
-    <a href="/blog/2019/08/09/docker-reverse-shells/">Docker and Kubernetes Reverse shells</a>
+    <a href="/blog/2015/07/05/some-notes-on-docker/">Some notes on docker</a>
   </h2>
 
   <div>
     
     
-    <p>A handy technique for any pentester is the ability to create a reverse shell. This allows for a variety of cases where you want to get access to restricted environments or want to extract information from a remote system.</p>
+    <p>I’ve been spending some time this weekend looking more at docker and where I think it could be useful for my workflows, and along the way I’ve learned a couple of things which I didn’t know, so I thought it would be worth recording them, in case they’re useful to others.  None of this is particularly earth shattering but hey could save someone some time :)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    23rd,
+    
+    2015
+  </span>
+
+  <h2>
+    <a href="/blog/2015/05/23/so-youre-giving-a-conference-talk/">So you're giving a conference talk</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I realised the other day that I’ve been doing public speaking for quite a while now (started with doing internal training courses back in the 90’s, and graduated on to doing external speaking at seminars and conferences about 10 years back).</p>
 
     
     
@@ -418,18 +418,20 @@
 <ul class="pager"> 
 
   
-  <li class="previous disabled">
-    <a>&larr; Newer</a>
+  <li class="previous">
+    
+    <a href="/page4">&larr; Newer</a>
+    
   </li>
   
   
   <li>
-    <span class="page_number">Page: 1 of 52</span>
+    <span class="page_number">Page: 5 of 52</span>
   </li>
 
   
   <li class="next">
-    <a href="/page2">Older &rarr;</a>
+    <a href="/page6">Older &rarr;</a>
   </li>
   
 

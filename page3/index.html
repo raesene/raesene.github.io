@@ -158,46 +158,20 @@
 
   <span class="post-date">
     
-    May
-    31st,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/">Custom Pentest Distributions using WSL2</a>
-  </h2>
-
-  <div>
-    
-    
-    <h1 id="introduction">Introduction</h1>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
+    July
     23rd,
     
-    2020
+    2018
   </span>
 
   <h2>
-    <a href="/blog/2020/02/23/More-Podman/">More Podman - Rootfull containers, Networking and processes</a>
+    <a href="/blog/2018/07/23/exploring-kata/">Exploring Kata Containers</a>
   </h2>
 
   <div>
     
     
-    <h1 id="introduction">Introduction</h1>
+    <p>This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">here</a>.</p>
 
     
     
@@ -210,20 +184,20 @@
 
   <span class="post-date">
     
-    February
-    1st,
+    July
+    22nd,
     
-    2020
+    2018
   </span>
 
   <h2>
-    <a href="/blog/2020/02/01/Comparing-Docker-And-Podman/">Comparing Docker and Podman - Basic Operations</a>
+    <a href="/blog/2018/07/22/exploring-gvisor/">Exploring gVisor</a>
   </h2>
 
   <div>
     
     
-    <h1 id="introduction">Introduction</h1>
+    <p>As part of some talks I did for the recent NCC Con, I started looking at the <a href="https://github.com/google/gvisor">gVisor</a> project from Google (nothing like having to write a presentation to provide motivation!).</p>
 
     
     
@@ -236,20 +210,20 @@
 
   <span class="post-date">
     
-    October
-    15th,
+    July
+    19th,
     
-    2019
+    2018
   </span>
 
   <h2>
-    <a href="/blog/2019/10/15/From-stackoverflow-to-CVE/">From Stackoverflow to CVE, with some laughs along the way</a>
+    <a href="/blog/2018/07/19/exploring-public-kubernetes-certificates/">Exploring Public Kuberetes Certificates</a>
   </h2>
 
   <div>
     
     
-    <h2 id="discovery">Discovery</h2>
+    <p>Yesterday I noticed a <a href="https://twitter.com/dabdine/status/1019410599401287680">tweet from Derek Abdine</a> about the Rapid7 OpenData collections which are free to access datasets of various types, so thought I’d have a quick look at something I’ve been meaning to for a while, information disclosed via SSL certificates in Internet facing Kubernetes clusters.</p>
 
     
     
@@ -262,20 +236,20 @@
 
   <span class="post-date">
     
-    October
-    3rd,
+    May
+    23rd,
     
-    2019
+    2018
   </span>
 
   <h2>
-    <a href="/blog/2019/10/03/accessing-cluster-ips-from-the-outside/">Accessing Cluster IPs from the Outside</a>
+    <a href="/blog/2018/05/23/Auditing-Kubernetes-Access-Control/">Auditing Kubernetes Access Control</a>
   </h2>
 
   <div>
     
     
-    <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
+    <p>A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.</p>
 
     
     
@@ -288,46 +262,46 @@
 
   <span class="post-date">
     
-    September
+    March
+    29th,
+    
+    2018
+  </span>
+
+  <h2>
+    <a href="/blog/2018/03/29/WSL-And-Docker/">WSL and Docker for Windows</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     25th,
     
-    2019
+    2018
   </span>
 
   <h2>
-    <a href="/blog/2019/09/25/typosquatting-in-a-multi-registry-world/">Container Image Squatting in a Multi-Registry World</a>
+    <a href="/blog/2018/03/25/kubernetes-network-policies/">Some notes on Kubernetes Network Policies</a>
   </h2>
 
   <div>
     
     
-    <p>I’ve been starting to have a look at <a href="https://podman.io/">podman</a> recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    14th,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/09/14/kube-security-lab/">Kubernetes Security Lab with Kind and Ansible</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.</p>
+    <p>Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">network policies</a> are a useful security feature which allow for traffic into and (sometimes) out of pods to be restricted.</p>
 
     
     
@@ -341,19 +315,19 @@
   <span class="post-date">
     
     August
-    25th,
+    27th,
     
-    2019
+    2017
   </span>
 
   <h2>
-    <a href="/blog/2019/08/25/shells-in-gh-actions/">Shells in Github Actions</a>
+    <a href="/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/">Linux Capabilities and when to drop all</a>
   </h2>
 
   <div>
     
     
-    <p>I recently got my beta invite to the awesome <a href="https://github.com/features/actions">Github Actions</a> feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.</p>
+    <p>Somewhat following on from my <a href="https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/">previous post</a> about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.</p>
 
     
     
@@ -366,20 +340,20 @@
 
   <span class="post-date">
     
-    August
-    10th,
+    July
+    23rd,
     
-    2019
+    2017
   </span>
 
   <h2>
-    <a href="/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/">Making it Rain shells in Kubernetes</a>
+    <a href="/blog/2017/07/23/network-tools-in-nonroot-docker-images/">Network Tools in Non-Root Docker Images</a>
   </h2>
 
   <div>
     
     
-    <p>Following on from the <a href="https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/">last post</a> in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.</p>
+    <p>As some environments which allow for Docker images to run (e.g. OpenShift Origin’s default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.</p>
 
     
     
@@ -392,20 +366,46 @@
 
   <span class="post-date">
     
-    August
+    July
     9th,
     
-    2019
+    2017
   </span>
 
   <h2>
-    <a href="/blog/2019/08/09/docker-reverse-shells/">Docker and Kubernetes Reverse shells</a>
+    <a href="/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/">Keeping your Docker builds fresh</a>
   </h2>
 
   <div>
     
     
-    <p>A handy technique for any pentester is the ability to create a reverse shell. This allows for a variety of cases where you want to get access to restricted environments or want to extract information from a remote system.</p>
+    <p>Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    1st,
+    
+    2017
+  </span>
+
+  <h2>
+    <a href="/blog/2017/05/01/Kubernetes-Security-etcd/">Kubernetes Attack Surface - etcd</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
 
     
     
@@ -418,18 +418,20 @@
 <ul class="pager"> 
 
   
-  <li class="previous disabled">
-    <a>&larr; Newer</a>
+  <li class="previous">
+    
+    <a href="/page2">&larr; Newer</a>
+    
   </li>
   
   
   <li>
-    <span class="page_number">Page: 1 of 52</span>
+    <span class="page_number">Page: 3 of 52</span>
   </li>
 
   
   <li class="next">
-    <a href="/page2">Older &rarr;</a>
+    <a href="/page4">Older &rarr;</a>
   </li>
   
 

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
+    1st,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="/blog/2007/01/01/new_free_databa/">New Free Database scanner... a Windows only Java program!</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a new freeware database security scanner available called <a href="http://www.imperva.com/application_defense_center/scuba/">scuba </a> from Imperva.<br />
+The front page looks quite interesting so I'll be sure to have a look at it.  However not today, as I'm not in fromt of a windows machine.<br />
+And here's the really weird bit.  When I heard about it I noted that it's a Java program..... "great" I thought it'll run nicely on Linux (which I use almost exclusively at home, apart from the odd game) but.. it's a java program that requires windows!!<br />
+What the heck is the point of that!<br />
+"No problem" I thought "I'll just download the archive and there'll be a JAR file there that I can run manually"....<br />
+no<br />
+when you download the program it extracts one .exe file!<br />
+Why bother programming something in Java if you're going to tie it to windows!!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    7th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/07/the_wonders_of/">The wonders of modern (open source) technology...</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I was just thinking that there's lots of little advances in technology that you don't really think about but that add up to make a real difference to what you can do..<br />
+This time it's a combo of SSL VPN's and free broadband Internet in hotels that's letting me sit here and listen to any music from my home music collection without having to tote around player with me (that I always forget to charge!)<br />
+And the great thing is... it's all free.<br />
+The SSL VPN is courtesy of the excellent <a href="http://www.3sp.com/showSslExplorerCommunity.do">sslexplorer</a>.  the community edition is stored on my <a href="www.centos.org">CentOS</a> server at home which has a port forward from my little <a href="http://www.ipcop.org/">ipcop</a> firewall..<br />
+The next piece of the puzzle is <a href="http://www.slimdevices.com/su_downloads.html">slimserver</a> which is designed to support Slim devices squeeze boxes , but which they release as a free download whether you use their product or not...  This lets me set up a stream over HTTP of any music I like, that I can connect to with any media player (windows media etc)<br />
+Actually what occurs to me is that the common piece of all this is Open source software.  Without that all this would cost me a fortune and very likely I wouldn't have it at all...!  Yay open source.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    6th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/06/cool_netstat_an/">Cool netstat and wmic stuff</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System" href="http://isc.sans.org/diary.php?storyid=1911&amp;isc=6113ddcc651a8e9b3c8de550deb0fd3f">SANS - Internet Storm Center - Cooperative Cyber Threat Monitor And Alert System</a><br />
+This post on the sans handlers log has some really useful information about the use of netstat to detect connection information on windows boxes, with some features that I wasn't aware of.<br />
+Also put me on to something else that I've been woefully ignorant of . <a href="http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/wmic.mspx?mfr=true"> wmic</a><br />
+This looks like a really handy command-line tool for getting information out of windows boxes.  from what I can see so far, there's a load of interesting information that you can get from it.  To get started just type <i>"wmic"</i> from a command prompt then type /? for a list of "aliases" that wmic uses for information retrieval.<br />
+Some of the commands I've found so far which seem handy "process list brief" and nicconfig list brief" but you can use the <i>/?</i> switch after anything to get some useful help about options...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    3rd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/03/the_cats_allude/">The cats alluded to in by blog title</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>It occurs to me that I promised the odd cat when I set up this blog, and I've not really had any... so without further ado, here's some picture of our two that Marion captioned...<br />
+<img src="http://www.mccune.org.uk/funny_cats/camoflaged.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/cleanedyourwindscreen.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/firstclass.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/giftwrappedthismyself.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/gofindyourownpillow.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/preciousismine.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/stealinursheets.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/stealinursupplies.jpg" /><br />
+<img src="http://www.mccune.org.uk/funny_cats/wheresmypresent.jpg" /></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    1st,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/12/01/finally_a_sensi/">Finally ! A sensible view on AJAX Security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>A post over on <a href="http://www.whitehatsec.com/home/resources/articles/files/myth_busting_ajax_insecurity.html">White Hat Security</a> makes a great run at bursting the bubble of all the people saying that AJAX is some kind of terrible security risk.<br />
+I won't reiterate the arguments in the article, 'cause they do a pretty good job of laying out what the problems and non-problems of AJAX security are.  I'd just say that I agree this has been a really overhyped area of security.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    29th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/29/more_on_windows/">More on windows cached password recovery</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="" href="http://www.off-by-one.net/misc/cachedump.html"></a><br />
+hmm looks like it's not quite as bad as I thought it was.  After a bit more reading on the subject, the windows cached password is not just an NTLM hash, it's actually a salted hash, with the salt being the username.<br />
+So rainbow tables aren't really a practical attack for this, although it's interesting to note that there's a John the ripper plug-in for cachedump now which enables you to do dictionary based/brute-force attacks on retrieved credentials</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    29th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/29/pwdumpx/">PWDumpX</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Reed Arvin # Security Tools" href="http://reedarvin.thearvins.com/tools.html">Reed Arvin # Security Tools</a><br />
+A listing of some cool looking security tools.  In particular, I think that PWDumpX could be an interesting one.<br />
+I've not had a chance to play with it yet, but it seems to me that the implication of it is that in an enterprise environment, if you have access to a local admin set of credentials (which depending on how your company manages local admin accounts may be pretty easy) or if your domain account has local admin, you could use this tool to dump the domain credentials of any user by running this against the machine that they're logged in to.  Of course, once you've got the credentials you need to decrypt them, but then, that's what rainbow tables are for!<br />
+If it works like that it's actually a pretty sneaky attack, definitely one to test.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    23rd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/23/using_google_to/">Using google to hack for you</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>&lt;a title=&quot;SecuriTeam Blogs </p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    22nd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/22/new_uk_computer/">New UK Computer Misuse Act... Yeuch</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There are some amendments in the new <a href="http://www.opsi.gov.uk/acts/acts2006/ukpga_20060048_en.pdf"> Police and Justice Act</a> to the Computer Misuse Act and some of them do not sound like good news for the UK Penetration testing &amp; Security Research community.<br />
+Looking at Section 37 of the Act you get this<br />
+<i><br />
+(1) A person is guilty of an offence if he makes, adapts, supplies or offers<br />
+to supply any article intending it to be used to commit, or to assist in<br />
+the commission of, an offence under section 1 or 3.<br />
+(2) A person is guilty of an offence if he supplies or offers to supply any<br />
+article believing that it is likely to be used to commit, or to assist in the<br />
+commission of, an offence under section 1 or 3.<br />
+(3) A person is guilty of an offence if he obtains any article with a view to<br />
+its being supplied for use to commit, or to assist in the commission of,<br />
+an offence under section 1 or 3.</i><br />
+(Offences in section 1 or 3 is basically unauthorised access to computer resources).<br />
+To my mind that leaves people publishing exploit code in the UK in serious trouble along with anyone selling or making open source Penetration testing software.  It'd would be pretty hard to argue that you didn't believe it was likely that a tool that could be used for Pen testing could also be used by someone to break into a system, as the only thing that's really different is the intent !<br />
+The act also covers DoS (or reckless impairment of the operation of a computer as the act calls it) so would it follow that software which stress tests systems would also fall foul of the act?<br />
+I expect that what'll happen is that we'll get some chat from government officials that "legitimate security professionals won't be targeted" but I for one really don't like the idea that I could be committing an offence and I'm relying on someones definition of "legitimate" to avoid being prosecuted!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
+    21st,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/11/21/more_on_databas/">More on Database vulnerability numbers</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's some more data on comparing Oracle and MS SQL server vulnerability levels over at <a href="http://blogs.msdn.com/michael_howard/archive/2006/11/20/which-database-is-more-secure-oracle-vs-microsoft.aspx">michael Howards blog. </a><br />
+There's a link to a study by David Litchfield on the numbers <a href="http://www.databasesecurity.com/dbsec/comparison.pdf"> here</a> which pretty much comes to a similar conclusion to looking at the secunia numbers, but does a more accurate job of analysing the findings by looking at a number of sources.<br />
+The clear point to be made is that Microsoft have done a very good job on the security of MS SQL server 2005 and if someone were to ask me about a choice between these two "enterprise database" vendors in terms of security, it would be a bit of a no-brainer!<br />
+One thing you can see is that this study, whilst still coming to the same conclusion (that MS SQL server is more secure than Oracle) actually has quite different numbers from the ESG study that was quoted in Michael's earlier blog posting <a href="http://blogs.msdn.com/michael_howard/archive/2006/11/16/microsoft-sql-server-runs-the-security-table.aspx"> here</a><br />
+At a rough count the NGS paper lists ~58 MS SQL vulnerabilities whilst the ESG one lists less than 10 (there's no background data so it's kinda hard to tell), and a similar story for the Oracle one with well over a hundred in the NGS paper and only 70 in the ESG one.<br />
+IMO a good reason to actually dig a bit deeper on these things rather than go with something like CVE which isn't really designed for the purpose.  The same result has come out but by being able to see what's being counted it becomes more believable and less likely to have people be able to argue the stats....</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page19">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 20 of 52</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page21">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

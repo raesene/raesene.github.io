@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Raesene's Ramblings</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Raesene's Ramblings </h1>
+</div>
+
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    27th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/27/fix_for_in_plac/">fix for in_place_editing problem I had</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the cool things about rails is the Scriptalicious javascript library which you get as part of rails.  I've just been trying to add in place editing to some of the fields in my app and I encountered a problem with way it's implemented in conjunction with the way I was decribing the view.<br />
+Anyway a much better description of the exact problem I was having and a solution (which is in the comments to the post) is at the <a href="http://www.rabbitcreative.com/articles/2006/04/04/ruby-on-rails-in-place-editing">Rabiit Creative Blog </a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    27th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/27/ruby_on_rails/">Ruby On Rails</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well I've been meaning to post some of this stuff for a while.  I've been doing some Ruby On Rails (RoR) development for a while now, more to teach myself than to create any spectacular applications.<br />
+Anyway as you do I've run across a variety of intersesting sources of information about rails as I built my first application (a security checklist management system), so I'll post some of them here...<br />
+The main site is at <a href="http://www.rubyonrails.com">www.rubyonrails.com</a> and is a decent place to start.<br />
+For tutorials there's a list here <a href="http://www.digitalmediaminute.com/article/1816/top-ruby-on-rails-tutorials">Top 12 Rails Tutorials</a> of which I'd have to say that the rolling on rails one I liked (although it's a bit out of date now).  Also if you look at that one I'd be inclined to follow-up with Amy Hoy's ones which can be found <a href="http://www.slash7.com/articles/2005/01/24/really-getting-started-in-rails"> here </a><br />
+In terms of forums and the like I've actually not found any that I like a lot yet.  There's mailing lists off the main site, but I'm not a great fan of mailing lists  for picking up things as I find the web interfaces not that great, usually.<br />
+There's some books that are a good bet, the seminal one is <a href="http://www.pragmaticprogrammer.com/titles/rails2/index.html"> Agile Web Development with Rails </a> however I wouldn't buy the current print version as V2 is under development.  what you can do is get the PDF of the current cut of V2 from there and then you get the PDF of the final one when it's done...<br />
+There's an Oreilly book by the guy who did the Rolling on Rails tutorial I mentioned above, which is out on safari now and will be in print R.S.N .  I've not read much of it yet, so I'm not too sure how it'll be...<br />
+Anyway that's enough of an intro, I just need to remember to keep posting as I find new stuff...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    25th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/25/sitekey_vulnera/">Sitekey vulnerabilities article</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="SiteKey-20060718.pdf (application/pdf Object)" href="http://cr-labs.com/publications/SiteKey-20060718.pdf">SiteKey-20060718.pdf (application/pdf Object)</a><br />
+An article detailing some problems with the SiteKey implementation at BofA.  I must say I'm not surprised by the one about real-time MITM bypassing the problem, but I'm a little surprised about one of the security processes for login being waived once the user clicks a button on a given PC and moreso that there's no easy way to remove the bypass from a given PC....<br />
+Secondary security questions (well one's that aren't likely to be public knowledge anyway) are a decent add-on to an authentication procedure, but I wouldn't have thought that they were so onerous, that you couldn't just ask them every time...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    23rd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/23/great_dictionar/">Great Dictionary Site</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="GData: An Online MD5 Hash Database" href="http://gdataonline.com/">GData: An Online MD5 Hash Database</a><br />
+I've been looking for a good site to get password dictionaries from for ages.  Don't know why this one doesn't seem to show well on google searches, but the dictionaries for download there look good to me</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    14th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/14/walkthough_of_a/">Walkthough of an XSS attack</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a> The XSS Vulnerability" href="http://www.informit.com/articles/article.asp?p=603037&amp;rl=1"&gt;XSS, Cookies, and Session ID Authentication – Three Ingredients for a Successful Hack &gt; The XSS Vulnerability</a><br />
+Some more reading for me.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    5th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/05/some_interestin/">Some Interesting Javascript Attacks</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="DNS: Spoofing and Pinning." href="http://viper.haque.net/~timeless/blog/11/">DNS: Spoofing and Pinning.</a><br />
+<a href="http://www.spidynamics.com/spilabs/education/articles/JS-portscan.html"> SPI Dynamics Article on Javascript system enumeration </a><br />
+A Couple of interesting articles on the dangers of javascript/XSS attacks...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    5th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/05/java_nessus_cli/">Java Nessus Client</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a> PSS &gt; Tools &gt; Nessj" href="http://www.pss.intekras.com/tools/nessj/"&gt;Intekras &gt; PSS &gt; Tools &gt; Nessj</a><br />
+Handy.  A java based nessus client.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    2nd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/02/analysis_of_the/">Analysis of the Vista Security Model</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Windows_Vista_Security_Model_Analysis.pdf (application/pdf Object)" href="http://www.symantec.com/avcenter/reference/Windows_Vista_Security_Model_Analysis.pdf">Windows_Vista_Security_Model_Analysis.pdf (application/pdf Object)</a><br />
+Symantec's analysis of the Vista Security Model.  Another one to read when I get some time.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    2nd,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/08/02/post_17/">Security Review Process</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="A Process for Performing Security Code Reviews" href="http://www.computer.org/portal/site/security/menuitem.6f7b2414551cb84651286b108bcd45f3/index.jsp?&amp;pName=security_level1_article&amp;TheCat=1001&amp;path=security/2006/v4n4&amp;file=basic.xml&amp;">A Process for Performing Security Code Reviews</a><br />
+Article on Performing security code reviews, one to read when I get a chance.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    24th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="/blog/2006/07/24/cool_interviews/">Cool Interviews with great programmers</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Sztywny Blog - Stiff asks, great programmers answer" href="http://sztywny.titaniumhosting.com/2006/07/23/stiff-asks-great-programmers-answers/">Sztywny Blog - Stiff asks, great programmers answer</a><br />
+Very interesting answers...</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="/page24">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 25 of 52</span>
+  </li>
+
+  
+  <li class="next">
+    <a href="/page26">Older &rarr;</a>
+  </li>
+  
+
+</ul>
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+
