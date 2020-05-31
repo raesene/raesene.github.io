@@ -167,7 +167,7 @@
 
 <p>When pods are deployed to a cluster, in most default installs, the <a href="https://kubernetes.io/docs/admin/admission-controllers/">Admission Contoller</a> will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a <a href="https://kubernetes.io/docs/admin/service-accounts-admin/">Service Account</a> inside the containers that make up the pod.</p>
 
-<p>This service account includes a token which is mounted at a predictable location <code class="highlighter-rouge">/var/run/secrets/kubernetes.io/serviceaccount/token</code> .</p>
+<p>This service account includes a token which is mounted at a predictable location <code class="language-plaintext highlighter-rouge">/var/run/secrets/kubernetes.io/serviceaccount/token</code> .</p>
 
 <p>What’s interesting is that, by default unless <a href="https://kubernetes.io/docs/admin/authorization/rbac/">RBAC</a> is deployed, it’s likely that this token provides cluster admin privileges.</p>
 
@@ -175,7 +175,7 @@
 
 <p>If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of <a href="https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl">kubectl</a> and point it at your API Server with something like</p>
 
-<p><code class="highlighter-rouge">./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]</code></p>
+<p><code class="language-plaintext highlighter-rouge">./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]</code></p>
 
 <p>then try out some kubernetes commands…</p>
 

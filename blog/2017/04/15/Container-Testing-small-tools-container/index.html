@@ -167,7 +167,7 @@
 
 <p>There’s a couple of ways of achieving this goal. You could run a container interactively with something like</p>
 
-<p><code class="highlighter-rouge">docker run -i -t [image_name] /bin/sh</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker run -i -t [image_name] /bin/sh</code></p>
 
 <p>but one of the downsides of using a container like this is if you exit from the container, it’ll stop running, so ideally you want a container that’ll keep running and that you can connect to over the network.</p>
 
@@ -179,15 +179,15 @@
 
 <p>To use this approach just do something like</p>
 
-<p><code class="highlighter-rouge">docker run -d raesene/alpine-containertools</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker run -d raesene/alpine-containertools</code></p>
 
 <p>then find out what IP address has been assigned to your container with</p>
 
-<p><code class="highlighter-rouge">docker inspect -f "" [container_name]</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker inspect -f "" [container_name]</code></p>
 
 <p>and what the password that’s been generated with</p>
 
-<p><code class="highlighter-rouge">docker logs [container_name]</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker logs [container_name]</code></p>
 
 <p>and you should be able to SSH in and get started with testing.  This image has some network tools like nmap and curl and also some container tools like the docker client, kubectl and etcdctl which is handy for checking whether you can get access to the ETCD database in a Kubernetes network.</p>
 

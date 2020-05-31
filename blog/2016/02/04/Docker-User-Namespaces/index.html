@@ -171,7 +171,7 @@
 
 <p>copy the base systemd config file to /etc/systemd/system</p>
 
-<p><code class="highlighter-rouge">sudo cp /lib/systemd/system/docker.service /etc/systemd/system/</code></p>
+<p><code class="language-plaintext highlighter-rouge">sudo cp /lib/systemd/system/docker.service /etc/systemd/system/</code></p>
 
 <p>It’s not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.</p>
 
@@ -179,27 +179,27 @@
 
 <p>So in /etc/systemd/system/docker you can edit</p>
 
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon -H fd://</code></p>
+<p><code class="language-plaintext highlighter-rouge">ExecStart=/usr/bin/docker daemon -H fd://</code></p>
 
 <p>to</p>
 
-<p><code class="highlighter-rouge">ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://</code></p>
+<p><code class="language-plaintext highlighter-rouge">ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://</code></p>
 
 <p>and then restart docker with</p>
 
-<p><code class="highlighter-rouge">sudo systemctl daemon-reload</code></p>
+<p><code class="language-plaintext highlighter-rouge">sudo systemctl daemon-reload</code></p>
 
-<p><code class="highlighter-rouge">sudo systemctl restart docker</code></p>
+<p><code class="language-plaintext highlighter-rouge">sudo systemctl restart docker</code></p>
 
 <p>Once you’ve done that you can check to make sure that it’s working by running a process in a container as root and look at what UID is being shown on the host.</p>
 
 <p>So something like</p>
 
-<p><code class="highlighter-rouge">docker run -it ubuntu:14.04 top</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker run -it ubuntu:14.04 top</code></p>
 
 <p>should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like</p>
 
-<p><code class="highlighter-rouge">165536     2347   2323  0 21:20 pts/0    00:00:00 top</code></p>
+<p><code class="language-plaintext highlighter-rouge">165536     2347   2323  0 21:20 pts/0    00:00:00 top</code></p>
 
 <p>So, no longer running as root , yay!</p>
 
@@ -207,7 +207,7 @@
 
 <p>You can back up your existing images with something like</p>
 
-<p><code class="highlighter-rouge">docker save</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker save</code></p>
 
 <p>if needed and it’s also worth noting that if you disable userns again, your original images will be available.</p>
 

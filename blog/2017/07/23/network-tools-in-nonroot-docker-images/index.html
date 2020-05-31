@@ -167,14 +167,14 @@
 
 <p>Usually tools like nmap, tcpdump and ping will either need to be setuid root or be run as a user who has root level privileges, however with a bit of capabilities fiddling its relatively easy to get a container that doesn’t need that level of privilege.</p>
 
-<p>The key is use use the <code class="highlighter-rouge">setcap</code> utility to add the appropriate capability to your binaries, in this case CAP_NET_RAW.  CAP_NET_RAW is generally avaialable to containers as it’s on Docker’s default white list.</p>
+<p>The key is use use the <code class="language-plaintext highlighter-rouge">setcap</code> utility to add the appropriate capability to your binaries, in this case CAP_NET_RAW.  CAP_NET_RAW is generally avaialable to containers as it’s on Docker’s default white list.</p>
 
 <p>Once you’ve downloaded packages into the image, just use something like</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN setcap cap_net_raw+ep /usr/bin/nmap
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>RUN setcap cap_net_raw+ep /usr/bin/nmap
 </code></pre></div></div>
 
-<p>to set the capability on that binary.  One trick to note is that setcap doesn’t work on symbolic links so you need to find the destination of any links before using it.  One example is that in Alpine based images, <code class="highlighter-rouge">/bin/ping</code> is just a symlink to <code class="highlighter-rouge">/bin/busybox</code> so if you want to enable CAP_NET_RAW in that setup <code class="highlighter-rouge">/bin/busybox</code> should be your target.</p>
+<p>to set the capability on that binary.  One trick to note is that setcap doesn’t work on symbolic links so you need to find the destination of any links before using it.  One example is that in Alpine based images, <code class="language-plaintext highlighter-rouge">/bin/ping</code> is just a symlink to <code class="language-plaintext highlighter-rouge">/bin/busybox</code> so if you want to enable CAP_NET_RAW in that setup <code class="language-plaintext highlighter-rouge">/bin/busybox</code> should be your target.</p>
 
 <p>There’s an example repo and associated Docker Hub image <a href="https://github.com/raesene/alpine-noroot-containertools">here</a> and <a href="https://hub.docker.com/r/raesene/alpine-noroot-containertools/">here</a></p>
 

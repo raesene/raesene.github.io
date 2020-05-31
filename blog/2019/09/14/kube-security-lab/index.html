@@ -173,7 +173,7 @@
 
 <p>So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it <a href="https://github.com/raesene/kube_security_lab">here</a></p>
 
-<p>The idea is that the <code class="highlighter-rouge">client-machine.yml</code> playbook can be used to spin up a container with client tools installed (it’s just an instance of <a href="https://hub.docker.com/r/raesene/alpine-containertools">this image</a> at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.</p>
+<p>The idea is that the <code class="language-plaintext highlighter-rouge">client-machine.yml</code> playbook can be used to spin up a container with client tools installed (it’s just an instance of <a href="https://hub.docker.com/r/raesene/alpine-containertools">this image</a> at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.</p>
 
 <p>In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!</p>
 

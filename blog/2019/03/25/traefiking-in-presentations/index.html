@@ -173,7 +173,7 @@
 
 <p>Traefik configuration can be done using a Docker compose file, where labels in the service definition let traefik know how to route specific requests.  My planned layout was just to specify hosts on my domain (pwndland.uk) for each presentation.</p>
 
-<p>The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using <code class="highlighter-rouge">expose</code> statements, otherwise traefik wouldn’t know how to route traffic.</p>
+<p>The main “Gotcha” I encountered when writing the configuration below was that I needed to explicitly specify the port on the container network that was hosting the application using <code class="language-plaintext highlighter-rouge">expose</code> statements, otherwise traefik wouldn’t know how to route traffic.</p>
 
 <p>One note from a security perspective if you’re making use of Traefik, is that it</p>
 
@@ -186,7 +186,7 @@
   <li><a href="http://docker.pwndland.uk/#/">BSides London 2016 - Docker - Security Myths, Security Legends</a></li>
 </ul>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>version: '3'
 
 services:
   reverse-proxy:

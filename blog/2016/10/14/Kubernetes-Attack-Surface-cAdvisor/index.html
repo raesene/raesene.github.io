@@ -167,9 +167,9 @@
 
 <p>So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.</p>
 
-<p>This cluster has three nodes on <code class="highlighter-rouge">192.168.41.233</code> , <code class="highlighter-rouge">192.168.41.201</code> and <code class="highlighter-rouge">192.168.41.232</code> so we can start with</p>
+<p>This cluster has three nodes on <code class="language-plaintext highlighter-rouge">192.168.41.233</code> , <code class="language-plaintext highlighter-rouge">192.168.41.201</code> and <code class="language-plaintext highlighter-rouge">192.168.41.232</code> so we can start with</p>
 
-<p><code class="highlighter-rouge">nmap -sT -n -p- 192.168.41.201,232,233</code></p>
+<p><code class="language-plaintext highlighter-rouge">nmap -sT -n -p- 192.168.41.201,232,233</code></p>
 
 <p>From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.</p>
 
@@ -181,9 +181,9 @@
 
 <p><img src="/assets/media/cadvisor_docker.png" alt="cadvisor docker" /></p>
 
-<p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
+<p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="language-plaintext highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
         "creation_time": "2016-10-09T03:55:54.113949226+01:00",
         "aliases": [
             "k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de",

@@ -177,7 +177,7 @@
 
 <p>The Dockerfile to do this was really pretty straightforward</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM jekyll/jekyll
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM jekyll/jekyll
 MAINTAINER Rory McCune &lt;rorym@mccune.org.uk&gt;
 RUN mkdir /presentation
 WORKDIR /presentation/
@@ -188,9 +188,9 @@ CMD ["jekyll", "serve", "-H", "0.0.0.0"]
 
 <p>from the base jekyll install it basically just adds the git working directory to the image and runs jekyll to serve up the presentation.  The only gotcha I encountered was that the jekyll image very sensibly doesn’t run as root, so you need to chown your presentation files appropriately to avoid permission issues when you run the container.</p>
 
-<p>This is also a useful time to use a <code class="highlighter-rouge">.dockerignore</code> file to avoid the container getting all the git history which it doesn’t need</p>
+<p>This is also a useful time to use a <code class="language-plaintext highlighter-rouge">.dockerignore</code> file to avoid the container getting all the git history which it doesn’t need</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>.git
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>.git
 .gitignore
 README.md
 </code></pre></div></div>

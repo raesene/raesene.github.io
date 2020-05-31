@@ -171,13 +171,13 @@
 
 <p>So for example for one of my images the curl request to trigger a build on it would look like this (with the [TOKEN] replaced with the trigger token for the build)</p>
 
-<p><code class="highlighter-rouge">curl -H "Content-Type: application/json" --data '{"build": true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/</code></p>
+<p><code class="language-plaintext highlighter-rouge">curl -H "Content-Type: application/json" --data '{"build": true}' -X POST https://registry.hub.docker.com/u/raesene/alpine-nettools/trigger/[TOKEN]/</code></p>
 
 <p>Now we have the method for updating our image, we just need to set up some mechanism for this to be carried out periodically.  The obvious way to do this is just to make use of a Linux host and cron but I’m sure there’s a variety of other ways of triggering an HTTP post on a regular basis.</p>
 
 <p>So just add your curl command to a crontab file somewhere and away you go.</p>
 
-<p>The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in <code class="highlighter-rouge">Settings--&gt;Notifications</code>.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.</p>
+<p>The last thing to watch for is obviously there’s a risk that your automated build will fail, so you should turn on the option in Docker Hub to notify you of any build failures.  That can be found in <code class="language-plaintext highlighter-rouge">Settings--&gt;Notifications</code>.  Just tick the box “Notify me when an automated build fails” and you should get an e-mail if something goes wrong.</p>
 
 	  </div>
 

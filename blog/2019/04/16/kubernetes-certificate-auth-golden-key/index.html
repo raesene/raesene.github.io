@@ -179,7 +179,7 @@
 
 <p>One reason these attacks are possible is due to an important (and somewhat unintuitive) aspect of Kubernetes authentication which is that in general Kubernetes has no concept of a user database, it relies on the identity provided by the authentication mechanism, to determine who the user is and then matches this to RBAC bindings to provide rights to that user.</p>
 
-<p>In the case of certificate authentication this is done by looking at the <code class="highlighter-rouge">CN</code> and <code class="highlighter-rouge">O</code> fields of the client certificate as it’s presented to the API server.  A certificate which is signed by the appropriate CA is then given whatever rights that user identity correlates to.</p>
+<p>In the case of certificate authentication this is done by looking at the <code class="language-plaintext highlighter-rouge">CN</code> and <code class="language-plaintext highlighter-rouge">O</code> fields of the client certificate as it’s presented to the API server.  A certificate which is signed by the appropriate CA is then given whatever rights that user identity correlates to.</p>
 
 <p>So an attacker with access to the CA key can just mint new user identities whenever it likes, and Kubernetes won’t complain, even if there’s another certificate with that identity.</p>
 

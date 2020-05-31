@@ -171,19 +171,19 @@
 
 <p>The other downside is the use of NAT, which can cause issues with some networking tools that make a large number of network connections (e.g. nmap).</p>
 
-<p>One option to address this is to use the docker option <code class="highlighter-rouge">-net=host</code> which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.</p>
+<p>One option to address this is to use the docker option <code class="language-plaintext highlighter-rouge">-net=host</code> which essentially has the container run with the hosts network settings.  However one slight problem there is…. it doesn’t work with user namespaces, which I’m keen on having enabled.</p>
 
 <p>So ideally I’d like another option which provides no-NAT access to a container, ideally with an IP address on the host network subnet, with user namespaces enabled.  This is kind of similar to the VMWare Workstation/fusion setup with bridged networking.</p>
 
 <p>I had quite a dig around in the official docker documentation to see if this kind of setup is possible using in-built functionality and I didn’t see a way of doing this, so a little manual work is required. However I did find some interesting references to working out this kind of problem notably this <a href="https://stackoverflow.com/questions/25529386/how-can-i-set-a-static-ip-address-in-a-docker-container">StackOverflow post</a> and <a href="http://blog.oddbit.com/2014/08/11/four-ways-to-connect-a-docker/">this</a> slightly older post on Docker networking.</p>
 
-<p>First in one shell we need to start our target container.  We use the option <code class="highlighter-rouge">--net=none</code> to setup the container without having docker do it’s usual network setup routines.</p>
+<p>First in one shell we need to start our target container.  We use the option <code class="language-plaintext highlighter-rouge">--net=none</code> to setup the container without having docker do it’s usual network setup routines.</p>
 
 <figure class="highlight"><pre><code class="language-shell" data-lang="shell">docker run <span class="nt">-it</span> <span class="nt">--net</span><span class="o">=</span>none <span class="nt">--name</span><span class="o">=</span>nettest ubuntu:14.04 /bin/bash</code></pre></figure>
 
-<p>Next we need to create our virtual interface as below, I’ve called it <code class="highlighter-rouge">virtual0</code> , in my case <code class="highlighter-rouge">eno16777736</code> is the name of my host ethernet interface</p>
+<p>Next we need to create our virtual interface as below, I’ve called it <code class="language-plaintext highlighter-rouge">virtual0</code> , in my case <code class="language-plaintext highlighter-rouge">eno16777736</code> is the name of my host ethernet interface</p>
 
-<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo </span>ip link add virtual0 link eno16777736 <span class="nb">type </span>macvlan mode bridge</code></pre></figure>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo </span>ip <span class="nb">link </span>add virtual0 <span class="nb">link </span>eno16777736 <span class="nb">type </span>macvlan mode bridge</code></pre></figure>
 
 <p>After we’re done that we need to add the virtual0 interface to the container, so we need to know the pid, which we can get from docker inspect.</p>
 
@@ -191,13 +191,13 @@
 
 <p>Then we create a link in /var/run/netns and set the netns of the virtual0 interface to be the same as our container.  In the examples below 3463 is the pid returned by the docker inspect command above.</p>
 
-<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo </span>mkdir <span class="nt">-p</span> /var/run/netns
-<span class="nb">sudo </span>ln <span class="nt">-s</span> /proc/3463/ns/net /var/run/netns/3463
-<span class="nb">sudo </span>ip link <span class="nb">set </span>virtual0 netns 3463</code></pre></figure>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo mkdir</span> <span class="nt">-p</span> /var/run/netns
+<span class="nb">sudo ln</span> <span class="nt">-s</span> /proc/3463/ns/net /var/run/netns/3463
+<span class="nb">sudo </span>ip <span class="nb">link set </span>virtual0 netns 3463</code></pre></figure>
 
-<p>We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the <code class="highlighter-rouge">ip netns exec</code> command from the host</p>
+<p>We can then bring up the interface and apply an IP address.  Doing this inside the container doesn’t work from a permissions standpoint so it can be done with the <code class="language-plaintext highlighter-rouge">ip netns exec</code> command from the host</p>
 
-<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo </span>ip netns <span class="nb">exec </span>3463 ip link <span class="nb">set </span>virtual0 up</code></pre></figure>
+<figure class="highlight"><pre><code class="language-shell" data-lang="shell"><span class="nb">sudo </span>ip netns <span class="nb">exec </span>3463 ip <span class="nb">link set </span>virtual0 up</code></pre></figure>
 
 <p>and we can then assign a DHCP address from the host network DHCP server to the container</p>
 

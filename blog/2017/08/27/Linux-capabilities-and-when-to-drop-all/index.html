@@ -171,22 +171,22 @@
 
 <p>One point to make note of is, that capabilities are only needed to carry out privileged actions on a host.  If your process only needs to carry out actions that an ordinary user could without the use of sudo, su or setuid root binaries, then your process doesn’t need any capabilities assigned to it.</p>
 
-<p>To provide a concrete example, take the <code class="highlighter-rouge">ping</code> program which ships with most Linux disitributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not availble to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.</p>
+<p>To provide a concrete example, take the <code class="language-plaintext highlighter-rouge">ping</code> program which ships with most Linux disitributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not availble to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.</p>
 
 <h2 id="practical-use-of-capabilities">Practical use of capabilities</h2>
 
-<p>So how do we actually manipulate capabilites on a Linux system? The most basic way of handing this (without writing custom code) is to use the <code class="highlighter-rouge">getcap</code> and <code class="highlighter-rouge">setcap</code> binaries which come with the libcap2-bin package on debian derived systems.</p>
+<p>So how do we actually manipulate capabilites on a Linux system? The most basic way of handing this (without writing custom code) is to use the <code class="language-plaintext highlighter-rouge">getcap</code> and <code class="language-plaintext highlighter-rouge">setcap</code> binaries which come with the libcap2-bin package on debian derived systems.</p>
 
 <p>If you use getcap on a file which has capabilities, you’ll see something like this</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/usr/bin/arping = cap_net_raw+ep
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/usr/bin/arping = cap_net_raw+ep
 </code></pre></div></div>
 
-<p>We can see here that the arping file has cap_net_raw with <code class="highlighter-rouge">+ep</code> at the end of it, so what does that mean.  The e here refers to the effective capability of the file and the p to the permitted capability. Effectively for file capabilities the effective flag is needed where the binary isn’t “capability aware” i.e. it’s not written with capabilities in mind (which is usually the case).  For practical purposes if you’re assigning capabilities to files, you’ll use <code class="highlighter-rouge">+ep</code> most of the time.</p>
+<p>We can see here that the arping file has cap_net_raw with <code class="language-plaintext highlighter-rouge">+ep</code> at the end of it, so what does that mean.  The e here refers to the effective capability of the file and the p to the permitted capability. Effectively for file capabilities the effective flag is needed where the binary isn’t “capability aware” i.e. it’s not written with capabilities in mind (which is usually the case).  For practical purposes if you’re assigning capabilities to files, you’ll use <code class="language-plaintext highlighter-rouge">+ep</code> most of the time.</p>
 
 <p>So if you want to assign a capability, for example to apply cap_net_raw to an nmap binary</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>setcap cap_net_raw+ep /usr/bin/nmap
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>setcap cap_net_raw+ep /usr/bin/nmap
 </code></pre></div></div>
 
 <p>It’s important to note that you can’t set capabilities on symlinks, it has to be the binary, and also you can’t set capabilities on shell scripts (well unless you have a super-recent kernel)</p>
@@ -211,27 +211,27 @@
 
 <p>there’s a number of ways of reviewing what capabilities a process or file has got.  From a low-level perspective, we can review the contents of /proc/[pid]/status.  This will contain some information that looks like this :-</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 0000000000000000
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 0000000000000000
 CapPrm: 0000000000000000
 CapEff: 0000000000000000
 CapBnd: 0000003fffffffff
 CapAmb: 0000000000000000
 </code></pre></div></div>
 
-<p>This set was for a user level process (using the command <code class="highlighter-rouge">cat /proc/self/status</code>).  As you can see the CapPrm and CapEff are both all zero’s indicating that I don’t have any capabilities and assigned.</p>
+<p>This set was for a user level process (using the command <code class="language-plaintext highlighter-rouge">cat /proc/self/status</code>).  As you can see the CapPrm and CapEff are both all zero’s indicating that I don’t have any capabilities and assigned.</p>
 
-<p>If I then switch to a root user using <code class="highlighter-rouge">sudo bash</code> and run the same command, I  get the following</p>
+<p>If I then switch to a root user using <code class="language-plaintext highlighter-rouge">sudo bash</code> and run the same command, I  get the following</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 0000000000000000
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 0000000000000000
 CapPrm: 0000003fffffffff
 CapEff: 0000003fffffffff
 CapBnd: 0000003fffffffff
 </code></pre></div></div>
 <p>which is quite the difference, here CapPrm and CapEff have a lot more content as I’m a privileged user.</p>
 
-<p>If we try the same in a Docker process using the command <code class="highlighter-rouge">docker run alpine:latest cat /proc/self/status</code> we get</p>
+<p>If we try the same in a Docker process using the command <code class="language-plaintext highlighter-rouge">docker run alpine:latest cat /proc/self/status</code> we get</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 00000000a80425fb
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CapInh: 00000000a80425fb
 CapPrm: 00000000a80425fb
 CapEff: 00000000a80425fb
 CapBnd: 00000000a80425fb
@@ -241,16 +241,16 @@ CapBnd: 00000000a80425fb
 
 <h3 id="interpreting-capabilities">Interpreting capabilities</h3>
 
-<p>Of course these long hex strings aren’t exactly the most friendly way of viewing capabilities.  Luckily there are ways of making this a bit more readable.  if we use <code class="highlighter-rouge">capsh</code> (which comes with libcap2-bin on debian derived systems) we can work out what’s meant here.</p>
+<p>Of course these long hex strings aren’t exactly the most friendly way of viewing capabilities.  Luckily there are ways of making this a bit more readable.  if we use <code class="language-plaintext highlighter-rouge">capsh</code> (which comes with libcap2-bin on debian derived systems) we can work out what’s meant here.</p>
 
-<p>Running <code class="highlighter-rouge">capsh --decode=0000003fffffffff</code> returns</p>
+<p>Running <code class="language-plaintext highlighter-rouge">capsh --decode=0000003fffffffff</code> returns</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x0000003fffffffff=cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,cap_wake_alarm,cap_block_suspend,37
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x0000003fffffffff=cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,cap_wake_alarm,cap_block_suspend,37
 </code></pre></div></div>
 
-<p>So that shows that our root shell run outside basically had all the capabilities.  If we run <code class="highlighter-rouge">capsh --decode=00000000a80425fb</code> we can see what Docker provides by default</p>
+<p>So that shows that our root shell run outside basically had all the capabilities.  If we run <code class="language-plaintext highlighter-rouge">capsh --decode=00000000a80425fb</code> we can see what Docker provides by default</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x00000000a80425fb=cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_net_bind_service,cap_net_raw,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x00000000a80425fb=cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_net_bind_service,cap_net_raw,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap
 </code></pre></div></div>
 
 <p>which corresponds to the list in the <a href="https://github.com/moby/moby/blob/master/oci/defaults.go#L14-L30">source code</a>.</p>
@@ -261,7 +261,7 @@ CapBnd: 00000000a80425fb
 
 <h3 id="other-utilities">Other Utilities</h3>
 
-<p>There are some other utilities which are handy for doing things like auditing capabilities.  the <a href="https://people.redhat.com/sgrubb/libcap-ng/index.html">libcap-ng-utils</a> package has the very handy <code class="highlighter-rouge">filecap</code> and <code class="highlighter-rouge">pscap</code> programs which can be used to review capapbilties on all files and all processes on a system by default.  There’s also <code class="highlighter-rouge">captest</code> which will review capabilities in the context of the current process.</p>
+<p>There are some other utilities which are handy for doing things like auditing capabilities.  the <a href="https://people.redhat.com/sgrubb/libcap-ng/index.html">libcap-ng-utils</a> package has the very handy <code class="language-plaintext highlighter-rouge">filecap</code> and <code class="language-plaintext highlighter-rouge">pscap</code> programs which can be used to review capapbilties on all files and all processes on a system by default.  There’s also <code class="language-plaintext highlighter-rouge">captest</code> which will review capabilities in the context of the current process.</p>
 
 <p>Also if you’re running containers and want a nice quick way to assess capabilities amongst other things, you could use Jessie Frazelle’s <a href="https://github.com/jessfraz/amicontained">amicontained</a></p>
 
@@ -279,12 +279,12 @@ CapBnd: 00000000a80425fb
 
 <p>Another one is that where you’re manipulating files you need to make sure that the tools you’re using understand capabilities.  For example when backing up files with tar, you need to use the following switches to make it all work.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>--xattrs               Enable extended attributes support
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>--xattrs               Enable extended attributes support
 --xattrs-exclude=MASK  specify the exclude pattern for xattr keys
 --xattrs-include=MASK  specify the include pattern for xattr keys
 </code></pre></div></div>
 
-<p>In practice for tar you’ll likely want to use <code class="highlighter-rouge">--xattrs</code> and <code class="highlighter-rouge">--xatttrs-include=security.capability</code> to make backups of files with capabilities.</p>
+<p>In practice for tar you’ll likely want to use <code class="language-plaintext highlighter-rouge">--xattrs</code> and <code class="language-plaintext highlighter-rouge">--xatttrs-include=security.capability</code> to make backups of files with capabilities.</p>
 
 	  </div>
 

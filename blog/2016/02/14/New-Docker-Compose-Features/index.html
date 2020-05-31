@@ -165,23 +165,23 @@
 	  <div class="article_body">
 	  <p>Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for <a href="https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/">pen testing</a> one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.</p>
 
-<p>So now with the new setup, we can use something like the example below, and then start it up with <code class="highlighter-rouge">docker-compose run sectest /bin/bash</code></p>
+<p>So now with the new setup, we can use something like the example below, and then start it up with <code class="language-plaintext highlighter-rouge">docker-compose run sectest /bin/bash</code></p>
 
 <p>This will start up four containers on the default private docker network, and provide a shell for the sectest container which we can use to run tools like nmap and metasploit.  Using this approach we get a couple of handy features.</p>
 
-<p>Because of docker links the names of the other containers are registered in each one, so for example in sectest we can <code class="highlighter-rouge">ping dradis</code> and have that work ok.</p>
+<p>Because of docker links the names of the other containers are registered in each one, so for example in sectest we can <code class="language-plaintext highlighter-rouge">ping dradis</code> and have that work ok.</p>
 
 <p>As the browser and the dradis/openvas instances are on the same private network we can access these browser based tools without having to expose them to the wider network.</p>
 
-<p>All the tools will have a directory in their filesystem at <code class="highlighter-rouge">/data</code> which points to our data volume.  At the end of the test this can then be saved off either from within the tools or outside at host level.</p>
+<p>All the tools will have a directory in their filesystem at <code class="language-plaintext highlighter-rouge">/data</code> which points to our data volume.  At the end of the test this can then be saved off either from within the tools or outside at host level.</p>
 
 <p>If you’re doing it at host level you need to note where the data’s actually stored.  To do that do</p>
 
-<p><code class="highlighter-rouge">docker volume ls</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker volume ls</code></p>
 
 <p>to get the name of your data volume.  By default it’ll be the name of the directory you ran the docker-compose file from and then ‘-data’ after that.</p>
 
-<p>Once you know the name just do <code class="highlighter-rouge">docker inspect (name)</code> and copy the files from there to whereever you’re storing them.</p>
+<p>Once you know the name just do <code class="language-plaintext highlighter-rouge">docker inspect (name)</code> and copy the files from there to whereever you’re storing them.</p>
 
 <figure class="highlight"><pre><code class="language-yaml" data-lang="yaml"><span class="na">version</span><span class="pi">:</span> <span class="s1">'</span><span class="s">2'</span>
 

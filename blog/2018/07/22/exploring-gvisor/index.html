@@ -171,11 +171,11 @@
 
 <h2 id="setup">Setup</h2>
 
-<p>The installation process is pretty straightforward, with a single binary to place on your Docker Engine host and then a quick modification to <code class="highlighter-rouge">/etc/docker/daemon.json</code> to make the alternate runtime available.</p>
+<p>The installation process is pretty straightforward, with a single binary to place on your Docker Engine host and then a quick modification to <code class="language-plaintext highlighter-rouge">/etc/docker/daemon.json</code> to make the alternate runtime available.</p>
 
 <h2 id="usage">Usage</h2>
 
-<p>After that you can start containers with the <code class="highlighter-rouge">--runtime=runsc</code> switch and they’ll make use it.  Notably it’s perfectly possible to run some containers on a host with standard Docker and others with gVisor at the same time.</p>
+<p>After that you can start containers with the <code class="language-plaintext highlighter-rouge">--runtime=runsc</code> switch and they’ll make use it.  Notably it’s perfectly possible to run some containers on a host with standard Docker and others with gVisor at the same time.</p>
 
 <h2 id="notes">Notes</h2>
 
@@ -183,27 +183,27 @@
 
 <p>First up the kernel version. Generally with Linux containers, the kernel version inside a container is the same as outside as the container makes use of the same underlying kernel when it’s operating.  However as gVisor is intercepting syscalls before they can get to the underlying Linux kernel, we see things slightly differently when it’s in use.</p>
 
-<p>If you run <code class="highlighter-rouge">uname -a</code> when running a gVisor container you get</p>
+<p>If you run <code class="language-plaintext highlighter-rouge">uname -a</code> when running a gVisor container you get</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 903108eb81ab 3.11.10 #1 SMP Fri Nov 29 10:47:50 PST 2013 x86_64 Linux
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 903108eb81ab 3.11.10 #1 SMP Fri Nov 29 10:47:50 PST 2013 x86_64 Linux
 </code></pre></div></div>
 
 <p>On the same host running without gVisor I get</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 835730d3b41c 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 835730d3b41c 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
 </code></pre></div></div>
 
 <p>which is the same as my underlying host (as expected).  This could be useful for fingerprinting the runtime in use as I’d expect that all containers running a given gVisor version will return the same info. from uname regardless of the underlying system.</p>
 
-<p>Another place you’ll see a difference is in <code class="highlighter-rouge">/proc</code> .  The gVisor project is working on exposing various pieces of informatio in proc (more information <a href="https://github.com/google/gvisor/tree/master/pkg/sentry/fs/proc">here</a>) but at the moment there’s a lot less info. here than you would find normally in a Docker container (which has positives and negatives).  As a quick metric <code class="highlighter-rouge">ls -laR</code> in /proc produces 304 entries in a gVisor container against 4700 in a standard Docker one.</p>
+<p>Another place you’ll see a difference is in <code class="language-plaintext highlighter-rouge">/proc</code> .  The gVisor project is working on exposing various pieces of informatio in proc (more information <a href="https://github.com/google/gvisor/tree/master/pkg/sentry/fs/proc">here</a>) but at the moment there’s a lot less info. here than you would find normally in a Docker container (which has positives and negatives).  As a quick metric <code class="language-plaintext highlighter-rouge">ls -laR</code> in /proc produces 304 entries in a gVisor container against 4700 in a standard Docker one.</p>
 
 <p>One side note from this is that as a result of this, tools like <a href="https://github.com/genuinetools/amicontained">amicontained</a> can’t necessarily get the information they need to provide info about the security of the container, as they rely on reading information from files in /proc.</p>
 
-<p>Another thing worth noting at this point is that gVisor is still relatively young as a project and does have bugs.  For example running <code class="highlighter-rouge">ls -laR | wc -l</code> reliably hung in an alpine:3.7 container when I was testing.</p>
+<p>Another thing worth noting at this point is that gVisor is still relatively young as a project and does have bugs.  For example running <code class="language-plaintext highlighter-rouge">ls -laR | wc -l</code> reliably hung in an alpine:3.7 container when I was testing.</p>
 
 <p>If you’re looking to tell whether containers on a host are using gVisor or runc, the following command should return the relevant information</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker inspect --format='' [container_name]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker inspect --format='' [container_name]
 </code></pre></div></div>
 
 <h2 id="performance">Performance</h2>
@@ -212,10 +212,10 @@
 
 <p>The test I did was to run</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it alpine:3.7 /bin/ash
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it alpine:3.7 /bin/ash
 </code></pre></div></div>
 
-<p>with gVisor and runc. If you do that and run <code class="highlighter-rouge">docker stats</code> it shows the runc container using 1.16MiB of memory and the gVisor one using 84MiB ! Also there seems to be some constant CPU usage on the gVisor container, even though it’s just running an idling ash shell with nothing else happening.</p>
+<p>with gVisor and runc. If you do that and run <code class="language-plaintext highlighter-rouge">docker stats</code> it shows the runc container using 1.16MiB of memory and the gVisor one using 84MiB ! Also there seems to be some constant CPU usage on the gVisor container, even though it’s just running an idling ash shell with nothing else happening.</p>
 
 
 	  </div>

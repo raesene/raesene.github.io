@@ -167,7 +167,7 @@
 
 <p>I’m not going to try and cover the whole Top 10 but I think it’s worth looking at what Kenna have mentioned specifically with regards to the two FREAK vulnerabilities that I looked at last time. From Kenna’s blog post they define “Successful Exploitation” as</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Successful Exploitation is defined as one successful technical exploitation of a vulnerability on one machine at a particular timestamp. The event is defined as: 
 1. An asset has a known CVE open. 
 2. An attack come in that matches the signature for that CVE on that asset and 
 3. One or more IOCs are detected/correlated post attack
@@ -183,7 +183,7 @@
 
 <p>Looking at the graph for CVE-2015-0204, we can see a …. huge spike in activity around March 2015, when… the researchers for the FREAK attack did a large scan looking for the issue. Looking at the <a href="">Freak Attack</a> page we see a note</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The following sites from the Alexa Top 10,000 websites permit RSA_EXPORT cipher suites, which potentially puts their users at risk from the FREAK attack. This list is current as of March 10 at 8:00 AM EST. 
 </code></pre></div></div>
 
 <p>indicating that they did a big scan in March 2015 which roughly correlates with the big spike in Kenna’s graph.  I’d also guess that a lot of other researchers would scan around that time as it was when the vulnerability was released.</p>

@@ -165,13 +165,13 @@
 	  <div class="article_body">
 	  <p>Coming up for 4 years ago (a lifetime in Container land) Ian Miell wrote about <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">“The most pointless Docker Command Ever”</a>.  This was a docker command that you could run and it would return you back as root on your host.</p>
 
-<p>Far from being useless, this is one of my favourite Docker commands, either to demonstrate to people why things like mounting <code class="highlighter-rouge">docker.sock</code> inside a container is dangerous, or for using as part of security tests where I can create containers, and I’d like to get to the underlying host easily.</p>
+<p>Far from being useless, this is one of my favourite Docker commands, either to demonstrate to people why things like mounting <code class="language-plaintext highlighter-rouge">docker.sock</code> inside a container is dangerous, or for using as part of security tests where I can create containers, and I’d like to get to the underlying host easily.</p>
 
 <p>I was thinking today, I wonder what this would look like in Kubernetes…? So I create a quick pod YAML file to test.  You can use this YAML to demonstrate the risks of allowing users to create pods on your cluster, without PodSecurityPolicy setup (of course, I’m sure <strong>all</strong> production clusters have a PodSecurityPolicy….. right?).</p>
 
-<p>The YAML is pretty simple, it basically creates a privileged container based on the <code class="highlighter-rouge">busybox</code> image and sets it in an endless loop, waiting for a connection, whilst also setting up the appropriate security flags to make the pod privileged, and also mounting the root directory of the underlying host into <code class="highlighter-rouge">/host</code></p>
+<p>The YAML is pretty simple, it basically creates a privileged container based on the <code class="language-plaintext highlighter-rouge">busybox</code> image and sets it in an endless loop, waiting for a connection, whilst also setting up the appropriate security flags to make the pod privileged, and also mounting the root directory of the underlying host into <code class="language-plaintext highlighter-rouge">/host</code></p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
 kind: Pod
 metadata:
   name: noderootpod
@@ -196,18 +196,18 @@ spec:
       path: /
 </code></pre></div></div>
 
-<p>Once you’ve got that as a file called say “noderoot.yml” , just run <code class="highlighter-rouge">kubectl create -f noderoot.yml</code>
+<p>Once you’ve got that as a file called say “noderoot.yml” , just run <code class="language-plaintext highlighter-rouge">kubectl create -f noderoot.yml</code>
 then, to get root on your Kubernetes node you just need to run</p>
 
-<p><code class="highlighter-rouge">kubectl exec -it noderootpod chroot /host</code></p>
+<p><code class="language-plaintext highlighter-rouge">kubectl exec -it noderootpod chroot /host</code></p>
 
-<p>and Hey Presto, you’ll be the <code class="highlighter-rouge">root</code> user on the host :)</p>
+<p>and Hey Presto, you’ll be the <code class="language-plaintext highlighter-rouge">root</code> user on the host :)</p>
 
 <p>Of course, you’re thinking, “that only does one random node” and you’d be right.  To get root shells on all the nodes, what you need is a DaemonSet, which will schedule a Pod onto every node in the cluster.</p>
 
 <p>The YAML for this is a little more complex, but the essence is the same</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: apps/v1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: noderootpod
@@ -243,7 +243,7 @@ spec:
           path: /
 </code></pre></div></div>
 
-<p>Once that’s run just do a <code class="highlighter-rouge">kubectl get po</code> to see your list of pods to choose from, and run the same <code class="highlighter-rouge">chroot /host</code> command on one to get that root on the host feeling…</p>
+<p>Once that’s run just do a <code class="language-plaintext highlighter-rouge">kubectl get po</code> to see your list of pods to choose from, and run the same <code class="language-plaintext highlighter-rouge">chroot /host</code> command on one to get that root on the host feeling…</p>
 
 <p>If you’ve made it all the way to the bottom of this post, I’ll briefly pimp out my <a href="https://www.blackhat.com/us-19/training/schedule/index.html#mastering-container-security-140201547156094">Mastering Container Security</a> course, which I’m running at Black Hat USA this year, where we’ll be covering this and much much more container security goodness :)</p>
 

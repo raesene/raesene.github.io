@@ -169,7 +169,7 @@
 
 <p>To do this what I did was write some code that implemented the ISessionHandlingAction interface using JRuby.  It’s a pretty simple interface, just two methods, so it wasn’t too tricky to get working.</p>
 
-<p>The main action you need to look at is called <code class="highlighter-rouge">performAction</code> which takes two parameters which represent the request to be modified and the results of any macros that have been run.  That second part is important as using a macro is how we’re going to get our token to inject into the request.</p>
+<p>The main action you need to look at is called <code class="language-plaintext highlighter-rouge">performAction</code> which takes two parameters which represent the request to be modified and the results of any macros that have been run.  That second part is important as using a macro is how we’re going to get our token to inject into the request.</p>
 
 <p>So first we set a couple of variables with the information from our two input requests.  We use these later on to get information about the requests that we need to extract data from them</p>
 
@@ -191,7 +191,7 @@
 </code></pre></div></div>
 <p>Next up we need to ensure that any existing Authorization header is removed before we add our new one.  This code is a bit brittle at the moment as it doesn’t account for cases where you have other authorization headers you might want (e.g. an HTTP basic one) or cases where there are multiple headers to remove.</p>
 
-<p>One thing I found a little tricky in this, coming from a ruby background, was the handling of removing an element from the array.  If you were doing this in ruby you might use <code class="highlighter-rouge">delete!</code> to remove the element, but it’s important to note that the getHeaders call doesn’t return a ruby array, it returns a Java ArrayList which has a different set of methods altogether.</p>
+<p>One thing I found a little tricky in this, coming from a ruby background, was the handling of removing an element from the array.  If you were doing this in ruby you might use <code class="language-plaintext highlighter-rouge">delete!</code> to remove the element, but it’s important to note that the getHeaders call doesn’t return a ruby array, it returns a Java ArrayList which has a different set of methods altogether.</p>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#Get the headers from our base request</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="n">request_info</span><span class="p">.</span><span class="nf">getHeaders</span><span class="p">()</span>
