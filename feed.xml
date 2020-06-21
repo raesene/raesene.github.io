@@ -46,12 +46,42 @@
   &lt;li&gt;Even in a fully updated base image, there can still be outstanding CVEs, depending on the update cycle of both Docker Hub and the underlying distribution.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;&lt;strong&gt;Summary of Vulnerability Numbers&lt;/strong&gt;
-|   |Ubuntu:18.04|Ubuntu:20.04|Debian:stable|Centos:8|
-|—|—|—|—|—|
-|Anchore|71|23|47|74|
-|Clair|38|0|89|1|
-|Trivy|73|26|88|N/A|&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Summary of Vulnerability Numbers&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt; &lt;/th&gt;
+      &lt;th&gt;Ubuntu:18.04&lt;/th&gt;
+      &lt;th&gt;Ubuntu:20.04&lt;/th&gt;
+      &lt;th&gt;Debian:stable&lt;/th&gt;
+      &lt;th&gt;Centos:8&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Anchore&lt;/td&gt;
+      &lt;td&gt;71&lt;/td&gt;
+      &lt;td&gt;23&lt;/td&gt;
+      &lt;td&gt;47&lt;/td&gt;
+      &lt;td&gt;74&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Clair&lt;/td&gt;
+      &lt;td&gt;38&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+      &lt;td&gt;89&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Trivy&lt;/td&gt;
+      &lt;td&gt;73&lt;/td&gt;
+      &lt;td&gt;26&lt;/td&gt;
+      &lt;td&gt;88&lt;/td&gt;
+      &lt;td&gt;N/A&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
 
 &lt;h1 id=&quot;result-details&quot;&gt;Result Details&lt;/h1&gt;
 
