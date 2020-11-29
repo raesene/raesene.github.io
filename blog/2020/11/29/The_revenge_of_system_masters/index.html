@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>The most pointess Kubernetes command ever</title>
+	<title>The revenge of system:masters, return of the AKS</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>The most pointess Kubernetes command ever </h1>
+  <h1>The revenge of system:masters, return of the AKS </h1>
 </div>
 	
 <article>
@@ -157,95 +157,43 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   1st,
-	     
-	   2019
+	   November 
+	   29th,
+	   
+	   2020
 	 </span>
 	  <div class="article_body">
-	  <p>Coming up for 4 years ago (a lifetime in Container land) Ian Miell wrote about <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">“The most pointless Docker Command Ever”</a>.  This was a docker command that you could run and it would return you back as root on your host.</p>
+	  <p>When looking at an AKS cluster recently, I came across some unusual default behaviour, which I thought deserved some more investigation over the weekend. Seems like AKS is making some … interesting… choices with regards to user authentication, in some setups.</p>
 
-<p>Far from being useless, this is one of my favourite Docker commands, either to demonstrate to people why things like mounting <code class="language-plaintext highlighter-rouge">docker.sock</code> inside a container is dangerous, or for using as part of security tests where I can create containers, and I’d like to get to the underlying host easily.</p>
+<p>Usually when you authenticate to an Azure AD (AAD) enabled AKS cluster it uses OAuth with a short renewal window for credentials, which is great as it leverages the Azure AD authentication process and has a nice short expiry to reduce the risk of a misplaced kubeconfig file.</p>
 
-<p>I was thinking today, I wonder what this would look like in Kubernetes…? So I create a quick pod YAML file to test.  You can use this YAML to demonstrate the risks of allowing users to create pods on your cluster, without PodSecurityPolicy setup (of course, I’m sure <strong>all</strong> production clusters have a PodSecurityPolicy….. right?).</p>
+<p>However there’s an option on the <code class="language-plaintext highlighter-rouge">az aks get-credentials</code> command which acts a bit differently. If you pass <code class="language-plaintext highlighter-rouge">--admin</code> to that command, instead of using OAuth, it adds a client certificate file to your <code class="language-plaintext highlighter-rouge">kubeconfig</code>.</p>
 
-<p>The YAML is pretty simple, it basically creates a privileged container based on the <code class="language-plaintext highlighter-rouge">busybox</code> image and sets it in an endless loop, waiting for a connection, whilst also setting up the appropriate security flags to make the pod privileged, and also mounting the root directory of the underlying host into <code class="language-plaintext highlighter-rouge">/host</code></p>
+<p>Client certificate authentication in Kubernetes is a bit problematic for a number of reasons, the main one being that there is <strong>no way</strong> to revoke a credential once it’s issued (short of rolling the keys for the whole certificate authority), that means it’s generally unsuitable for any production cluster and definitely production clusters used by large organizations.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: v1
-kind: Pod
-metadata:
-  name: noderootpod
-  labels:
-spec:
-  hostNetwork: true
-  hostPID: true
-  hostIPC: true
-  containers:
-  - name: noderootpod
-    image: busybox
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - mountPath: /host
-      name: noderoot
-    command: [ "/bin/sh", "-c", "--" ]
-    args: [ "while true; do sleep 30; done;" ]
-  volumes:
-  - name: noderoot
-    hostPath:
-      path: /
+<p>However digging into the client cert issued by AKS, things get worse. If you decode it (the one below is from a sample AKS cluster I set-up using the standard <a href="https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough">AKS QuickStart</a>), you’ll see something like this</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> Validity
+   Not Before: Nov 28 20:11:59 2020 GMT
+   Not After : Nov 28 20:21:59 2022 GMT
+   Subject: O <span class="o">=</span> system:masters, CN <span class="o">=</span> masterclient
 </code></pre></div></div>
 
-<p>Once you’ve got that as a file called say “noderoot.yml” , just run <code class="language-plaintext highlighter-rouge">kubectl create -f noderoot.yml</code>
-then, to get root on your Kubernetes node you just need to run</p>
+<p>The way that Kubernetes client certificate authentication works, the <code class="language-plaintext highlighter-rouge">CN</code> field is considered the username and the <code class="language-plaintext highlighter-rouge">O</code> field is the group the user belongs to, so this is logging in with a username of <code class="language-plaintext highlighter-rouge">masterclient</code> and a group of <code class="language-plaintext highlighter-rouge">system:masters</code>.</p>
 
-<p><code class="language-plaintext highlighter-rouge">kubectl exec -it noderootpod chroot /host</code></p>
+<p>First problem is the username. That’s not the name of the user I used to login, this is a generic username. That means that any actions taken by this credential will show up with a generic username not matter who uses it, bit of a problem for auditing.</p>
 
-<p>and Hey Presto, you’ll be the <code class="language-plaintext highlighter-rouge">root</code> user on the host :)</p>
+<p>The second problem is the group name. <code class="language-plaintext highlighter-rouge">system:masters</code> is a special group in Kubernetes, its access as a cluster-admin is hardcoded into the Kubernetes source code and there’s no way to remove those rights, so this credential will always have cluster-admin rights.</p>
 
-<p>Of course, you’re thinking, “that only does one random node” and you’d be right.  To get root shells on all the nodes, what you need is a DaemonSet, which will schedule a Pod onto every node in the cluster.</p>
+<p>The third problem is the expiry, which is 2 years from cluster setup. So anyone with this credential has a generic cluster-admin level login which can’t be revoked (short of rolling the entire certifiicate authority used for the cluster) and can’t be audited, which lasts for up to two years.</p>
 
-<p>The YAML for this is a little more complex, but the essence is the same</p>
+<p>Another surprising thing I noticed was that, in non-AAD enabled clusters, users with the <code class="language-plaintext highlighter-rouge">Azure Kubernetes Service Cluster User Role</code> get this same certificate given to them when they use <code class="language-plaintext highlighter-rouge">az aks get-credentials</code> even without the <code class="language-plaintext highlighter-rouge">--admin</code> switch! This is a <a href="https://github.com/Azure/AKS/issues/1343">known issue</a> with AKS…</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: noderootpod
-  labels:
-spec:
-  selector:
-    matchLabels:
-      name: noderootdaemon
-  template:
-    metadata:
-      labels:
-        name: noderootdaemon
-    spec:
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-      hostNetwork: true
-      hostPID: true
-      hostIPC: true
-      containers:
-      - name: noderootpod
-        image: busybox
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /host
-          name: noderoot
-        command: [ "/bin/sh", "-c", "--" ]
-        args: [ "while true; do sleep 30; done;" ]
-      volumes:
-      - name: noderoot
-        hostPath:
-          path: /
-</code></pre></div></div>
+<h2 id="conclusion">Conclusion</h2>
 
-<p>Once that’s run just do a <code class="language-plaintext highlighter-rouge">kubectl get po</code> to see your list of pods to choose from, and run the same <code class="language-plaintext highlighter-rouge">chroot /host</code> command on one to get that root on the host feeling…</p>
+<p>A couple of takeaways if your organization is planning to use Azure AKS. First up if your clusters are AAD enabled, be <strong>very</strong> careful with who has rights to used the <code class="language-plaintext highlighter-rouge">--admin</code> switch on the <code class="language-plaintext highlighter-rouge">get-credentials</code> command. Secondly, I’d recommend not exposing your clusters directly on the Internet to reduce the likely impact of this.</p>
 
-<p>If you’ve made it all the way to the bottom of this post, I’ll briefly pimp out my <a href="https://www.blackhat.com/us-19/training/schedule/index.html#mastering-container-security-140201547156094">Mastering Container Security</a> course, which I’m running at Black Hat USA this year, where we’ll be covering this and much much more container security goodness :)</p>
+<p>If you’re using non-AAD enabled clusters, it’s worth noting that all your users may be using generic cluster-admin credentials, so you should check the generated kubeconfig files and plan for that.</p>
 
 	  </div>
 
@@ -271,7 +219,7 @@ spec:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=The most pointess Kubernetes command ever&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=The revenge of system:masters, return of the AKS&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -299,10 +247,10 @@ spec:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/" title="When is a Vulnerability (possibly) not a vulnerability">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2019/04/16/kubernetes-certificate-auth-golden-key/" title="Certificate Authentication and the Golden Ticket at the heart of Kubernetes">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
