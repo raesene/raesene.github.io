@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Security Lab with Kind and Ansible</title>
+	<title>Escalating Away</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Security Lab with Kind and Ansible </h1>
+  <h1>Escalating Away </h1>
 </div>
 	
 <article>
@@ -157,28 +157,35 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   September 
-	   14th,
+	   December 
+	   12th,
 	   
-	   2019
+	   2020
 	 </span>
 	  <div class="article_body">
-	  <p>Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.</p>
+	  <p>Following a recent run of the container security training course I do, I was poking around a bit with the escalate verb in Kubernetes RBAC and found some interesting points, so thought it’d be worth documenting, as it’s not necessarily the best known part of RBAC.</p>
 
-<p>In the past I’ve looked at using <a href="https://kind.sigs.k8s.io">kind</a> for this (with <a href="https://raesene.github.io/blog/2019/03/04/kind-of-insecure-test-clusters/">kind of insecure</a>).  This works pretty well, but there are some limitations on what we can do in terms of setting up vulnerable environments with just kind on it’s own.</p>
+<p>The reason we were interested in the escalate verb is to answer the question “If I can get secrets in a standard kubeadm cluster, what are my options for escalating my privileges to cluster-admin?”. This question used to be pretty straightforward as until last year there was a service account in the kube-system namespace which had cluster-admin rights, so you could easily get its secret and be cluster-admin. The service account in question is <code class="language-plaintext highlighter-rouge">clusterrole-aggregation-controller</code>. However last year the rights on this service account got changed (at least in part as I pointed it out). From <a href="https://github.com/kubernetes/kubernetes/commit/8b155e82d876c8130962e61b2235f2bd066abde1">the commit</a> you can see that the cluster-admin rights were replaced with <code class="language-plaintext highlighter-rouge">escalate</code> rights on cluster roles.</p>
 
-<p>Adding a configuration management tool to the mix can let us easily create more complex test environments.  Enter <a href="https://www.ansible.com/">Ansible</a> which works pretty well for this application. It doesn’t require any server infrastructure, which is good for this kind of setup, and it’s possible to define a Docker container as the host for applying the actions to via a playbook.</p>
+<p>So that leads to the question, “how can I use this permission?”. Unlike the <code class="language-plaintext highlighter-rouge">impersonate</code> verb, there’s no handy kubectl flags to add to instantly escalate your rights. So I was looking for information on the topic (which is pretty sparse) and found this <a href="https://www.impidio.com/blog/kubernetes-rbac-security-pitfalls">interesting blog post</a>, which led to the answer.</p>
 
-<h2 id="kube-security-lab">Kube Security Lab</h2>
+<p>What escalate does is bypass the Kubernetes RBAC check which prevents users who are able to create roles or cluster roles from creating (or editing) these objects to have more rights than they do. So what we can do, once we have the service account token for the clusterrole-aggregation-controller is to edit our own cluster role to increase our permissions?</p>
 
-<p>So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it <a href="https://github.com/raesene/kube_security_lab">here</a></p>
+<p>We can run <code class="language-plaintext highlighter-rouge">kubectl edit clusterrole system:controller:clusterrole-aggregation-controller</code> and then edit it to add this to the rules section</p>
 
-<p>The idea is that the <code class="language-plaintext highlighter-rouge">client-machine.yml</code> playbook can be used to spin up a container with client tools installed (it’s just an instance of <a href="https://hub.docker.com/r/raesene/alpine-containertools">this image</a> at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+</code></pre></div></div>
 
-<p>In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!</p>
+<p>and away you go!</p>
 
-<p>There’s a starter set of playbooks up now, and I’ll plan to expand this as I get more ideas.  Also there should be walkthroughs for each of the clusters, in case people want the cheat sheet version :)</p>
+<h2 id="conclusion">Conclusion</h2>
 
+<p>Things like <code class="language-plaintext highlighter-rouge">bind</code>, <code class="language-plaintext highlighter-rouge">escalate</code> and <code class="language-plaintext highlighter-rouge">impersonate</code> are lesser known features of RBAC but one that you should be aware of if you’re a systems administrator or if you’re looking at security tooling around Kubernetes.</p>
 
 	  </div>
 
@@ -204,7 +211,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Security Lab with Kind and Ansible&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Escalating Away&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -232,10 +239,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="/blog/2019/08/25/shells-in-gh-actions/" title="Shells in Github Actions">&larr; Previous</a></li>
+		  <li class="previous"><a href="/blog/2020/11/29/The_revenge_of_system_masters/" title="The revenge of system:masters, return of the AKS">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="/blog/2019/09/25/typosquatting-in-a-multi-registry-world/" title="Container Image Squatting in a Multi-Registry World">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

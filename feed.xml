@@ -7,6 +7,37 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Escalating Away</title>
+				<description>&lt;p&gt;Following a recent run of the container security training course I do, I was poking around a bit with the escalate verb in Kubernetes RBAC and found some interesting points, so thought it’d be worth documenting, as it’s not necessarily the best known part of RBAC.&lt;/p&gt;
+
+&lt;p&gt;The reason we were interested in the escalate verb is to answer the question “If I can get secrets in a standard kubeadm cluster, what are my options for escalating my privileges to cluster-admin?”. This question used to be pretty straightforward as until last year there was a service account in the kube-system namespace which had cluster-admin rights, so you could easily get its secret and be cluster-admin. The service account in question is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole-aggregation-controller&lt;/code&gt;. However last year the rights on this service account got changed (at least in part as I pointed it out). From &lt;a href=&quot;https://github.com/kubernetes/kubernetes/commit/8b155e82d876c8130962e61b2235f2bd066abde1&quot;&gt;the commit&lt;/a&gt; you can see that the cluster-admin rights were replaced with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;escalate&lt;/code&gt; rights on cluster roles.&lt;/p&gt;
+
+&lt;p&gt;So that leads to the question, “how can I use this permission?”. Unlike the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;impersonate&lt;/code&gt; verb, there’s no handy kubectl flags to add to instantly escalate your rights. So I was looking for information on the topic (which is pretty sparse) and found this &lt;a href=&quot;https://www.impidio.com/blog/kubernetes-rbac-security-pitfalls&quot;&gt;interesting blog post&lt;/a&gt;, which led to the answer.&lt;/p&gt;
+
+&lt;p&gt;What escalate does is bypass the Kubernetes RBAC check which prevents users who are able to create roles or cluster roles from creating (or editing) these objects to have more rights than they do. So what we can do, once we have the service account token for the clusterrole-aggregation-controller is to edit our own cluster role to increase our permissions?&lt;/p&gt;
+
+&lt;p&gt;We can run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl edit clusterrole system:controller:clusterrole-aggregation-controller&lt;/code&gt; and then edit it to add this to the rules section&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and away you go!&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Things like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bind&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;escalate&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;impersonate&lt;/code&gt; are lesser known features of RBAC but one that you should be aware of if you’re a systems administrator or if you’re looking at security tooling around Kubernetes.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 12 Dec 2020 13:00:39 +0000</pubDate>
+				<link>/blog/2020/12/12/Escalating_Away/</link>
+				<guid isPermaLink="true">/blog/2020/12/12/Escalating_Away/</guid>
+			</item>
+		
+			<item>
 				<title>The revenge of system:masters, return of the AKS</title>
 				<description>&lt;p&gt;When looking at an AKS cluster recently, I came across some unusual default behaviour, which I thought deserved some more investigation over the weekend. Seems like AKS is making some … interesting… choices with regards to user authentication, in some setups.&lt;/p&gt;
 
@@ -622,30 +653,6 @@ registries = ['registry.redhat.io', 'quay.io', 'docker.io']
 				<pubDate>Wed, 25 Sep 2019 18:10:39 +0100</pubDate>
 				<link>/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</link>
 				<guid isPermaLink="true">/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</guid>
-			</item>
-		
-			<item>
-				<title>Kubernetes Security Lab with Kind and Ansible</title>
-				<description>&lt;p&gt;Being able to practice exploits and attacks is always useful for security testers, whether it’s working out whether a tool is working properly, or fine-tuning the syntax for a command in a predictable environment, it’s a very handy technique.  One factor that can slow this down is having to rely on external resources, like Virtual Machines or cloud based resources, for running our tests.  Ideally we should be able to run everything locally on a single machine.&lt;/p&gt;
-
-&lt;p&gt;In the past I’ve looked at using &lt;a href=&quot;https://kind.sigs.k8s.io&quot;&gt;kind&lt;/a&gt; for this (with &lt;a href=&quot;https://raesene.github.io/blog/2019/03/04/kind-of-insecure-test-clusters/&quot;&gt;kind of insecure&lt;/a&gt;).  This works pretty well, but there are some limitations on what we can do in terms of setting up vulnerable environments with just kind on it’s own.&lt;/p&gt;
-
-&lt;p&gt;Adding a configuration management tool to the mix can let us easily create more complex test environments.  Enter &lt;a href=&quot;https://www.ansible.com/&quot;&gt;Ansible&lt;/a&gt; which works pretty well for this application. It doesn’t require any server infrastructure, which is good for this kind of setup, and it’s possible to define a Docker container as the host for applying the actions to via a playbook.&lt;/p&gt;
-
-&lt;h2 id=&quot;kube-security-lab&quot;&gt;Kube Security Lab&lt;/h2&gt;
-
-&lt;p&gt;So I’ve started off the process of creating a set of vulnerable clusters as Ansible playbooks and put it &lt;a href=&quot;https://github.com/raesene/kube_security_lab&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;The idea is that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client-machine.yml&lt;/code&gt; playbook can be used to spin up a container with client tools installed (it’s just an instance of &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;this image&lt;/a&gt; at the moment) and then bring up one or more of the vulnerable clusters as playbooks, practice attacking that configuration and then easily remove both the cluster and client container.&lt;/p&gt;
-
-&lt;p&gt;In general you can spin up the client machine and a sample cluster, then port-scan the target cluster to see what’s exposed and start attacking things!&lt;/p&gt;
-
-&lt;p&gt;There’s a starter set of playbooks up now, and I’ll plan to expand this as I get more ideas.  Also there should be walkthroughs for each of the clusters, in case people want the cheat sheet version :)&lt;/p&gt;
-
-</description>
-				<pubDate>Sat, 14 Sep 2019 17:10:39 +0100</pubDate>
-				<link>/blog/2019/09/14/kube-security-lab/</link>
-				<guid isPermaLink="true">/blog/2019/09/14/kube-security-lab/</guid>
 			</item>
 		
 	</channel>
