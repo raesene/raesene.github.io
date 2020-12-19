@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Exploring Rootless Docker</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Exploring Rootless Docker </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   December 
+	   19th,
+	   
+	   2020
+	 </span>
+	  <div class="article_body">
+	  <p>With the release of Docker 20.10, the rootless containers feature has left experimental status. This is an important step for Docker security as it allows for the entire Docker installation to run with standard user prvivileges, no use of root required. Other container solutions like Podman have had this feature for a while but if your used to Docker’s approach it’s nice to see it being available.</p>
+
+<p>Docker’s documentation on <a href="https://docs.docker.com/engine/security/rootless/">rootless containers</a> has some information about how this is achieved, but I thought it’d be interesting to have a poke around some of the details of the implementation and what it means for container security, especially as I’ll be adding this to the container security course I do.</p>
+
+<h2 id="install-and-use">Install and Use</h2>
+
+<p>Setting up rootless containers is pretty straightforward, on Ubuntu at least. You need a couple of packages to be installed (the main one you’ll likely need to add is uidmap) and then you can use Docker’s install script to set it up. Obviously I’d recommend downloading and reading the script rather than following their suggestion to pipe it straight to <code class="language-plaintext highlighter-rouge">sh</code> but looking through it you’ll see it’s mainly just checking the environment before setting up and then downloading and extracting the necessary binaries to <code class="language-plaintext highlighter-rouge">$HOME/bin</code>.</p>
+
+<p>Once it’s installed and you tell the docker CLI where to find the socket file (in <code class="language-plaintext highlighter-rouge">/run/user/UID/docker.sock</code> instead of the usual <code class="language-plaintext highlighter-rouge">/var/run/docker.sock</code> ) you can start using Docker. The general use case is pretty much exactly what you’d expect, docker commands work fine, you can pull and run images, execute shells in them, and do most of the other things you’d usually do.</p>
+
+<p>A couple of limitations are present, specifically no cgroups support, unless you enabled cgroupsv2 at the host level and no use of ping or ports &lt; 1024, but again these can be configured if needed. I’d expect the primary use case for rootless docker to be on shared development boxes and perhaps CI hosts, so these limitations probably are deal breakers and in both cases simple configuration options are available.</p>
+
+<h2 id="exploring-under-the-covers">Exploring under the covers</h2>
+
+<p>So what’s going on here, and how does it compare to standard Docker.</p>
+
+<h3 id="user-namespaces">User namespaces</h3>
+
+<p>One of the common security challenges when using containes is that they often run as the root user (uid 0) on the host. Whilst Docker has various layers of security to reduce the risk of this, it’s still a cause of potential security problems.</p>
+
+<p>So now we’re running Docker without any root acccess, what happens?</p>
+
+<p>With rootless docker setup, if we do something like <code class="language-plaintext highlighter-rouge">docker run --name=rootlessweb -d nginx</code> to start up a container, then run <code class="language-plaintext highlighter-rouge">docker exec rootlessweb whoami</code> , you’ll get back the answer <code class="language-plaintext highlighter-rouge">root</code>, which shows that the container thinks it’s running as root.</p>
+
+<p>To see what’s really happening, we can get the PID of the container with <code class="language-plaintext highlighter-rouge">docker inspect -f '' rootlessweb</code> and then look for that process ID in the output of <code class="language-plaintext highlighter-rouge">ps -ef</code>. What you’ll see is that instead of running as root, it’s running as your user!</p>
+
+<p>The way this is being done is through the use of <a href="https://man7.org/linux/man-pages/man7/user_namespaces.7.html">user namespaces</a> which have been available in Docker (but rarely used) for quite some time. Docker is mapping uids inside the container, to different uids outside the container (which is why it needed the uidmap package installed). This allows the contained process to act as though it had root rights, without it actually having root rights to the underlying machine.</p>
+
+<p>Obviously from a security standpoint this is a big positive as it means that kernel bugs that need real <code class="language-plaintext highlighter-rouge">uid 0</code> to work, will be blocked as, from the perspective of the kernel, the process is unprivileged.</p>
+
+<h2 id="capabilities">Capabilities</h2>
+
+<p>One of the things Docker does as part of its setup is use various layers of isolation on contained processes. One of those layers is capabilities. With this one, you might think it’s not going to apply to rootless containers as capabilities are often described as “piece of root rights” which don’t apply here.</p>
+
+<p>However, reading the user namespace manpages, we can see that actually capabilities are still used inside user namespaces to restrict access. The important part to remember from a security standpoint is that capabilities in user namespaces can only grant rights to resources governed by that namespace. So having CAP_SYS_ADMIN in a user namespace will get you rights in that namespace, but not rights over the underlying host kernel.</p>
+
+<p>We can see the capability setup by running <code class="language-plaintext highlighter-rouge">pscap</code> on a host running rootless containers. For example the nginx container from the previous example will look like this</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>8198  8219  rorym       nginx             <span class="nb">chown</span>, dac_override, fowner, fsetid, <span class="nb">kill</span>, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, <span class="nb">mknod</span>, audit_write, setfcap
+</code></pre></div></div>
+
+<h2 id="apparmor">AppArmor</h2>
+
+<p>This one is not supported under rootless containers, so no profiles will be loaded (unlike standard rootful containers).</p>
+
+<h2 id="seccomp-filter">Seccomp filter</h2>
+
+<p>The standard Docker seccomp filter is enabled when using rootless containers, which you can see by inspecting the proc status for our contained process with <code class="language-plaintext highlighter-rouge">cat /proc/[PID]/status | grep Seccomp</code> which should return a value of <code class="language-plaintext highlighter-rouge">2</code> showing there’s a seccomp profile applied.</p>
+
+<h2 id="container-breakout">Container breakout</h2>
+
+<p>So now we’ve looked at the various layers of isolation that are used in docker and how they apply (or don’t) to rootless containers, lets look at some of the practical tools and techniques and what they return when run in a rootless container.</p>
+
+<h3 id="the-most-pointless-docker-command-ever">The most pointless docker command ever</h3>
+
+<p><a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">My favourite docker command</a> is a good place to start. Running</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">-ti</span> <span class="nt">--privileged</span> <span class="nt">--net</span><span class="o">=</span>host <span class="nt">--pid</span><span class="o">=</span>host <span class="nt">--ipc</span><span class="o">=</span>host <span class="nt">--volume</span> /:/host busybox <span class="nb">chroot</span> /host
+</code></pre></div></div>
+
+<p>Generates an error. Both <code class="language-plaintext highlighter-rouge">--pid=host</code> and <code class="language-plaintext highlighter-rouge">--ipc=host</code> don’t work with rootless containers, after removing those we get dropped to a root shell with access to what <em>looks like</em> the root filesystem of the underlying host. Trying to modify things, however, shows we’re not in the real root filesystem. We can add files in system directories like <code class="language-plaintext highlighter-rouge">/etc</code> , however exiting the container shows that the files haven’t actually been created, so it’s obvious that our volume mount didn’t have the effect it would have had, if we had been running a rootful container.</p>
+
+<h3 id="amicontained">amicontained</h3>
+
+<p>Running <a href="https://github.com/genuinetools/amicontained">amicontained</a> from inside a rootless container shows that it’s easy to detect that we’re in a user namespace, and indeed information is available about how UIDs are being mapped inside the container</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Container Runtime: docker
+Has Namespaces:
+        pid: <span class="nb">true
+        </span>user: <span class="nb">true
+</span>User Namespace Mappings:
+        Container -&gt; 0  Host -&gt; 1000    Range -&gt; 1
+        Container -&gt; 1  Host -&gt; 100000  Range -&gt; 65536
+AppArmor Profile: unconfined
+Capabilities:
+        BOUNDING -&gt; <span class="nb">chown </span>dac_override fowner fsetid <span class="nb">kill </span>setgid setuid setpcap net_bind_service net_raw sys_chroot <span class="nb">mknod </span>audit_write setfcap
+Seccomp: filtering
+Blocked Syscalls <span class="o">(</span>64<span class="o">)</span>:
+        MSGRCV SYSLOG SETSID USELIB USTAT SYSFS VHANGUP PIVOT_ROOT _SYSCTL ACCT SETTIMEOFDAY MOUNT UMOUNT2 SWAPON SWAPOFF REBOOT SETHOSTNAME SETDOMAINNAME IOPL IOPERM CREATE_MODULE INIT_MODULE DELETE_MODULE GET_KERNEL_SYMS QUERY_MODULE QUOTACTL NFSSERVCTL GETPMSG PUTPMSG AFS_SYSCALL TUXCALL SECURITY LOOKUP_DCOOKIE CLOCK_SETTIME VSERVER MBIND SET_MEMPOLICY GET_MEMPOLICY KEXEC_LOAD ADD_KEY REQUEST_KEY KEYCTL MIGRATE_PAGES FUTIMESAT UNSHARE MOVE_PAGES UTIMENSAT PERF_EVENT_OPEN FANOTIFY_INIT NAME_TO_HANDLE_AT OPEN_BY_HANDLE_AT SETNS PROCESS_VM_READV PROCESS_VM_WRITEV KCMP FINIT_MODULE KEXEC_FILE_LOAD BPF USERFAULTFD PKEY_MPROTECT PKEY_ALLOC PKEY_FREE IO_PGETEVENTS RSEQ
+</code></pre></div></div>
+
+<h3 id="botb">botb</h3>
+
+<p>Using <a href="https://github.com/brompwnie/botb">botb</a> to try and autopwn out of a container that has the docker socket mounted runs us into a problem, which is that it tries to use <code class="language-plaintext highlighter-rouge">--pid=host</code> and <code class="language-plaintext highlighter-rouge">--ipc=host</code> as part of the breakout.</p>
+
+<p>This is, in general, a possibly interesting point about container breakout tools, as they’re unlikely to take account of rootless containers.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Rootless containers are a great addition to Docker’s repetoire. In situations where you want to have users run docker commands without giving the root access to the underlying host, this will really help out. The setup and usuability are great, but you need to take account of the fact that certain things just won’t work the same way as functions reserved for the root user on the host machine won’t be usuable.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Docker-ref">
+					Docker <span>(22)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring Rootless Docker&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2020/12/12/Escalating_Away/" title="Escalating Away">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+

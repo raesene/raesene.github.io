@@ -7,6 +7,104 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Exploring Rootless Docker</title>
+				<description>&lt;p&gt;With the release of Docker 20.10, the rootless containers feature has left experimental status. This is an important step for Docker security as it allows for the entire Docker installation to run with standard user prvivileges, no use of root required. Other container solutions like Podman have had this feature for a while but if your used to Docker’s approach it’s nice to see it being available.&lt;/p&gt;
+
+&lt;p&gt;Docker’s documentation on &lt;a href=&quot;https://docs.docker.com/engine/security/rootless/&quot;&gt;rootless containers&lt;/a&gt; has some information about how this is achieved, but I thought it’d be interesting to have a poke around some of the details of the implementation and what it means for container security, especially as I’ll be adding this to the container security course I do.&lt;/p&gt;
+
+&lt;h2 id=&quot;install-and-use&quot;&gt;Install and Use&lt;/h2&gt;
+
+&lt;p&gt;Setting up rootless containers is pretty straightforward, on Ubuntu at least. You need a couple of packages to be installed (the main one you’ll likely need to add is uidmap) and then you can use Docker’s install script to set it up. Obviously I’d recommend downloading and reading the script rather than following their suggestion to pipe it straight to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sh&lt;/code&gt; but looking through it you’ll see it’s mainly just checking the environment before setting up and then downloading and extracting the necessary binaries to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME/bin&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Once it’s installed and you tell the docker CLI where to find the socket file (in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/run/user/UID/docker.sock&lt;/code&gt; instead of the usual &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/run/docker.sock&lt;/code&gt; ) you can start using Docker. The general use case is pretty much exactly what you’d expect, docker commands work fine, you can pull and run images, execute shells in them, and do most of the other things you’d usually do.&lt;/p&gt;
+
+&lt;p&gt;A couple of limitations are present, specifically no cgroups support, unless you enabled cgroupsv2 at the host level and no use of ping or ports &amp;lt; 1024, but again these can be configured if needed. I’d expect the primary use case for rootless docker to be on shared development boxes and perhaps CI hosts, so these limitations probably are deal breakers and in both cases simple configuration options are available.&lt;/p&gt;
+
+&lt;h2 id=&quot;exploring-under-the-covers&quot;&gt;Exploring under the covers&lt;/h2&gt;
+
+&lt;p&gt;So what’s going on here, and how does it compare to standard Docker.&lt;/p&gt;
+
+&lt;h3 id=&quot;user-namespaces&quot;&gt;User namespaces&lt;/h3&gt;
+
+&lt;p&gt;One of the common security challenges when using containes is that they often run as the root user (uid 0) on the host. Whilst Docker has various layers of security to reduce the risk of this, it’s still a cause of potential security problems.&lt;/p&gt;
+
+&lt;p&gt;So now we’re running Docker without any root acccess, what happens?&lt;/p&gt;
+
+&lt;p&gt;With rootless docker setup, if we do something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run --name=rootlessweb -d nginx&lt;/code&gt; to start up a container, then run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec rootlessweb whoami&lt;/code&gt; , you’ll get back the answer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt;, which shows that the container thinks it’s running as root.&lt;/p&gt;
+
+&lt;p&gt;To see what’s really happening, we can get the PID of the container with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker inspect -f '' rootlessweb&lt;/code&gt; and then look for that process ID in the output of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ps -ef&lt;/code&gt;. What you’ll see is that instead of running as root, it’s running as your user!&lt;/p&gt;
+
+&lt;p&gt;The way this is being done is through the use of &lt;a href=&quot;https://man7.org/linux/man-pages/man7/user_namespaces.7.html&quot;&gt;user namespaces&lt;/a&gt; which have been available in Docker (but rarely used) for quite some time. Docker is mapping uids inside the container, to different uids outside the container (which is why it needed the uidmap package installed). This allows the contained process to act as though it had root rights, without it actually having root rights to the underlying machine.&lt;/p&gt;
+
+&lt;p&gt;Obviously from a security standpoint this is a big positive as it means that kernel bugs that need real &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;uid 0&lt;/code&gt; to work, will be blocked as, from the perspective of the kernel, the process is unprivileged.&lt;/p&gt;
+
+&lt;h2 id=&quot;capabilities&quot;&gt;Capabilities&lt;/h2&gt;
+
+&lt;p&gt;One of the things Docker does as part of its setup is use various layers of isolation on contained processes. One of those layers is capabilities. With this one, you might think it’s not going to apply to rootless containers as capabilities are often described as “piece of root rights” which don’t apply here.&lt;/p&gt;
+
+&lt;p&gt;However, reading the user namespace manpages, we can see that actually capabilities are still used inside user namespaces to restrict access. The important part to remember from a security standpoint is that capabilities in user namespaces can only grant rights to resources governed by that namespace. So having CAP_SYS_ADMIN in a user namespace will get you rights in that namespace, but not rights over the underlying host kernel.&lt;/p&gt;
+
+&lt;p&gt;We can see the capability setup by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pscap&lt;/code&gt; on a host running rootless containers. For example the nginx container from the previous example will look like this&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;8198  8219  rorym       nginx             &lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt;, dac_override, fowner, fsetid, &lt;span class=&quot;nb&quot;&gt;kill&lt;/span&gt;, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, &lt;span class=&quot;nb&quot;&gt;mknod&lt;/span&gt;, audit_write, setfcap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;apparmor&quot;&gt;AppArmor&lt;/h2&gt;
+
+&lt;p&gt;This one is not supported under rootless containers, so no profiles will be loaded (unlike standard rootful containers).&lt;/p&gt;
+
+&lt;h2 id=&quot;seccomp-filter&quot;&gt;Seccomp filter&lt;/h2&gt;
+
+&lt;p&gt;The standard Docker seccomp filter is enabled when using rootless containers, which you can see by inspecting the proc status for our contained process with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat /proc/[PID]/status | grep Seccomp&lt;/code&gt; which should return a value of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2&lt;/code&gt; showing there’s a seccomp profile applied.&lt;/p&gt;
+
+&lt;h2 id=&quot;container-breakout&quot;&gt;Container breakout&lt;/h2&gt;
+
+&lt;p&gt;So now we’ve looked at the various layers of isolation that are used in docker and how they apply (or don’t) to rootless containers, lets look at some of the practical tools and techniques and what they return when run in a rootless container.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-most-pointless-docker-command-ever&quot;&gt;The most pointless docker command ever&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;My favourite docker command&lt;/a&gt; is a good place to start. Running&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run &lt;span class=&quot;nt&quot;&gt;-ti&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--privileged&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--pid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--ipc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--volume&lt;/span&gt; /:/host busybox &lt;span class=&quot;nb&quot;&gt;chroot&lt;/span&gt; /host
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Generates an error. Both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--ipc=host&lt;/code&gt; don’t work with rootless containers, after removing those we get dropped to a root shell with access to what &lt;em&gt;looks like&lt;/em&gt; the root filesystem of the underlying host. Trying to modify things, however, shows we’re not in the real root filesystem. We can add files in system directories like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc&lt;/code&gt; , however exiting the container shows that the files haven’t actually been created, so it’s obvious that our volume mount didn’t have the effect it would have had, if we had been running a rootful container.&lt;/p&gt;
+
+&lt;h3 id=&quot;amicontained&quot;&gt;amicontained&lt;/h3&gt;
+
+&lt;p&gt;Running &lt;a href=&quot;https://github.com/genuinetools/amicontained&quot;&gt;amicontained&lt;/a&gt; from inside a rootless container shows that it’s easy to detect that we’re in a user namespace, and indeed information is available about how UIDs are being mapped inside the container&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Container Runtime: docker
+Has Namespaces:
+        pid: &lt;span class=&quot;nb&quot;&gt;true
+        &lt;/span&gt;user: &lt;span class=&quot;nb&quot;&gt;true
+&lt;/span&gt;User Namespace Mappings:
+        Container -&amp;gt; 0  Host -&amp;gt; 1000    Range -&amp;gt; 1
+        Container -&amp;gt; 1  Host -&amp;gt; 100000  Range -&amp;gt; 65536
+AppArmor Profile: unconfined
+Capabilities:
+        BOUNDING -&amp;gt; &lt;span class=&quot;nb&quot;&gt;chown &lt;/span&gt;dac_override fowner fsetid &lt;span class=&quot;nb&quot;&gt;kill &lt;/span&gt;setgid setuid setpcap net_bind_service net_raw sys_chroot &lt;span class=&quot;nb&quot;&gt;mknod &lt;/span&gt;audit_write setfcap
+Seccomp: filtering
+Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;:
+        MSGRCV SYSLOG SETSID USELIB USTAT SYSFS VHANGUP PIVOT_ROOT _SYSCTL ACCT SETTIMEOFDAY MOUNT UMOUNT2 SWAPON SWAPOFF REBOOT SETHOSTNAME SETDOMAINNAME IOPL IOPERM CREATE_MODULE INIT_MODULE DELETE_MODULE GET_KERNEL_SYMS QUERY_MODULE QUOTACTL NFSSERVCTL GETPMSG PUTPMSG AFS_SYSCALL TUXCALL SECURITY LOOKUP_DCOOKIE CLOCK_SETTIME VSERVER MBIND SET_MEMPOLICY GET_MEMPOLICY KEXEC_LOAD ADD_KEY REQUEST_KEY KEYCTL MIGRATE_PAGES FUTIMESAT UNSHARE MOVE_PAGES UTIMENSAT PERF_EVENT_OPEN FANOTIFY_INIT NAME_TO_HANDLE_AT OPEN_BY_HANDLE_AT SETNS PROCESS_VM_READV PROCESS_VM_WRITEV KCMP FINIT_MODULE KEXEC_FILE_LOAD BPF USERFAULTFD PKEY_MPROTECT PKEY_ALLOC PKEY_FREE IO_PGETEVENTS RSEQ
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;botb&quot;&gt;botb&lt;/h3&gt;
+
+&lt;p&gt;Using &lt;a href=&quot;https://github.com/brompwnie/botb&quot;&gt;botb&lt;/a&gt; to try and autopwn out of a container that has the docker socket mounted runs us into a problem, which is that it tries to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--ipc=host&lt;/code&gt; as part of the breakout.&lt;/p&gt;
+
+&lt;p&gt;This is, in general, a possibly interesting point about container breakout tools, as they’re unlikely to take account of rootless containers.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Rootless containers are a great addition to Docker’s repetoire. In situations where you want to have users run docker commands without giving the root access to the underlying host, this will really help out. The setup and usuability are great, but you need to take account of the fact that certain things just won’t work the same way as functions reserved for the root user on the host machine won’t be usuable.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 19 Dec 2020 16:00:39 +0000</pubDate>
+				<link>/blog/2020/12/19/rootless_docker/</link>
+				<guid isPermaLink="true">/blog/2020/12/19/rootless_docker/</guid>
+			</item>
+		
+			<item>
 				<title>Escalating Away</title>
 				<description>&lt;p&gt;Following a recent run of the container security training course I do, I was poking around a bit with the escalate verb in Kubernetes RBAC and found some interesting points, so thought it’d be worth documenting, as it’s not necessarily the best known part of RBAC.&lt;/p&gt;
 
@@ -612,47 +710,6 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 				<pubDate>Thu, 03 Oct 2019 18:10:39 +0100</pubDate>
 				<link>/blog/2019/10/03/accessing-cluster-ips-from-the-outside/</link>
 				<guid isPermaLink="true">/blog/2019/10/03/accessing-cluster-ips-from-the-outside/</guid>
-			</item>
-		
-			<item>
-				<title>Container Image Squatting in a Multi-Registry World</title>
-				<description>&lt;p&gt;I’ve been starting to have a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; recently and in doing so, I noticed something potentially interesting from a security perspective, which is how podman handles the pulling of new container images.  As podman is billed as a “drop-in” replacement for Docker (and indeed provides a package to alias docker commands to their podman equivalents), it’s interesting to note how default settings might differ, as these differences could trip up unsuspecting users moving from Docker to podman.&lt;/p&gt;
-
-&lt;p&gt;One of the more fixed things in the Docker landscape is how it address container image registries. Docker hub is hard coded in the source code of Docker as the default registry, so that if you do something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull nginx&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; it will assume that you’re looking for these images on Docker Hub.  If you want to pull from an alternate registry, you need to provide the hostname and port of that registry server.&lt;/p&gt;
-
-&lt;p&gt;This behaviour appears to have been a source of frustration for other organizations in the container ecosystem, so it’s not really a surprise to find that it works differently when you use other tools, like podman.&lt;/p&gt;
-
-&lt;p&gt;What podman does is allow users to specify their registry search order via a configuration file stored at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/containers/registries.conf&lt;/code&gt;. On a CentOS8 install the default registry search order is this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[registries.search]
-registries = ['registry.redhat.io', 'quay.io', 'docker.io']
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;From that, we can see that both Redhat’s registry and Quay come in before Docker.&lt;/p&gt;
-
-&lt;p&gt;This has a potentially interesting side effect from a security perspective, which is, if a user requests an image without specifying the host name and port of the registry, they could get the wrong image.&lt;/p&gt;
-
-&lt;p&gt;To give an example. On Docker hub there’s an image I have with some container tooling called &lt;a href=&quot;https://hub.docker.com/r/raesene/alpine-containertools&quot;&gt;alpine-containertools&lt;/a&gt;.  As an experiment I tried creating the same image name with totally different content on Quay.io which is &lt;a href=&quot;https://quay.io/repository/raesene/alpine-containertools&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;So if you use podman and run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker pull raesene/alpine-containertools&lt;/code&gt; you’re going to get the wrong image.&lt;/p&gt;
-
-&lt;p&gt;This could lead to attackers essentially squatting on common Docker Hub accounts to try and trick users into pulling malicious images.  A process made somewhat easier by the fact that you can register organization names on Quay.io (for example, I registered &lt;a href=&quot;https://quay.io/organization/nccgroup&quot;&gt;nccgroup&lt;/a&gt;).&lt;/p&gt;
-
-&lt;h2 id=&quot;what-can-you-do-about-this&quot;&gt;What can you do about this?&lt;/h2&gt;
-
-&lt;p&gt;Well if you’re planning to adopt podman there’s a couple of things you could do to mitigate this risk&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Change the search order in registries.conf to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker.io&lt;/code&gt; first, which essentially restores the default behaviour (although it could still produce unexpected results if you misspell your pull request)&lt;/li&gt;
-  &lt;li&gt;Remove the other registries from the file altogether (which essentially makes the behaviour the same as Docker)&lt;/li&gt;
-  &lt;li&gt;Ensure that you’ve registered any names you use on Docker Hub on Quay.io (this only works where you’re pulling Docker Hub images from accounts you control, but of course who pulls Docker Hub images from accounts they don’t control!)&lt;/li&gt;
-  &lt;li&gt;Use FQDNs for all your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pull&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;run&lt;/code&gt; statements, essentially bypassing the search order.&lt;/li&gt;
-  &lt;li&gt;Make use of image signing to check that the image pulled is the same as that which was expected.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>Wed, 25 Sep 2019 18:10:39 +0100</pubDate>
-				<link>/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</link>
-				<guid isPermaLink="true">/blog/2019/09/25/typosquatting-in-a-multi-registry-world/</guid>
 			</item>
 		
 	</channel>
