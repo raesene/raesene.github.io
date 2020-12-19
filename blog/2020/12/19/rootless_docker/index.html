@@ -187,7 +187,7 @@
 
 <p>With rootless docker setup, if we do something like <code class="language-plaintext highlighter-rouge">docker run --name=rootlessweb -d nginx</code> to start up a container, then run <code class="language-plaintext highlighter-rouge">docker exec rootlessweb whoami</code> , you’ll get back the answer <code class="language-plaintext highlighter-rouge">root</code>, which shows that the container thinks it’s running as root.</p>
 
-<p>To see what’s really happening, we can get the PID of the container with <code class="language-plaintext highlighter-rouge">docker inspect -f '' rootlessweb</code> and then look for that process ID in the output of <code class="language-plaintext highlighter-rouge">ps -ef</code>. What you’ll see is that instead of running as root, it’s running as your user!</p>
+<p>To see what’s really happening, we can get the PID of the container with <code class="language-plaintext highlighter-rouge">docker inspect -f '{{.State.Pid}}' rootlessweb</code> and then look for that process ID in the output of <code class="language-plaintext highlighter-rouge">ps -ef</code>. What you’ll see is that instead of running as root, it’s running as your user!</p>
 
 <p>The way this is being done is through the use of <a href="https://man7.org/linux/man-pages/man7/user_namespaces.7.html">user namespaces</a> which have been available in Docker (but rarely used) for quite some time. Docker is mapping uids inside the container, to different uids outside the container (which is why it needed the uidmap package installed). This allows the contained process to act as though it had root rights, without it actually having root rights to the underlying machine.</p>
 
