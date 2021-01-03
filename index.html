@@ -158,6 +158,32 @@
 
   <span class="post-date">
     
+    January
+    3rd,
+    
+    2021
+  </span>
+
+  <h2>
+    <a href="/blog/2021/01/03/Kubernetes-is-a-router/">Kubernetes is a router</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     December
     19th,
     
@@ -387,32 +413,6 @@
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    3rd,
-    
-    2019
-  </span>
-
-  <h2>
-    <a href="/blog/2019/10/03/accessing-cluster-ips-from-the-outside/">Accessing Cluster IPs from the Outside</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -441,7 +441,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2021 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

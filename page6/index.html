@@ -158,6 +158,32 @@
 
   <span class="post-date">
     
+    February
+    4th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="/blog/2016/02/04/Docker-User-Namespaces/">Docker 1.10 Notes - User Namespaces</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     January
     31st,
     
@@ -387,48 +413,6 @@
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    November
-    2nd,
-    
-    2014
-  </span>
-
-  <h2>
-    <a href="/blog/2014/11/02/changing-times-end-of-sms-auth/">Changing Times - End of SMS Auth?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So like most things in security, decisions are made based on a set of assumptions, and it’s when these assumptions prove to be faulty that security can go quite badly wrong.</p>
-
-<p>I was thinking about a fairly common assumption recently in light of Apple’s new <a href="http://support.apple.com/en-us/HT6337">continuity</a> feature.  Over the last couple of years as the weaknesses in password based authentication models become ever more apparent, there’s obviously been a drive to improve authentication, and one method of doing this is through the use of different channels to send authentication tokens “out of band”.</p>
-
-<p>One of the more common methods of doing this is to send authentication tokens over SMS messages.  The theory is that this is a separate channel from the PC or tablet that is the primary device being used, so it should be harder for an attacker to compromise both channels, thereby improving security.</p>
-
-<p>For example if we have an attacker who has access to a users PC (for example having placed malware on it which steals passwords and other data entered there), the idea goes, by adding in SMS, we make it harder for the attacker to compromise the whole authentication mechanism.</p>
-
-<p>You can probably see, based on the starting paragraph, where this assumption is starting to fall down… With features like Continuity or, SMS to email applications or phone carriers who provide websites which allow for viewing and sending SMS messages, the barrier between these two channels is effectively pierced and SMS becomes much less useful as a second factor for authentication.</p>
-
-<p>Now if an attacker can compromise the PC, it’s quite likely that they’ll get access to the users SMS messages at the same time, with all that entails.</p>
-
-<p>Hopefully this line of thinking will penetrate with service operators and they’ll realise that if 2-factor/channel authentication is needed for their service, they’ll need to offer something more robustly separate.</p>
-
-<p>The other thing I thought this was an interesting illustration of, is that this to me is a good example of differing incentives in the security world.  Online service provides have the incentive for SMS messaging to be a good 2nd channel for authentication data as it’s something that almost all their subscribers already have access to, and it’s very cheap to use.</p>
-
-<p>On the other hand, mobile operators and mobile ecosystem providers have no such incentive.  Instead they’re working to make it easier for users to access all their information in a single place….</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -459,7 +443,7 @@
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2020 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2021 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

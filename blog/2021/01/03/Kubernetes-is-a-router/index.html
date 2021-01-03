@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Kubernetes is a router</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="/">Home</a></li>
+				<li><a href="/categories/index.html">Categories</a></li>
+				<li><a href="/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="/"></a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Kubernetes is a router </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   January 
+	   3rd,
+	     
+	   2021
+	 </span>
+	  <div class="article_body">
+	  <p>One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.</p>
+
+<p>This could leave you with the idea that pods aren’t accessible from elsewhere on the LAN that the cluster lives on, which could in turn provide a false sense of security about their accessibility, so it’s important to know that whilst pods aren’t usually accessible, that’s not a security feature.</p>
+
+<p>To demonstrate this I setup a single node Kubeadm cluster and a client machine on the same LAN. In this setup the cluster node is at <code class="language-plaintext highlighter-rouge">192.168.197.134</code> and the client at <code class="language-plaintext highlighter-rouge">192.168.197.135</code>.</p>
+
+<p>On the cluster node if I do <code class="language-plaintext highlighter-rouge">kubectl get po -A -o wide</code> we can see the pod IP addresses for various services</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAMESPACE         NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE         NOMINATED NODE   READINESS GATES
+calico-system     calico-kube-controllers-546d44f5b7-gchk4   1/1     Running   1          16h   10.8.203.8        kubeadm120   &lt;none&gt;           &lt;none&gt;
+calico-system     calico-node-475ff                          1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+calico-system     calico-typha-54879db669-6m4pr              1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+default           testweb                                    1/1     Running   1          16h   10.8.203.7        kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       coredns-74ff55c5b-pp2kt                    1/1     Running   1          16h   10.8.203.6        kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       coredns-74ff55c5b-x8fzx                    1/1     Running   1          16h   10.8.203.5        kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       etcd-kubeadm120                            1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-apiserver-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-controller-manager-kubeadm120         1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-proxy-kkb2v                           1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-scheduler-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+tigera-operator   tigera-operator-657cc89589-624rj           1/1     Running   2          16h   192.168.197.134   kubeadm120   &lt;none&gt;           &lt;none&gt;
+</code></pre></div></div>
+
+<p>Whilst some of them (the ones using host networking) are on the <code class="language-plaintext highlighter-rouge">192.168.197.0/24</code> network, some of the others are on the pod network of <code class="language-plaintext highlighter-rouge">10.8.0.0/16</code> which was configured when I setup the cluster. So, from my client machine, I can’t immediately address services on the pod network. If I try to access the nginx web server on the “testweb” pod, it won’t work, as my client doesn’t know how to route traffic to it.</p>
+
+<p>However, like the post title says, Kubernetes is a router, so if I can add a route on my client, telling it that the <code class="language-plaintext highlighter-rouge">10.8.0.0/16</code> network can be reached via the Kubernetes cluster node, I can get traffic to it!</p>
+
+<p>This is easily enough done, just add a route like this <code class="language-plaintext highlighter-rouge">sudo route add -net 10.8.0.0 netmask 255.255.0.0 gw 192.168.197.134</code> and then bingo, <code class="language-plaintext highlighter-rouge">curl http://10.8.203.7</code> will return our nginx container’s home page.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This is a relatively minor point, but one worth remembering, just because you can’t get access to pod IP addresses from outside the cluster by default, it’s not a security barrier you should be relying on. In general services running in pods on the cluster should be secured, just like any other service running in your network as they are likely to be accessible in one way or another. If you do want to restrict access to pods running in a cluster, using <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">network policies</a> will be the way to go.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(17)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes is a router&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="/blog/2020/12/19/rootless_docker/" title="Exploring Rootless Docker">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2021 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/app.js"></script>
+</body>
+</html>
+
+
