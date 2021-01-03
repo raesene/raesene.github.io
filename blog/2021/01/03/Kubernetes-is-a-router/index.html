@@ -192,6 +192,31 @@ tigera-operator   tigera-operator-657cc89589-624rj           1/1     Running   2
 
 <p>This is easily enough done, just add a route like this <code class="language-plaintext highlighter-rouge">sudo route add -net 10.8.0.0 netmask 255.255.0.0 gw 192.168.197.134</code> and then bingo, <code class="language-plaintext highlighter-rouge">curl http://10.8.203.7</code> will return our nginx container’s home page.</p>
 
+<h2 id="why-does-that-work">Why does that work?</h2>
+
+<p>So we can then look a bit into why this works. The first part is routing. If we look at the routing table on our cluster node we can see routes for our pods. <code class="language-plaintext highlighter-rouge">route -n</code> shows :-</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.197.2   0.0.0.0         UG    100    0        0 ens33
+10.8.203.5      0.0.0.0         255.255.255.255 UH    0      0        0 cali8c667e24141
+10.8.203.6      0.0.0.0         255.255.255.255 UH    0      0        0 calib967dfbd495
+10.8.203.7      0.0.0.0         255.255.255.255 UH    0      0        0 calib9199d171be
+10.8.203.8      0.0.0.0         255.255.255.255 UH    0      0        0 calie65c0ecd96a
+10.8.203.9      0.0.0.0         255.255.255.255 UH    0      0        0 cali68caf03a5f4
+10.8.203.10     0.0.0.0         255.255.255.255 UH    0      0        0 cali78a7a37ae9d
+172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
+192.168.197.0   0.0.0.0         255.255.255.0   U     0      0        0 ens33
+192.168.197.2   0.0.0.0         255.255.255.255 UH    100    0        0 ens33
+</code></pre></div></div>
+
+<p>So we know the node has a route for the pods which is local as there’s no “G” flag on it. The other part of the equation is packet forwarding. Checking the standard Linux sysctl for this with <code class="language-plaintext highlighter-rouge">sysctl net.ipv4.ip_forward</code> we can see that packet fowarding is enabled</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>net.ipv4.ip_forward <span class="o">=</span> 1
+</code></pre></div></div>
+
+<p>So traffic sent to the kubernetes node will be forwarded, based on its routing table, and will get to the pod ok.</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>This is a relatively minor point, but one worth remembering, just because you can’t get access to pod IP addresses from outside the cluster by default, it’s not a security barrier you should be relying on. In general services running in pods on the cluster should be secured, just like any other service running in your network as they are likely to be accessible in one way or another. If you do want to restrict access to pods running in a cluster, using <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">network policies</a> will be the way to go.</p>
