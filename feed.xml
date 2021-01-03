@@ -16,19 +16,19 @@
 
 &lt;p&gt;On the cluster node if I do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get po -A -o wide&lt;/code&gt; we can see the pod IP addresses for various services&lt;/p&gt;
 
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAMESPACE         NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE         NOMINATED NODE   READINESS GATES
-calico-system     calico-kube-controllers-546d44f5b7-gchk4   1/1     Running   1          16h   10.8.203.8        kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-calico-system     calico-node-475ff                          1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-calico-system     calico-typha-54879db669-6m4pr              1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-default           testweb                                    1/1     Running   1          16h   10.8.203.7        kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       coredns-74ff55c5b-pp2kt                    1/1     Running   1          16h   10.8.203.6        kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       coredns-74ff55c5b-x8fzx                    1/1     Running   1          16h   10.8.203.5        kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       etcd-kubeadm120                            1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       kube-apiserver-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       kube-controller-manager-kubeadm120         1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       kube-proxy-kkb2v                           1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-kube-system       kube-scheduler-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-tigera-operator   tigera-operator-657cc89589-624rj           1/1     Running   2          16h   192.168.197.134   kubeadm120   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAMESPACE         NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE      
+calico-system     calico-kube-controllers-546d44f5b7-gchk4   1/1     Running   1          16h   10.8.203.8        kubeadm120
+calico-system     calico-node-475ff                          1/1     Running   1          16h   192.168.197.134   kubeadm120
+calico-system     calico-typha-54879db669-6m4pr              1/1     Running   1          16h   192.168.197.134   kubeadm120
+default           testweb                                    1/1     Running   1          16h   10.8.203.7        kubeadm120
+kube-system       coredns-74ff55c5b-pp2kt                    1/1     Running   1          16h   10.8.203.6        kubeadm120
+kube-system       coredns-74ff55c5b-x8fzx                    1/1     Running   1          16h   10.8.203.5        kubeadm120
+kube-system       etcd-kubeadm120                            1/1     Running   1          16h   192.168.197.134   kubeadm120
+kube-system       kube-apiserver-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120
+kube-system       kube-controller-manager-kubeadm120         1/1     Running   1          16h   192.168.197.134   kubeadm120
+kube-system       kube-proxy-kkb2v                           1/1     Running   1          16h   192.168.197.134   kubeadm120
+kube-system       kube-scheduler-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120
+tigera-operator   tigera-operator-657cc89589-624rj           1/1     Running   2          16h   192.168.197.134   kubeadm120
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Whilst some of them (the ones using host networking) are on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.197.0/24&lt;/code&gt; network, some of the others are on the pod network of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.8.0.0/16&lt;/code&gt; which was configured when I setup the cluster. So, from my client machine, I can’t immediately address services on the pod network. If I try to access the nginx web server on the “testweb” pod, it won’t work, as my client doesn’t know how to route traffic to it.&lt;/p&gt;
