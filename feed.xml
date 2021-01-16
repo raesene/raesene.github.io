@@ -7,6 +7,131 @@
 		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Getting into a bind with Kubernetes</title>
+				<description>&lt;p&gt;Following on from &lt;a href=&quot;https://raesene.github.io/blog/2020/12/12/Escalating_Away/&quot;&gt;looking at the escalate verb in Kubernetes RBAC&lt;/a&gt;, I thought it would be worth looking at another one of the unusual verbs you can see in Kubernetes RBAC, bind.&lt;/p&gt;
+
+&lt;p&gt;These two, along with the impersonate verb are operations that are available on some RBAC objects in the Kubernetes API. They’re quite important if you’re looking at designing or auditing Kubernetes rights as they can allow for privilege escalation, so know which principals have access to them is important.&lt;/p&gt;
+
+&lt;p&gt;The bind verb can be applied to roles or clusterroles and allows a principal to bypass a general restriction on (cluster)role binding creation, which stops users who can create role bindings from escalating their privileges by binding to high privilege roles like cluster admin. This restriction is described in the Kubernetes documentation &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/rbac/#restrictions-on-role-binding-creation-or-update&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The way that this works is that, without using bind, a user cannot create a rolebinding or clusterrolebinding to a role or cluster role which has rights that the user themselves does not currently have. So for example if a user with the rights to create rolebindings tries to bind to cluster-admin , this won’t work unless that user already has cluster-admin rights.&lt;/p&gt;
+
+&lt;p&gt;Bind is made available to allow for this restriction to be bypassed.&lt;/p&gt;
+
+&lt;h2 id=&quot;practical-example&quot;&gt;Practical Example&lt;/h2&gt;
+
+&lt;p&gt;Let’s show a practical example of this. First up we’ll create a couple of service accounts to act as our user for this experiment and we’ll call them &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbac-binder&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;not-rbac-binder&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we’ll create a couple of cluster roles. Both have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebindings&lt;/code&gt; but one will also have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bind&lt;/code&gt; on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterroles&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac-binder&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterroles&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bind&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterrolebindings&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;create&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;not-rbac-binder&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterrolebindings&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;create&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we’ll just bind those two clusterroles to their respective service accounts.&lt;/p&gt;
+
+&lt;p&gt;So at this point if we look at our users rights with ` kubectl –as=system:serviceaccount:default:rbac-binder auth can-i –list` we can see that the rbac-binder service account has the following rights&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Resources                                       Non-Resource URLs   Resource Names   Verbs
+clusterroles.rbac.authorization.k8s.io          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+selfsubjectaccessreviews.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+selfsubjectrulesreviews.authorization.k8s.io    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+clusterrolebindings.rbac.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and the not-rbac-binder service account has these rights&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:not-rbac-binder auth can-i &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
+Resources                                       Non-Resource URLs   Resource Names   Verbs
+selfsubjectaccessreviews.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+selfsubjectrulesreviews.authorization.k8s.io    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+clusterrolebindings.rbac.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now if we try to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;not-rbac-binder&lt;/code&gt; to create a clusterrolebinding to cluster-admin, it will fail with the following error message (remember here that we do have create clusterrolebinding rights).&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:not-rbac-binder create clusterrolebinding rbac-clusteradmin &lt;span class=&quot;nt&quot;&gt;--clusterrole&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cluster-admin &lt;span class=&quot;nt&quot;&gt;--serviceaccount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;namespace:not-rbac-binder
+error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io &lt;span class=&quot;s2&quot;&gt;&quot;rbac-clusteradmin&quot;&lt;/span&gt; is forbidden: user &lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccount:default:not-rbac-binder&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;groups&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccounts&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccounts:default&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;system:authenticated&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; is attempting to grant RBAC permissions not currently held:
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;APIGroups:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Resources:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Verbs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;NonResourceURLs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Verbs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then if we try the same operation with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbac-binder&lt;/code&gt; it works!&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:rbac-binder create clusterrolebinding rbac-clusteradmin &lt;span class=&quot;nt&quot;&gt;--clusterrole&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cluster-admin &lt;span class=&quot;nt&quot;&gt;--serviceaccount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;namespace:rbac-binder
+clusterrolebinding.rbac.authorization.k8s.io/rbac-clusteradmin created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;The bind verb on RBAC is a useful piece of Kubernetes RBAC configuration but it’s also a lesser known are of RBAC and one which not all tools might properly understand. As it can allow for privilege escalation, it’s an important thing to check for when creating or auditing roles and clusterroles.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 16 Jan 2021 16:00:39 +0000</pubDate>
+				<link>/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</link>
+				<guid isPermaLink="true">/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</guid>
+			</item>
+		
+			<item>
 				<title>Kubernetes is a router</title>
 				<description>&lt;p&gt;One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.&lt;/p&gt;
 
@@ -668,55 +793,6 @@ Seccomp:	2
 				<pubDate>Sat, 01 Feb 2020 11:10:39 +0000</pubDate>
 				<link>/blog/2020/02/01/Comparing-Docker-And-Podman/</link>
 				<guid isPermaLink="true">/blog/2020/02/01/Comparing-Docker-And-Podman/</guid>
-			</item>
-		
-			<item>
-				<title>From Stackoverflow to CVE, with some laughs along the way</title>
-				<description>&lt;h2 id=&quot;discovery&quot;&gt;Discovery&lt;/h2&gt;
-
-&lt;p&gt;A couple of weeks ago I was on Stackoverflow and noticed an &lt;a href=&quot;https://stackoverflow.com/questions/58129150/security-yaml-bomb-user-can-restart-kube-api-by-sending-configmap/58133282#58133282&quot;&gt;interesting post&lt;/a&gt; with one of my watched tags. The post described a problem where the user had submitted a YAML manifest to their Kubernetes server and caused very high CPU/memory usage, indicating that there could be an application Denial of service issue.&lt;/p&gt;
-
-&lt;p&gt;The YAML posted was a lightly modified version of the YAML bomb example on this &lt;a href=&quot;https://en.wikipedia.org/wiki/Billion_laughs_attack&quot;&gt;Wikipedia page&lt;/a&gt; about the “Billion Laughs Attack”.  This is an issue mainly associated with XML parsing where recursive entities can be defined in a document and, when expanding them, the process parsing the document consumes large amounts of CPU and memory.&lt;/p&gt;
-
-&lt;p&gt;A bit of checking seemed to show that this indeed was a valid issue but that the resource utilization was on the client-side in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; and not server-side, so it wouldn’t seem like a major issue.&lt;/p&gt;
-
-&lt;p&gt;That changed after conferring with Brad Geesaman and Jordan Liggitt on the Kubernetes slack as it became obvious that the Denial of Service could occur on either the client or server, depending on how the document was passed to the server. When &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; was used the YAML was parsed locally before being passed to the Kubernetes API server, however by using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;curl&lt;/code&gt; the YAML could be passed directly to the API server causing the YAML to be parsed server-side.&lt;/p&gt;
-
-&lt;p&gt;Doing some initial testing on a local VM it was obvious that the server could be DoS’d with a relatively small number of requests and Brad checked that this could also impact cloud hosted versions. The example given did require the attacker to be able to create &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configMap&lt;/code&gt; objects on the server, which reduced the number of potential attackers considerably, so this would be an moderately serious issue but not too bad, as it required an authenticated user.&lt;/p&gt;
-
-&lt;p&gt;After that though, some more investigation did show that, under some circumstances, it was possible to pass YAML to the server as an unauthenticated user, which makes the issue more serious, especially if your Kubernetes cluster is exposed to the Internet.  This is a (somewhat surprisingly) common configuration, with over 200,000 Kubernetes servers being internet facing (based on statistics from &lt;a href=&quot;https://www.binaryedge.io/&quot;&gt;Binary Edge&lt;/a&gt;).  It won’t always be the case that older clusters are vulnerable (as it depends on the exact configuration) but it’s more likely.&lt;/p&gt;
-
-&lt;p&gt;After the &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/83253&quot;&gt;issue&lt;/a&gt; had been reported to the Kubernetes security team they quickly had a CVE assigned and arranged for patch releases to be created which are dropping today, covering versions 1.13 and up.&lt;/p&gt;
-
-&lt;h2 id=&quot;mitigation&quot;&gt;Mitigation&lt;/h2&gt;
-
-&lt;p&gt;There are a couple of mitigations that can be applied to avoid this being an issue for your Kubernetes cluster.  Firstly, ensure that you apply the available patches or, if you are using a managed Kubernetes distribution, ensure that your vendor has patched the issue.&lt;/p&gt;
-
-&lt;p&gt;Secondly, consider whether your Kubernetes server needs to be directly exposed to the Internet, or whether access to it can be restricted using firewalling or placing it behind a bastion host or VPN.&lt;/p&gt;
-
-&lt;p&gt;Another good mitigation is to minimize or remove anonymous access from the Kubernetes API server, although care is needed here as some monitoring tools require unauthenticated access to some endpoints.  Some older versions of Kubernetes allowed quite a few unauthenticated requests, including some which can trigger this issue.  Removing access from the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; user or setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; on the API server can reduce the risk of this issue being triggered on a cluster.  Again, if you’re using a managed Kubernetes distribution, you’ll need to speak to your vendor about enabling those flags.&lt;/p&gt;
-
-&lt;h2 id=&quot;underlying-library---a-tale-of-differing-perspectives&quot;&gt;Underlying library - A tale of differing perspectives&lt;/h2&gt;
-
-&lt;p&gt;After looking at the Kubernetes perspective, I thought it would be interesting to dig down to where this issue originated, to see if it may have a wider impact.&lt;/p&gt;
-
-&lt;p&gt;The affected code comes from the &lt;a href=&quot;https://github.com/go-yaml/yaml&quot;&gt;go-yaml&lt;/a&gt; library.  I reported the issue to the Go security team and they got in touch with the library author.  A fix, which already existed in a later version of the library, was quickly put in place for the v2 one (which was used by Kubernetes). However at this point an interesting difference of opinion cropped up.&lt;/p&gt;
-
-&lt;p&gt;I suggested raising a CVE for this issue to help awareness for downstream projects.  The author felt that, as the original code was compliant with the YAML specification, this was unnecessary and the Go security team felt that it wasn’t their role to assign one.&lt;/p&gt;
-
-&lt;p&gt;Both of these positions make sense, when considered from their respective positions. But, this causes quite a serious problem from a security community perspective.&lt;/p&gt;
-
-&lt;p&gt;The problem is that CVEs are used by most software security tools as flags to indicate “this library needs to be upgraded”. Without a CVE it’s very likely that automated software scanning tools (that are used in many enterprises for software vulnerability management) won’t flag this issue, and that unless teams manually review the changelogs of all their dependencies (a large task) they’ll be unaware of the potential risk.&lt;/p&gt;
-
-&lt;p&gt;The library in question is heavily used in the Go community, with around 36000 code references on Github alone, and presumably a lot of use elsewhere as YAML is a common format in the Cloud Native space where Go is often used.&lt;/p&gt;
-
-&lt;p&gt;It also raises the possibility of confusion if the Kubernetes CVE is used as an ersatz stand-in for a library one.  It’s already possible to see other projects which use the library referencing the Kubernetes CVE as a driver for updating their library version, which would seem very odd if you don’t know the back-story.&lt;/p&gt;
-
-&lt;p&gt;This is also an example of a possible expectations gap between different groups.  The enterprise IT/Security communities might be expecting the CVE databases to be the canonical source of vulnerabilities that they can use to prioritise software and library upgrades but if the software development communities don’t see the necessity of always assigning a CVE, that expectation won’t hold…&lt;/p&gt;
-</description>
-				<pubDate>Tue, 15 Oct 2019 18:10:39 +0100</pubDate>
-				<link>/blog/2019/10/15/From-stackoverflow-to-CVE/</link>
-				<guid isPermaLink="true">/blog/2019/10/15/From-stackoverflow-to-CVE/</guid>
 			</item>
 		
 	</channel>
