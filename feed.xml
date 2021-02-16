@@ -3,8 +3,8 @@
 	<channel>
 		<title>Raesene's Ramblings</title>
 		<description>Things that occur to me</description>
-		<link>/</link>
-		<atom:link href="/feed.xml" rel="self" type="application/rss+xml" />
+		<link>https://raesene.github.io/</link>
+		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
 				<title>Getting into a bind with Kubernetes</title>
@@ -127,8 +127,8 @@ clusterrolebinding.rbac.authorization.k8s.io/rbac-clusteradmin created
 &lt;p&gt;The bind verb on RBAC is a useful piece of Kubernetes RBAC configuration but it’s also a lesser known are of RBAC and one which not all tools might properly understand. As it can allow for privilege escalation, it’s an important thing to check for when creating or auditing roles and clusterroles.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 16 Jan 2021 16:00:39 +0000</pubDate>
-				<link>/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</link>
-				<guid isPermaLink="true">/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</guid>
+				<link>https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</guid>
 			</item>
 		
 			<item>
@@ -192,8 +192,8 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 &lt;p&gt;This is a relatively minor point, but one worth remembering, just because you can’t get access to pod IP addresses from outside the cluster by default, it’s not a security barrier you should be relying on. In general services running in pods on the cluster should be secured, just like any other service running in your network as they are likely to be accessible in one way or another. If you do want to restrict access to pods running in a cluster, using &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; will be the way to go.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 03 Jan 2021 16:00:39 +0000</pubDate>
-				<link>/blog/2021/01/03/Kubernetes-is-a-router/</link>
-				<guid isPermaLink="true">/blog/2021/01/03/Kubernetes-is-a-router/</guid>
+				<link>https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</guid>
 			</item>
 		
 			<item>
@@ -290,8 +290,8 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=
 &lt;p&gt;Rootless containers are a great addition to Docker’s repetoire. In situations where you want to have users run docker commands without giving the root access to the underlying host, this will really help out. The setup and usuability are great, but you need to take account of the fact that certain things just won’t work the same way as functions reserved for the root user on the host machine won’t be usuable.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 19 Dec 2020 16:00:39 +0000</pubDate>
-				<link>/blog/2020/12/19/rootless_docker/</link>
-				<guid isPermaLink="true">/blog/2020/12/19/rootless_docker/</guid>
+				<link>https://raesene.github.io/blog/2020/12/19/rootless_docker/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/12/19/rootless_docker/</guid>
 			</item>
 		
 			<item>
@@ -321,8 +321,8 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=
 &lt;p&gt;Things like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bind&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;escalate&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;impersonate&lt;/code&gt; are lesser known features of RBAC but one that you should be aware of if you’re a systems administrator or if you’re looking at security tooling around Kubernetes.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 12 Dec 2020 13:00:39 +0000</pubDate>
-				<link>/blog/2020/12/12/Escalating_Away/</link>
-				<guid isPermaLink="true">/blog/2020/12/12/Escalating_Away/</guid>
+				<link>https://raesene.github.io/blog/2020/12/12/Escalating_Away/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/12/12/Escalating_Away/</guid>
 			</item>
 		
 			<item>
@@ -360,8 +360,8 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=
 &lt;p&gt;If you’re using non-AAD enabled clusters, it’s worth noting that all your users may be using generic cluster-admin credentials, so you should check the generated kubeconfig files and plan for that.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 29 Nov 2020 11:00:39 +0000</pubDate>
-				<link>/blog/2020/11/29/The_revenge_of_system_masters/</link>
-				<guid isPermaLink="true">/blog/2020/11/29/The_revenge_of_system_masters/</guid>
+				<link>https://raesene.github.io/blog/2020/11/29/The_revenge_of_system_masters/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/11/29/The_revenge_of_system_masters/</guid>
 			</item>
 		
 			<item>
@@ -403,8 +403,8 @@ Total: 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;UNKNOWN: 0, LOW: 0, MEDIU
 &lt;p&gt;Of course, mitigations like minimizing the number of installed packages and looking at distroless or scratch containers, could also help reduce this kind of problem.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 22 Nov 2020 11:10:39 +0000</pubDate>
-				<link>/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</link>
-				<guid isPermaLink="true">/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</guid>
+				<link>https://raesene.github.io/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</guid>
 			</item>
 		
 			<item>
@@ -559,8 +559,8 @@ Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </description>
 				<pubDate>Sun, 21 Jun 2020 16:10:39 +0100</pubDate>
-				<link>/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</link>
-				<guid isPermaLink="true">/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</guid>
+				<link>https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</guid>
 			</item>
 		
 			<item>
@@ -634,8 +634,8 @@ Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 &lt;p&gt;Overall I think that WSL2 along with Windows Terminal, Visual Studio Code, and Docker for Windows, can provide a very nice Linux based environment inside a host Windows OS. So for environments where you can’t, or don’t want to, run Linux as your base OS, it becomes fairly easy to set-up your tooling the way you want it to work.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 31 May 2020 11:10:39 +0100</pubDate>
-				<link>/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</link>
-				<guid isPermaLink="true">/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</guid>
+				<link>https://raesene.github.io/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</guid>
 			</item>
 		
 			<item>
@@ -683,8 +683,8 @@ Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 
 </description>
 				<pubDate>Sun, 23 Feb 2020 11:10:39 +0000</pubDate>
-				<link>/blog/2020/02/23/More-Podman/</link>
-				<guid isPermaLink="true">/blog/2020/02/23/More-Podman/</guid>
+				<link>https://raesene.github.io/blog/2020/02/23/More-Podman/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/02/23/More-Podman/</guid>
 			</item>
 		
 			<item>
@@ -791,8 +791,8 @@ Seccomp:	2
 &lt;p&gt;It’s clear that the podman ecosystem is coming along quite well and that, for a lot of use cases, it could be used by developers on local machines to avoid the overhead and security risk of running a root daemon to allow for container use.  There are some limitations, but those seem to be more about the inherent limits of running as an unprivileged user than anything else.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 01 Feb 2020 11:10:39 +0000</pubDate>
-				<link>/blog/2020/02/01/Comparing-Docker-And-Podman/</link>
-				<guid isPermaLink="true">/blog/2020/02/01/Comparing-Docker-And-Podman/</guid>
+				<link>https://raesene.github.io/blog/2020/02/01/Comparing-Docker-And-Podman/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2020/02/01/Comparing-Docker-And-Podman/</guid>
 			</item>
 		
 	</channel>
