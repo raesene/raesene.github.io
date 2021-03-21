@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Trying out Cosign</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Trying out Cosign </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   March 
+	   21st,
+	     
+	   2021
+	 </span>
+	  <div class="article_body">
+	  <p>Container image signing has been a bit of a gap in the security landscape, so I’m always interested in seeing new projects starting up which address it. Docker Content Trust/Notary never really gained traction in v1, and whilst v2 looks very interesting, it’s still in the design phase (AFAIK).</p>
+
+<p>So seeing the <a href="https://github.com/sigstore/cosign">Cosign project</a> come along as part of the <a href="https://sigstore.dev/">Sigstore</a> initiative, I was interested to take a look at it and see how it works. Sigstore has some really interesting ideas about software transparency logs, but for this blog, I’ll just be looking at the raw image signing process.</p>
+
+<p>The use case I wanted to look at was the idea of getting a container image that’s built as part of a CI pipeline and making a signature available so that people downloading the image from Docker hub could validate that the image they’re downloading was built by me (well more precisely that it was built by someone who had access to the private key which was used to sign it).</p>
+
+<h2 id="installing-cosign">Installing cosign</h2>
+
+<p>It’s a golang project, so it’s fairly easy to get started, there’s a single binary available from their <a href="https://github.com/sigstore/cosign/releases/tag/v0.1.0">release page</a> and it has been signed by them.</p>
+
+<p>Once you’ve got it you can generate a keypair <code class="language-plaintext highlighter-rouge">cosign generate-key-pair</code>. A very important point here, is to set a good long passphrase to protect your private key! This will provide you with a public and private key.</p>
+
+<h2 id="setting-up-github-actions-to-build-and-sign-your-image">Setting up Github Actions to build and sign your image.</h2>
+
+<p>With cosign installed and working, we need get our CI setup to sign the image as it’s built. Cosign have done this with their setup but I wanted to do things a little differently. They put the private key in the repository and I’d prefer to try and keep it a bit more restricted. I’m sure that they’ve set a good passphrase on the key but making it available publicly does open you up to brute force attacks on the passphrase used, so I’d say ideally you’d want to avoid that.</p>
+
+<p>The test repo I made for this process is <a href="https://github.com/raesene/cosign_test">here</a>. The image itself is just a super simple Dockerfile based on ubuntu 18.04 which adds the cosign binary to it, the interesting part is the GH actions file <a href="https://github.com/raesene/cosign_test/blob/main/.github/workflows/ci-build-docker-image.yml">here</a></p>
+
+<p>Let’s break down what we’re doing in the action. I’m by no means an expert on these, but this seems to work ok :)</p>
+
+<p>First step is setting up some output with today’s date in this (<a href="https://github.community/t/how-can-i-set-an-expression-as-an-environment-variable-at-workflow-level/16516/6">source</a>). I’m using that to tag the images.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Get current Date</span>
+      <span class="na">id</span><span class="pi">:</span> <span class="s">date</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">echo "::set-output name=date::$(date +'%Y-%m-%d')"</span>
+</code></pre></div></div>
+
+<p>Next we’ll log into my account on Docker hub. For this you’ll need to set a secret in the Github repository with a docker hub access token in it.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Docker login</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">echo $ | docker login -u raesene --password-stdin</span>
+</code></pre></div></div>
+
+<p>Then we’ll build the Docker image and push it to Docker Hub.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">build Docker Image</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">docker build -t raesene/cosign_test:$ .</span>
+    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">push to Docker hub</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">docker push raesene/cosign_test:$</span>
+</code></pre></div></div>
+
+<p>With our new image on Docker Hub, we need to sign it. One thing I thought about this flow is that it doesn’t really protect against an active malicious Registry as they could theoretically modify my image as soon as it’s uploaded then the sign commands hit afterwards. Pretty niche attack in most cases but could be worth considering.</p>
+
+<p>What I’ve done in advance of this is get the passphrase protected Cosign private key and place it into a Github Secret called <code class="language-plaintext highlighter-rouge">COSIGN_KEY</code> . In order to have it available for cosign to read, I put it into a file (using a method from <a href="https://stackoverflow.com/a/59482124/537897">here</a>)</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">place the cosign private key in a file</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s1">'</span><span class="s">echo</span><span class="nv"> </span><span class="s">"$COSIGN_KEY"</span><span class="nv"> </span><span class="s">&gt;</span><span class="nv"> </span><span class="s">/tmp/cosign.key'</span>
+      <span class="na">shell</span><span class="pi">:</span> <span class="s">bash</span>
+      <span class="na">env</span><span class="pi">:</span>
+        <span class="na">COSIGN_KEY</span><span class="pi">:</span> <span class="s">$</span>
+</code></pre></div></div>
+
+<p>Now with the signing key available inside the Action, I can sign the image</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Sign the image pushed</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">echo -n "$" | ./cosign sign -key /tmp/cosign.key raesene/cosign_test:$</span>
+</code></pre></div></div>
+
+<p>One interesting thing, is how cosign stores signatures. If you look on the Docker Hub page for the image that I’m using in the <a href="https://hub.docker.com/repository/docker/raesene/cosign_test/tags?page=1&amp;ordering=last_updated">tags tab</a> you’ll see that cosign creates tags that it uses inside the repo. I think we’ll be seeing more people using OCI registries for things other than pure container images, but this is the first time I’ve seen a tool take that approach.</p>
+
+<h2 id="verifying-the-image">Verifying the image</h2>
+
+<p>Once you’ve got your image uploaded, anyone can use cosign to verify it. For my test image , the public key is</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s">-----BEGIN PUBLIC KEY-----</span>
+<span class="s">MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoeqsxUUhzWrx70u/dCAf1QgBFMVF</span>
+<span class="s">eyqWrtbAfwDdjONf9gbhfzURQFyZvcL7ET5PEq36x0OS9enJShKzAJKkEQ==</span>
+<span class="s">-----END PUBLIC KEY-----</span>
+</code></pre></div></div>
+
+<p>With that saved to a file called <code class="language-plaintext highlighter-rouge">cosign.pub</code> you should be able to run</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cosign verify <span class="nt">-key</span> cosign.pub raesene/cosign_test:2021-03-21
+</code></pre></div></div>
+
+<p>and get output that looks like</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - The signatures were verified against the specified public key
+  - Any certificates were verified against the Fulcio roots.
+  - WARNING - THE CERTIFICATE EXPIRY WAS NOT CHECKED. <span class="nb">set </span><span class="nv">COSIGN_EXPERIMENTAL</span><span class="o">=</span>1 to check!
+<span class="o">{</span><span class="s2">"Critical"</span>:<span class="o">{</span><span class="s2">"Identity"</span>:<span class="o">{</span><span class="s2">"docker-reference"</span>:<span class="s2">""</span><span class="o">}</span>,<span class="s2">"Image"</span>:<span class="o">{</span><span class="s2">"Docker-manifest-digest"</span>:<span class="s2">"sha256:9b5a67e1e2e67f60d4e93529ff280f12601586c0c382949f96947001c0c6094f"</span><span class="o">}</span>,<span class="s2">"Type"</span>:<span class="s2">"cosign container signature"</span><span class="o">}</span>,<span class="s2">"Optional"</span>:null<span class="o">}</span>
+</code></pre></div></div>
+
+<p>If you try verifying a tag that doesn’t have a signature like the <code class="language-plaintext highlighter-rouge">invalid</code> tag on that repository using <code class="language-plaintext highlighter-rouge">cosign verify -key cosign.pub raesene/cosign_test:invalid</code> you’ll get an error</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>error: GET https://index.docker.io/v2/raesene/cosign_test/manifests/sha256-45c6f8f1b2fe15adaa72305616d69a6cd641169bc8b16886756919e7c01fa48b.cosign: MANIFEST_UNKNOWN: manifest unknown<span class="p">;</span> map[Tag:sha256-45c6f8f1b2fe15adaa72305616d69a6cd641169bc8b16886756919e7c01fa48b.cosign]
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>It’s early days for cosign (they just hit 0.1 2 days back), but it along with sigstore, look like a really promising area of tech. Hopefully we’ll see more developments in this area and get some great new ideas for image (and general software) signing.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Docker-ref">
+					Docker <span>(23)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Trying out Cosign&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/" title="Getting into a bind with Kubernetes">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2021 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -7,6 +7,107 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Trying out Cosign</title>
+				<description>&lt;p&gt;Container image signing has been a bit of a gap in the security landscape, so I’m always interested in seeing new projects starting up which address it. Docker Content Trust/Notary never really gained traction in v1, and whilst v2 looks very interesting, it’s still in the design phase (AFAIK).&lt;/p&gt;
+
+&lt;p&gt;So seeing the &lt;a href=&quot;https://github.com/sigstore/cosign&quot;&gt;Cosign project&lt;/a&gt; come along as part of the &lt;a href=&quot;https://sigstore.dev/&quot;&gt;Sigstore&lt;/a&gt; initiative, I was interested to take a look at it and see how it works. Sigstore has some really interesting ideas about software transparency logs, but for this blog, I’ll just be looking at the raw image signing process.&lt;/p&gt;
+
+&lt;p&gt;The use case I wanted to look at was the idea of getting a container image that’s built as part of a CI pipeline and making a signature available so that people downloading the image from Docker hub could validate that the image they’re downloading was built by me (well more precisely that it was built by someone who had access to the private key which was used to sign it).&lt;/p&gt;
+
+&lt;h2 id=&quot;installing-cosign&quot;&gt;Installing cosign&lt;/h2&gt;
+
+&lt;p&gt;It’s a golang project, so it’s fairly easy to get started, there’s a single binary available from their &lt;a href=&quot;https://github.com/sigstore/cosign/releases/tag/v0.1.0&quot;&gt;release page&lt;/a&gt; and it has been signed by them.&lt;/p&gt;
+
+&lt;p&gt;Once you’ve got it you can generate a keypair &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cosign generate-key-pair&lt;/code&gt;. A very important point here, is to set a good long passphrase to protect your private key! This will provide you with a public and private key.&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-github-actions-to-build-and-sign-your-image&quot;&gt;Setting up Github Actions to build and sign your image.&lt;/h2&gt;
+
+&lt;p&gt;With cosign installed and working, we need get our CI setup to sign the image as it’s built. Cosign have done this with their setup but I wanted to do things a little differently. They put the private key in the repository and I’d prefer to try and keep it a bit more restricted. I’m sure that they’ve set a good passphrase on the key but making it available publicly does open you up to brute force attacks on the passphrase used, so I’d say ideally you’d want to avoid that.&lt;/p&gt;
+
+&lt;p&gt;The test repo I made for this process is &lt;a href=&quot;https://github.com/raesene/cosign_test&quot;&gt;here&lt;/a&gt;. The image itself is just a super simple Dockerfile based on ubuntu 18.04 which adds the cosign binary to it, the interesting part is the GH actions file &lt;a href=&quot;https://github.com/raesene/cosign_test/blob/main/.github/workflows/ci-build-docker-image.yml&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Let’s break down what we’re doing in the action. I’m by no means an expert on these, but this seems to work ok :)&lt;/p&gt;
+
+&lt;p&gt;First step is setting up some output with today’s date in this (&lt;a href=&quot;https://github.community/t/how-can-i-set-an-expression-as-an-environment-variable-at-workflow-level/16516/6&quot;&gt;source&lt;/a&gt;). I’m using that to tag the images.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Get current Date&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;date&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;echo &quot;::set-output name=date::$(date +'%Y-%m-%d')&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next we’ll log into my account on Docker hub. For this you’ll need to set a secret in the Github repository with a docker hub access token in it.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Docker login&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;echo $ | docker login -u raesene --password-stdin&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we’ll build the Docker image and push it to Docker Hub.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;build Docker Image&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;docker build -t raesene/cosign_test:$ .&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;push to Docker hub&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;docker push raesene/cosign_test:$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With our new image on Docker Hub, we need to sign it. One thing I thought about this flow is that it doesn’t really protect against an active malicious Registry as they could theoretically modify my image as soon as it’s uploaded then the sign commands hit afterwards. Pretty niche attack in most cases but could be worth considering.&lt;/p&gt;
+
+&lt;p&gt;What I’ve done in advance of this is get the passphrase protected Cosign private key and place it into a Github Secret called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;COSIGN_KEY&lt;/code&gt; . In order to have it available for cosign to read, I put it into a file (using a method from &lt;a href=&quot;https://stackoverflow.com/a/59482124/537897&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;place the cosign private key in a file&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;echo&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;$COSIGN_KEY&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/tmp/cosign.key'&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;shell&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bash&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;COSIGN_KEY&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now with the signing key available inside the Action, I can sign the image&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Sign the image pushed&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;echo -n &quot;$&quot; | ./cosign sign -key /tmp/cosign.key raesene/cosign_test:$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One interesting thing, is how cosign stores signatures. If you look on the Docker Hub page for the image that I’m using in the &lt;a href=&quot;https://hub.docker.com/repository/docker/raesene/cosign_test/tags?page=1&amp;amp;ordering=last_updated&quot;&gt;tags tab&lt;/a&gt; you’ll see that cosign creates tags that it uses inside the repo. I think we’ll be seeing more people using OCI registries for things other than pure container images, but this is the first time I’ve seen a tool take that approach.&lt;/p&gt;
+
+&lt;h2 id=&quot;verifying-the-image&quot;&gt;Verifying the image&lt;/h2&gt;
+
+&lt;p&gt;Once you’ve got your image uploaded, anyone can use cosign to verify it. For my test image , the public key is&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;s&quot;&gt;-----BEGIN PUBLIC KEY-----&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoeqsxUUhzWrx70u/dCAf1QgBFMVF&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;eyqWrtbAfwDdjONf9gbhfzURQFyZvcL7ET5PEq36x0OS9enJShKzAJKkEQ==&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;-----END PUBLIC KEY-----&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that saved to a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cosign.pub&lt;/code&gt; you should be able to run&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cosign verify &lt;span class=&quot;nt&quot;&gt;-key&lt;/span&gt; cosign.pub raesene/cosign_test:2021-03-21
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and get output that looks like&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - The signatures were verified against the specified public key
+  - Any certificates were verified against the Fulcio roots.
+  - WARNING - THE CERTIFICATE EXPIRY WAS NOT CHECKED. &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;COSIGN_EXPERIMENTAL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1 to check!
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Critical&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Identity&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;docker-reference&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Image&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Docker-manifest-digest&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;sha256:9b5a67e1e2e67f60d4e93529ff280f12601586c0c382949f96947001c0c6094f&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Type&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;cosign container signature&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Optional&quot;&lt;/span&gt;:null&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you try verifying a tag that doesn’t have a signature like the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invalid&lt;/code&gt; tag on that repository using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cosign verify -key cosign.pub raesene/cosign_test:invalid&lt;/code&gt; you’ll get an error&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;error: GET https://index.docker.io/v2/raesene/cosign_test/manifests/sha256-45c6f8f1b2fe15adaa72305616d69a6cd641169bc8b16886756919e7c01fa48b.cosign: MANIFEST_UNKNOWN: manifest unknown&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; map[Tag:sha256-45c6f8f1b2fe15adaa72305616d69a6cd641169bc8b16886756919e7c01fa48b.cosign]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;It’s early days for cosign (they just hit 0.1 2 days back), but it along with sigstore, look like a really promising area of tech. Hopefully we’ll see more developments in this area and get some great new ideas for image (and general software) signing.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 21 Mar 2021 16:00:39 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2021/03/21/Trying-out-cogign/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/03/21/Trying-out-cogign/</guid>
+			</item>
+		
+			<item>
 				<title>Getting into a bind with Kubernetes</title>
 				<description>&lt;p&gt;Following on from &lt;a href=&quot;https://raesene.github.io/blog/2020/12/12/Escalating_Away/&quot;&gt;looking at the escalate verb in Kubernetes RBAC&lt;/a&gt;, I thought it would be worth looking at another one of the unusual verbs you can see in Kubernetes RBAC, bind.&lt;/p&gt;
 
@@ -685,114 +786,6 @@ Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 				<pubDate>Sun, 23 Feb 2020 11:10:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2020/02/23/More-Podman/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2020/02/23/More-Podman/</guid>
-			</item>
-		
-			<item>
-				<title>Comparing Docker and Podman - Basic Operations</title>
-				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
-
-&lt;p&gt;I’ve been meaning to take more of a look at &lt;a href=&quot;https://podman.io/&quot;&gt;podman&lt;/a&gt; for a while. This is a Redhat backed project which provides an alternative to Docker for local operation of containers.  One of it’s big selling points over the current versions of Docker is the ability to run containers as an ordinary user, without needing access to a daemon process running as root (it’s worth noting that Docker are &lt;a href=&quot;https://docs.docker.com/engine/security/rootless/&quot;&gt;working on&lt;/a&gt; ‘rootless’ mode too)&lt;/p&gt;
-
-&lt;p&gt;What I thought would be useful would be to compare the two with common use-cases and see some of what’s going on under the hood.  Both projects use &lt;a href=&quot;https://github.com/opencontainers/runc&quot;&gt;runc&lt;/a&gt; as the underlying tool for launching containers, but the higher level components are quite different.&lt;/p&gt;
-
-&lt;h2 id=&quot;installation&quot;&gt;Installation&lt;/h2&gt;
-
-&lt;p&gt;For these tests I installed Docker-CE on Ubuntu 18.04.3, following the Docker install process &lt;a href=&quot;https://docs.docker.com/install/linux/docker-ce/ubuntu/&quot;&gt;here&lt;/a&gt; and installed Docker 19.03.5. For podman I made use of the Ubuntu installation instructions &lt;a href=&quot;https://podman.io/getting-started/installation&quot;&gt;here&lt;/a&gt; using the packages provided by the &lt;a href=&quot;https://kubic.opensuse.org/&quot;&gt;kubic project&lt;/a&gt; I installed Podman version 1.7.0.&lt;/p&gt;
-
-&lt;p&gt;I was pleasantly surprised to find that it’s possible to have both podman and Docker installed on the same host using this method, the deb’s provided didn’t clash at all with regards to dependencies.&lt;/p&gt;
-
-&lt;h2 id=&quot;initial-post-installation&quot;&gt;Initial Post Installation&lt;/h2&gt;
-
-&lt;p&gt;After installation, with Docker there are two daemon processes running, containerd and dockerd.  With podman, as expected, there are no long running processes initially.  One thing I did notice, which was unexpected was that after running the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman info&lt;/code&gt; command, a podman process was left running on the host.&lt;/p&gt;
-
-&lt;h2 id=&quot;image-storage&quot;&gt;Image storage&lt;/h2&gt;
-
-&lt;p&gt;The Docker daemon stores all the files related to it in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/lib/docker&lt;/code&gt; which obviously won’t make sense for a container tool that’s running for the individual user.  Podman stores its files at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home/$USER/.local/share/containers/storage&lt;/code&gt; .  One point that could be relevant here for some use cases is that this will mean that if you have multiple users on a host running containers, each user will pull and store their own copy of all images, which would take some additional storage&lt;/p&gt;
-
-&lt;h2 id=&quot;basic-commands&quot;&gt;Basic commands&lt;/h2&gt;
-
-&lt;p&gt;Running a basic interactive container with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman run -it ubuntu:18.04 /bin/bash&lt;/code&gt; works as expected and lands you in a “root” shell inside the container.  One interesting point is that, on Ubuntu, podman defaults to requesting images from Docker Hub first, although it does support a registry search order.  This is an important point for security as having a different search order for container images could result in unexpected behaviour (more details on this &lt;a href=&quot;https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/containers/libpod/issues/4549&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
-
-&lt;h2 id=&quot;processes-behind-the-scenes&quot;&gt;Processes behind the scenes&lt;/h2&gt;
-
-&lt;p&gt;What’s happening behind the scenes for this command is quite interesting.  There’s a couple of processes being used to manage our ubuntu container.  A &lt;a href=&quot;https://github.com/rootless-containers/slirp4netns&quot;&gt;slirp4netns&lt;/a&gt; process is running.  This is a tool which helps networking work in unprivileged containers.&lt;/p&gt;
-
-&lt;p&gt;There’s also a &lt;a href=&quot;https://github.com/containers/conmon&quot;&gt;conmon&lt;/a&gt; process running, which is another helper process.&lt;/p&gt;
-
-&lt;p&gt;These two processes are used for every container, so if you run 10 containers, you’ll get 20 supporting processes.&lt;/p&gt;
-
-&lt;p&gt;Comparing this to Docker, conmon seems to be the equivalent of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;containerd-shim&lt;/code&gt; process that runs with every container and there’s no &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;slirp4netns&lt;/code&gt; equivalent needed as Docker is running with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; privileges.&lt;/p&gt;
-
-&lt;h2 id=&quot;namespaces&quot;&gt;Namespaces&lt;/h2&gt;
-
-&lt;p&gt;Docker uses Linux namespaces to provide an isolated environment for contained processes, and as they both use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runc&lt;/code&gt; under the covers, it’s not too surprising to see that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman&lt;/code&gt; is similar. There are some differences though that are worth noting.  Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a host running an ubuntu container via podman we can see the following&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532621 user        4  1352 rorym            podman
-4026532622 mnt         2  1352 rorym            podman
-4026532624 net         1  1479 rorym            /bin/bash
-4026532679 mnt         1  1479 rorym            /bin/bash
-4026532680 mnt         1  1465 rorym            /usr/bin/slirp4netns --disable-host-loopback --mtu 65520 --e
-4026532681 uts         1  1479 rorym            /bin/bash
-4026532682 ipc         1  1479 rorym            /bin/bash
-4026532683 pid         1  1479 rorym            /bin/bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lsns&lt;/code&gt; on a Docker container doing using the same image and command we get&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4026532626 mnt         1  1932 root             /bin/bash
-4026532627 uts         1  1932 root             /bin/bash
-4026532628 ipc         1  1932 root             /bin/bash
-4026532629 pid         1  1932 root             /bin/bash
-4026532631 net         1  1932 root             /bin/bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The podman list includes a user namespace which isn’t too surprising as we’re running as an ordinary user, but appear to be the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user inside the container.  What is interesting is that there’s a single user namespace which is attached to the podman process, rather than it being directly attached to the container.  Also we can see that there’s a mnt namespace for slirp4netns.&lt;/p&gt;
-
-&lt;h2 id=&quot;capabilities&quot;&gt;Capabilities&lt;/h2&gt;
-
-&lt;p&gt;By default, Docker containers get a set of capabilities, which can allow them to execute operations which require root privileges.  While podman is running as an ordinary user and making use of user namespaces, it does still use capabilities, but unlike Docker they only allow privileges within the user namespace and not over the entire host.&lt;/p&gt;
-
-&lt;p&gt;Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pscap&lt;/code&gt; under podman shows the following lines relevant to podman&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1     1352  rorym       podman pause      full
-1     1465  rorym       slirp4netns       net_bind_service
-1     1468  rorym       conmon            full
-1468  1479  rorym       bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;For Docker we get :-&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;978   1913  root        containerd-shim   full
-1913  1932  root        bash              chown, dac_override, fowner, fsetid, kill, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, mknod, audit_write, setfcap
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The key difference being the 4 processes running for podman are all in a user namespace.&lt;/p&gt;
-
-&lt;h2 id=&quot;apparmor&quot;&gt;AppArmor&lt;/h2&gt;
-
-&lt;p&gt;Docker provides a default AppArmor policy which restricts the contained process.  Looking at the podman setup, there doesn’t appear to be an apparmor policy getting enabled by default.  Running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;aa-status&lt;/code&gt; shows 0 processes in enforce mode.&lt;/p&gt;
-
-&lt;h2 id=&quot;seccomp&quot;&gt;Seccomp&lt;/h2&gt;
-
-&lt;p&gt;Docker also uses a &lt;a href=&quot;https://www.kernel.org/doc/html/v4.16/userspace-api/seccomp_filter.html&quot;&gt;seccomp-bpf&lt;/a&gt; filter to restrict calls to specific syscalls.  Looking at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bash&lt;/code&gt; process running under Podman, we can see that there is also a Seccomp profile attached there&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;cat /proc/1479/status | grep Seccomp
-Seccomp:	2
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;limitations-of-rootless-containers&quot;&gt;Limitations of rootless containers&lt;/h2&gt;
-
-&lt;p&gt;With the use of rootless containers, there does come some limitations/complications.  There are some things that won’t work in rootless mode.  Things like not being able to bind ports &amp;lt; 1024 make sense as this is a feature generally restricted for the root user.  However, some of the other items that are root only might be a surprise like network management.&lt;/p&gt;
-
-&lt;p&gt;As Dan Walsh &lt;a href=&quot;https://twitter.com/rhatdan/status/1225797102820716544&quot;&gt;points out&lt;/a&gt; podman can also run containers as root, and that’s something I’ll explore more in the &lt;a href=&quot;https://raesene.github.io/blog/2020/02/23/More-Podman/&quot;&gt;next post&lt;/a&gt;&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;It’s clear that the podman ecosystem is coming along quite well and that, for a lot of use cases, it could be used by developers on local machines to avoid the overhead and security risk of running a root daemon to allow for container use.  There are some limitations, but those seem to be more about the inherent limits of running as an unprivileged user than anything else.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 01 Feb 2020 11:10:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2020/02/01/Comparing-Docker-And-Podman/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2020/02/01/Comparing-Docker-And-Podman/</guid>
 			</item>
 		
 	</channel>
