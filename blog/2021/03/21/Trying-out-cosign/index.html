@@ -193,15 +193,15 @@
 <p>Next we’ll log into my account on Docker hub. For this you’ll need to set a secret in the Github repository with a docker hub access token in it.</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Docker login</span>
-      <span class="na">run</span><span class="pi">:</span> <span class="s">echo $ | docker login -u raesene --password-stdin</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">echo $\{\{secrets.DOCKER_PASSWORD\}\} | docker login -u raesene --password-stdin</span>
 </code></pre></div></div>
 
 <p>Then we’ll build the Docker image and push it to Docker Hub.</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">build Docker Image</span>
-      <span class="na">run</span><span class="pi">:</span> <span class="s">docker build -t raesene/cosign_test:$ .</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">docker build -t raesene/cosign_test:$\{\{steps.date.outputs.date\}\} .</span>
     <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">push to Docker hub</span>
-      <span class="na">run</span><span class="pi">:</span> <span class="s">docker push raesene/cosign_test:$</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">docker push raesene/cosign_test:$\{\{steps.date.outputs.date\}\}</span>
 </code></pre></div></div>
 
 <p>With our new image on Docker Hub, we need to sign it. One thing I thought about this flow is that it doesn’t really protect against an active malicious Registry as they could theoretically modify my image as soon as it’s uploaded then the sign commands hit afterwards. Pretty niche attack in most cases but could be worth considering.</p>
@@ -212,13 +212,13 @@
       <span class="na">run</span><span class="pi">:</span> <span class="s1">'</span><span class="s">echo</span><span class="nv"> </span><span class="s">"$COSIGN_KEY"</span><span class="nv"> </span><span class="s">&gt;</span><span class="nv"> </span><span class="s">/tmp/cosign.key'</span>
       <span class="na">shell</span><span class="pi">:</span> <span class="s">bash</span>
       <span class="na">env</span><span class="pi">:</span>
-        <span class="na">COSIGN_KEY</span><span class="pi">:</span> <span class="s">$</span>
+        <span class="na">COSIGN_KEY</span><span class="pi">:</span> <span class="s">$\{\{secrets.COSIGN_KEY\}\}</span>
 </code></pre></div></div>
 
 <p>Now with the signing key available inside the Action, I can sign the image</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Sign the image pushed</span>
-      <span class="na">run</span><span class="pi">:</span> <span class="s">echo -n "$" | ./cosign sign -key /tmp/cosign.key raesene/cosign_test:$</span>
+      <span class="na">run</span><span class="pi">:</span> <span class="s">echo -n "$\{\{secrets.COSIGN_KEY_PASSPHRASE\}\}" | ./cosign sign -key /tmp/cosign.key raesene/cosign_test:$\{\{steps.date.outputs.date\}\}</span>
 </code></pre></div></div>
 
 <p>One interesting thing, is how cosign stores signatures. If you look on the Docker Hub page for the image that I’m using in the <a href="https://hub.docker.com/repository/docker/raesene/cosign_test/tags?page=1&amp;ordering=last_updated">tags tab</a> you’ll see that cosign creates tags that it uses inside the repo. I think we’ll be seeing more people using OCI registries for things other than pure container images, but this is the first time I’ve seen a tool take that approach.</p>
