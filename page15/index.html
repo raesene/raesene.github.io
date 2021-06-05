@@ -159,6 +159,34 @@
   <span class="post-date">
     
     February
+    21st,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2008/02/21/upcoming_securi/">Upcoming Security Events in Scotland</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's a couple of good security events coming up in Scotland which should be a great chance to meet some of the security community up here and also hear some good speakers!<br />
+On the 28th of February, there's an OWASP Scotland meeting with Dr Steven Moyle of <a href="http://www.secerno.com/">Secerno</a> doing a talk on Database Security.  There's more information and the address to RSVP to on the <a href="https://lists.owasp.org/pipermail/owasp-scotland/2008-February/000010.html">OWASP Scotland Mailing list</a><br />
+Next up on the 27th of March is the latest <a href="http://www.securetest.com/">Securetest Edinburgh RANT</a> with Graeme Marsh from <a href="http://www.deloitte.com/dtt/home/0,1044,stc%253DHOME%2526lid%253D7,00.html?WT.mc_id=UKGoogle_NatAd">Deloittes</a> doing a talk on "Plugging the Gap - Information Leakage in Organisations".  For more information and to RSVP for this one go to <a href="http://www.securetest.com/events/view-event.aspx?id=209"> this page</a> on SecureTests site.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    February
     1st,
     
     2008
@@ -417,46 +445,6 @@ Two potential options for this are</p>
 <li><b>IP based lockout.</b> Instead of locking the account for all users, only lock it for the source IP of the attack.  This isn't perfect protection but may well work for many attackers</li>
 <li><b>Use multiple secrets.</b> For example have a password and a secondary secret.  Then only increment the incorrect login count if the attacker is getting the username and one of the secrets correct.  </li>
 </ul>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    27th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/09/27/risk_assessed_p_1/">Risk Assessed Password Policies - Password Strength</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>The next stop in my trip through password policies and some of the mistakes that are made is password strength (length and complexity).<br />
-It seems that for a lot of IT and IT Security people, there's one inevitable truth about password strength which is you can't have too strong passwords.<br />
-Unfortunately not true.<br />
-Like any security control password strength should reflect the environment that the system is deployed in and the likely threats it will face.<br />
-For most circumstances my feeling is that any password over about 9 characters with Upper and lower case alpha and numeric characters is overkill.<br />
-For this to be the case I'd say that the password should not be sent across the network in the clear either as plain text or a straight hashed value and should be stored in place in a salted-hash.<br />
-If you consider the threats, this will usually be more than adequate.</p>
-<ol>
-<li><b>Online Brute-Force.</b>  This attack isn't best mitigated by password strength.  Account lockout and alerting are a much better way to deal with this.  For online systems I saw an interesting twist on this which was to only lockout the ip address the attack comes from as a mitigation of the DoS potential </li>
-<li><b>Rainbow Table</b>.  The primary mitigation for this is to use salted hashes, as they mitigate this pretty effectively.  However where that's not a possibility (off-the-shelf software) consider disk space required for the tables and the time to calculate.  I've not seen any tables that go much beyond 7-8, and indeed one estimate I saw for 7-9 character passwords was that it would require 135000GB of space!</li>
-<li><b>Offline Hash attack</b>.  This one is wheeled out a lot by advocates of extremely long passwords.  One point I'd make is that in many scenarios if the attacker already has access to your password database, he's probably already broken in to your system pretty effectively!  However even so, it's worth considering.<br />
-Offline password guessing is done either through (hyrbid)dictionary attacks or straight brute-force.  For brute force my experience has been that even with modern kit it gets too long to be practical for most attackers beyond about 8 characters.  Dictionary attacks work very well if users choose dictionary password so it's worth investing in education/auditing to discourage this</li>
-</ol>
-<p>So what does all that leave you with ... Well all of these attacks are reasonably mitigated in typical scenarios with 9 character passwords.  Only problem is most people can't reliably remember 9 chunks of totally random information, so the key is to reduce the number of chunks whilst keeping up the number of characters.<br />
-There's a number of ways of doing this but things like passphrases like "414 million for that? We was robbed" are easy to remember (especially if you're Scottish) but very difficult to crack.</p>
 
     
     

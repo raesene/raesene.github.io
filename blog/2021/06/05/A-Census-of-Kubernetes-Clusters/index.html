@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>A Census of Kubernetes Clusters</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>A Census of Kubernetes Clusters </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   June 
+	   5th,
+	   
+	   2021
+	 </span>
+	  <div class="article_body">
+	  <p>I’ve always been a fan of spelunking around in Internet data sets to see what interesting things I can find, so when I saw that <a href="https://censys.io/">Censys</a> had a new version of their search site, and that it had classified data about Kubernetes clusters, I had to have a look around :) Before I talk about the results, I will say I was very impressed by their new offering, the search speed is amazing for the amount of data and there’s some really useful search filters, some of which I’m using here.</p>
+
+<p>So with access to the data my goal was to see what information I can find out about Internet facing Kubernetes clusters. There are quite a lot of these around mainly because a lot of managed Kubernetes vendors have defaulted to making the API server Internet accessible by default (top security tip is, turn that off if you don’t need it!)</p>
+
+<h2 id="finding-kubernetes-servers-on-the-internet">Finding Kubernetes Servers on the Internet</h2>
+
+<p>So our first question is, “how do we know we’ve found a Kubernetes server?”. The first option takes advantage of a peculiarity of how Kubernetes does TLS certificates. In a standard cluster, the API server will have a number of Subject Alternative Name fields which are predictable and consistent. For example, if I dump the API server TLS cert from a kind cluster, I get the following in the SAN field</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>DNS:kind-control-plane, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, DNS:localhost, IP Address:10.96.0.1, IP Address:172.18.0.2, IP Address:127.0.0.1
+</code></pre></div></div>
+
+<p>Names like <code class="language-plaintext highlighter-rouge">kubernetes.default.svc.cluster.local</code> have been present in pretty much every cluster I’ve looked at, so are probably a reasonable place to start. Censys allows you to search for names in a cert, so with a search like <a href="https://search.censys.io/search?resource=hosts&amp;q=services.tls.certificates.leaf_data.names%3D%22kubernetes.default.svc.cluster.local%22">this</a> we can get some results.</p>
+
+<p>At the time of writing that’s returning 776795 results, a fair few clusters! This leads on to another question though which is, What versions of Kubernetes are running here?</p>
+
+<h2 id="using-kubernetes-unauthenticated-version-endpoint">Using Kubernetes Unauthenticated Version Endpoint</h2>
+
+<p>An interesting point about the Kubernetes API server is that, by default, many clusters will make the <code class="language-plaintext highlighter-rouge">/version</code> endpoint available on the API server without authentication. This endpoint returns specific information like the specific version of Kubernetes in use and the version of golang used when compiling it. Another top security tip is, disable this if you don’t need it!</p>
+
+<p>However fortunately for our census, many Kubernetes distributions don’t disable this option. In the past I’ve considered scanning the Internet for this info., so I was very happy to find out that Censys had done the hard work for me, and it’s available as a query in their new search API.</p>
+
+<p><a href="https://search.censys.io/search?resource=hosts&amp;q=services.kubernetes.version_info.git_version%3D%22%2A%22">This Search</a> will give us a list of all the servers which return that information. At just over 90,000 results, that’s not a bad place to start.</p>
+
+<p>We can then use the very handy “report” feature to automatically extract all the versions and a count for each one. The report can be seen <a href="https://search.censys.io/search/report?resource=hosts&amp;q=services.kubernetes.version_info.git_version%3D%22*%22&amp;field=services.kubernetes.version_info.git_version&amp;num_buckets=1000">here</a>. From that we can see a couple of interesting points immediately. The first one is that many of the clusters have customized version strings, due the distribution vendor modifying the API server binary. Fortunately most of the vendors put a noticable pattern (e.g. ‘gke’ for GKE) so we can form some conclusions about which distributions we’re seeing.</p>
+
+<h2 id="splitting-down-the-distributions">Splitting down the Distributions</h2>
+
+<p>Looking through the identified distributions, the two largest are GKE and EKS, somewhat unsurprisingly. Based on a lack of any AKS distributions, it looks like Microsoft are blocking access to the version endpoint by default.</p>
+
+<p><img src="https://raesene.github.io/assets/media/kubernetes-distros-censys.png" alt="Distributions" /></p>
+
+<p>In addition to the big 3 managed distributions, I noticed quite a lot for IKS (IBM’s managed Kubernetes) and OpenShift. Worth noting if you’re looking at the data, OpenShift doesn’t include their name in the version string but have a tell-tale pattern with a hex string at the end (e.g. <code class="language-plaintext highlighter-rouge">v1.9.1+a0ce1bc657</code>)</p>
+
+<h2 id="what-versions-are-in-use">What Versions are In Use?</h2>
+
+<p>The next interesting question is, what Kubernetes versions are in use? A bit of data manipulation is needed to get the major version from each running cluster, but at the end of it we end up with a chart like this</p>
+
+<p><img src="https://raesene.github.io/assets/media/Kubernetes_versions-censys.png" alt="Distributions" /></p>
+
+<p>First up, there’s <em>a lot</em> of unsupported Kubernetes out there. Looking at the major distributions out there, most have dropped support for anything older than 1.17. Based on this, there’s at least 26% of clusters running unsupported versions.</p>
+
+<p>In particularly notable results, there’s two clusters running Kubernetes 1.2! Both of them appear to be OpenShift clusters.</p>
+
+<h2 id="what-else-is-there-to-find">What else is there to find?</h2>
+
+<p>I’m just getting started on the search for interesting things, but one thing I noticed by looking through the clusters, you can also find other interesting things. One point I noted was that there are currently over 600 systems running the famous Weave <a href="https://microservices-demo.github.io/">Sock Shop</a> demonstration App. (Censys Search <a href="https://search.censys.io/search?resource=hosts&amp;q=%22WeaveSocks+Demo+App%22">here</a>)</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Amusing results aside, there’s a couple of important points which come out of this data. The first one is that it’s quite easy to fingerprint Kubernetes clusters on the Internet, either via distinctive TLS certificates, or exposed API endpoints.</p>
+
+<p>The second point is the number of companies running unsupported Kubernetes versions exposed to the Internet. These clusters are unlikely to receive security patches, so they could be a single CVE away from compromise.</p>
+
+<p>In general, from a security standpoint, I’d very much recommend not exposing your API server directly to the Internet unless you really need to. And if you do, make sure you keep it running a supported version of the software!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(19)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=A Census of Kubernetes Clusters&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/03/21/Trying-out-cosign/" title="Trying out Cosign">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2021 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
