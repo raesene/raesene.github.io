@@ -7,6 +7,37 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Containers and Low Ports</title>
+				<description>&lt;p&gt;I had cause to look into unprivileged binding of ports in Docker containers recently, and found a couple of things that were a surprise to me, so taking the time to write them down, in case it’s of use to anyone else.&lt;/p&gt;
+
+&lt;h2 id=&quot;background&quot;&gt;Background&lt;/h2&gt;
+
+&lt;p&gt;Traditionally, on a Linux system, to bind a port lower than 1024 a process either had to be run by the root user, be setUID root or have CAP_NET_BIND_SERVICE. As a result of this, many containers images that want to use low ports would run as the root user. Additionally the Docker daemon included CAP_NET_BIND_SERVICE as one of the default capabilities provided to running containers.&lt;/p&gt;
+
+&lt;h2 id=&quot;sysctls-to-the-rescue&quot;&gt;sysctls to the rescue!&lt;/h2&gt;
+
+&lt;p&gt;Effectively the reasons that used to apply for having a set of “privileged” ports no longer really apply, so in version 4.11 of the Linux kernel a new option was introduced to allow system administrators to set the &lt;a href=&quot;https://sysctl-explorer.net/net/ipv4/ip_unprivileged_port_start/&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ip_unprivileged_port_start&lt;/code&gt; sysctl&lt;/a&gt; to a different value. By setting this to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; you allow unprivileged processes to bind any port.&lt;/p&gt;
+
+&lt;h2 id=&quot;state-of-play-in-container-land&quot;&gt;State of play in container land&lt;/h2&gt;
+
+&lt;p&gt;Looking into how this works in container-land, I got a pleasant surprise which is that the latest version already sets this by default (here’s &lt;a href=&quot;https://github.com/moby/moby/pull/41030&quot;&gt;the commit&lt;/a&gt;), along with allowing ping sockets, so that ping works as an unprivileged user too. As this is a namespaced sysctl, it’s only set in the net namespace of the container, and not set at the host level.&lt;/p&gt;
+
+&lt;p&gt;For Podman, the option isn’t enabled by default, but can be set on a per-container basis with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--sysctl net.ipv4.ip_unprivileged_port_start=0&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;For ContainerD there’s an &lt;a href=&quot;https://github.com/containerd/containerd/issues/4936&quot;&gt;open issue&lt;/a&gt; to add the same default, and it’s possible to add the setting using the same switch as for podman.&lt;/p&gt;
+
+&lt;p&gt;In the Kubernetes project there’s also an &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/102612&quot;&gt;open issue&lt;/a&gt; about enabling this by default.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Allowing unprivileged users to bind low ports is likely to be a safer way to provide this functionality than using setUID root or using capabilities, so it’s good to see things moving in that direction. At the moment I could see some confusion occuring due to differing defaults amongst containerization solutions, but hopefully in the longer run, it’ll all get smoothed out :).&lt;/p&gt;
+</description>
+				<pubDate>Sat, 03 Jul 2021 20:00:39 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2021/07/03/containers-and-low-ports/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/07/03/containers-and-low-ports/</guid>
+			</item>
+		
+			<item>
 				<title>A Census of Kubernetes Clusters</title>
 				<description>&lt;p&gt;I’ve always been a fan of spelunking around in Internet data sets to see what interesting things I can find, so when I saw that &lt;a href=&quot;https://censys.io/&quot;&gt;Censys&lt;/a&gt; had a new version of their search site, and that it had classified data about Kubernetes clusters, I had to have a look around :) Before I talk about the results, I will say I was very impressed by their new offering, the search speed is amazing for the amount of data and there’s some really useful search filters, some of which I’m using here.&lt;/p&gt;
 
@@ -724,81 +755,6 @@ Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
 				<pubDate>Sun, 21 Jun 2020 16:10:39 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</guid>
-			</item>
-		
-			<item>
-				<title>Custom Pentest Distributions using WSL2</title>
-				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
-
-&lt;p&gt;So with the release of Windows 20.04 over the last week, we’ve finally got the opportunity to use WSL2 without being subscribed to Windows Insider.  After upgrading and getting WSL2 setup, I started thinking about how I could use this as part of my standard pentesting workflow.&lt;/p&gt;
-
-&lt;p&gt;One good practice for pentesting is to create a clean environment for every test you do, to avoid data from one test getting picked up in another and to keep your tooling versions clean. Tools like Ansible are very handy for the packaging piece, I’ve got some playbooks for adding container security tooling to an Ubuntu setup &lt;a href=&quot;https://github.com/raesene/container_sec_workstation&quot;&gt;on GitHub&lt;/a&gt;, but that still leaves the creation of the base install.  Also another challenge can be integrating your pentest environment with your main system.&lt;/p&gt;
-
-&lt;p&gt;With these challenges in mind it seemed like WSL2 could make things easier by providing lightweight virtualized environments with good integration with a Windows host.  What we’ll need however is a way to create “template” WSL2 instances.  By default with WSL and WSL2 you install distributions from the Windows store, but that doesn’t quite fit our use case as what I’m looking to do here is create a new one per test.&lt;/p&gt;
-
-&lt;p&gt;Luckily WSL2 is pretty flexible and we can work round this easily. The steps below are based on the process in &lt;a href=&quot;https://winaero.com/blog/export-import-wsl-linux-distro-windows-10/&quot;&gt;this blog&lt;/a&gt;.  From that we can see that it’s possible to import and export root filesystems to create WSL distributions (kind of the same way you can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--export&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--import&lt;/code&gt; in Docker)&lt;/p&gt;
-
-&lt;h1 id=&quot;creating-a-custom-distribution&quot;&gt;Creating a Custom Distribution&lt;/h1&gt;
-
-&lt;p&gt;The first thing we’ll need is a root filesystem.  Luckily Ubuntu make their WSL root filesystem available for download, which is availble &lt;a href=&quot;https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz&quot;&gt;here&lt;/a&gt;. For this walkthrough I’ve created a directory on my Windows C: drive called “WSL”, we’ll place the rootfs files in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\WSL\wslrootfs&lt;/code&gt; and the distros in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\WSL\wsldistros\&lt;/code&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Download the file above to the wslrootfs directory.&lt;/li&gt;
-  &lt;li&gt;Run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wsl.exe --import baseubu C:\wsl\wsldistros\baseubu\ C:\wsl\wslrootfs\ubuntu-20.04-server-cloudimg-amd64-wsl.rootfs.tar.gz&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;In this command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;baseubu&lt;/code&gt; Is just a name you want to assign so for example a specific project. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c:\wsl\wsldistros\baseubu\&lt;/code&gt; is the directory on your machine you want to place the virtual disk file for the distribution and then we have the distro file we downloaded&lt;/p&gt;
-
-&lt;p&gt;At this point you have a clean install of ubuntu 20.04 to use. You can then easily access each distribution you have available with Windows Terminal which places them all on a tab drop-down for easy access.&lt;/p&gt;
-
-&lt;h1 id=&quot;adding-docker-into-our-distribution&quot;&gt;Adding Docker into our distribution&lt;/h1&gt;
-
-&lt;p&gt;If you’ve got &lt;a href=&quot;https://docs.docker.com/docker-for-windows/&quot;&gt;Docker for Windows&lt;/a&gt; installed, you can also easily integrate it into this environment, so you can get all your favourite container based goodies working.  To do this, go into Docker’s settings, go to Resources–&amp;gt; WSL Integration.  You’ll see a list of your distributions, including the one you’ve just imported.  Flick the slider next to it to “on” , then click “apply and restart” and all your docker commands should work just fine then next time you start a session with that distro.&lt;/p&gt;
-
-&lt;h1 id=&quot;visual-studio-code-integration&quot;&gt;Visual Studio Code Integration&lt;/h1&gt;
-
-&lt;p&gt;Another nice Add-On that WSL2 brings is integration with &lt;a href=&quot;https://code.visualstudio.com/&quot;&gt;Visual Studio Code&lt;/a&gt;.  This means that the filesystem that VS Code sees is your WSL2 distro and you can open a terminal inside VS Code that works inside the distro too. For this just install the “Remote - WSL” plugin, then you can use the “Remote Explorer” button on the left hand side of the VS Code Window, to open a directory inside WSL.&lt;/p&gt;
-
-&lt;p&gt;You can also get other VS Code plugins working inside the WSL environment, so things like the Docker and Kubernetes plugins can be installed and will work from that perspective too.&lt;/p&gt;
-
-&lt;h1 id=&quot;host-filesystem-integration&quot;&gt;Host Filesystem Integration&lt;/h1&gt;
-
-&lt;p&gt;In common with WSL1 the host’s filesystem is visible inside the distro. It’ll be mounted at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/mnt/c/&lt;/code&gt; so you can easily copy files into and out of the environment.&lt;/p&gt;
-
-&lt;h1 id=&quot;customizing-our-distribution-for-container-work&quot;&gt;Customizing our Distribution for Container Work&lt;/h1&gt;
-
-&lt;p&gt;Once we’re up and running we can customize our environment for the test type we’re using.  I’m using some ansible playbooks for this from &lt;a href=&quot;https://github.com/raesene/container_sec_workstation&quot;&gt;this repo&lt;/a&gt;.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Install ansible first.  If you’re using Ubuntu 20.04 you can just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apt update &amp;amp;&amp;amp; apt install -y ansible&lt;/code&gt; to get that working&lt;/li&gt;
-  &lt;li&gt;Then run the playbook &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ansible-playbook wsl_container_workstation.yml&lt;/code&gt; and it sets up the necessary tooling&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;using-our-wsl-distro-as-a-template&quot;&gt;Using our WSL distro as a template&lt;/h1&gt;
-
-&lt;p&gt;Now that we’ve got the tooling we want installed, if we don’t want to re-run the ansible playbook for every test, we can export the rootfs for later use.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl --export baseubu c:\wsl\wslrootfs\containersec
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then we can create new instances based off this by importing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;containersec&lt;/code&gt; file we just created&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wsl --import test1 c:\wsl\wsldistros\test1\ c:\wsl\wslrootfs\containersec
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and when we start it up, all our tools are in place :)&lt;/p&gt;
-
-&lt;h1 id=&quot;cleaning-up&quot;&gt;Cleaning up&lt;/h1&gt;
-
-&lt;p&gt;Once you’re finished with it, it can just be removed with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wsl.exe --unregister &amp;lt;Name&amp;gt;&lt;/code&gt;. This will delete the virtual disk file and leave everything nice and clean.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Overall I think that WSL2 along with Windows Terminal, Visual Studio Code, and Docker for Windows, can provide a very nice Linux based environment inside a host Windows OS. So for environments where you can’t, or don’t want to, run Linux as your base OS, it becomes fairly easy to set-up your tooling the way you want it to work.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 31 May 2020 11:10:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2020/05/31/Custom_Pentest_Distributions_With_WSL2/</guid>
 			</item>
 		
 	</channel>

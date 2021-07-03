@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Exploring Kata Containers</title>
+	<title>Containers and Low Ports</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Exploring Kata Containers </h1>
+  <h1>Containers and Low Ports </h1>
 </div>
 	
 <article>
@@ -158,72 +158,34 @@
 	 <span class="post-date">
 	   
 	   July 
-	   23rd,
+	   3rd,
 	     
-	   2018
+	   2021
 	 </span>
 	  <div class="article_body">
-	  <p>This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">here</a>.</p>
+	  <p>I had cause to look into unprivileged binding of ports in Docker containers recently, and found a couple of things that were a surprise to me, so taking the time to write them down, in case it’s of use to anyone else.</p>
 
-<h2 id="introduction">Introduction</h2>
+<h2 id="background">Background</h2>
 
-<p><a href="https://katacontainers.io/">Kata Containers</a> is a project to provide a container runtime which makes use of qemu virtualization to provide isolation for the contained processes.  At face value this seems a bit of an odd decision as generally companies have moved from virtualization based isolation to process based isolation with projects like Docker.</p>
+<p>Traditionally, on a Linux system, to bind a port lower than 1024 a process either had to be run by the root user, be setUID root or have CAP_NET_BIND_SERVICE. As a result of this, many containers images that want to use low ports would run as the root user. Additionally the Docker daemon included CAP_NET_BIND_SERVICE as one of the default capabilities provided to running containers.</p>
 
-<p>However having the flexibility to run some workloads with additional isolation is a useful option, and it’s perfectly possible to have a single Docker engine instance which supports multiple container runtimes.</p>
+<h2 id="sysctls-to-the-rescue">sysctls to the rescue!</h2>
 
-<h2 id="installation-notes">Installation Notes</h2>
+<p>Effectively the reasons that used to apply for having a set of “privileged” ports no longer really apply, so in version 4.11 of the Linux kernel a new option was introduced to allow system administrators to set the <a href="https://sysctl-explorer.net/net/ipv4/ip_unprivileged_port_start/"><code class="language-plaintext highlighter-rouge">ip_unprivileged_port_start</code> sysctl</a> to a different value. By setting this to <code class="language-plaintext highlighter-rouge">0</code> you allow unprivileged processes to bind any port.</p>
 
-<p>The Kata container installation process is pretty straightfoward. I was installing on Ubuntu so followed the instructions <a href="https://github.com/kata-containers/documentation/blob/master/install/ubuntu-installation-guide.md">here</a>.  One first note is that 18.04 is supported even though the docs currently say 16.04 or 17.10.</p>
+<h2 id="state-of-play-in-container-land">State of play in container land</h2>
 
-<p>Once you’ve got the packages installed you need to configure the Docker daemon to use the new runtime.  Kata Containers provide some documentation on that <a href="https://github.com/kata-containers/documentation/blob/master/install/docker/ubuntu-docker-install.md">here</a> however I went a slightly different route.</p>
+<p>Looking into how this works in container-land, I got a pleasant surprise which is that the latest version already sets this by default (here’s <a href="https://github.com/moby/moby/pull/41030">the commit</a>), along with allowing ping sockets, so that ping works as an unprivileged user too. As this is a namespaced sysctl, it’s only set in the net namespace of the container, and not set at the host level.</p>
 
-<p>Their install process modifies the systemd unit file to add the runtime there and make it the default, but as I’m running a host with multiple container runtimes, it seemed like a better idea to make the change in Docker’s daemon.json file which lives in /etc/docker/ .  I’ve got gVisor setup on this host as well so my file looks like this</p>
+<p>For Podman, the option isn’t enabled by default, but can be set on a per-container basis with <code class="language-plaintext highlighter-rouge">--sysctl net.ipv4.ip_unprivileged_port_start=0</code></p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
-    "runtimes": {
-        "runsc": {
-            "path": "/usr/local/bin/runsc"
-        },
-        "kata-runtime": {
-            "path": "/usr/bin/kata-runtime"
-        }
-    }
-}
-</code></pre></div></div>
+<p>For ContainerD there’s an <a href="https://github.com/containerd/containerd/issues/4936">open issue</a> to add the same default, and it’s possible to add the setting using the same switch as for podman.</p>
 
-<p>One other important installation note is that, if you’re setting up inside a VM, you’ll need to enable nested virtualization, so that qemu will start ok.</p>
+<p>In the Kubernetes project there’s also an <a href="https://github.com/kubernetes/kubernetes/issues/102612">open issue</a> about enabling this by default.</p>
 
-<h2 id="usage">Usage</h2>
+<h2 id="conclusion">Conclusion</h2>
 
-<p>Once you’ve got it installed running a container with Kata Containers is as simple as adding <code class="language-plaintext highlighter-rouge">--runtime=kata-runtime</code> to the docker run command.  I think part of the allure of using something like Kata Containers is that you can still take advantage of the containerization workflows, without potentially reducing the security level that you’ve traditionally had with a VM based model.</p>
-
-<h2 id="notes">Notes</h2>
-
-<p>Once you’ve got your Kata Containers container up and running, there’s a couple of things to notice.  The kernel version inside the container is likely to be different from that outside, which is kind of expected given that we’re running in a VM as opposed to using Linux isolation.</p>
-
-<p><strong>output of uname -a without kata containers</strong></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 41665d9e7de6 4.15.0-23-generic #25-Ubuntu SMP Wed May 23 18:02:16 UTC 2018 x86_64 Linux
-</code></pre></div></div>
-
-<p><strong>output of uname -a with kata containers</strong></p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Linux 1941e8a8e06a 4.14.51-132.container #1 SMP Tue Jul 3 17:13:46 UTC 2018 x86_64 Linux
-</code></pre></div></div>
-
-<p>Interestingly the text <strong>container</strong> in the kernel version could be a useful fingerprinting indicator.</p>
-
-<p>As with gVisor there’s a difference in the contents of <code class="language-plaintext highlighter-rouge">/proc</code> as well.  In a standard container I’m seeing 4700 entries against 2741 in the kata-containers version, so there’s likely some exploration there to see what’s different.</p>
-
-<p>Getting information about what Kata containers is up to seems easy enough. There’s a handy kata-env command that can be run <code class="language-plaintext highlighter-rouge">/usr/bin/kata-runtime kata-env</code> which outputs a load of useful information including things like what VM image is being used by qemu for the containers you are running.</p>
-
-<p>Each container you run up spawns a kata-shim, kata-proxy and qemu process, there’s details on exactly what each does in the project’s <a href="https://github.com/kata-containers/documentation/blob/master/architecture.md">architecture docs</a></p>
-
-<p><code class="language-plaintext highlighter-rouge">--privileged</code> doesn’t work under kata containers as with qemu isolation it doesn’t make a great deal of sense to have a privileged mode. Also <code class="language-plaintext highlighter-rouge">--net=host</code> doesn’t work and indeed it’ll hang the hosts network quite effectively if you try! <code class="language-plaintext highlighter-rouge">--pid=host</code> doesn’t work either, but at least it doesn’t crash the host :) There’s a document tracking limitations <a href="https://github.com/kata-containers/documentation/blob/master/Limitations.md">here</a></p>
-
-<h2 id="performance">Performance</h2>
-
-<p>I think it’s fair to say that there’s a bit of performance hit to using Kata Containers over standard Docker.  running an alpine:3.7 container using Docker shows an output from <code class="language-plaintext highlighter-rouge">sudo pmap -x [pid]</code> of 1.5MB . Running the same for kata containers and you get 3GB for the Qemu process and 600MB for the kata-shim process, so similar to what you’d see for VMs which is somewhat unsurprising.</p>
-
-<p>Whilst I’m sure that there’s going to be circumstances where that tradeoff will be worth it, that’s a pretty significant impact if you’re moving to containerization for the performance benefits.</p>
+<p>Allowing unprivileged users to bind low ports is likely to be a safer way to provide this functionality than using setUID root or using capabilities, so it’s good to see things moving in that direction. At the moment I could see some confusion occuring due to differing defaults amongst containerization solutions, but hopefully in the longer run, it’ll all get smoothed out :).</p>
 
 	  </div>
 
@@ -249,7 +211,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring Kata Containers&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Containers and Low Ports&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -277,10 +239,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/" title="Exploring gVisor">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/" title="A Census of Kubernetes Clusters">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2018/08/05/Docker-Containers-Without-Docker/" title="Docker containers without Docker">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
