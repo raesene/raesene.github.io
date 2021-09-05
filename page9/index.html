@@ -159,6 +159,38 @@
   <span class="post-date">
     
     March
+    24th,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2013/03/24/three-lines/">Three Lines</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>We've decided that the results/recommendations coming out of most of the Internal Security Reviews we do can be summarised in three lines.</p>
+<p>a)  Patch everything.  Not just Windows - everything.</p>
+<p>b)  Change default credentials.  Don't leave your main router with creds of admin/admin</p>
+<p>c) Get rid of clear text protocols.  Ditch telnet for SSH and ftp for sftp</p>
+<p>It doesn't require Ninjas, Red Teams or Zero days to compromise most organisations, given access to their internal networks.  In fact why bother with anything fancy, when the most basic of techniques uncovers such glaring faults.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     21st,
     
     2013
@@ -473,46 +505,6 @@
 <p>Comparing it to the iPad, first some negative features.  It weighs nearly twice as much as the iPad 3  and the battery life is not nearly as good.  After 8 hours on standby, the W500 was only on about quarter charge, whereas I can leave the iPad on standby for days without it losing any appreciable amount of charge.  The screen rotation on the W500 is good, but it doesn't have the transition affect the iPad does, so the screen goes black briefly when you rotate it.</p>
 <p>Its good features (of which there are quite a lot).  It is a proper fully fledged PC with 2G RAM and a dual core processor which runs proper Windows apps (pretty smoothly on Win 8).  I wouldn't want to use the virtual keyboard to write a pentest report with a fancy template, but for short periods of time it is perfectly usable and (I think) nicer than the Apple one.  Plugged in to its docking station, you could easily work on a Word document on it, which is pretty much essential to our jobs.  It also has two USB ports and a SD card reader which are features I really miss in the iPad.  I tested installing a couple of programs on the SD card because the internal SSD is pretty small at 33G, and they run tolerably quickly.</p>
 <p>So my verdict.  If you want a purely locked down tablet with a lovely smooth experience and a great battery life - I would go with the iPad.  However if you want to do a bit more and have a combined tablet/laptop that you can actually do work on - I think the W500 is a better bet.  Personally I am keeping both....</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    13th,
-    
-    2012
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2012/01/13/getting-the-best-from-your-web-application-pentest/">Getting the best from your Web Application Pentest</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><strong>Getting the best from your Web Application Pentest</strong></p>
-<p>We’ve noticed during the many penetration tests we have carried out, that a lot of companies do not always get the best value for money from the tester’s time they have paid for.  Below are some general observations from a tester’s point of view, and some hints for IT Managers and developers on what they should be asking for.</p>
-<p>a)      Black box is not always the best approach.  The vast majority of tests we carry out completely blind – in other words we are not given any information about the systems we are testing (for example the platform the application runs on, the development framework used to create it etc.).  This means that we have to spend a considerable proportion of our time finding out basic details which could easily be supplied in advance.  The point is that we <strong>can</strong> find these things out, and we are time limited, whilst an attacker who is determined to get into your application may have all the time in the world.  By having a preliminary meeting with the tester and supplying some basic details about the application, you save him a lot of time which you have paid for and enable him to focus on the deeper issues rather than the superficial stuff.</p>
-<p>b)      Fix what you can in advance.  We get the same sets of basic findings over and over again.  SSLv2 enabled.  HttpOnly flags not set on session cookies.  Poor password management policy etc. etc. etc.  These all take time to discover and time to report on – and that time is not being spent on finding out the serious issues which may get your application compromised. This policy may not get you a big fat report to wave at management, but it will get you a more thorough test.</p>
-<p>c)       Think about what systems should be in scope.  We often get told that our scope is one application, but on starting to test we find that it is closely linked in with another application that is out of scope.  On one notable occasion the in scope ASP.NET application was reasonably secure but part of its functionality was served by an ancient looking PHP system likely had a large number of issues.  This makes no sense – so when you are scoping a test, don’t just think about the application itself, think about related applications and also the infrastructure that they rely on (DNS, AD, SMTP etc).</p>
-<p>d)      Don’t test web applications in live unless you absolutely have to.  Testing in live does not always give you the best value for money, because in a lot of cases, testers have to be more careful with how they scan to avoid any adverse impact on the system.  Also, if your application has a lot of input fields, there is no way they can all be tested manually in a short time-span, so the only way to get full coverage is to run scanners, and scanners create data and (on occasion) crash servers. At least here in UK, a decent percentage of customers do not want live systems to be actually compromised, so if you want a full on Pentest rather than a risk assessment, give the tester access to a pre-prod system.</p>
-<p>e)      Don’t tie your tester’s hands behind his back.  Bad guys will not throttle back their scanners because you have a flaky firewall.  They will not worry about locking your users’ accounts.  They will not refrain from creating data on your site.  They will not restrain their activities to business hours.  If you do any (or all) of these things you are not getting a full test.  So try to fix any issues you know you have in advance, and then let the tester have full access.</p>
-<p>f)       Testing sites still in active development is largely pointless.  Many are the tests we have done where we are told not to test parts of it because the developers are still working on it.  For reasons that should be obvious, this is a bit of a waste of time.  Making a change to one function and accidentally bypassing input validation can introduce multiple errors in different (and sometimes unexpected) parts of the application.  Ideally the order of events should be something along the lines of Development -&gt; UAT -&gt; Redevelopment -&gt; Security Test in test environment -&gt; Redevelopment -&gt; Move to live -&gt; further Security Test.  But if time or money does not permit – at the very least wait until you have finished coding before you start testing.</p>
-<p>g)      Don’t retest unless you think you have fixed the problems.  We frequently do retests where virtually none of the original issues have been fixed.  This is the ultimate exercise in futility and is a huge waste of your company’s money.  Fix the issues yourself and if you don’t know how, Google is your friend.  If you really can’t find out how to fix something – spend your money on some consultancy rather than on a pointless retest.</p>
-<p>h)      If you know there is a problem you can’t fix – tell the tester.  Don’t let the tester waste huge amounts of time testing and writing up something which you know about already (for example if there is some limitation of the framework or database you are using).  Having a known security vulnerability is bad, but spending money on having someone write about it is even worse.</p>
-<p>i)        Consider using part of the time you have paid for as a corrective exercise.  Following on from point g), dependent on what the issues are you might want to spend part of your time with the tester on taking advice on how to fix the problems.  Testers aren’t generally skilled developers in any particular technology, but we can normally help with configuration issues and at least point in the right direction for more development specific vulnerabilities.</p>
-<p>j)        Verbose reports are not always required.  Normally on a five day test, one day is reserved for report writing (proportionally less or more for shorter or longer tests).  The reason this takes so long is that many testing companies have an elaborate report format with graphics, slides, executive summary etc.  In many cases the findings could be summarized in an email which would take half an hour to write, instead of a fifty page report which takes a whole day.  So if you don’t require a formal report, you can get more value for money out of your test by getting the tester to write it as an email summary.  You will also have a happy tester!!</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 
     
     

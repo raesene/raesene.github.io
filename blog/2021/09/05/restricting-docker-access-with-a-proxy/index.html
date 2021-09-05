@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Using 'Try with PWD' buttons to demonstrate apps</title>
+	<title>Restricting Docker Access With a Reverse Proxy</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Using 'Try with PWD' buttons to demonstrate apps </h1>
+  <h1>Restricting Docker Access With a Reverse Proxy </h1>
 </div>
 	
 <article>
@@ -157,29 +157,112 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   October 
-	   21st,
-	     
-	   2018
+	   September 
+	   5th,
+	   
+	   2021
 	 </span>
 	  <div class="article_body">
-	  <p>I came across a very interesting post <a href="https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94">this morning</a> on <a href="https://labs.play-with-docker.com/">using Play With Docker</a> (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, <a href="https://labs.play-with-k8s.com/">Play with Kubernetes</a>), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.</p>
+	  <p>One of the things that comes up a lot with Docker security is that, by default, the authorization model is all or nothing. Essentially any user or process that has access to the Docker socket (or Docker TCP port if it’s configured to listen on a network) can use any of its functions. This means that from a security standpoint essentially any user with Docker access can get root on the host <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">easily</a>.</p>
 
-<p>What I hadn’t realised before was that you can pass a Docker compose file in as a parameter to a PWD URL and have it automatically spin up an instance of that stack.  This model seems super-useful for trying out new applications in disposable environments and works well with web applications, as we’ll see.</p>
+<p>This is a bit of a problem if you have something like monitoring software, which you want to be able to get stats on running containers, but you don’t really want it to have access to all of Docker’s functionality. So I was wondering, what would be a good way to restrict it, so you can let the monitoring software see the information it needs, without giving it root rights to the host.</p>
 
-<p>So having read the post I thought I’d try adding a sample instance for my <a href="https://github.com/raesene/dockerized-security-tools">Dockerized Security Tools</a> project.  From the tools I’ve got in there at the moment, the best candidate for a try out looked to be <a href="https://dradisframework.com/ce/">Dradis-CE</a>.</p>
+<h2 id="http-apis-and-reverse-proxies">HTTP APIs and Reverse Proxies</h2>
 
-<p>I knocked up a very basic Docker compose file for it, and then put a button referencing it in the Readme, with this as the result.</p>
+<p>As Docker is essentially an HTTP API, one idea would be to use a reverse proxy to sit in front of it and filter what paths are available. Ideally it would be good to have a proxy that understands unix socket files, so we don’t need to expose Docker on the network to make it work. Luckily a brief bit of searching showed me there were some good options and in particular <a href="https://caddyserver.com/">Caddy</a> looked like it would fit the bill. As an aside the initial version of Caddy I tried (v2.4.3) would hang with some Docker responses but the latest version (v2.4.5) should be fine.</p>
 
-<p><a href="https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/raesene/dockerized-security-tools/master/dradis/docker-compose.yml"><img src="https://raw.githubusercontent.com/play-with-docker/stacks/master/assets/images/button.png" alt="Try in PWD" /></a></p>
+<p>Before I get into the details, I’ll mention this is just a PoC, I wouldn’t rely on it in production without more work and testing, but the basics work fine :)</p>
 
-<p>If you click that button and then login (you’ll need a Docker Hub account for this, but they’re free to create), PWD will launch the application.  The only other trick to trying it out is that you need to click a link in the PWD interface to access the exposed application.</p>
+<h2 id="setting-up-a-docker-reverse-proxy-with-caddy">Setting up a Docker Reverse Proxy with Caddy</h2>
 
-<p>There will be a grey oval next to the IP address at the top with the exposed port number (in this case 3000).  Clicking that link should take you into a running instance of Dradis! The first page load will be a little slow, but after that it should work just fine.</p>
+<p>After installing Caddy the first thing to do was make sure it worked the way I expected. For that a simple Caddyfile like this one does the trick</p>
 
-<p>I could see this having a number of use cases, things like running up instances of <a href="https://www.owasp.org/index.php/OWASP_Juice_Shop_Project">OWASP Juice Shop</a> to try out tools or similar.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  debug
+}
 
-<p>The runtime is limited to four hours, but that should be plenty for a quick look round a tool to see what it’s like.</p>
+
+http://localhost:2379 {
+  reverse_proxy unix///var/run/docker.sock
+}
+</code></pre></div></div>
+
+<p>This will expose a network port of 2379/TCP and just send on any requests to the Docker socket. The <code class="language-plaintext highlighter-rouge">debug</code> stanza at the top just gets Caddy to output verbose information which is handy when working out what’s happening.</p>
+
+<p>With that in place we can just tell Docker to connect to that port and see if it works using the <code class="language-plaintext highlighter-rouge">-H</code> switch</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker -H tcp://localhost:2379 info
+</code></pre></div></div>
+
+<p>That works just fine and we can see in the Caddy debug log, the requests going through the proxy to Docker</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2021/09/05 08:37:07.052 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {"upstream": "unix///var/run/docker.sock", "request": {"remote_addr": "127.0.0.1:55376", "proto": "HTTP/1.1", "method": "HEAD", "host": "localhost:2379", "uri": "/_ping", "headers": {"User-Agent": ["Docker-Client/20.10.8 (linux)"], "X-Forwarded-Proto": ["http"], "X-Forwarded-For": ["127.0.0.1"]}}, "headers": {"Pragma": ["no-cache"], "Server": ["Docker/20.10.8 (linux)"], "Date": ["Sun, 05 Sep 2021 08:37:07 GMT"], "Api-Version": ["1.41"], "Content-Length": ["0"], "Content-Type": ["text/plain; charset=utf-8"], "Cache-Control": ["no-cache, no-store, must-revalidate"], "Docker-Experimental": ["false"], "Ostype": ["linux"]}, "status": 200}
+2021/09/05 08:37:07.067 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {"upstream": "unix///var/run/docker.sock", "request": {"remote_addr": "127.0.0.1:55376", "proto": "HTTP/1.1", "method": "GET", "host": "localhost:2379", "uri": "/v1.41/info", "headers": {"X-Forwarded-For": ["127.0.0.1"], "User-Agent": ["Docker-Client/20.10.8 (linux)"], "X-Forwarded-Proto": ["http"]}}, "headers": {"Api-Version": ["1.41"], "Content-Type": ["application/json"], "Docker-Experimental": ["false"], "Ostype": ["linux"], "Server": ["Docker/20.10.8 (linux)"], "Date": ["Sun, 05 Sep 2021 08:37:07 GMT"]}, "status": 200}
+</code></pre></div></div>
+
+<p>This information is useful because it lets us know what paths we need to whitelist for our restrictive proxy. It’s important to try and whitelist the paths you definitely need and not try to blacklist the paths you don’t need, otherwise one missing path could ruin your whole day.</p>
+
+<p>With that setup in place, we can just run all the Docker commands we want our monitoring software to do and build out a set of paths that should be allowed by the proxy. My set ended up like this.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  debug
+}
+
+http://localhost:2379 {
+  @infourl {
+    method GET
+    path /v1.41/info
+  }
+
+  @pingurl {
+    method HEAD
+    path /_ping
+  }
+
+  @versionurl {
+    method GET
+    path /v1.41/version
+  }
+
+  @eventsurl {
+    method GET
+    path /v1.41/events
+  }
+
+  @statsurl {
+    method GET
+    path /v1.41/stats
+  }
+
+  @containerstatsurl {
+    method GET
+    path /v1.41/containers/*/stats
+  }
+
+  @containersurl {
+    method GET
+    path /v1.41/containers/json
+  }
+
+  reverse_proxy @pingurl unix///var/run/docker.sock
+  reverse_proxy @infourl unix///var/run/docker.sock
+  reverse_proxy @versionurl unix///var/run/docker.sock
+  reverse_proxy @eventsurl unix///var/run/docker.sock
+  reverse_proxy @statsurl unix///var/run/docker.sock
+  reverse_proxy @containerstatsurl unix///var/run/docker.sock
+  reverse_proxy @containersurl unix///var/run/docker.sock
+}
+</code></pre></div></div>
+
+<p>With that set of paths in place, software should be able to gather stats, list Docker engine information and list the running containers.  If the client tries any other operation it just produces an EOF error.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker -H tcp://localhost:2379 images
+EOF
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>So this is one option for trying to provide a restricted view of the Docker API for things like monitoring tools. Getting to something production ready would obviously require more work, but the basic concept is interesting.</p>
 
 	  </div>
 
@@ -205,7 +288,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Using 'Try with PWD' buttons to demonstrate apps&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Restricting Docker Access With a Reverse Proxy&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -233,10 +316,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/09/10/Kubernetes-Secret-User-Database/" title="Kubernetes authentication woes and secret user database">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/07/03/containers-and-low-ports/" title="Containers and Low Ports">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

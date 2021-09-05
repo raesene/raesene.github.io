@@ -7,6 +7,114 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Restricting Docker Access With a Reverse Proxy</title>
+				<description>&lt;p&gt;One of the things that comes up a lot with Docker security is that, by default, the authorization model is all or nothing. Essentially any user or process that has access to the Docker socket (or Docker TCP port if it’s configured to listen on a network) can use any of its functions. This means that from a security standpoint essentially any user with Docker access can get root on the host &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;easily&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a bit of a problem if you have something like monitoring software, which you want to be able to get stats on running containers, but you don’t really want it to have access to all of Docker’s functionality. So I was wondering, what would be a good way to restrict it, so you can let the monitoring software see the information it needs, without giving it root rights to the host.&lt;/p&gt;
+
+&lt;h2 id=&quot;http-apis-and-reverse-proxies&quot;&gt;HTTP APIs and Reverse Proxies&lt;/h2&gt;
+
+&lt;p&gt;As Docker is essentially an HTTP API, one idea would be to use a reverse proxy to sit in front of it and filter what paths are available. Ideally it would be good to have a proxy that understands unix socket files, so we don’t need to expose Docker on the network to make it work. Luckily a brief bit of searching showed me there were some good options and in particular &lt;a href=&quot;https://caddyserver.com/&quot;&gt;Caddy&lt;/a&gt; looked like it would fit the bill. As an aside the initial version of Caddy I tried (v2.4.3) would hang with some Docker responses but the latest version (v2.4.5) should be fine.&lt;/p&gt;
+
+&lt;p&gt;Before I get into the details, I’ll mention this is just a PoC, I wouldn’t rely on it in production without more work and testing, but the basics work fine :)&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-a-docker-reverse-proxy-with-caddy&quot;&gt;Setting up a Docker Reverse Proxy with Caddy&lt;/h2&gt;
+
+&lt;p&gt;After installing Caddy the first thing to do was make sure it worked the way I expected. For that a simple Caddyfile like this one does the trick&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+  debug
+}
+
+
+http://localhost:2379 {
+  reverse_proxy unix///var/run/docker.sock
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This will expose a network port of 2379/TCP and just send on any requests to the Docker socket. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;debug&lt;/code&gt; stanza at the top just gets Caddy to output verbose information which is handy when working out what’s happening.&lt;/p&gt;
+
+&lt;p&gt;With that in place we can just tell Docker to connect to that port and see if it works using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-H&lt;/code&gt; switch&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker -H tcp://localhost:2379 info
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That works just fine and we can see in the Caddy debug log, the requests going through the proxy to Docker&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;2021/09/05 08:37:07.052 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {&quot;upstream&quot;: &quot;unix///var/run/docker.sock&quot;, &quot;request&quot;: {&quot;remote_addr&quot;: &quot;127.0.0.1:55376&quot;, &quot;proto&quot;: &quot;HTTP/1.1&quot;, &quot;method&quot;: &quot;HEAD&quot;, &quot;host&quot;: &quot;localhost:2379&quot;, &quot;uri&quot;: &quot;/_ping&quot;, &quot;headers&quot;: {&quot;User-Agent&quot;: [&quot;Docker-Client/20.10.8 (linux)&quot;], &quot;X-Forwarded-Proto&quot;: [&quot;http&quot;], &quot;X-Forwarded-For&quot;: [&quot;127.0.0.1&quot;]}}, &quot;headers&quot;: {&quot;Pragma&quot;: [&quot;no-cache&quot;], &quot;Server&quot;: [&quot;Docker/20.10.8 (linux)&quot;], &quot;Date&quot;: [&quot;Sun, 05 Sep 2021 08:37:07 GMT&quot;], &quot;Api-Version&quot;: [&quot;1.41&quot;], &quot;Content-Length&quot;: [&quot;0&quot;], &quot;Content-Type&quot;: [&quot;text/plain; charset=utf-8&quot;], &quot;Cache-Control&quot;: [&quot;no-cache, no-store, must-revalidate&quot;], &quot;Docker-Experimental&quot;: [&quot;false&quot;], &quot;Ostype&quot;: [&quot;linux&quot;]}, &quot;status&quot;: 200}
+2021/09/05 08:37:07.067 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {&quot;upstream&quot;: &quot;unix///var/run/docker.sock&quot;, &quot;request&quot;: {&quot;remote_addr&quot;: &quot;127.0.0.1:55376&quot;, &quot;proto&quot;: &quot;HTTP/1.1&quot;, &quot;method&quot;: &quot;GET&quot;, &quot;host&quot;: &quot;localhost:2379&quot;, &quot;uri&quot;: &quot;/v1.41/info&quot;, &quot;headers&quot;: {&quot;X-Forwarded-For&quot;: [&quot;127.0.0.1&quot;], &quot;User-Agent&quot;: [&quot;Docker-Client/20.10.8 (linux)&quot;], &quot;X-Forwarded-Proto&quot;: [&quot;http&quot;]}}, &quot;headers&quot;: {&quot;Api-Version&quot;: [&quot;1.41&quot;], &quot;Content-Type&quot;: [&quot;application/json&quot;], &quot;Docker-Experimental&quot;: [&quot;false&quot;], &quot;Ostype&quot;: [&quot;linux&quot;], &quot;Server&quot;: [&quot;Docker/20.10.8 (linux)&quot;], &quot;Date&quot;: [&quot;Sun, 05 Sep 2021 08:37:07 GMT&quot;]}, &quot;status&quot;: 200}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This information is useful because it lets us know what paths we need to whitelist for our restrictive proxy. It’s important to try and whitelist the paths you definitely need and not try to blacklist the paths you don’t need, otherwise one missing path could ruin your whole day.&lt;/p&gt;
+
+&lt;p&gt;With that setup in place, we can just run all the Docker commands we want our monitoring software to do and build out a set of paths that should be allowed by the proxy. My set ended up like this.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+  debug
+}
+
+http://localhost:2379 {
+  @infourl {
+    method GET
+    path /v1.41/info
+  }
+
+  @pingurl {
+    method HEAD
+    path /_ping
+  }
+
+  @versionurl {
+    method GET
+    path /v1.41/version
+  }
+
+  @eventsurl {
+    method GET
+    path /v1.41/events
+  }
+
+  @statsurl {
+    method GET
+    path /v1.41/stats
+  }
+
+  @containerstatsurl {
+    method GET
+    path /v1.41/containers/*/stats
+  }
+
+  @containersurl {
+    method GET
+    path /v1.41/containers/json
+  }
+
+  reverse_proxy @pingurl unix///var/run/docker.sock
+  reverse_proxy @infourl unix///var/run/docker.sock
+  reverse_proxy @versionurl unix///var/run/docker.sock
+  reverse_proxy @eventsurl unix///var/run/docker.sock
+  reverse_proxy @statsurl unix///var/run/docker.sock
+  reverse_proxy @containerstatsurl unix///var/run/docker.sock
+  reverse_proxy @containersurl unix///var/run/docker.sock
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that set of paths in place, software should be able to gather stats, list Docker engine information and list the running containers.  If the client tries any other operation it just produces an EOF error.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker -H tcp://localhost:2379 images
+EOF
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;So this is one option for trying to provide a restricted view of the Docker API for things like monitoring tools. Getting to something production ready would obviously require more work, but the basic concept is interesting.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 05 Sep 2021 09:50:39 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2021/09/05/restricting-docker-access-with-a-proxy/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/09/05/restricting-docker-access-with-a-proxy/</guid>
+			</item>
+		
+			<item>
 				<title>Containers and Low Ports</title>
 				<description>&lt;p&gt;I had cause to look into unprivileged binding of ports in Docker containers recently, and found a couple of things that were a surprise to me, so taking the time to write them down, in case it’s of use to anyone else.&lt;/p&gt;
 
@@ -599,162 +707,6 @@ Total: 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;UNKNOWN: 0, LOW: 0, MEDIU
 				<pubDate>Sun, 22 Nov 2020 11:10:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/</guid>
-			</item>
-		
-			<item>
-				<title>Container Vulnerability Scanning Fun</title>
-				<description>&lt;p&gt;Vulnerability Assessment is one of those foundational IT Security tasks that often gets overlooked or thought to be reasonably straightforward, where you can actually find some interesting complications that make it trickier than expected.&lt;/p&gt;
-
-&lt;p&gt;Generally, most companies will include VA as part of their overall operational security processes, looking to assure that the software they’re deploying is relatively free of unpatched security vulnerabilities.&lt;/p&gt;
-
-&lt;p&gt;This post will look a bit at how assessing vulnerabilities of container images for outdated operating system packages is handled and some things to be aware of. We’ll exclude Windows container images to keep things (relatively) straightforward and stick to operating system level vulnerabilities.&lt;/p&gt;
-
-&lt;h1 id=&quot;overview&quot;&gt;Overview&lt;/h1&gt;
-
-&lt;p&gt;Most Docker images are based on specific Linux distributions and make use of the package managers that those distributions provide to deploy software like tooling and libraries that support the application running in containers based on that image.&lt;/p&gt;
-
-&lt;p&gt;So if we’re looking to assess whether there are known vulnerabilities in our images, it would seem possible to use the data provided by the distributions about package versions and CVEs that are patched in them, to assess whether a given image has unpatched vulnerabilities, so far … so simple!&lt;/p&gt;
-
-&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;/h2&gt;
-
-&lt;p&gt;To take a practical look at how this works, we can use some of the Open Source container vulnerability scanning tools that are available.  For this post we’ll look at three&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/anchore/anchore-engine&quot;&gt;Anchore Engine&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/quay/clair&quot;&gt;Clair&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aquasecurity/trivy&quot;&gt;Trivy&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For the examples below, I set up all three scanners to run locally (e.g. without setting up a container registry).  For Anchore I used their Docker compose file and &lt;a href=&quot;https://github.com/anchore/anchore-cli&quot;&gt;Ancore CLI&lt;/a&gt;, for clair I used &lt;a href=&quot;https://github.com/arminc/clair-local-scan&quot;&gt;clair-local-scan&lt;/a&gt; and for Trivy, I just used the binary as it comes from their repo. A side note on these is that, from the perspective of setup processes for standalone usage, Trivy is by far the easiest to get working.&lt;/p&gt;
-
-&lt;h2 id=&quot;scanning-common-base-images&quot;&gt;Scanning Common Base Images&lt;/h2&gt;
-
-&lt;p&gt;So now we’ve got three scanners setup, let’s take a look at some common base images and see what they come up with. All three tools provide a JSON output option, so we can use that to create parseable results for analysis.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;TL;DR.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;If you don’t want to read down a couple of points to note&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Despite the task seeming relatively simple, even in base images different container vulnerability scanners produce quite different results&lt;/li&gt;
-  &lt;li&gt;The scanning engines support different sets of base images, so that should be noted when you’re assessing which one to use&lt;/li&gt;
-  &lt;li&gt;Even in a fully updated base image, there can still be outstanding CVEs, depending on the update cycle of both Docker Hub and the underlying distribution.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;Summary of Vulnerability Numbers&lt;/strong&gt;&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt; &lt;/th&gt;
-      &lt;th&gt;Ubuntu:18.04&lt;/th&gt;
-      &lt;th&gt;Ubuntu:20.04&lt;/th&gt;
-      &lt;th&gt;Debian:stable&lt;/th&gt;
-      &lt;th&gt;Centos:8&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Anchore&lt;/td&gt;
-      &lt;td&gt;71&lt;/td&gt;
-      &lt;td&gt;23&lt;/td&gt;
-      &lt;td&gt;47&lt;/td&gt;
-      &lt;td&gt;74&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Clair&lt;/td&gt;
-      &lt;td&gt;38&lt;/td&gt;
-      &lt;td&gt;0&lt;/td&gt;
-      &lt;td&gt;89&lt;/td&gt;
-      &lt;td&gt;1&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Trivy&lt;/td&gt;
-      &lt;td&gt;73&lt;/td&gt;
-      &lt;td&gt;26&lt;/td&gt;
-      &lt;td&gt;88&lt;/td&gt;
-      &lt;td&gt;N/A&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h1 id=&quot;result-details&quot;&gt;Result Details&lt;/h1&gt;
-
-&lt;h2 id=&quot;ubuntu1804&quot;&gt;Ubuntu:18.04&lt;/h2&gt;
-
-&lt;p&gt;This is a very commonly used base image.  We’re using the latest version with that tag from Docker Hub.  First question is, when we scan this image, how many vulnerabilities does each scanner think we have?&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 71
-Clair thinks the vuln count is : 38
-Trivy thinks the vuln count is : 73
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This is moderately interesting already.  If you’re using an updated image from Docker Hub, you might think there would be no unpatched issues, but you’d be wrong. One interesting piece about these issue counts is that (in this case) it turns out that the CVEs referenced are the same but that some of the scanners have multiple vulnerabilities for a single CVE.&lt;/p&gt;
-
-&lt;p&gt;Next question, what severity do the various scanners apply to these vulnerabilities&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;31, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;17&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;11, &lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;20, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;7&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;55, &lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;18&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Some relatively major differences there too.&lt;/p&gt;
-
-&lt;h2 id=&quot;ubuntu2004&quot;&gt;Ubuntu:20.04&lt;/h2&gt;
-
-&lt;p&gt;Lets try the newest stable release of Ubuntu and see what that shows up. Here, Clair doesn’t notice any issues whilst both Anchore and Trivy report over twenty&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 23
-Clair thinks the vuln count is : 0
-Trivy thinks the vuln count is : 26
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;On severities, Trivy includes a high, where all of Anchore’s severities are medium or low.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;11, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;5, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;7&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
-Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;9, &lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;16, &lt;span class=&quot;s2&quot;&gt;&quot;HIGH&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;debianstable&quot;&gt;Debian:stable&lt;/h2&gt;
-
-&lt;p&gt;Here the numbers are switched around again with Clair and Trivy reporting quite a few more issues than Anchore. An interesting point is that whilst Clair and Trivy’s total vulnerability counts are similar, the referenced CVEs have quite a few differences.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 47
-Clair thinks the vuln count is : 89
-Trivy thinks the vuln count is : 88
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability severity&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;46, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;21, &lt;span class=&quot;s2&quot;&gt;&quot;Negligible&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;45, &lt;span class=&quot;s2&quot;&gt;&quot;Unknown&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;LOW&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;69, &lt;span class=&quot;s2&quot;&gt;&quot;MEDIUM&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;17, &lt;span class=&quot;s2&quot;&gt;&quot;HIGH&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;2&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;centos8&quot;&gt;Centos:8&lt;/h2&gt;
-
-&lt;p&gt;Another commonly used base image here the results are interesting, in that Trivy doesn’t recognize the OS at all and Anchore comes out with a lot more vulnerabilities than Clair.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Count&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore thinks the vuln count is : 74
-Clair thinks the vuln count is : 1
-Trivy thinks the vuln count is : 0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Vulnerability Severities&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Anchore Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Low&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;23, &lt;span class=&quot;s2&quot;&gt;&quot;High&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;4, &lt;span class=&quot;s2&quot;&gt;&quot;Medium&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;47&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Clair Severity Counts : &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;High&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-Trivy Severity Counts : &lt;span class=&quot;o&quot;&gt;{}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-</description>
-				<pubDate>Sun, 21 Jun 2020 16:10:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2020/06/21/Container_Vulnerability_Scanning_Fun/</guid>
 			</item>
 		
 	</channel>
