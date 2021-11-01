@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kind of Insecure Test Clusters</title>
+	<title>Fun with CRDs - Overwriting core types</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kind of Insecure Test Clusters </h1>
+  <h1>Fun with CRDs - Overwriting core types </h1>
 </div>
 	
 <article>
@@ -157,60 +157,97 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   4th,
-	   
-	   2019
+	   November 
+	   1st,
+	     
+	   2021
 	 </span>
 	  <div class="article_body">
-	  <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+	  <p>I was playing around with CRDs today when I wondered “what would happen if I tried to overwrite one of Kubernetes’ core object types? The results weren’t what I expected, so thought it was worth writing it down, in case it comes as a surprise to others :)</p>
 
-<p>For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.</p>
+<h2 id="whats-a-crd">What’s a CRD?</h2>
 
-<p>So when I heard about <a href="https://kind.sigs.k8s.io/">kind</a> on an episode of Heptio’s <a href="https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ">TGIK</a> I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.</p>
+<p>Kubernetes Custom Resources are a way to extend the core Kubernetes API with custom types. They’re heavily used by various programs which extend Kubernetes functionality, and a common feature of most clusters.  In general, Custom Resources have their own group so, for example if you use Cilium for your kubernetes networking, you’ll have CRDs like <code class="language-plaintext highlighter-rouge">ciliumendpoints.cilium.io</code> which is the ciliumendpoint object in the cilium.io group.</p>
 
-<p>Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.</p>
+<h2 id="overwriting-core-kubernetes-crds">Overwriting core Kubernetes CRDs</h2>
 
-<p>What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.</p>
+<p>So an obvious question for a curious goose is, what happens if I try to create a CRD with the <code class="language-plaintext highlighter-rouge">k8s.io</code> group, which is used by a lot of core Kubernetes objects. Well, let’s find out !</p>
 
-<p>Kind supports a <code class="language-plaintext highlighter-rouge">--config</code> option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to <a href="https://twitter.com/BenTheElder">@BenTheElder</a> and <a href="https://twitter.com/mauilion">@mauillon</a> for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.</p>
+<p>If we write a basic CRD which starts like this</p>
 
-<p>The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.</p>
-
-<p>To provide a concrete example, the config below will create a cluster with the insecure port running on the API server</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: "0.0.0.0"
-        insecure-port: "8080"
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">apiextensions.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">CustomResourceDefinition</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">networkpolicies.networking.k8s.io</span>
 </code></pre></div></div>
 
-<p>Once you’ve got kind installed and this is present as a YAML file you can just run</p>
+<p>we get an error when we create it. The error handily tells us that we need an annotation added to create a CRD in this group</p>
 
-<p><code class="language-plaintext highlighter-rouge">kind --config insecure-port.yaml --name insecure create cluster</code></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The CustomResourceDefinition "networkpolicies.networking.k8s.io" is invalid: metadata.annotations[api-approved.kubernetes.io]: Required value: protected groups must have approval annotation "api-approved.kubernetes.io", see https://github.com/kubernetes/enhancements/pull/1111
+</code></pre></div></div>
 
-<p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="language-plaintext highlighter-rouge">docker0</code> interface.</p>
+<p>There’s no validation on the contents of this annotation, so I just took the sample one from the GH issue. After I did that, it works! The first time I created a CRD overwriting the Network Policy object, I had it as a namespace scoped object and the results were unexpected.</p>
 
-<p>So you can get the IP address of that interface from <code class="language-plaintext highlighter-rouge">docker inspect insecure-control-plane</code></p>
+<p>Checking <code class="language-plaintext highlighter-rouge">kubectl get crds</code> shows that it created ok (The one I created didn’t have an egress field)</p>
 
-<p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="language-plaintext highlighter-rouge">172.17.0.3</code>)</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get crds
+NAME                                CREATED AT
+networkpolicies.networking.k8s.io   2021-11-01T19:28:04Z
+</code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">curl http://172.17.0.3:8080/</code></p>
+<p>but if I use <code class="language-plaintext highlighter-rouge">kubectl explain</code> on the object, the definition I get back is the original core object.</p>
 
-<p>I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github <a href="https://github.com/raesene/kind-of-insecure">here</a></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl explain networkpolicies.networking.k8s.io.spec
+KIND:     NetworkPolicy
+VERSION:  networking.k8s.io/v1
+
+RESOURCE: spec &lt;Object&gt;
+
+DESCRIPTION:
+     Specification of the desired behavior for this NetworkPolicy.
+
+     NetworkPolicySpec provides the specification of a NetworkPolicy
+
+FIELDS:
+   egress       &lt;[]Object&gt;
+     List of egress rules to be applied to the selected pods. Outgoing traffic
+     is allowed if there are no NetworkPolicies selecting the pod (and cluster
+     policy otherwise allows the traffic), OR if the traffic matches at least
+     one egress rule across all of the NetworkPolicy objects whose podSelector
+     matches the pod. If this field is empty then this NetworkPolicy limits all
+     outgoing traffic (and serves solely to ensure that the pods it selects are
+     isolated by default). This field is beta-level in 1.8
+</code></pre></div></div>
+
+<p>Also if I try to create a sample network policy which uses the original object type, it works ok. So the CRD is there, but it’s not working.</p>
+
+<p>What happens if you change the scope in the CRD from namespaced to cluster? Well now, it shows in the CRD list <em>and</em> it’s overwritten the object definition retrieved by <code class="language-plaintext highlighter-rouge">kubectl explain</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl explain networkpolicies.networking.k8s.io.spec
+KIND:     NetworkPolicy
+VERSION:  networking.k8s.io/v1
+
+RESOURCE: spec &lt;Object&gt;
+
+DESCRIPTION:
+     &lt;empty&gt;
+
+FIELDS:
+   name &lt;string&gt;
+</code></pre></div></div>
+
+<p>and if I try to create a Network Policy, I get an error showing that it doesn’t understand those field, so this has overwritten the core object.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>error: error validating "sample-netpol.yaml": error validating data: [ValidationError(NetworkPolicy.spec): unknown field "egress" in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field "ingress" in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field "podSelector" in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field "policyTypes" in io.k8s.networking.v1.NetworkPolicy.spec]; if you choose to ignore these errors, turn validation off with --validate=false
+</code></pre></div></div>
+
+<h2 id="other-examples">Other examples</h2>
+
+<p>There’s more prodding at this to be done, but a fun additional one I noticed is that if you try to create a CRD with a name of <code class="language-plaintext highlighter-rouge">users.authentication.k8s.io</code> it creates, but the result isn’t visible in <code class="language-plaintext highlighter-rouge">kubectl api-resources</code> and you can’t use <code class="language-plaintext highlighter-rouge">kubectl explain</code> on it, even though it’s not overwriting a visible Object type.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>From a security standpoint, the takeaway here is, don’t let anyone create CRDs in your cluster unless you really really trust them, as they can modify Kubernetes core behaviour. Also if you’re planning to appear on Rawkode’s klustered show, you could try this and hope the cluster fixers don’t read my blog :)</p>
 
 	  </div>
 
@@ -236,7 +273,7 @@ nodes:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kind of Insecure Test Clusters&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with CRDs - Overwriting core types&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -264,10 +301,10 @@ nodes:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/09/05/restricting-docker-access-with-a-proxy/" title="Restricting Docker Access With a Reverse Proxy">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
