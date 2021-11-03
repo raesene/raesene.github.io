@@ -163,7 +163,7 @@
 	   2021
 	 </span>
 	  <div class="article_body">
-	  <p>I was playing around with CRDs today when I wondered “what would happen if I tried to overwrite one of Kubernetes’ core object types? The results weren’t what I expected, so thought it was worth writing it down, in case it comes as a surprise to others :)</p>
+	  <p>I was playing around with CRDs today when I wondered “what would happen if I tried to overwrite one of Kubernetes’ core object types? The results weren’t what I expected, so thought it was worth writing it down, in case it comes as a surprise to others :) <strong>N.B. There’s an update at the bottom which sheds more light on what happens when you do this</strong></p>
 
 <h2 id="whats-a-crd">What’s a CRD?</h2>
 
@@ -247,7 +247,13 @@ FIELDS:
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>From a security standpoint, the takeaway here is, don’t let anyone create CRDs in your cluster unless you really really trust them, as they can modify Kubernetes core behaviour. Also if you’re planning to appear on Rawkode’s klustered show, you could try this and hope the cluster fixers don’t read my blog :)</p>
+<p>From a security standpoint, the takeaway here is, don’t let anyone create CRDs in your cluster unless you really really trust them, <del>as they can modify Kubernetes core behaviour</del>. Also if you’re planning to appear on Rawkode’s klustered show, you could try this and hope the cluster fixers don’t read my blog :)</p>
+
+<h2 id="update-03112021">Update 03/11/2021</h2>
+
+<p>Curious to get some details on was going on behind the scenes and possible security implications, I asked on k8s slack (a great source of information), and the inimitable <a href="https://twitter.com/liggitt">Jordan Liggitt</a> was able to explain it. It seems like this doesn’t actually overwrite the core Kubernetes types, but what it does do is modify OpenAPI schemes used by clients like Kubectl to validate data being passed to the API server. So, in effect this could break tooling or produce odd behaviour but isn’t modifying the core Kubernetes API. There’s an issue in the <a href="https://github.com/kubernetes/kubernetes/issues/106056">Kubernetes Github repo</a> with more info.</p>
+
+<p>To me, it’s still interesting, but in a slightly different way as it illuminates how some of the different components in Kubernetes work together and some of the possible complexity when unusual or unexpected changes are made.</p>
 
 	  </div>
 
