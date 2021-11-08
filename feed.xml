@@ -7,6 +7,54 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with unicode - messing with output</title>
+				<description>&lt;p&gt;This week there was some research published from Cambridge university called “&lt;a href=&quot;https://www.trojansource.codes/&quot;&gt;Trojan Codes&lt;/a&gt;”, around the potential risks of RTL unicode characters in source code. Whilst this is very much not a new problem, there have been various pieces of research over the years about the difficulties of handling unicode characters, it seemed like a good cue to look at this kind of issue in the context of Kubernetes. So far I’ve not found any security issues caused by this, but I found a couple of things which could be of interest, so thought I’d write it down, in case it’s useful to anyone.&lt;/p&gt;
+
+&lt;h2 id=&quot;where-might-this-cause-a-problem&quot;&gt;Where might this cause a problem?&lt;/h2&gt;
+
+&lt;p&gt;So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to &lt;a href=&quot;https://github.com/kubernetes/kubectl/issues/888&quot;&gt;this issue&lt;/a&gt; in how CSR information can be represented.&lt;/p&gt;
+
+&lt;p&gt;Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.&lt;/p&gt;
+
+&lt;p&gt;It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.&lt;/p&gt;
+
+&lt;h2 id=&quot;putting-unicode-into-kubernetes-manifests&quot;&gt;Putting unicode into Kubernetes manifests&lt;/h2&gt;
+
+&lt;p&gt;So, how do you actually put RTL style codes into Kubernetes manifests? Essentially the format is something like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;\U0000202E&quot;&lt;/code&gt; and putting these codes in a manifest can will change how the information is stored and displayed by Kubernetes. So a concrete example would look like this&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRoleBinding&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;creationTimestamp&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;null&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;roleRef&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;subjects&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;User&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\U0000202E&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nimda-retsulc&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\U0000202C&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you create that manifest and then retrieve it, you can see that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;name&lt;/code&gt; in the output shows as cluster-admin with a couple of white spaces in front of it.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/rtl-unicode.png&quot; alt=&quot;rtl in manifest&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;other-possible-unicode-fun&quot;&gt;Other possible unicode fun&lt;/h2&gt;
+
+&lt;p&gt;Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; character is a Cryllic character)&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;The complexities which go with unicode characters are definitely one to be aware of with regards to their possible security impact. There have been multiple cases in the past where security vulnerabilities have occurred due to misinterpretation of UTF-8 input, and I’m sure there will be more in the future :)&lt;/p&gt;
+</description>
+				<pubDate>Sat, 06 Nov 2021 08:50:39 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</guid>
+			</item>
+		
+			<item>
 				<title>Fun with CRDs - Overwriting core types</title>
 				<description>&lt;p&gt;I was playing around with CRDs today when I wondered “what would happen if I tried to overwrite one of Kubernetes’ core object types? The results weren’t what I expected, so thought it was worth writing it down, in case it comes as a surprise to others :) &lt;strong&gt;N.B. There’s an update at the bottom which sheds more light on what happens when you do this&lt;/strong&gt;&lt;/p&gt;
 
@@ -724,45 +772,6 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=
 				<pubDate>Sat, 12 Dec 2020 13:00:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2020/12/12/Escalating_Away/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2020/12/12/Escalating_Away/</guid>
-			</item>
-		
-			<item>
-				<title>The revenge of system:masters, return of the AKS</title>
-				<description>&lt;p&gt;When looking at an AKS cluster recently, I came across some unusual default behaviour, which I thought deserved some more investigation over the weekend. Seems like AKS is making some … interesting… choices with regards to user authentication, in some setups.&lt;/p&gt;
-
-&lt;p&gt;Usually when you authenticate to an Azure AD (AAD) enabled AKS cluster it uses OAuth with a short renewal window for credentials, which is great as it leverages the Azure AD authentication process and has a nice short expiry to reduce the risk of a misplaced kubeconfig file.&lt;/p&gt;
-
-&lt;p&gt;However there’s an option on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az aks get-credentials&lt;/code&gt; command which acts a bit differently. If you pass &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; to that command, instead of using OAuth, it adds a client certificate file to your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeconfig&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Client certificate authentication in Kubernetes is a bit problematic for a number of reasons, the main one being that there is &lt;strong&gt;no way&lt;/strong&gt; to revoke a credential once it’s issued (short of rolling the keys for the whole certificate authority), that means it’s generally unsuitable for any production cluster and definitely production clusters used by large organizations.&lt;/p&gt;
-
-&lt;p&gt;However digging into the client cert issued by AKS, things get worse. If you decode it (the one below is from a sample AKS cluster I set-up using the standard &lt;a href=&quot;https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough&quot;&gt;AKS QuickStart&lt;/a&gt;), you’ll see something like this&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; Validity
-   Not Before: Nov 28 20:11:59 2020 GMT
-   Not After : Nov 28 20:21:59 2022 GMT
-   Subject: O &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; system:masters, CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; masterclient
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The way that Kubernetes client certificate authentication works, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CN&lt;/code&gt; field is considered the username and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;O&lt;/code&gt; field is the group the user belongs to, so this is logging in with a username of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;masterclient&lt;/code&gt; and a group of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;First problem is the username. That’s not the name of the user I used to login, this is a generic username. That means that any actions taken by this credential will show up with a generic username not matter who uses it, bit of a problem for auditing.&lt;/p&gt;
-
-&lt;p&gt;The second problem is the group name. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; is a special group in Kubernetes, its access as a cluster-admin is hardcoded into the Kubernetes source code and there’s no way to remove those rights, so this credential will always have cluster-admin rights.&lt;/p&gt;
-
-&lt;p&gt;The third problem is the expiry, which is 2 years from cluster setup. So anyone with this credential has a generic cluster-admin level login which can’t be revoked (short of rolling the entire certifiicate authority used for the cluster) and can’t be audited, which lasts for up to two years.&lt;/p&gt;
-
-&lt;p&gt;Another surprising thing I noticed was that, in non-AAD enabled clusters, users with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Azure Kubernetes Service Cluster User Role&lt;/code&gt; get this same certificate given to them when they use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;az aks get-credentials&lt;/code&gt; even without the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; switch! This is a &lt;a href=&quot;https://github.com/Azure/AKS/issues/1343&quot;&gt;known issue&lt;/a&gt; with AKS…&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;A couple of takeaways if your organization is planning to use Azure AKS. First up if your clusters are AAD enabled, be &lt;strong&gt;very&lt;/strong&gt; careful with who has rights to used the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--admin&lt;/code&gt; switch on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get-credentials&lt;/code&gt; command. Secondly, I’d recommend not exposing your clusters directly on the Internet to reduce the likely impact of this.&lt;/p&gt;
-
-&lt;p&gt;If you’re using non-AAD enabled clusters, it’s worth noting that all your users may be using generic cluster-admin credentials, so you should check the generated kubeconfig files and plan for that.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 29 Nov 2020 11:00:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2020/11/29/The_revenge_of_system_masters/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2020/11/29/The_revenge_of_system_masters/</guid>
 			</item>
 		
 	</channel>
