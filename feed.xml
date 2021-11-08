@@ -10,14 +10,6 @@
 				<title>Fun with unicode - messing with output</title>
 				<description>&lt;p&gt;This week there was some research published from Cambridge university called “&lt;a href=&quot;https://www.trojansource.codes/&quot;&gt;Trojan Codes&lt;/a&gt;”, around the potential risks of RTL unicode characters in source code. Whilst this is very much not a new problem, there have been various pieces of research over the years about the difficulties of handling unicode characters, it seemed like a good cue to look at this kind of issue in the context of Kubernetes. So far I’ve not found any security issues caused by this, but I found a couple of things which could be of interest, so thought I’d write it down, in case it’s useful to anyone.&lt;/p&gt;
 
-&lt;h2 id=&quot;where-might-this-cause-a-problem&quot;&gt;Where might this cause a problem?&lt;/h2&gt;
-
-&lt;p&gt;So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to &lt;a href=&quot;https://github.com/kubernetes/kubectl/issues/888&quot;&gt;this issue&lt;/a&gt; in how CSR information can be represented.&lt;/p&gt;
-
-&lt;p&gt;Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.&lt;/p&gt;
-
-&lt;p&gt;It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.&lt;/p&gt;
-
 &lt;h2 id=&quot;putting-unicode-into-kubernetes-manifests&quot;&gt;Putting unicode into Kubernetes manifests&lt;/h2&gt;
 
 &lt;p&gt;So, how do you actually put RTL style codes into Kubernetes manifests? Essentially the format is something like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;\U0000202E&quot;&lt;/code&gt; and putting these codes in a manifest can will change how the information is stored and displayed by Kubernetes. So a concrete example would look like this&lt;/p&gt;
@@ -44,6 +36,14 @@
 &lt;h2 id=&quot;other-possible-unicode-fun&quot;&gt;Other possible unicode fun&lt;/h2&gt;
 
 &lt;p&gt;Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; character is a Cryllic character)&lt;/p&gt;
+
+&lt;h2 id=&quot;where-might-this-cause-a-problem&quot;&gt;Where might this cause a problem?&lt;/h2&gt;
+
+&lt;p&gt;So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to &lt;a href=&quot;https://github.com/kubernetes/kubectl/issues/888&quot;&gt;this issue&lt;/a&gt; in how CSR information can be represented.&lt;/p&gt;
+
+&lt;p&gt;Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.&lt;/p&gt;
+
+&lt;p&gt;It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.&lt;/p&gt;
 
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 

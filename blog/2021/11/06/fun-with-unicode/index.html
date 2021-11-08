@@ -165,14 +165,6 @@
 	  <div class="article_body">
 	  <p>This week there was some research published from Cambridge university called “<a href="https://www.trojansource.codes/">Trojan Codes</a>”, around the potential risks of RTL unicode characters in source code. Whilst this is very much not a new problem, there have been various pieces of research over the years about the difficulties of handling unicode characters, it seemed like a good cue to look at this kind of issue in the context of Kubernetes. So far I’ve not found any security issues caused by this, but I found a couple of things which could be of interest, so thought I’d write it down, in case it’s useful to anyone.</p>
 
-<h2 id="where-might-this-cause-a-problem">Where might this cause a problem?</h2>
-
-<p>So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to <a href="https://github.com/kubernetes/kubectl/issues/888">this issue</a> in how CSR information can be represented.</p>
-
-<p>Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.</p>
-
-<p>It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.</p>
-
 <h2 id="putting-unicode-into-kubernetes-manifests">Putting unicode into Kubernetes manifests</h2>
 
 <p>So, how do you actually put RTL style codes into Kubernetes manifests? Essentially the format is something like this <code class="language-plaintext highlighter-rouge">"\U0000202E"</code> and putting these codes in a manifest can will change how the information is stored and displayed by Kubernetes. So a concrete example would look like this</p>
@@ -199,6 +191,14 @@
 <h2 id="other-possible-unicode-fun">Other possible unicode fun</h2>
 
 <p>Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the <code class="language-plaintext highlighter-rouge">a</code> character is a Cryllic character)</p>
+
+<h2 id="where-might-this-cause-a-problem">Where might this cause a problem?</h2>
+
+<p>So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to <a href="https://github.com/kubernetes/kubectl/issues/888">this issue</a> in how CSR information can be represented.</p>
+
+<p>Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.</p>
+
+<p>It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
