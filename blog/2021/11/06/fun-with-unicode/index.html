@@ -188,9 +188,11 @@
 
 <p><img src="https://raesene.github.io/assets/media/rtl-unicode.png" alt="rtl in manifest" /></p>
 
-<h2 id="other-possible-unicode-fun">Other possible unicode fun</h2>
+<h2 id="other-possible-unicode--output-corruption-fun">Other possible unicode &amp; output corruption fun</h2>
 
 <p>Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the <code class="language-plaintext highlighter-rouge">a</code> character is a Cryllic character)</p>
+
+<p>Another way I noticed that you can possibly corrupt output is by changing the content of an X.509 certificate, there’s more details on that <a href="https://github.com/kubernetes/kubectl/issues/888">here</a></p>
 
 <h2 id="where-might-this-cause-a-problem">Where might this cause a problem?</h2>
 
