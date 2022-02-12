@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Fun with secrets - Where did they go?</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Fun with secrets - Where did they go? </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   February 
+	   12th,
+	   
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>Before I get into this post a quick note that there is no dramatic payoff here, it’s just playing around with something that surprised me in Kubernetes, to understand a bit about what’s going on.</p>
+
+<p>Kubernetes clusters make use of secrets for a variety of purposes and (for the time being) one of the main ones is to provide credentials to service accounts, so that the workloads running in a cluster can authenticate to the API server. The reason I say “for the time being” is that this feature is being replaced by <a href="https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-token-volume">Bound Service Account Token Volumes</a>, but that’s a matter for another post.</p>
+
+<p>The way it usually works is that, when you create a service account, Kubernetes will automatically create a secret to go along with it, and then when you specify that service account is to be used in your workload, Kubernetes will automatically mount the secret into the workload for you.</p>
+
+<p>Whilst this is usually automatic, when I was chatting to <a href="https://twitter.com/christophetd">Christophe</a> the other day, he mentioned that you can manually create secrets and add an annotation to them specifying a service account name. When you do that, Kubernetes will automatically populate the secret with a service account token for that service account.</p>
+
+<p>When playing around with this and creating new secrets, I noticed something odd. If you specify a service account name that doesn’t exist in your namespace when creating your secret, while kubectl tells you the creation happens ok, the secret never actually appears!. So as an example, if you get a secret like this</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Secret</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">build-robot-secret</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">kubernetes.io/service-account.name</span><span class="pi">:</span> <span class="s">build-robot</span>
+<span class="na">type</span><span class="pi">:</span> <span class="s">kubernetes.io/service-account-token</span>
+</code></pre></div></div>
+
+<p>save it in a file called, <code class="language-plaintext highlighter-rouge">build-robot-secre.yaml</code> and do <code class="language-plaintext highlighter-rouge">kubectl create -f build-robot-secret.yaml</code> you get</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create <span class="nt">-f</span> base-secret.yaml
+secret/build-robot-secret created
+</code></pre></div></div>
+
+<p>but then if you do <code class="language-plaintext highlighter-rouge">kubectl get secrets</code></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get secrets
+NAME                  TYPE                                  DATA   AGE
+default-token-nxrbt   kubernetes.io/service-account-token   3      40m
+</code></pre></div></div>
+
+<p>it’s nowhere to be seen!</p>
+
+<h2 id="working-out-whats-happening">Working out what’s happening</h2>
+
+<p>So we have a mystery, what is causing our secret (which is valid kubernetes YAML) to seem to be created but apparently vanish after creation. The first thought I had was, maybe it’s being created but not displayed. So to check that, we can look at the contents of the cluster’s etcd database. It’s the canonical store of information for a cluster, so generally a good place to look.</p>
+
+<p>To do this, I set-up a cluster with etcd authentication turned off (to make things easier to check), using the etcd-noauth playbook from <a href="https://github.com/raesene/kube_security_lab/">kube-security-lab</a>. with that set-up we can rerun our secret creation loop and see what does or doesn’t show up in etcd, using etcdctl.  The layout of the database is pretty straightforward, so we just ask it to show us the contents of /registry/secrets/default, which is all the secrets in the default namespace.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code> etcdctl <span class="nt">--insecure-transport</span><span class="o">=</span><span class="nb">false</span> <span class="nt">--insecure-skip-tls-verify</span> <span class="nt">--endpoints</span><span class="o">=</span>172.18.0.3:2379 get /registry/secrets/default <span class="nt">--prefix</span> <span class="nt">--keys-only</span>
+/registry/secrets/default/default-token-nxrbt
+</code></pre></div></div>
+
+<p>Looking at the output, we can see it’s just our default service account token. So now we know that the secret isn’t persisted. Next question is, what happens if we change an existing secret which points to a valid service account, and make it point to an invalid one.</p>
+
+<p>We can create a valid one like this</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Secret</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">extra-default-secret</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">kubernetes.io/service-account.name</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">type</span><span class="pi">:</span> <span class="s">kubernetes.io/service-account-token</span>
+</code></pre></div></div>
+
+<p>and if we do <code class="language-plaintext highlighter-rouge">kubectl get secrets</code> once we’ve created it, we can see it’s there</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>❯ kubectl get secrets
+NAME                   TYPE                                  DATA   AGE
+default-token-nxrbt    kubernetes.io/service-account-token   3      5h20m
+extra-default-secret   kubernetes.io/service-account-token   3      4s
+</code></pre></div></div>
+
+<p>ok so now if we do <code class="language-plaintext highlighter-rouge">kubectl edit secret extra-default-secret</code> and change the <code class="language-plaintext highlighter-rouge">service-account.name</code> field to <code class="language-plaintext highlighter-rouge">test</code> what’ll happen… The answer turns out to be that the edit succeeds and the secret vanishes! Checking etcd as above confirms that our secret has gone from the datastore too.</p>
+
+<h2 id="why-does-that-happen">Why does that happen?</h2>
+
+<p>Knowing a bit about Kubernetes I’ve got a fair idea of why this happens, I’d expect it to be done by one of the <a href="https://kubernetes.io/docs/concepts/architecture/controller/">controllers</a> that Kubernetes use to manage cluster state. There are a wide range of controllers which run as part of the controller-manager component and what they do (roughly) is run a loop watching the state of a certain class of object looking at the desired state. They then make changes to the configuration of the cluster to ensure it stays in that desired state.</p>
+
+<p>Looking at the docs for <a href="https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#token-controller">Kubernetes service accounts</a> we see this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>TokenController runs as part of kube-controller-manager. It acts asynchronously. It:
+
+    watches ServiceAccount creation and creates a corresponding ServiceAccount token Secret to allow API access.
+    watches ServiceAccount deletion and deletes all corresponding ServiceAccount token Secrets.
+    watches ServiceAccount token Secret addition, and ensures the referenced ServiceAccount exists, and adds a token to the Secret if needed.
+    watches Secret deletion and removes a reference from the corresponding ServiceAccount if needed.
+</code></pre></div></div>
+
+<p>So it seems likely, although the docs don’t mention it deleting secrets that don’t match to an existing service account, that this component will be the one deleting our secrets, but how do we check?</p>
+
+<p>Well Kubernetes auditing should be able to help us here, as all the controllers in Kubernetes send their requests via the API server, so we can look at what happens when we try to create our <code class="language-plaintext highlighter-rouge">build-robot-secret</code>.</p>
+
+<p>Running the <code class="language-plaintext highlighter-rouge">kubectl create</code> from earlier on that cluster confirms the hypothesis. There’s three events which happen.</p>
+
+<ol>
+  <li>A create event from the kubernetes-admin user (which is the name of the default first user in a kubeadm cluster)</li>
+  <li>A get event from the tokens-controller. Interestingly here the “user” is <code class="language-plaintext highlighter-rouge">system:kube-controller-manager</code> but the user agent indicates that it’s the tokens-controller.</li>
+  <li>A delete event from the tokens-controller that looks like this</li>
+</ol>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Event"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"audit.k8s.io/v1"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RequestResponse"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"auditID"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ef0f48eb-a606-4f50-afcd-517268a5cd2e"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"stage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ResponseComplete"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"requestURI"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/api/v1/namespaces/default/secrets/build-robot-secret"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"verb"</span><span class="p">:</span><span class="w"> </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"user"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"username"</span><span class="p">:</span><span class="w"> </span><span class="s2">"system:kube-controller-manager"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"groups"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"system:authenticated"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"sourceIPs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="s2">"172.18.0.3"</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"userAgent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"kube-controller-manager/v1.21.1 (linux/amd64) kubernetes/5e58841/tokens-controller"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"objectRef"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"resource"</span><span class="p">:</span><span class="w"> </span><span class="s2">"secrets"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"namespace"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"build-robot-secret"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"v1"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"responseStatus"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"metadata"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Success"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"code"</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"requestObject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DeleteOptions"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"apiVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"v1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"preconditions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"uid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"16c9f476-34fe-48a0-b623-100f7de93d0f"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Like I mentioned at the top of this post, nothing earthshaking here, but it’s kind of interesting to dig into how Kubernetes controllers which keep the cluster in a desired state are constantly watching and changing resources.</p>
+
+<p>In terms of impact, outside of a niche scenario where someone was allowed to edit secrets but not delete them, there’s probably no major impact here, but it might help someone understand why a secret that looked like it got created ok, was no longer present in their cluster!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(22)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with secrets - Where did they go?&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2021/11/06/fun-with-unicode/" title="Fun with unicode - messing with output">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
