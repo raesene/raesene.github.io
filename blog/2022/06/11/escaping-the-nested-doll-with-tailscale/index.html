@@ -211,6 +211,30 @@ webserver   1/1     Running   0          13m   10.244.0.5   kind-control-plane  
 
 <p><img src="https://raesene.github.io/assets/media/tailscale-webapp-access.png" alt="webapp over tailscale" /></p>
 
+<h2 id="addendum---getting-cluster-dns">Addendum - Getting Cluster DNS</h2>
+
+<p>So a question on this post from <a href="https://twitter.com/blair_drummond/status/1535952970352930816?s=20&amp;t=9LG336wUxUe36Qjm4BFGwA">Blair Drummond</a> was can you get cluster DNS working for this setup? The answer is yes, although it might be a bit fiddly. Let’s walk through an example. For this example to work it’s important, when following the Tailscale instructions above, that you add a route for the service IP address range in Kubernetes as well as the pod IP address range.</p>
+
+<p>Next, we need to expose our Pod that we created earlier with a service. Services in Kubernetes get DNS names which can be addressed.</p>
+
+<p>We can do this with something like</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl expose pod webserver <span class="nt">--port</span><span class="o">=</span>80 <span class="nt">--target-port</span><span class="o">=</span>80
+</code></pre></div></div>
+
+<p>Once we’ve done that, we nee to tell Tailscale to use the Kubernetes DNS service for our service domain of <code class="language-plaintext highlighter-rouge">default.svc.cluster.local</code>. We can do that in the Tailscale DNS section of their admin app.</p>
+
+<p><img src="https://raesene.github.io/assets/media/tailscale-cluster-dns.png" alt="webapp over tailscale" /></p>
+
+<p>The nameserver IP address we’re using here is the Kubernetes DNS service</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get svc <span class="nt">-n</span> kube-system
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>                  AGE
+kube-dns   ClusterIP   10.96.0.10   &lt;none&gt;        53/UDP,53/TCP,9153/TCP   13m
+</code></pre></div></div>
+
+<p>Once we’ve got that setup we can reach our webserver that we deployed with a DNS name of <code class="language-plaintext highlighter-rouge">[SERVICENAME].default.svc.cluster.local</code> and it should work fine :)</p>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>It’s pretty easy to end up with complex network setups when playing around in container land, especially once you add the complexities of Kubernetes pod network to the mix. Fortunately there are solutions out there that make it easier to work with all of this and let you get access wherever you need it :)</p>

@@ -56,6 +56,30 @@ webserver   1/1     Running   0          13m   10.244.0.5   kind-control-plane  
 
 &lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-webapp-access.png&quot; alt=&quot;webapp over tailscale&quot; /&gt;&lt;/p&gt;
 
+&lt;h2 id=&quot;addendum---getting-cluster-dns&quot;&gt;Addendum - Getting Cluster DNS&lt;/h2&gt;
+
+&lt;p&gt;So a question on this post from &lt;a href=&quot;https://twitter.com/blair_drummond/status/1535952970352930816?s=20&amp;amp;t=9LG336wUxUe36Qjm4BFGwA&quot;&gt;Blair Drummond&lt;/a&gt; was can you get cluster DNS working for this setup? The answer is yes, although it might be a bit fiddly. Let’s walk through an example. For this example to work it’s important, when following the Tailscale instructions above, that you add a route for the service IP address range in Kubernetes as well as the pod IP address range.&lt;/p&gt;
+
+&lt;p&gt;Next, we need to expose our Pod that we created earlier with a service. Services in Kubernetes get DNS names which can be addressed.&lt;/p&gt;
+
+&lt;p&gt;We can do this with something like&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl expose pod webserver &lt;span class=&quot;nt&quot;&gt;--port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;80 &lt;span class=&quot;nt&quot;&gt;--target-port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;80
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once we’ve done that, we nee to tell Tailscale to use the Kubernetes DNS service for our service domain of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default.svc.cluster.local&lt;/code&gt;. We can do that in the Tailscale DNS section of their admin app.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-cluster-dns.png&quot; alt=&quot;webapp over tailscale&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The nameserver IP address we’re using here is the Kubernetes DNS service&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get svc &lt;span class=&quot;nt&quot;&gt;-n&lt;/span&gt; kube-system
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;S&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                  AGE
+kube-dns   ClusterIP   10.96.0.10   &amp;lt;none&amp;gt;        53/UDP,53/TCP,9153/TCP   13m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once we’ve got that setup we can reach our webserver that we deployed with a DNS name of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[SERVICENAME].default.svc.cluster.local&lt;/code&gt; and it should work fine :)&lt;/p&gt;
+
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 
 &lt;p&gt;It’s pretty easy to end up with complex network setups when playing around in container land, especially once you add the complexities of Kubernetes pod network to the mix. Fortunately there are solutions out there that make it easier to work with all of this and let you get access wherever you need it :)&lt;/p&gt;
