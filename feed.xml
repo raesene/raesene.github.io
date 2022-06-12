@@ -7,6 +7,65 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Escaping the Nested Doll with Tailscale</title>
+				<description>&lt;p&gt;There are lots of tools which we can use in the container ecosystem to easily create and test applications, but sometimes the networking they create can get a little complex, making it hard to work with and troubleshoot. I came across a scenario recently (for a workshop in Kubecon) where I needed to access a GUI application deployed in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster running in an EC2 instance on AWS, from my laptop. The solution I came up with was to use &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and as it seemed like a nice way to solve the problem, I thought it was worth documenting.&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-our-nested-doll&quot;&gt;Setting up our Nested Doll&lt;/h2&gt;
+
+&lt;p&gt;Let’s lay out the different networks we’re working with to show up the problem. My client machine is on a LAN and has an assigned IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.41.70&lt;/code&gt; (like most home networks I’m using NAT to access the Internet).&lt;/p&gt;
+
+&lt;p&gt;I create an EC2 instance, which gets assigned an external IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;52.56.82.230&lt;/code&gt; which is in one of AWS’ subnets. SSH’ing to that host I get an IP address on my AWS subnet of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.31.3.70&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ip addr
+ens5: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 9001 qdisc mq state UP group default qlen 1000
+    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 06:82:28:cc:5d:6c brd ff:ff:ff:ff:ff:ff
+    altname enp0s5
+    inet 172.31.3.70/20 brd 172.31.15.255 scope global dynamic ens5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then I install Docker and KinD on the EC2. Creating a KinD cluster sets up a new Docker container which acts as my node. That container has an IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;kind-control-plane ip addr
+eth0@if6: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 1500 qdisc noqueue state UP group default
+    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then I create a pod in my KinD cluster with the web application that I want to access, which gets an IP address assigned in the pod network range for the cluster of 10.244.0.5&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get po &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; wide
+NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
+webserver   1/1     Running   0          13m   10.244.0.5   kind-control-plane   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When all’s said and done, it ends up looking a bit like this&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/nested-doll.png&quot; alt=&quot;nested doll&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;So how do we get easy access to our website?&lt;/p&gt;
+
+&lt;h2 id=&quot;enter-tailscale&quot;&gt;Enter Tailscale&lt;/h2&gt;
+
+&lt;p&gt;Tailscale is a VPN like product that can be installed on a wide range of devices and essentially creates an overlay network for you that means that devices that you connect can easily access services on any other device in the network. As part of this they have a number of ways of deploying Tailscale to Kubernetes clusters, so you can access your services. In this case probably the easiest to setup is the &lt;a href=&quot;https://tailscale.com/kb/1185/kubernetes/#subnet-router&quot;&gt;subnet router&lt;/a&gt; where we can essentially give access to any workload in the Kubernetes pod network by deploying a Tailscale pod to act as a router.&lt;/p&gt;
+
+&lt;p&gt;Once we follow the Tailscale instructions for creating our Kubernetes Subnet router and &lt;a href=&quot;https://tailscale.com/kb/1019/subnets/#step-3-enable-subnet-routes-from-the-admin-console&quot;&gt;authorize the subnet&lt;/a&gt; in the admin panel, our networking looks a bit like this&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/nested-doll-with-tailscale.png&quot; alt=&quot;nested doll with tailscale&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;and if we browse to the pod IP address of our web server (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.5&lt;/code&gt;) from our local PC, up pops the deployed application, like magic!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-webapp-access.png&quot; alt=&quot;webapp over tailscale&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;It’s pretty easy to end up with complex network setups when playing around in container land, especially once you add the complexities of Kubernetes pod network to the mix. Fortunately there are solutions out there that make it easier to work with all of this and let you get access wherever you need it :)&lt;/p&gt;
+</description>
+				<pubDate>Sat, 11 Jun 2022 09:10:39 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</guid>
+			</item>
+		
+			<item>
 				<title>Fun with secrets - Where did they go?</title>
 				<description>&lt;p&gt;Before I get into this post a quick note that there is no dramatic payoff here, it’s just playing around with something that surprised me in Kubernetes, to understand a bit about what’s going on.&lt;/p&gt;
 
@@ -146,8 +205,8 @@ extra-default-secret   kubernetes.io/service-account-token   3      4s
 &lt;p&gt;In terms of impact, outside of a niche scenario where someone was allowed to edit secrets but not delete them, there’s probably no major impact here, but it might help someone understand why a secret that looked like it got created ok, was no longer present in their cluster!&lt;/p&gt;
 </description>
 				<pubDate>Sat, 12 Feb 2022 14:50:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/02/12/fun-with-secrets/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/02/12/fun-with-secrets/</guid>
+				<link>https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</guid>
 			</item>
 		
 			<item>
@@ -789,104 +848,6 @@ Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
 				<pubDate>Sun, 03 Jan 2021 16:00:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring Rootless Docker</title>
-				<description>&lt;p&gt;With the release of Docker 20.10, the rootless containers feature has left experimental status. This is an important step for Docker security as it allows for the entire Docker installation to run with standard user prvivileges, no use of root required. Other container solutions like Podman have had this feature for a while but if your used to Docker’s approach it’s nice to see it being available.&lt;/p&gt;
-
-&lt;p&gt;Docker’s documentation on &lt;a href=&quot;https://docs.docker.com/engine/security/rootless/&quot;&gt;rootless containers&lt;/a&gt; has some information about how this is achieved, but I thought it’d be interesting to have a poke around some of the details of the implementation and what it means for container security, especially as I’ll be adding this to the container security course I do.&lt;/p&gt;
-
-&lt;h2 id=&quot;install-and-use&quot;&gt;Install and Use&lt;/h2&gt;
-
-&lt;p&gt;Setting up rootless containers is pretty straightforward, on Ubuntu at least. You need a couple of packages to be installed (the main one you’ll likely need to add is uidmap) and then you can use Docker’s install script to set it up. Obviously I’d recommend downloading and reading the script rather than following their suggestion to pipe it straight to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sh&lt;/code&gt; but looking through it you’ll see it’s mainly just checking the environment before setting up and then downloading and extracting the necessary binaries to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$HOME/bin&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Once it’s installed and you tell the docker CLI where to find the socket file (in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/run/user/UID/docker.sock&lt;/code&gt; instead of the usual &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/var/run/docker.sock&lt;/code&gt; ) you can start using Docker. The general use case is pretty much exactly what you’d expect, docker commands work fine, you can pull and run images, execute shells in them, and do most of the other things you’d usually do.&lt;/p&gt;
-
-&lt;p&gt;A couple of limitations are present, specifically no cgroups support, unless you enabled cgroupsv2 at the host level and no use of ping or ports &amp;lt; 1024, but again these can be configured if needed. I’d expect the primary use case for rootless docker to be on shared development boxes and perhaps CI hosts, so these limitations probably are deal breakers and in both cases simple configuration options are available.&lt;/p&gt;
-
-&lt;h2 id=&quot;exploring-under-the-covers&quot;&gt;Exploring under the covers&lt;/h2&gt;
-
-&lt;p&gt;So what’s going on here, and how does it compare to standard Docker.&lt;/p&gt;
-
-&lt;h3 id=&quot;user-namespaces&quot;&gt;User namespaces&lt;/h3&gt;
-
-&lt;p&gt;One of the common security challenges when using containes is that they often run as the root user (uid 0) on the host. Whilst Docker has various layers of security to reduce the risk of this, it’s still a cause of potential security problems.&lt;/p&gt;
-
-&lt;p&gt;So now we’re running Docker without any root acccess, what happens?&lt;/p&gt;
-
-&lt;p&gt;With rootless docker setup, if we do something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run --name=rootlessweb -d nginx&lt;/code&gt; to start up a container, then run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec rootlessweb whoami&lt;/code&gt; , you’ll get back the answer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt;, which shows that the container thinks it’s running as root.&lt;/p&gt;
-
-&lt;p&gt;To see what’s really happening, we can get the PID of the container with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker inspect -f '{{.State.Pid}}' rootlessweb&lt;/code&gt; and then look for that process ID in the output of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ps -ef&lt;/code&gt;. What you’ll see is that instead of running as root, it’s running as your user!&lt;/p&gt;
-
-&lt;p&gt;The way this is being done is through the use of &lt;a href=&quot;https://man7.org/linux/man-pages/man7/user_namespaces.7.html&quot;&gt;user namespaces&lt;/a&gt; which have been available in Docker (but rarely used) for quite some time. Docker is mapping uids inside the container, to different uids outside the container (which is why it needed the uidmap package installed). This allows the contained process to act as though it had root rights, without it actually having root rights to the underlying machine.&lt;/p&gt;
-
-&lt;p&gt;Obviously from a security standpoint this is a big positive as it means that kernel bugs that need real &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;uid 0&lt;/code&gt; to work, will be blocked as, from the perspective of the kernel, the process is unprivileged.&lt;/p&gt;
-
-&lt;h2 id=&quot;capabilities&quot;&gt;Capabilities&lt;/h2&gt;
-
-&lt;p&gt;One of the things Docker does as part of its setup is use various layers of isolation on contained processes. One of those layers is capabilities. With this one, you might think it’s not going to apply to rootless containers as capabilities are often described as “piece of root rights” which don’t apply here.&lt;/p&gt;
-
-&lt;p&gt;However, reading the user namespace manpages, we can see that actually capabilities are still used inside user namespaces to restrict access. The important part to remember from a security standpoint is that capabilities in user namespaces can only grant rights to resources governed by that namespace. So having CAP_SYS_ADMIN in a user namespace will get you rights in that namespace, but not rights over the underlying host kernel.&lt;/p&gt;
-
-&lt;p&gt;We can see the capability setup by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pscap&lt;/code&gt; on a host running rootless containers. For example the nginx container from the previous example will look like this&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;8198  8219  rorym       nginx             &lt;span class=&quot;nb&quot;&gt;chown&lt;/span&gt;, dac_override, fowner, fsetid, &lt;span class=&quot;nb&quot;&gt;kill&lt;/span&gt;, setgid, setuid, setpcap, net_bind_service, net_raw, sys_chroot, &lt;span class=&quot;nb&quot;&gt;mknod&lt;/span&gt;, audit_write, setfcap
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;apparmor&quot;&gt;AppArmor&lt;/h2&gt;
-
-&lt;p&gt;This one is not supported under rootless containers, so no profiles will be loaded (unlike standard rootful containers).&lt;/p&gt;
-
-&lt;h2 id=&quot;seccomp-filter&quot;&gt;Seccomp filter&lt;/h2&gt;
-
-&lt;p&gt;The standard Docker seccomp filter is enabled when using rootless containers, which you can see by inspecting the proc status for our contained process with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat /proc/[PID]/status | grep Seccomp&lt;/code&gt; which should return a value of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;2&lt;/code&gt; showing there’s a seccomp profile applied.&lt;/p&gt;
-
-&lt;h2 id=&quot;container-breakout&quot;&gt;Container breakout&lt;/h2&gt;
-
-&lt;p&gt;So now we’ve looked at the various layers of isolation that are used in docker and how they apply (or don’t) to rootless containers, lets look at some of the practical tools and techniques and what they return when run in a rootless container.&lt;/p&gt;
-
-&lt;h3 id=&quot;the-most-pointless-docker-command-ever&quot;&gt;The most pointless docker command ever&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;My favourite docker command&lt;/a&gt; is a good place to start. Running&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run &lt;span class=&quot;nt&quot;&gt;-ti&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--privileged&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--pid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--ipc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--volume&lt;/span&gt; /:/host busybox &lt;span class=&quot;nb&quot;&gt;chroot&lt;/span&gt; /host
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Generates an error. Both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--ipc=host&lt;/code&gt; don’t work with rootless containers, after removing those we get dropped to a root shell with access to what &lt;em&gt;looks like&lt;/em&gt; the root filesystem of the underlying host. Trying to modify things, however, shows we’re not in the real root filesystem. We can add files in system directories like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc&lt;/code&gt; , however exiting the container shows that the files haven’t actually been created, so it’s obvious that our volume mount didn’t have the effect it would have had, if we had been running a rootful container.&lt;/p&gt;
-
-&lt;h3 id=&quot;amicontained&quot;&gt;amicontained&lt;/h3&gt;
-
-&lt;p&gt;Running &lt;a href=&quot;https://github.com/genuinetools/amicontained&quot;&gt;amicontained&lt;/a&gt; from inside a rootless container shows that it’s easy to detect that we’re in a user namespace, and indeed information is available about how UIDs are being mapped inside the container&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Container Runtime: docker
-Has Namespaces:
-        pid: &lt;span class=&quot;nb&quot;&gt;true
-        &lt;/span&gt;user: &lt;span class=&quot;nb&quot;&gt;true
-&lt;/span&gt;User Namespace Mappings:
-        Container -&amp;gt; 0  Host -&amp;gt; 1000    Range -&amp;gt; 1
-        Container -&amp;gt; 1  Host -&amp;gt; 100000  Range -&amp;gt; 65536
-AppArmor Profile: unconfined
-Capabilities:
-        BOUNDING -&amp;gt; &lt;span class=&quot;nb&quot;&gt;chown &lt;/span&gt;dac_override fowner fsetid &lt;span class=&quot;nb&quot;&gt;kill &lt;/span&gt;setgid setuid setpcap net_bind_service net_raw sys_chroot &lt;span class=&quot;nb&quot;&gt;mknod &lt;/span&gt;audit_write setfcap
-Seccomp: filtering
-Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;:
-        MSGRCV SYSLOG SETSID USELIB USTAT SYSFS VHANGUP PIVOT_ROOT _SYSCTL ACCT SETTIMEOFDAY MOUNT UMOUNT2 SWAPON SWAPOFF REBOOT SETHOSTNAME SETDOMAINNAME IOPL IOPERM CREATE_MODULE INIT_MODULE DELETE_MODULE GET_KERNEL_SYMS QUERY_MODULE QUOTACTL NFSSERVCTL GETPMSG PUTPMSG AFS_SYSCALL TUXCALL SECURITY LOOKUP_DCOOKIE CLOCK_SETTIME VSERVER MBIND SET_MEMPOLICY GET_MEMPOLICY KEXEC_LOAD ADD_KEY REQUEST_KEY KEYCTL MIGRATE_PAGES FUTIMESAT UNSHARE MOVE_PAGES UTIMENSAT PERF_EVENT_OPEN FANOTIFY_INIT NAME_TO_HANDLE_AT OPEN_BY_HANDLE_AT SETNS PROCESS_VM_READV PROCESS_VM_WRITEV KCMP FINIT_MODULE KEXEC_FILE_LOAD BPF USERFAULTFD PKEY_MPROTECT PKEY_ALLOC PKEY_FREE IO_PGETEVENTS RSEQ
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;botb&quot;&gt;botb&lt;/h3&gt;
-
-&lt;p&gt;Using &lt;a href=&quot;https://github.com/brompwnie/botb&quot;&gt;botb&lt;/a&gt; to try and autopwn out of a container that has the docker socket mounted runs us into a problem, which is that it tries to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--pid=host&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--ipc=host&lt;/code&gt; as part of the breakout.&lt;/p&gt;
-
-&lt;p&gt;This is, in general, a possibly interesting point about container breakout tools, as they’re unlikely to take account of rootless containers.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Rootless containers are a great addition to Docker’s repetoire. In situations where you want to have users run docker commands without giving the root access to the underlying host, this will really help out. The setup and usuability are great, but you need to take account of the fact that certain things just won’t work the same way as functions reserved for the root user on the host machine won’t be usuable.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 19 Dec 2020 16:00:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2020/12/19/rootless_docker/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2020/12/19/rootless_docker/</guid>
 			</item>
 		
 	</channel>

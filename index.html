@@ -158,6 +158,32 @@
 
   <span class="post-date">
     
+    June
+    11th,
+    
+    2022
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/">Escaping the Nested Doll with Tailscale</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There are lots of tools which we can use in the container ecosystem to easily create and test applications, but sometimes the networking they create can get a little complex, making it hard to work with and troubleshoot. I came across a scenario recently (for a workshop in Kubecon) where I needed to access a GUI application deployed in a <a href="https://kind.sigs.k8s.io/">KinD</a> cluster running in an EC2 instance on AWS, from my laptop. The solution I came up with was to use <a href="https://tailscale.com/">Tailscale</a> and as it seemed like a nice way to solve the problem, I thought it was worth documenting.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     February
     12th,
     
@@ -165,7 +191,7 @@
   </span>
 
   <h2>
-    <a href="https://raesene.github.io/blog/2022/02/12/fun-with-secrets/">Fun with secrets - Where did they go?</a>
+    <a href="https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/">Fun with secrets - Where did they go?</a>
   </h2>
 
   <div>
@@ -380,32 +406,6 @@
     
     
     <p>One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    19th,
-    
-    2020
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2020/12/19/rootless_docker/">Exploring Rootless Docker</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>With the release of Docker 20.10, the rootless containers feature has left experimental status. This is an important step for Docker security as it allows for the entire Docker installation to run with standard user prvivileges, no use of root required. Other container solutions like Podman have had this feature for a while but if your used to Docker’s approach it’s nice to see it being available.</p>
 
     
     

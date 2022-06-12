@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Accessing Cluster IPs from the Outside</title>
+	<title>Escaping the Nested Doll with Tailscale</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Accessing Cluster IPs from the Outside </h1>
+  <h1>Escaping the Nested Doll with Tailscale </h1>
 </div>
 	
 <article>
@@ -157,62 +157,63 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   October 
-	   3rd,
-	     
-	   2019
+	   June 
+	   11th,
+	   
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
+	  <p>There are lots of tools which we can use in the container ecosystem to easily create and test applications, but sometimes the networking they create can get a little complex, making it hard to work with and troubleshoot. I came across a scenario recently (for a workshop in Kubecon) where I needed to access a GUI application deployed in a <a href="https://kind.sigs.k8s.io/">KinD</a> cluster running in an EC2 instance on AWS, from my laptop. The solution I came up with was to use <a href="https://tailscale.com/">Tailscale</a> and as it seemed like a nice way to solve the problem, I thought it was worth documenting.</p>
 
-<p>When you run Kubernetes services, generally they are of type “ClusterIP” which means they get assigned a fixed IP address inside the cluster, but this IP address isn’t visible externally (it’s not designed for external users to contact the service, that’s what Ingress resources or NodePort services are for).</p>
+<h2 id="setting-up-our-nested-doll">Setting up our Nested Doll</h2>
 
-<p>However, given the way Kubernetes works, it’s possible to access these service IP addresses by the simple expedient of …. Adding a route to them :)  Essentially Kubernetes nodes are Linux routers and kube-proxy will direct traffic for us and doesn’t generally care what generated that traffic.</p>
+<p>Let’s lay out the different networks we’re working with to show up the problem. My client machine is on a LAN and has an assigned IP address of <code class="language-plaintext highlighter-rouge">192.168.41.70</code> (like most home networks I’m using NAT to access the Internet).</p>
 
-<p>Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface <code class="language-plaintext highlighter-rouge">ens33</code> with an IP address of <code class="language-plaintext highlighter-rouge">172.16.198.131</code>.</p>
+<p>I create an EC2 instance, which gets assigned an external IP address of <code class="language-plaintext highlighter-rouge">52.56.82.230</code> which is in one of AWS’ subnets. SSH’ing to that host I get an IP address on my AWS subnet of <code class="language-plaintext highlighter-rouge">172.31.3.70</code></p>
 
-<p>The servce IP address range defined on the cluster is the standard <code class="language-plaintext highlighter-rouge">10.96.0.0/12</code> . If I try to scan a service listening in that range on <code class="language-plaintext highlighter-rouge">10.105.140.70:3000</code> for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by <a href="https://twitter.com/TinkerFairy_Net">@TinkerFairy_Net</a>) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.</p>
-
-<p>One other point about the command below is that you need the <code class="language-plaintext highlighter-rouge">-Pn</code> switch to disable nmap’s Ping scanning which it usually does to determine if a host is live.  Service IPs aren’t real machines, so they won’t respond on any port other than the service one.</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo nmap -Pn -sT -n -p3000 10.105.140.70
-
-Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:51 BST
-Nmap scan report for 10.105.140.70
-Host is up.
-
-PORT     STATE    SERVICE
-3000/tcp filtered ppp
-
-Nmap done: 1 IP address (1 host up) scanned in 2.04 seconds
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ip addr
+ens5: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 9001 qdisc mq state UP group default qlen 1000
+    <span class="nb">link</span>/ether 06:82:28:cc:5d:6c brd ff:ff:ff:ff:ff:ff
+    altname enp0s5
+    inet 172.31.3.70/20 brd 172.31.15.255 scope global dynamic ens5
 </code></pre></div></div>
 
-<p>So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address.</p>
+<p>Then I install Docker and KinD on the EC2. Creating a KinD cluster sets up a new Docker container which acts as my node. That container has an IP address of <code class="language-plaintext highlighter-rouge">172.18.0.2</code></p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo ip route add 10.96.0.0/12 via 172.16.198.131
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker <span class="nb">exec </span>kind-control-plane ip addr
+eth0@if6: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default
+    <span class="nb">link</span>/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
 </code></pre></div></div>
 
-<p>This change essentially tells our client machine that there’s another router on the network and that for traffic in the range <code class="language-plaintext highlighter-rouge">10.96.0.0/12</code> it should send the packets to our Kubernetes cluster node for onwards transmission.</p>
+<p>Then I create a pod in my KinD cluster with the web application that I want to access, which gets an IP address assigned in the pod network range for the cluster of 10.244.0.5</p>
 
-<p>Now if we retry the same command</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo nmap -Pn -sT -n -p3000 10.105.140.70
-
-Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:53 BST
-Nmap scan report for 10.105.140.70
-Host is up (0.00074s latency).
-
-PORT     STATE SERVICE
-3000/tcp open  ppp
-
-Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get po <span class="nt">-o</span> wide
+NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
+webserver   1/1     Running   0          13m   10.244.0.5   kind-control-plane   &lt;none&gt;           &lt;none&gt;
 </code></pre></div></div>
 
-<p>Our port is open :)</p>
+<p>When all’s said and done, it ends up looking a bit like this</p>
 
-<p>So we can interrogate any service in that network from outside the cluster (and without any rights to the cluster!) without restriction.</p>
+<p><img src="https://raesene.github.io/assets/media/nested-doll.png" alt="nested doll" /></p>
 
-<p>From a security point, the important thing to take away here is, don’t assume that services are protected because they’re not hooked into an ingress, if an attacker can route traffic to the cluster, they can just do this to see those IP addresses.</p>
+<p>So how do we get easy access to our website?</p>
+
+<h2 id="enter-tailscale">Enter Tailscale</h2>
+
+<p>Tailscale is a VPN like product that can be installed on a wide range of devices and essentially creates an overlay network for you that means that devices that you connect can easily access services on any other device in the network. As part of this they have a number of ways of deploying Tailscale to Kubernetes clusters, so you can access your services. In this case probably the easiest to setup is the <a href="https://tailscale.com/kb/1185/kubernetes/#subnet-router">subnet router</a> where we can essentially give access to any workload in the Kubernetes pod network by deploying a Tailscale pod to act as a router.</p>
+
+<p>Once we follow the Tailscale instructions for creating our Kubernetes Subnet router and <a href="https://tailscale.com/kb/1019/subnets/#step-3-enable-subnet-routes-from-the-admin-console">authorize the subnet</a> in the admin panel, our networking looks a bit like this</p>
+
+<p><img src="https://raesene.github.io/assets/media/nested-doll-with-tailscale.png" alt="nested doll with tailscale" /></p>
+
+<p>and if we browse to the pod IP address of our web server (<code class="language-plaintext highlighter-rouge">10.244.0.5</code>) from our local PC, up pops the deployed application, like magic!</p>
+
+<p><img src="https://raesene.github.io/assets/media/tailscale-webapp-access.png" alt="webapp over tailscale" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>It’s pretty easy to end up with complex network setups when playing around in container land, especially once you add the complexities of Kubernetes pod network to the mix. Fortunately there are solutions out there that make it easier to work with all of this and let you get access wherever you need it :)</p>
 
 	  </div>
 
@@ -238,7 +239,7 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Accessing Cluster IPs from the Outside&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Escaping the Nested Doll with Tailscale&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -266,10 +267,10 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/" title="Container Image Squatting in a Multi-Registry World">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/" title="Fun with secrets - Where did they go?">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/10/15/From-stackoverflow-to-CVE/" title="From Stackoverflow to CVE, with some laughs along the way">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
