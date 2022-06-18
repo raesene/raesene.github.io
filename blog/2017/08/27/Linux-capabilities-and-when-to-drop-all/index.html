@@ -171,11 +171,11 @@
 
 <p>One point to make note of is, that capabilities are only needed to carry out privileged actions on a host.  If your process only needs to carry out actions that an ordinary user could without the use of sudo, su or setuid root binaries, then your process doesn’t need any capabilities assigned to it.</p>
 
-<p>To provide a concrete example, take the <code class="language-plaintext highlighter-rouge">ping</code> program which ships with most Linux disitributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not availble to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.</p>
+<p>To provide a concrete example, take the <code class="language-plaintext highlighter-rouge">ping</code> program which ships with most Linux distributions. Traditionally this program has been setuid root due to the fact that it needs to send raw network packets and this privilege is not available to ordinary users.  With a capability aware system this can be broken down and only the CAP_NET_RAW privilege can be assigned to the file.  This means that an attacker who was able to compromise the ping binary, would only get a small additional level of privilege and not full access to the host, as might have been possible when it was setuid root.</p>
 
 <h2 id="practical-use-of-capabilities">Practical use of capabilities</h2>
 
-<p>So how do we actually manipulate capabilites on a Linux system? The most basic way of handing this (without writing custom code) is to use the <code class="language-plaintext highlighter-rouge">getcap</code> and <code class="language-plaintext highlighter-rouge">setcap</code> binaries which come with the libcap2-bin package on debian derived systems.</p>
+<p>So how do we actually manipulate capabilities on a Linux system? The most basic way of handing this (without writing custom code) is to use the <code class="language-plaintext highlighter-rouge">getcap</code> and <code class="language-plaintext highlighter-rouge">setcap</code> binaries which come with the libcap2-bin package on debian derived systems.</p>
 
 <p>If you use getcap on a file which has capabilities, you’ll see something like this</p>
 
@@ -195,7 +195,7 @@
 
 <p>If you look at capability sets for files and processes, you’ll run across two additional terms which bear looking at, Inheritable and Bounded.</p>
 
-<p>Inheritable capabilites are capabilites that can be passed from one program to another.</p>
+<p>Inheritable capabilities are capabilities that can be passed from one program to another.</p>
 
 <p>Bounded capabilities are, to quote the <a href="https://linux.die.net/man/7/capabilities">Man page for capabilities</a></p>
 
@@ -271,7 +271,7 @@ CapBnd: 00000000a80425fb
 
 <p>If you’re running with root containers, then it’s well worth reviewing the default list of capabilities that is provided by your container runtime an ensuring that you’re happy that these are needed.</p>
 
-<p>Specifically there are ones like CAP_NET_RAW in the default docker set which could be dangerous (see <a href="https://www.nccgroup.trust/uk/our-research/abusing-privileged-and-unprivileged-linux-containers/">here</a> for more details)</p>
+<p>Specifically there are ones like CAP_NET_RAW in the default docker set which could be dangerous (see <a href="https://www.nccgroup.com/globalassets/our-research/us/whitepapers/2016/june/container_whitepaper.pdf.">here</a> for more details)</p>
 
 <h3 id="capability-gotchas">Capability Gotcha’s</h3>
 

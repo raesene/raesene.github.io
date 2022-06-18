@@ -183,7 +183,7 @@
 
 <p>then find out what IP address has been assigned to your container with</p>
 
-<p><code class="language-plaintext highlighter-rouge">docker inspect -f "" [container_name]</code></p>
+<p><code class="language-plaintext highlighter-rouge">docker inspect -f "{{.NetworkSettings.IPAddress}}" [container_name]</code></p>
 
 <p>and what the password that’s been generated with</p>
 

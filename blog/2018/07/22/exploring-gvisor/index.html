@@ -203,7 +203,7 @@
 
 <p>If you’re looking to tell whether containers on a host are using gVisor or runc, the following command should return the relevant information</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker inspect --format='' [container_name]
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker inspect --format='{{.HostConfig.Runtime}}' [container_name]
 </code></pre></div></div>
 
 <h2 id="performance">Performance</h2>
