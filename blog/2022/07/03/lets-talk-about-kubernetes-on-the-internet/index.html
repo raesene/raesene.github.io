@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Let's talk about Kubernetes on the Internet</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Let's talk about Kubernetes on the Internet </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   July 
+	   3rd,
+	     
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>There’s been a couple of studies recently released by security research companies about exposed Kubernetes clusters on the Internet, and whilst it’s nice to see the security industry focusing a bit more on Kubernetes, some of the analysis misses some of the details of why Kubernetes clusters are exposed to the Internet and what some of the results mean, so I thought it would be a good opportunity to <a href="https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/">revist</a> this topic, also as there have been some developments in what information can be found via Internet search engines.</p>
+
+<h2 id="background---kubernetes-network-footprint">Background - Kubernetes Network footprint</h2>
+
+<p>Kubernetes is made up of a number of REST APIs which are commonly exposed on network ports. We’ve got</p>
+
+<ul>
+  <li>The <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/">Kubernetes API server</a>. commonly exposed on 443/TCP, 6443/TCP or 8443/TCP.</li>
+  <li>The <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/">Kubelet</a>. Commonly exposed on 10250/TCP and (in older clusters) 10255/TCP</li>
+  <li><a href="https://etcd.io/">Etcd</a> - Commonly exposed on 2379/TCP and 2380/TCP</li>
+</ul>
+
+<p>There’s also an additional set of listening ports but in <em>most</em> clusters these will be bound to localhost, so won’t show up in our Internet scanning</p>
+
+<ul>
+  <li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/">Kubernetes Controller Manager</a>. Defaults to 10257/TCP in recent Kubernetes version.</li>
+  <li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/">Kubernetes Scheduler</a>. Defaults to 10259/TCP in recent Kubernetes versions.</li>
+  <li><a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/">Kube-Proxy</a>. Defaults to 10256/TCP.</li>
+</ul>
+
+<p>So from an Internet scanning perspective we’ve got a range of ports to look for. The API Server, Kubelet and etcd are also likely to be the most significant from a security standpoint, if they’re mis-configured, so it makes sense to focus there.</p>
+
+<h2 id="finding-kubernetes-clusters">Finding Kubernetes Clusters</h2>
+
+<p>So now we know the network ports and services we’re looking for, how can we reliably identify that what we’re talking to is a Kubernetes service?</p>
+
+<h3 id="kubernetes-api-server">Kubernetes API Server</h3>
+
+<h4 id="tls-certificate-information">TLS Certificate Information</h4>
+
+<p>Kubernetes API servers are secured by TLS and as they are contacted by clients both inside and outside the cluster, they need to make sure they have name fields which match the various ways they can be contacted. This is handled by putting information into the Subject Alternative Name field in their certificates.</p>
+
+<p>If we look at a standard <a href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/">Kubeadm</a> cluster we can see some of that information.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> ssl-cert: Subject: commonName=kube-apiserver
+| Subject Alternative Name: DNS:kubeadm2nodemaster, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.41.77
+| Issuer: commonName=kubernetes
+</code></pre></div></div>
+
+<p>From this there’s a couple of points that are worth noting. Firstly internal cluster IP addresses are leaked (useful for Internet based attackers doing reconnaissance), secondly there are names that will typically appear on <em>every</em> Kubernetes cluster, making identification easy. <code class="language-plaintext highlighter-rouge">kubernetes.default.svc.cluster.local</code> is the DNS name used for clients inside the cluster network to connect to the API server so will be present in pretty much every cluster.</p>
+
+<h4 id="response-codes">Response codes</h4>
+
+<p>In addition to the TLS certificate information we can also tell some things about an API server based on the response codes we get. For most clusters, if you try to curl the root path of the API server you’ll get a response something like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k https://192.168.41.77:6443
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+
+  },
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {
+
+  },
+  "code": 403
+}
+</code></pre></div></div>
+
+<p>What this indicates is that we are being authenticated to the API server (so anonymous authentication is enabled, which is the default) but that we’re not authorized to get that URL. You can see from the response that we’ve been assigned the username <code class="language-plaintext highlighter-rouge">system:anonymous</code> which is given to any requests made without other credentials.</p>
+
+<p>Whilst 403 responses are the most common from the API server, a Kubernetes API server will respond with a 401 (unauthorized) instead. The most obvious one would be if anonymous authentication is disabled on the API server. Also if HTTP basic authentication (only available till 1.19) or token authentication are enabled and an incorrect set of credentials provided a 401 will also be returned.</p>
+
+<p>Obviously there’s another option for response codes which is 200. This would occur for a path which is permitted for the <code class="language-plaintext highlighter-rouge">system:anonymous</code> user or <code class="language-plaintext highlighter-rouge">system:unauthenticated</code> group. In default Kubernetes there are still a couple of paths that this’ll work for. Most notably for the purposes of fingerprinting Kubernetes clusters <code class="language-plaintext highlighter-rouge">/version</code> will generally be visible. Requests to that path will return something like this, which provides quite a bit of information about the running software.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"major"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"minor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"21"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"gitVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"v1.21.2"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"gitCommit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"092fbfbf53427de67cac1e9fa54aaa09a28371d7"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"gitTreeState"</span><span class="p">:</span><span class="w"> </span><span class="s2">"clean"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"buildDate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2021-06-16T12:53:14Z"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"goVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"go1.16.5"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"compiler"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gc"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"platform"</span><span class="p">:</span><span class="w"> </span><span class="s2">"linux/amd64"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="kubelet">Kubelet</h3>
+
+<p>Typically identifying the Kubelet is relatively straightforward as there aren’t a large number of common services which use 10250/TCP and/or 10255/TCP.</p>
+
+<h4 id="kubelet-response-codes">Kubelet Response Codes</h4>
+
+<p>Usually the Kubelet will return a 404 response when the root path it queried. This indicates that anonymous authentication is enabled (which is the default) but that it doesn’t have anything present at that URL. Querying a valid path for the API (e.g. <code class="language-plaintext highlighter-rouge">/pods</code>) will return a 401 unauthorized message, unless the <code class="language-plaintext highlighter-rouge">alwaysAllow</code> authorization mechanism is set-up, when that path would return a list of the pods on the node.</p>
+
+<p>In the event that 10255/TCP is visible on a cluster (only older versions) this is the unauthenticated Kubelet “read-only” port which will return a detailed list of pods running on the node.</p>
+
+<h3 id="etcd">etcd</h3>
+
+<p>Like the Kubelet etcd runs on a reasonably unusual set of ports (2379/TCP and 2380/TCP). A running etcd instance may not be related to a Kubernetes cluster as it can be used independently, but when seen along-side ports like 10250/TCP it’s a fair bet it’s support a Kubernetes installation.</p>
+
+<p>When supporting Kubernetes, etcd will almost always be set-up with client certificate authentication only, so requests will just be rejected with a bad certificate error like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl: (35) error:14094412:SSL routines:ssl3_read_bytes:sslv3 alert bad certificate
+</code></pre></div></div>
+
+<h2 id="finding-kubernetes-clusters-on-the-internet">Finding Kubernetes Clusters on the Internet</h2>
+
+<p>So now we know what we’re looking for, how do we find it? Luckily, there are multiple Internet search engines which provide filters to make finding Kubernetes ports easy. <a href="https://shodan.io">Shodan</a>, <a href="https://censys.io/">Censys</a> and <a href="https://www.binaryedge.io/">Binary Edge</a> are all options. In addition to pre-packed filters we can also use certain features of how Kubernetes to identify services listening on the Internet (or any other network).</p>
+
+<p>Of the three Shodan currently finds the most servers, to let’s look at some of the options to find things there. Some of the query results below will require a shodan account to look at so I’ve put screenshots for some of the more interesting information.</p>
+
+<h3 id="basic-information-for-exposed-clusters">Basic Information for exposed clusters</h3>
+
+<p>The most basic search available is one for <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22">product:”Kubernetes”</a>. This currently returns 1.3M results. Of these ~240k are Kublet’s, so that leaves us with a bit over a million likely Kubernetes API servers.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-product-kubernetes.png" alt="shodan basic results" /></p>
+
+<p>So the first question that likely occurs is “why are there so many Kubernetes services on the Internet?”. Whilst there’s a number of reasons, the major one comes down to the defaults used by the 3 major managed Kubernetes services, EKS, AKS and GKE. All of these services default to putting the API server directly on the Internet, and we can see evidence of this from Shodan’s reporting of the netblock owners for the various exposed services.</p>
+
+<p>Looking at the <a href="https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;facet=org">organizations</a> for this we can see the largest are Google, Amazon and Microsoft respectively and that they account for well over 600k of the exposed services.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-kubernetes-orgs.png" alt="shodan org results" /></p>
+
+<p>The next likely interesting point is around the versions of Kubernetes running on the exposed services. Shodan (like the other Internet search engines) pull that information out by querying the <code class="language-plaintext highlighter-rouge">/version</code> endpoint where it’s exposed.</p>
+
+<p>Looking at the <a href="https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;facet=version">version information</a> we can see a couple of interesting things. Firstly we see EKS and GKE versions there but not AKS. This is because, by default, both Amazon and Google make that endpoint available without authentication and Microsoft does not.</p>
+
+<p>Looking at the top versions available the other interesting point is that, while most are recent’ish, they’re still falling behind the latest available (1.24) and quite a large number of clusters are running unsupported versions.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-exposed-versions.png" alt="shodan version results" /></p>
+
+<h3 id="response-code-variations">Response code variations</h3>
+
+<p>One of the things that was reported on by other research was around the response codes for Kubernetes API servers. Looking at the information on Shodan we can see something quite interesting about the split of responses. The majority of API servers respond with the 403 forbidden code as shown <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22+403">here</a> and looking at the responses for 401 unauthorized <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22+401">here</a> what we can see is that the vast majority of them are in Microsoft’s netblock space. The likely explanation here is that Microsoft’s AKS product is that they’re disabling anonymous authentication to the API server or they’re using some kind of additional load balancer or proxy in front of the API servers which is returning 401 to requests to the root path.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-kubernetes-401.png" alt="shodan 401 response code results" /></p>
+
+<h3 id="kubelets">Kubelets</h3>
+
+<p>Searching for what we know about Kubelets, we can see <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22+http.status%3A%22404%22+port%3A%2210250%22">results for a response code of 404 on port 10250/TCP</a>. It’s kind of interesting that there are as many results as this as, while there’s some reasons why you might want the API server directly connected to the Internet, there’s not many reasons to directly expose the Kubelet.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-kubelets-exposed.png" alt="shodan kubelet results" /></p>
+
+<h3 id="etcd-1">Etcd</h3>
+
+<p>Tracking down etcd hosts is a little more difficult. As, by default, they won’t actually form a connection without a valid client certificate. We can look at Shodan’s data for <a href="https://www.shodan.io/search?query=port%3A%222379%22">port 2379</a>. In there there’s a subset of results for a product of etcd and looking at <a href="https://www.shodan.io/search?query=port%3A%222379%22+product%3A%22etcd%22">the results</a> what’s interesting is that these are essentially unauthenticated etcd services, which may or may not be related to Kubernetes clusters.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shodan-unauth-etcd.png" alt="shodan unauth etcd results" /></p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>The goal here was just to record a bit of information about Kubernetes network attack surface, some of the tricks of identifying Kubernetes clusters based on their responses to basic requests and look at what information is visible on the Internet relating to exposed Kubernetes services.</p>
+
+<p>Possibly the most important point here is that if you’re using one of the major managed Kubernetes distributions, you’re possibly exposing more information than you want to via the exposed API server port, and if you can, it’s a good idea to remove that exposure by restricting access to your cluster.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(24)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Let's talk about Kubernetes on the Internet&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Penetration Testing, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/" title="Escaping the Nested Doll with Tailscale">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

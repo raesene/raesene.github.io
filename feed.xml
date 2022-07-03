@@ -7,6 +7,163 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Let's talk about Kubernetes on the Internet</title>
+				<description>&lt;p&gt;There’s been a couple of studies recently released by security research companies about exposed Kubernetes clusters on the Internet, and whilst it’s nice to see the security industry focusing a bit more on Kubernetes, some of the analysis misses some of the details of why Kubernetes clusters are exposed to the Internet and what some of the results mean, so I thought it would be a good opportunity to &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;revist&lt;/a&gt; this topic, also as there have been some developments in what information can be found via Internet search engines.&lt;/p&gt;
+
+&lt;h2 id=&quot;background---kubernetes-network-footprint&quot;&gt;Background - Kubernetes Network footprint&lt;/h2&gt;
+
+&lt;p&gt;Kubernetes is made up of a number of REST APIs which are commonly exposed on network ports. We’ve got&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/&quot;&gt;Kubernetes API server&lt;/a&gt;. commonly exposed on 443/TCP, 6443/TCP or 8443/TCP.&lt;/li&gt;
+  &lt;li&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/&quot;&gt;Kubelet&lt;/a&gt;. Commonly exposed on 10250/TCP and (in older clusters) 10255/TCP&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://etcd.io/&quot;&gt;Etcd&lt;/a&gt; - Commonly exposed on 2379/TCP and 2380/TCP&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;There’s also an additional set of listening ports but in &lt;em&gt;most&lt;/em&gt; clusters these will be bound to localhost, so won’t show up in our Internet scanning&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/&quot;&gt;Kubernetes Controller Manager&lt;/a&gt;. Defaults to 10257/TCP in recent Kubernetes version.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/&quot;&gt;Kubernetes Scheduler&lt;/a&gt;. Defaults to 10259/TCP in recent Kubernetes versions.&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/&quot;&gt;Kube-Proxy&lt;/a&gt;. Defaults to 10256/TCP.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So from an Internet scanning perspective we’ve got a range of ports to look for. The API Server, Kubelet and etcd are also likely to be the most significant from a security standpoint, if they’re mis-configured, so it makes sense to focus there.&lt;/p&gt;
+
+&lt;h2 id=&quot;finding-kubernetes-clusters&quot;&gt;Finding Kubernetes Clusters&lt;/h2&gt;
+
+&lt;p&gt;So now we know the network ports and services we’re looking for, how can we reliably identify that what we’re talking to is a Kubernetes service?&lt;/p&gt;
+
+&lt;h3 id=&quot;kubernetes-api-server&quot;&gt;Kubernetes API Server&lt;/h3&gt;
+
+&lt;h4 id=&quot;tls-certificate-information&quot;&gt;TLS Certificate Information&lt;/h4&gt;
+
+&lt;p&gt;Kubernetes API servers are secured by TLS and as they are contacted by clients both inside and outside the cluster, they need to make sure they have name fields which match the various ways they can be contacted. This is handled by putting information into the Subject Alternative Name field in their certificates.&lt;/p&gt;
+
+&lt;p&gt;If we look at a standard &lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/&quot;&gt;Kubeadm&lt;/a&gt; cluster we can see some of that information.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; ssl-cert: Subject: commonName=kube-apiserver
+| Subject Alternative Name: DNS:kubeadm2nodemaster, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.41.77
+| Issuer: commonName=kubernetes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From this there’s a couple of points that are worth noting. Firstly internal cluster IP addresses are leaked (useful for Internet based attackers doing reconnaissance), secondly there are names that will typically appear on &lt;em&gt;every&lt;/em&gt; Kubernetes cluster, making identification easy. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubernetes.default.svc.cluster.local&lt;/code&gt; is the DNS name used for clients inside the cluster network to connect to the API server so will be present in pretty much every cluster.&lt;/p&gt;
+
+&lt;h4 id=&quot;response-codes&quot;&gt;Response codes&lt;/h4&gt;
+
+&lt;p&gt;In addition to the TLS certificate information we can also tell some things about an API server based on the response codes we get. For most clusters, if you try to curl the root path of the API server you’ll get a response something like this&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k https://192.168.41.77:6443
+{
+  &quot;kind&quot;: &quot;Status&quot;,
+  &quot;apiVersion&quot;: &quot;v1&quot;,
+  &quot;metadata&quot;: {
+
+  },
+  &quot;status&quot;: &quot;Failure&quot;,
+  &quot;message&quot;: &quot;forbidden: User \&quot;system:anonymous\&quot; cannot get path \&quot;/\&quot;&quot;,
+  &quot;reason&quot;: &quot;Forbidden&quot;,
+  &quot;details&quot;: {
+
+  },
+  &quot;code&quot;: 403
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;What this indicates is that we are being authenticated to the API server (so anonymous authentication is enabled, which is the default) but that we’re not authorized to get that URL. You can see from the response that we’ve been assigned the username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; which is given to any requests made without other credentials.&lt;/p&gt;
+
+&lt;p&gt;Whilst 403 responses are the most common from the API server, a Kubernetes API server will respond with a 401 (unauthorized) instead. The most obvious one would be if anonymous authentication is disabled on the API server. Also if HTTP basic authentication (only available till 1.19) or token authentication are enabled and an incorrect set of credentials provided a 401 will also be returned.&lt;/p&gt;
+
+&lt;p&gt;Obviously there’s another option for response codes which is 200. This would occur for a path which is permitted for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; user or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; group. In default Kubernetes there are still a couple of paths that this’ll work for. Most notably for the purposes of fingerprinting Kubernetes clusters &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; will generally be visible. Requests to that path will return something like this, which provides quite a bit of information about the running software.&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;major&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;minor&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;21&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;v1.21.2&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitCommit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;092fbfbf53427de67cac1e9fa54aaa09a28371d7&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitTreeState&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;clean&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;buildDate&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2021-06-16T12:53:14Z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;goVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;go1.16.5&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;compiler&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;gc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;platform&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;linux/amd64&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;kubelet&quot;&gt;Kubelet&lt;/h3&gt;
+
+&lt;p&gt;Typically identifying the Kubelet is relatively straightforward as there aren’t a large number of common services which use 10250/TCP and/or 10255/TCP.&lt;/p&gt;
+
+&lt;h4 id=&quot;kubelet-response-codes&quot;&gt;Kubelet Response Codes&lt;/h4&gt;
+
+&lt;p&gt;Usually the Kubelet will return a 404 response when the root path it queried. This indicates that anonymous authentication is enabled (which is the default) but that it doesn’t have anything present at that URL. Querying a valid path for the API (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/pods&lt;/code&gt;) will return a 401 unauthorized message, unless the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;alwaysAllow&lt;/code&gt; authorization mechanism is set-up, when that path would return a list of the pods on the node.&lt;/p&gt;
+
+&lt;p&gt;In the event that 10255/TCP is visible on a cluster (only older versions) this is the unauthenticated Kubelet “read-only” port which will return a detailed list of pods running on the node.&lt;/p&gt;
+
+&lt;h3 id=&quot;etcd&quot;&gt;etcd&lt;/h3&gt;
+
+&lt;p&gt;Like the Kubelet etcd runs on a reasonably unusual set of ports (2379/TCP and 2380/TCP). A running etcd instance may not be related to a Kubernetes cluster as it can be used independently, but when seen along-side ports like 10250/TCP it’s a fair bet it’s support a Kubernetes installation.&lt;/p&gt;
+
+&lt;p&gt;When supporting Kubernetes, etcd will almost always be set-up with client certificate authentication only, so requests will just be rejected with a bad certificate error like this&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl: (35) error:14094412:SSL routines:ssl3_read_bytes:sslv3 alert bad certificate
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;finding-kubernetes-clusters-on-the-internet&quot;&gt;Finding Kubernetes Clusters on the Internet&lt;/h2&gt;
+
+&lt;p&gt;So now we know what we’re looking for, how do we find it? Luckily, there are multiple Internet search engines which provide filters to make finding Kubernetes ports easy. &lt;a href=&quot;https://shodan.io&quot;&gt;Shodan&lt;/a&gt;, &lt;a href=&quot;https://censys.io/&quot;&gt;Censys&lt;/a&gt; and &lt;a href=&quot;https://www.binaryedge.io/&quot;&gt;Binary Edge&lt;/a&gt; are all options. In addition to pre-packed filters we can also use certain features of how Kubernetes to identify services listening on the Internet (or any other network).&lt;/p&gt;
+
+&lt;p&gt;Of the three Shodan currently finds the most servers, to let’s look at some of the options to find things there. Some of the query results below will require a shodan account to look at so I’ve put screenshots for some of the more interesting information.&lt;/p&gt;
+
+&lt;h3 id=&quot;basic-information-for-exposed-clusters&quot;&gt;Basic Information for exposed clusters&lt;/h3&gt;
+
+&lt;p&gt;The most basic search available is one for &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22&quot;&gt;product:”Kubernetes”&lt;/a&gt;. This currently returns 1.3M results. Of these ~240k are Kublet’s, so that leaves us with a bit over a million likely Kubernetes API servers.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-product-kubernetes.png&quot; alt=&quot;shodan basic results&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;So the first question that likely occurs is “why are there so many Kubernetes services on the Internet?”. Whilst there’s a number of reasons, the major one comes down to the defaults used by the 3 major managed Kubernetes services, EKS, AKS and GKE. All of these services default to putting the API server directly on the Internet, and we can see evidence of this from Shodan’s reporting of the netblock owners for the various exposed services.&lt;/p&gt;
+
+&lt;p&gt;Looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=org&quot;&gt;organizations&lt;/a&gt; for this we can see the largest are Google, Amazon and Microsoft respectively and that they account for well over 600k of the exposed services.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kubernetes-orgs.png&quot; alt=&quot;shodan org results&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The next likely interesting point is around the versions of Kubernetes running on the exposed services. Shodan (like the other Internet search engines) pull that information out by querying the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint where it’s exposed.&lt;/p&gt;
+
+&lt;p&gt;Looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=version&quot;&gt;version information&lt;/a&gt; we can see a couple of interesting things. Firstly we see EKS and GKE versions there but not AKS. This is because, by default, both Amazon and Google make that endpoint available without authentication and Microsoft does not.&lt;/p&gt;
+
+&lt;p&gt;Looking at the top versions available the other interesting point is that, while most are recent’ish, they’re still falling behind the latest available (1.24) and quite a large number of clusters are running unsupported versions.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-exposed-versions.png&quot; alt=&quot;shodan version results&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;response-code-variations&quot;&gt;Response code variations&lt;/h3&gt;
+
+&lt;p&gt;One of the things that was reported on by other research was around the response codes for Kubernetes API servers. Looking at the information on Shodan we can see something quite interesting about the split of responses. The majority of API servers respond with the 403 forbidden code as shown &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+403&quot;&gt;here&lt;/a&gt; and looking at the responses for 401 unauthorized &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+401&quot;&gt;here&lt;/a&gt; what we can see is that the vast majority of them are in Microsoft’s netblock space. The likely explanation here is that Microsoft’s AKS product is that they’re disabling anonymous authentication to the API server or they’re using some kind of additional load balancer or proxy in front of the API servers which is returning 401 to requests to the root path.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kubernetes-401.png&quot; alt=&quot;shodan 401 response code results&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;kubelets&quot;&gt;Kubelets&lt;/h3&gt;
+
+&lt;p&gt;Searching for what we know about Kubelets, we can see &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+http.status%3A%22404%22+port%3A%2210250%22&quot;&gt;results for a response code of 404 on port 10250/TCP&lt;/a&gt;. It’s kind of interesting that there are as many results as this as, while there’s some reasons why you might want the API server directly connected to the Internet, there’s not many reasons to directly expose the Kubelet.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kubelets-exposed.png&quot; alt=&quot;shodan kubelet results&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;etcd-1&quot;&gt;Etcd&lt;/h3&gt;
+
+&lt;p&gt;Tracking down etcd hosts is a little more difficult. As, by default, they won’t actually form a connection without a valid client certificate. We can look at Shodan’s data for &lt;a href=&quot;https://www.shodan.io/search?query=port%3A%222379%22&quot;&gt;port 2379&lt;/a&gt;. In there there’s a subset of results for a product of etcd and looking at &lt;a href=&quot;https://www.shodan.io/search?query=port%3A%222379%22+product%3A%22etcd%22&quot;&gt;the results&lt;/a&gt; what’s interesting is that these are essentially unauthenticated etcd services, which may or may not be related to Kubernetes clusters.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-unauth-etcd.png&quot; alt=&quot;shodan unauth etcd results&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;The goal here was just to record a bit of information about Kubernetes network attack surface, some of the tricks of identifying Kubernetes clusters based on their responses to basic requests and look at what information is visible on the Internet relating to exposed Kubernetes services.&lt;/p&gt;
+
+&lt;p&gt;Possibly the most important point here is that if you’re using one of the major managed Kubernetes distributions, you’re possibly exposing more information than you want to via the exposed API server port, and if you can, it’s a good idea to remove that exposure by restricting access to your cluster.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 03 Jul 2022 09:10:39 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</guid>
+			</item>
+		
+			<item>
 				<title>Escaping the Nested Doll with Tailscale</title>
 				<description>&lt;p&gt;There are lots of tools which we can use in the container ecosystem to easily create and test applications, but sometimes the networking they create can get a little complex, making it hard to work with and troubleshoot. I came across a scenario recently (for a workshop in Kubecon) where I needed to access a GUI application deployed in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster running in an EC2 instance on AWS, from my laptop. The solution I came up with was to use &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and as it seemed like a nice way to solve the problem, I thought it was worth documenting.&lt;/p&gt;
 
@@ -807,71 +964,6 @@ clusterrolebinding.rbac.authorization.k8s.io/rbac-clusteradmin created
 				<pubDate>Sat, 16 Jan 2021 16:00:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</guid>
-			</item>
-		
-			<item>
-				<title>Kubernetes is a router</title>
-				<description>&lt;p&gt;One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.&lt;/p&gt;
-
-&lt;p&gt;This could leave you with the idea that pods aren’t accessible from elsewhere on the LAN that the cluster lives on, which could in turn provide a false sense of security about their accessibility, so it’s important to know that whilst pods aren’t usually accessible, that’s not a security feature.&lt;/p&gt;
-
-&lt;p&gt;To demonstrate this I setup a single node Kubeadm cluster and a client machine on the same LAN. In this setup the cluster node is at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.197.134&lt;/code&gt; and the client at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.197.135&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;On the cluster node if I do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get po -A -o wide&lt;/code&gt; we can see the pod IP addresses for the pods running in the cluster :-&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAMESPACE         NAME                                       READY   STATUS    RESTARTS   AGE   IP                NODE      
-calico-system     calico-kube-controllers-546d44f5b7-gchk4   1/1     Running   1          16h   10.8.203.8        kubeadm120
-calico-system     calico-node-475ff                          1/1     Running   1          16h   192.168.197.134   kubeadm120
-calico-system     calico-typha-54879db669-6m4pr              1/1     Running   1          16h   192.168.197.134   kubeadm120
-default           testweb                                    1/1     Running   1          16h   10.8.203.7        kubeadm120
-kube-system       coredns-74ff55c5b-pp2kt                    1/1     Running   1          16h   10.8.203.6        kubeadm120
-kube-system       coredns-74ff55c5b-x8fzx                    1/1     Running   1          16h   10.8.203.5        kubeadm120
-kube-system       etcd-kubeadm120                            1/1     Running   1          16h   192.168.197.134   kubeadm120
-kube-system       kube-apiserver-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120
-kube-system       kube-controller-manager-kubeadm120         1/1     Running   1          16h   192.168.197.134   kubeadm120
-kube-system       kube-proxy-kkb2v                           1/1     Running   1          16h   192.168.197.134   kubeadm120
-kube-system       kube-scheduler-kubeadm120                  1/1     Running   1          16h   192.168.197.134   kubeadm120
-tigera-operator   tigera-operator-657cc89589-624rj           1/1     Running   2          16h   192.168.197.134   kubeadm120
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Whilst some of them (the ones using host networking) are on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.197.0/24&lt;/code&gt; network, some of the others are on the pod network of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.8.0.0/16&lt;/code&gt; which was configured when I setup the cluster. So, from my client machine, I can’t immediately address services on the pod network. If I try to access the nginx web server on the “testweb” pod, it won’t work, as my client doesn’t know how to route traffic to it.&lt;/p&gt;
-
-&lt;p&gt;However, like the post title says, Kubernetes is a router, so if I can add a route on my client, telling it that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.8.0.0/16&lt;/code&gt; network can be reached via the Kubernetes cluster node, I can get traffic to it!&lt;/p&gt;
-
-&lt;p&gt;This is easily enough done, just add a route like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo route add -net 10.8.0.0 netmask 255.255.0.0 gw 192.168.197.134&lt;/code&gt; and then bingo, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;curl http://10.8.203.7&lt;/code&gt; will return our nginx container’s home page.&lt;/p&gt;
-
-&lt;h2 id=&quot;why-does-that-work&quot;&gt;Why does that work?&lt;/h2&gt;
-
-&lt;p&gt;So we can then look a bit into why this works. The first part is routing. If we look at the routing table on our cluster node we can see routes for our pods. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;route -n&lt;/code&gt; shows :-&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Kernel IP routing table
-Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-0.0.0.0         192.168.197.2   0.0.0.0         UG    100    0        0 ens33
-10.8.203.5      0.0.0.0         255.255.255.255 UH    0      0        0 cali8c667e24141
-10.8.203.6      0.0.0.0         255.255.255.255 UH    0      0        0 calib967dfbd495
-10.8.203.7      0.0.0.0         255.255.255.255 UH    0      0        0 calib9199d171be
-10.8.203.8      0.0.0.0         255.255.255.255 UH    0      0        0 calie65c0ecd96a
-10.8.203.9      0.0.0.0         255.255.255.255 UH    0      0        0 cali68caf03a5f4
-10.8.203.10     0.0.0.0         255.255.255.255 UH    0      0        0 cali78a7a37ae9d
-172.17.0.0      0.0.0.0         255.255.0.0     U     0      0        0 docker0
-192.168.197.0   0.0.0.0         255.255.255.0   U     0      0        0 ens33
-192.168.197.2   0.0.0.0         255.255.255.255 UH    100    0        0 ens33
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So we know the node has a route for the pods which is local as there’s no “G” flag on it. The other part of the equation is packet forwarding. Checking the standard Linux sysctl for this with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysctl net.ipv4.ip_forward&lt;/code&gt; we can see that packet fowarding is enabled&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;net.ipv4.ip_forward &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So traffic sent to the kubernetes node will be forwarded, based on its routing table, and will get to the pod ok.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This is a relatively minor point, but one worth remembering, just because you can’t get access to pod IP addresses from outside the cluster by default, it’s not a security barrier you should be relying on. In general services running in pods on the cluster should be secured, just like any other service running in your network as they are likely to be accessible in one way or another. If you do want to restrict access to pods running in a cluster, using &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/network-policies/&quot;&gt;network policies&lt;/a&gt; will be the way to go.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 03 Jan 2021 16:00:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/</guid>
 			</item>
 		
 	</channel>
