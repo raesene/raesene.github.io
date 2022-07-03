@@ -271,7 +271,7 @@
 
 <h3 id="basic-information-for-exposed-clusters">Basic Information for exposed clusters</h3>
 
-<p>The most basic search available is one for <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22">product:”Kubernetes”</a>. This currently returns 1.3M results. Of these ~240k are Kublet’s, so that leaves us with a bit over a million likely Kubernetes API servers.</p>
+<p>The most basic search available is one for <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22">product:”Kubernetes”</a>. This currently returns 1.3M results. Of these ~240k are Kubelets, so that leaves us with a bit over a million likely Kubernetes API servers.</p>
 
 <p><img src="https://raesene.github.io/assets/media/shodan-product-kubernetes.png" alt="shodan basic results" /></p>
 
@@ -299,7 +299,7 @@
 
 <p>Searching for what we know about Kubelets, we can see <a href="https://www.shodan.io/search?query=product%3A%22Kubernetes%22+http.status%3A%22404%22+port%3A%2210250%22">results for a response code of 404 on port 10250/TCP</a>. It’s kind of interesting that there are as many results as this as, while there’s some reasons why you might want the API server directly connected to the Internet, there’s not many reasons to directly expose the Kubelet.</p>
 
-<p><img src="https://raesene.github.io/assets/media/shodan-kubelets-exposed.png" alt="shodan kubelet results" /></p>
+<p><img src="https://raesene.github.io/assets/media/shodan-kublets-exposed.png" alt="shodan kubelet results" /></p>
 
 <h3 id="etcd-1">Etcd</h3>
 
