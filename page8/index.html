@@ -159,6 +159,32 @@
   <span class="post-date">
     
     November
+    17th,
+    
+    2014
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2014/11/17/want-to-improve-your-security-just-turn-off-ssl/">Want to improve your security? Just turn off SSL!</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I’ve had cause to work with some of the more common Vulnerability Assessment scanners recently, and I couldn’t help but notice that a lot of the findings related to incorrect configuration of, or bugs with, SSL implementations.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
     2nd,
     
     2014
@@ -416,41 +442,6 @@
 <p>One final example….  Sadly I think Blackberry is going the same way.   Considering that they have been relegated to fourth place in the mobile market, I think it unlikely that they will still be in the race (as an independent company) in a year’s time.  And yet not so long ago they had the vast majority of the smartphone market.</p>
 <p>And the common factor in all of this….   Intellectual arrogance and the complete inability or unwillingness to listen to their customer base, or in any way to acknowledge that their product was not automatically superior just because it was the current market leader.</p>
 <p>So two things I would take from this…..  Firstly if I were a property management company I would seriously do something about my customer service before I allowed a simple Internet search to make me look that bad.  Secondly, I would bet a lot of money against the tech press who are writing Microsoft off as a major force compared to Apple and Google.  Consistently over the last 20 years they appear to have been the only company who genuinely care about customer service, and also one of the few who try to adapt to changing times.    They have never made any claims about 'doing no evil' - but it consistently appears that caring for your customers on a day to day basis, and being seen to do so, makes good commercial sense.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    23rd,
-    
-    2013
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2013/05/23/windows-azure-backup/">Windows Azure Backup</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I just configured the preview version of Windows Azure Backup.  It is very nice looking and easy to use once you get it up and running - but the instructions to install it are difficult to find and a bit patchy.</p>
-<p>First you have to create a certificate for your vault.  You use a utility called makecert.exe which is part of the Windows SDK (the link in the documentation to TechNet doesn't work - so you can get it here.</p>
-<p><a href="http://msdn.microsoft.com/en-US/windows/desktop/aa904949">http://msdn.microsoft.com/en-US/windows/desktop/aa904949</a></p>
-<p>For reasons that are not clear to me the utility doesn't seem to be available as a standalone - but downloading just the tools part of the SDK contains it.</p>
-<p>Then the documentation that actually works is here (there are several wrong versions in different places dotted across their sites).</p>
-<p><a href="http://msdn.microsoft.com/en-us/library/windowsazure/dn169036.aspx">http://msdn.microsoft.com/en-us/library/windowsazure/dn169036.aspx</a></p>
-<p>The key thing is to follow the instructions exactly - you need <strong>both </strong>the .cer file and the .pfx file (the public and private keys).</p>
-<p>Once you have followed all the instructions and configured your vault you can go ahead with the local software install.  If you have had the Beta version of the agent installed, you need to uninstall it and then install the new one.  Once the software is installed and the agent started, you can then register your server - this took a few minutes to do on my machine - so be patient with it.</p>
-<p>Once all this is done - configuring your backup and restores is a snip.  I hope that when it comes out of preview the documentation is improved a bit.</p>
-<p>&nbsp;</p>
 
     
     

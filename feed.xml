@@ -7,6 +7,68 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with Capbilities</title>
+				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
+
+&lt;p&gt;Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-in-practice&quot;&gt;here&lt;/a&gt;) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.&lt;/p&gt;
+
+&lt;h2 id=&quot;using-file-capabilities-when-youre-not-root&quot;&gt;Using File Capabilities when you’re not root&lt;/h2&gt;
+
+&lt;p&gt;Sometimes, in containerized environments, we are restricted from running as the root user, a notable example being OpenShift, which restricts that by default. However generally in those cases we’ll still get the default set of capabilities that most Linux container runtimes provide. This gives us what are called “bounding” capabilities, but the tricky part is, how do we use those when we’re not running as root?&lt;/p&gt;
+
+&lt;p&gt;Well if you can specify a container image that you control, the answer is to set capabilities on programs inside the image, that way when you use those programs you’ll be able to use the capabilities granted.&lt;/p&gt;
+
+&lt;p&gt;Let’s look at a practical example. In the Dockerfile for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raesene/alpine-noroot-containertools&lt;/code&gt; I’ve got the line&lt;/p&gt;
+
+&lt;div class=&quot;language-Dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;setcap &lt;span class=&quot;s1&quot;&gt;'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'&lt;/span&gt; /bin/busybox
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This sets all the capabilities from the Default Docker set on the busybox program inside this container, and busybox provides all the utilities like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chmod&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chown&lt;/code&gt; so I can run those commands with the capabilities I’ve specified. There’s a couple of useful side effects to doing this. The first is I can change the permissions of files in the image that I don’t own&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/capability-change-file-perm-in-image.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;fun, but not really that useful as you can always just change the permissions inside the image while you’re building it. A slightly more useful use case is that if you’re mounting files inside the container from the underlying host, you don’t have to worry about who owns those files or the permissions on them as you can just change the perms, using your file capabilities.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/capability-change-file-perm-on-mounted-dir.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is a handy way to get round the problem where you’re running your non-root containers, but don’t want to have to remember to change the permissions on files you mount in from the underlying host.&lt;/p&gt;
+
+&lt;h2 id=&quot;moving-files-with-capabilities&quot;&gt;Moving files with Capabilities&lt;/h2&gt;
+
+&lt;p&gt;One challenge, when working with file capabilities, is that it can be hard to move them around without losing the capabilities. Utilities like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cp&lt;/code&gt; will generally strip capabilities when they’re used. So if you have a file with capabilities how do you move it somewhere?&lt;/p&gt;
+
+&lt;p&gt;The answer is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tar&lt;/code&gt; which supports that idea. You can create a tar file using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--xattrs&lt;/code&gt; flag and then when you un-tar use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--xattrs-include='security.*'&lt;/code&gt; flag to ensure they’re retained. A notable restriction is that to un-tar using that flag, you need to be root. Another restriction is that not all implementations of tar support those flags (e.g. some versions of busybox).&lt;/p&gt;
+
+&lt;p&gt;So to demo this we’ll use an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ubuntu:22.04&lt;/code&gt; image. Our goal is going to be, starting as an ordinary user on the host with Docker rights, get a copy of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim&lt;/code&gt; that will let us edit files owned by root like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; (N.B. this isn’t really a security hole as Docker access == root in most cases, but it’s fun :) )&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/start-container-with-mapped-dir.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Once we’ve got it running first install &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;libcap2-bin&lt;/code&gt; which lets us set file capabilities. With those installed we can run this to set our file capabilities.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setcap &lt;span class=&quot;s1&quot;&gt;'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'&lt;/span&gt; /usr/bin/vim.basic
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we can tar our copy of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim.basic&lt;/code&gt; up in our mounted directory, and then untar it in the same place (so that the capabilities are preserved)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tar-file-capabilities.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now, with our copy of vim that has caps ready, exit the container and try to edit a file that we should not have access to on the host, and it should work just fine, thanks to the capabilities applied (specifically &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DAC_OVERRIDE&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;To bring it all together here’s a video showing all the steps&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/Ha7PRo1OnCE&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;File capabilities are an interesting area to explore when working with containers (and in Linux in general) whilst the security model has been pretty well thought out, there are cases where you can make use of them to allow things that might otherwise be tricky :)&lt;/p&gt;
+
+</description>
+				<pubDate>Sun, 31 Jul 2022 09:10:39 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/</guid>
+			</item>
+		
+			<item>
 				<title>Let's talk about Kubernetes on the Internet</title>
 				<description>&lt;p&gt;There’s been a couple of studies recently released by security research companies about exposed Kubernetes clusters on the Internet, and whilst it’s nice to see the security industry focusing a bit more on Kubernetes, some of the analysis misses some of the details of why Kubernetes clusters are exposed to the Internet and what some of the results mean, so I thought it would be a good opportunity to &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;revist&lt;/a&gt; this topic, also as there have been some developments in what information can be found via Internet search engines.&lt;/p&gt;
 
@@ -839,131 +901,6 @@ EOF
 				<pubDate>Sun, 21 Mar 2021 16:00:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2021/03/21/Trying-out-cosign/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/03/21/Trying-out-cosign/</guid>
-			</item>
-		
-			<item>
-				<title>Getting into a bind with Kubernetes</title>
-				<description>&lt;p&gt;Following on from &lt;a href=&quot;https://raesene.github.io/blog/2020/12/12/Escalating_Away/&quot;&gt;looking at the escalate verb in Kubernetes RBAC&lt;/a&gt;, I thought it would be worth looking at another one of the unusual verbs you can see in Kubernetes RBAC, bind.&lt;/p&gt;
-
-&lt;p&gt;These two, along with the impersonate verb are operations that are available on some RBAC objects in the Kubernetes API. They’re quite important if you’re looking at designing or auditing Kubernetes rights as they can allow for privilege escalation, so know which principals have access to them is important.&lt;/p&gt;
-
-&lt;p&gt;The bind verb can be applied to roles or clusterroles and allows a principal to bypass a general restriction on (cluster)role binding creation, which stops users who can create role bindings from escalating their privileges by binding to high privilege roles like cluster admin. This restriction is described in the Kubernetes documentation &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/rbac/#restrictions-on-role-binding-creation-or-update&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;The way that this works is that, without using bind, a user cannot create a rolebinding or clusterrolebinding to a role or cluster role which has rights that the user themselves does not currently have. So for example if a user with the rights to create rolebindings tries to bind to cluster-admin , this won’t work unless that user already has cluster-admin rights.&lt;/p&gt;
-
-&lt;p&gt;Bind is made available to allow for this restriction to be bypassed.&lt;/p&gt;
-
-&lt;h2 id=&quot;practical-example&quot;&gt;Practical Example&lt;/h2&gt;
-
-&lt;p&gt;Let’s show a practical example of this. First up we’ll create a couple of service accounts to act as our user for this experiment and we’ll call them &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbac-binder&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;not-rbac-binder&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;Now we’ll create a couple of cluster roles. Both have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebindings&lt;/code&gt; but one will also have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bind&lt;/code&gt; on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterroles&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac-binder&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterroles&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;bind&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterrolebindings&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;create&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;not-rbac-binder&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;clusterrolebindings&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;create&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then we’ll just bind those two clusterroles to their respective service accounts.&lt;/p&gt;
-
-&lt;p&gt;So at this point if we look at our users rights with ` kubectl –as=system:serviceaccount:default:rbac-binder auth can-i –list` we can see that the rbac-binder service account has the following rights&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Resources                                       Non-Resource URLs   Resource Names   Verbs
-clusterroles.rbac.authorization.k8s.io          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;bind&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
-selfsubjectaccessreviews.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-selfsubjectrulesreviews.authorization.k8s.io    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-clusterrolebindings.rbac.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and the not-rbac-binder service account has these rights&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:not-rbac-binder auth can-i &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
-Resources                                       Non-Resource URLs   Resource Names   Verbs
-selfsubjectaccessreviews.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-selfsubjectrulesreviews.authorization.k8s.io    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-clusterrolebindings.rbac.authorization.k8s.io   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now if we try to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;not-rbac-binder&lt;/code&gt; to create a clusterrolebinding to cluster-admin, it will fail with the following error message (remember here that we do have create clusterrolebinding rights).&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:not-rbac-binder create clusterrolebinding rbac-clusteradmin &lt;span class=&quot;nt&quot;&gt;--clusterrole&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cluster-admin &lt;span class=&quot;nt&quot;&gt;--serviceaccount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;namespace:not-rbac-binder
-error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io &lt;span class=&quot;s2&quot;&gt;&quot;rbac-clusteradmin&quot;&lt;/span&gt; is forbidden: user &lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccount:default:not-rbac-binder&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;groups&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccounts&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;system:serviceaccounts:default&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;system:authenticated&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; is attempting to grant RBAC permissions not currently held:
-&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;APIGroups:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Resources:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Verbs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;NonResourceURLs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;, Verbs:[&lt;span class=&quot;s2&quot;&gt;&quot;*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then if we try the same operation with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rbac-binder&lt;/code&gt; it works!&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--as&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;system:serviceaccount:default:rbac-binder create clusterrolebinding rbac-clusteradmin &lt;span class=&quot;nt&quot;&gt;--clusterrole&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;cluster-admin &lt;span class=&quot;nt&quot;&gt;--serviceaccount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;namespace:rbac-binder
-clusterrolebinding.rbac.authorization.k8s.io/rbac-clusteradmin created
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;The bind verb on RBAC is a useful piece of Kubernetes RBAC configuration but it’s also a lesser known are of RBAC and one which not all tools might properly understand. As it can allow for privilege escalation, it’s an important thing to check for when creating or auditing roles and clusterroles.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 16 Jan 2021 16:00:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/</guid>
 			</item>
 		
 	</channel>

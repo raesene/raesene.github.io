@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kind of Insecure Test Clusters</title>
+	<title>Fun with Capbilities</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kind of Insecure Test Clusters </h1>
+  <h1>Fun with Capbilities </h1>
 </div>
 	
 <article>
@@ -157,60 +157,66 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   4th,
-	   
-	   2019
+	   July 
+	   31st,
+	     
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+	  <h1 id="introduction">Introduction</h1>
 
-<p>For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.</p>
+<p>Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series <a href="https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work">here</a> and <a href="https://blog.container-solutions.com/linux-capabilities-in-practice">here</a>) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.</p>
 
-<p>So when I heard about <a href="https://kind.sigs.k8s.io/">kind</a> on an episode of Heptio’s <a href="https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ">TGIK</a> I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.</p>
+<h2 id="using-file-capabilities-when-youre-not-root">Using File Capabilities when you’re not root</h2>
 
-<p>Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.</p>
+<p>Sometimes, in containerized environments, we are restricted from running as the root user, a notable example being OpenShift, which restricts that by default. However generally in those cases we’ll still get the default set of capabilities that most Linux container runtimes provide. This gives us what are called “bounding” capabilities, but the tricky part is, how do we use those when we’re not running as root?</p>
 
-<p>What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.</p>
+<p>Well if you can specify a container image that you control, the answer is to set capabilities on programs inside the image, that way when you use those programs you’ll be able to use the capabilities granted.</p>
 
-<p>Kind supports a <code class="language-plaintext highlighter-rouge">--config</code> option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to <a href="https://twitter.com/BenTheElder">@BenTheElder</a> and <a href="https://twitter.com/mauilion">@mauillon</a> for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.</p>
+<p>Let’s look at a practical example. In the Dockerfile for <code class="language-plaintext highlighter-rouge">raesene/alpine-noroot-containertools</code> I’ve got the line</p>
 
-<p>The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.</p>
-
-<p>To provide a concrete example, the config below will create a cluster with the insecure port running on the API server</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: "0.0.0.0"
-        insecure-port: "8080"
+<div class="language-Dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">RUN </span>setcap <span class="s1">'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'</span> /bin/busybox
 </code></pre></div></div>
 
-<p>Once you’ve got kind installed and this is present as a YAML file you can just run</p>
+<p>This sets all the capabilities from the Default Docker set on the busybox program inside this container, and busybox provides all the utilities like <code class="language-plaintext highlighter-rouge">chmod</code> and <code class="language-plaintext highlighter-rouge">chown</code> so I can run those commands with the capabilities I’ve specified. There’s a couple of useful side effects to doing this. The first is I can change the permissions of files in the image that I don’t own</p>
 
-<p><code class="language-plaintext highlighter-rouge">kind --config insecure-port.yaml --name insecure create cluster</code></p>
+<p><img src="https://raesene.github.io/assets/media/capability-change-file-perm-in-image.png" alt="change file perm inside image" /></p>
 
-<p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="language-plaintext highlighter-rouge">docker0</code> interface.</p>
+<p>fun, but not really that useful as you can always just change the permissions inside the image while you’re building it. A slightly more useful use case is that if you’re mounting files inside the container from the underlying host, you don’t have to worry about who owns those files or the permissions on them as you can just change the perms, using your file capabilities.</p>
 
-<p>So you can get the IP address of that interface from <code class="language-plaintext highlighter-rouge">docker inspect insecure-control-plane</code></p>
+<p><img src="https://raesene.github.io/assets/media/capability-change-file-perm-on-mounted-dir.png" alt="change file perm inside image" /></p>
 
-<p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="language-plaintext highlighter-rouge">172.17.0.3</code>)</p>
+<p>This is a handy way to get round the problem where you’re running your non-root containers, but don’t want to have to remember to change the permissions on files you mount in from the underlying host.</p>
 
-<p><code class="language-plaintext highlighter-rouge">curl http://172.17.0.3:8080/</code></p>
+<h2 id="moving-files-with-capabilities">Moving files with Capabilities</h2>
 
-<p>I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github <a href="https://github.com/raesene/kind-of-insecure">here</a></p>
+<p>One challenge, when working with file capabilities, is that it can be hard to move them around without losing the capabilities. Utilities like <code class="language-plaintext highlighter-rouge">cp</code> will generally strip capabilities when they’re used. So if you have a file with capabilities how do you move it somewhere?</p>
+
+<p>The answer is <code class="language-plaintext highlighter-rouge">tar</code> which supports that idea. You can create a tar file using the <code class="language-plaintext highlighter-rouge">--xattrs</code> flag and then when you un-tar use the <code class="language-plaintext highlighter-rouge">--xattrs-include='security.*'</code> flag to ensure they’re retained. A notable restriction is that to un-tar using that flag, you need to be root. Another restriction is that not all implementations of tar support those flags (e.g. some versions of busybox).</p>
+
+<p>So to demo this we’ll use an <code class="language-plaintext highlighter-rouge">ubuntu:22.04</code> image. Our goal is going to be, starting as an ordinary user on the host with Docker rights, get a copy of <code class="language-plaintext highlighter-rouge">vim</code> that will let us edit files owned by root like <code class="language-plaintext highlighter-rouge">/etc/passwd</code> (N.B. this isn’t really a security hole as Docker access == root in most cases, but it’s fun :) )</p>
+
+<p><img src="https://raesene.github.io/assets/media/start-container-with-mapped-dir.png" alt="change file perm inside image" /></p>
+
+<p>Once we’ve got it running first install <code class="language-plaintext highlighter-rouge">vim</code> and <code class="language-plaintext highlighter-rouge">libcap2-bin</code> which lets us set file capabilities. With those installed we can run this to set our file capabilities.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>setcap <span class="s1">'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'</span> /usr/bin/vim.basic
+</code></pre></div></div>
+
+<p>Now we can tar our copy of <code class="language-plaintext highlighter-rouge">vim.basic</code> up in our mounted directory, and then untar it in the same place (so that the capabilities are preserved)</p>
+
+<p><img src="https://raesene.github.io/assets/media/tar-file-capabilities.png" alt="change file perm inside image" /></p>
+
+<p>Now, with our copy of vim that has caps ready, exit the container and try to edit a file that we should not have access to on the host, and it should work just fine, thanks to the capabilities applied (specifically <code class="language-plaintext highlighter-rouge">DAC_OVERRIDE</code>)</p>
+
+<p>To bring it all together here’s a video showing all the steps</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Ha7PRo1OnCE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>File capabilities are an interesting area to explore when working with containers (and in Linux in general) whilst the security model has been pretty well thought out, there are cases where you can make use of them to allow things that might otherwise be tricky :)</p>
+
 
 	  </div>
 
@@ -236,7 +242,7 @@ nodes:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kind of Insecure Test Clusters&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with Capbilities&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -264,10 +270,10 @@ nodes:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/" title="Let's talk about Kubernetes on the Internet">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
