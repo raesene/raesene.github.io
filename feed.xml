@@ -8,9 +8,7 @@
 		
 			<item>
 				<title>Fun with Capbilities</title>
-				<description>&lt;h1 id=&quot;introduction&quot;&gt;Introduction&lt;/h1&gt;
-
-&lt;p&gt;Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-in-practice&quot;&gt;here&lt;/a&gt;) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.&lt;/p&gt;
+				<description>&lt;p&gt;Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-in-practice&quot;&gt;here&lt;/a&gt;) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.&lt;/p&gt;
 
 &lt;h2 id=&quot;using-file-capabilities-when-youre-not-root&quot;&gt;Using File Capabilities when you’re not root&lt;/h2&gt;
 
