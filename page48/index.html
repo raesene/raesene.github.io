@@ -99,7 +99,7 @@
 
 
 <div id="bio" class="text-center">
-	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
 </div>
 
 
@@ -152,6 +152,33 @@
   <h1>Raesene's Ramblings </h1>
 </div>
 
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    31st,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/05/31/pen_testing_eng/">Pen Testing Engagement Guide</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>An Interesting <a href="http://www.penetration-testing.com/">Penetration Testing Guide</a> provided by corsaire.<br />
+Has some good points about choosing Pen Testing consultantcies and also some good resources at the end...</p>
+
+    
+    
+  </div>
+
+</article>
 
 
 <article class="home">
@@ -390,43 +417,6 @@ There's another reference to this story over at <a href="http://users.757.org/~j
     
     <p><a title="Diceware Passphrase Home Page" href="http://world.std.com/~reinhold/diceware.html">Diceware Passphrase Home Page</a><br />
 A link to an ... interesting ... method of generating passphrases</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    9th,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2004/05/09/client_security/">Client Security, It's important!</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This one is one of my recurrant rants, so I thought I'd post it while I think about it....<br />
-Why do large corporations, spend loads of money securing their perimiter, a fair quantity on their core line of business servers and very little securing corporate desktops...<br />
-If someone can compromise a desktop PC, they can get all the rest of the access they need very easily, they can also easily compromise your core servers...<br />
-Here's one scenario of many.<br />
-1st step - Get local administrator rights on a corporate PC running windows.  Easily done by booting off a CD grabbing the SAM file and cracking the password.   In most networks I've seen the local admin password is the same on all the PC's<br />
-2nd step - find out the IP address or machine name of an admin level persons desktop.  shouldn't be too hard if you are in the same building, if you're not something like an HTML e-mail with a web-bug in it would do the trick.....<br />
-3rd step - connect to their PC using the local administrator account and install a keylogger.<br />
-4th step - grab all the passwords as they type them! if you're feeling fancy, install a remote control program on their workstation then log on to their machine as them and connect to the servers they administer.  At that point it would be very hard for mechanisms like IDS to know that you're not the administrator of the system.....<br />
-How do you mitigate this?<br />
-One way would be to deploy 2-factor authentication for all your admins.  If you use RSA tokens or some other form of one-time password, it would cut back on the window of opportunity.<br />
-Another option would be to put desktop firewalls on all admin (or potentiallly all) PC's and configure a reasonable ruleset on them which only allows inbound connections from specific subnets, as required to maintain the system.<br />
-Another option (only applicable to this particular attack) would be to specify different local administrator passwors for each PC (might be a bit hard to administer though)</p>
 
     
     

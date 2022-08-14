@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Auditing RBAC - Redux</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Auditing RBAC - Redux </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   August 
+	   14th,
+	   
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>I was doing some reading on the topic of Kubernetes RBAC this week and I realised that a good article on the topic of auditing RBAC by <a href="https://twitter.com/antitree/">Mark Manning</a> had unfortunately succumbed to bitrot (Although the wayback machine <a href="https://web.archive.org/web/20200709085334/https://www.nccgroup.com/us/about-us/newsroom-and-events/blog/2019/august/tools-and-methods-for-auditing-kubernetes-rbac-policies/">still has a copy</a>), so I thought it would be a good opportunity to revisit the topic as there are some interesting nuances to it.</p>
+
+<h2 id="the-challenges-of-auditing-kubernetes-authorization">The challenges of auditing Kubernetes authorization</h2>
+
+<p>The idea of auditing the rights that users and services have to the Kubernetes API is obviously an important one in terms of operating a secure cluster. Regular reviews of access to ensure that “least privilege” principles are a necessary part of securing your environment.</p>
+
+<p>Kubernetes authorization is an additive process where the permissions from one or more “modes” are added together to see if a user can access a given resource. The most common of these is RBAC, however from the <a href="https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules">documentation</a> we can see that there are others (Node, ABAC and Webhook).</p>
+
+<p>This means that in order to effectively audit a cluster’s permissions you need to know which of the modes is enabled and be able to enumerate all the rights granted at each one. Typically (but <a href="https://github.com/Azure/AKS/issues/3004">not always</a>) Node and RBAC will be enabled, but for some managed clusters (e.g. AKS and GKE) Webhook authorization will also be involved.</p>
+
+<p>Auditing Node authorization is pretty simple, it’s a specialist mode which has the purpose of restricting what kubelet credentials can do, which is a mechanism designed to reduce the risk of kubelet credentials being compromised.</p>
+
+<p>Auditing Webhook authorization will depend on how the web service (for example Azure RBAC) being used works.</p>
+
+<p>That leaves us with RBAC. This will pretty much always be enabled, so you’ll need to audit it.</p>
+
+<h2 id="rbac-complexities">RBAC Complexities</h2>
+
+<p>The first complexity to note is that RBAC works at two scopes, namespace and cluster. It uses <code class="language-plaintext highlighter-rouge">Role</code> and <code class="language-plaintext highlighter-rouge">RoleBinding</code> objects at the namespace level and <code class="language-plaintext highlighter-rouge">ClusterRole</code> and <code class="language-plaintext highlighter-rouge">ClusterRoleBinding</code> objects at the cluster level. There’s three combinations of these objects possible, two of which are obvious and the third of which may be surprising.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Role</code> + <code class="language-plaintext highlighter-rouge">RoleBinding</code> == Rights provided at a namespace level</li>
+  <li><code class="language-plaintext highlighter-rouge">ClusterRole</code> + <code class="language-plaintext highlighter-rouge">ClusterRoleBinding</code> == Rights provided at a cluster level</li>
+  <li><code class="language-plaintext highlighter-rouge">ClusterRole</code> + <code class="language-plaintext highlighter-rouge">RoleBinding</code> == Rights provided at a namespace level</li>
+</ul>
+
+<p>Within RBAC there are some other nuances to be aware of as well. Firstly Kubernetes does not have a fixed list of “verbs” that can be applied to resources, in addition to the expected CREATE, READ, UPDATE, DELETE you can do things like <a href="https://blog.aquasec.com/kubernetes-verbs">educate dolphins</a>. Then in terms of the resources themselves, in addition to the standard set that are shipped as part of Kubernetes, there will likely be a large number of custom resources created by software installed in the cluster, for example most CNI providers will have several CRDs relating to networking objects.</p>
+
+<p>So for a comprehensive audit, it’s necessary to understand all the services which are plugged into the Kubernetes API (e.g. operators) and how they are set-up from an authorization perspective.</p>
+
+<p>One other complication is that Kubernetes does not have user database so to find things like which users are in a group mentioned in RBAC, you’ll need to audit the identity system(s) that are used by the cluster.</p>
+
+<p>Given all that what tools do we have that can help us in our work?</p>
+
+<h2 id="rbac-tooling">RBAC Tooling</h2>
+
+<h3 id="kubectl">Kubectl</h3>
+
+<p>First up there are some in-built capabilities within <code class="language-plaintext highlighter-rouge">kubectl</code> which can be handy. The <code class="language-plaintext highlighter-rouge">kubectl auth can-i</code> command can be used as a starting point, although it’s a bit limited when it comes to the unusual verbs we mentioned before.</p>
+
+<p>Running <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code> will provide a decent list of rights available</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl auth can-i <span class="nt">--list</span>
+Resources                                       Non-Resource URLs   Resource Names   Verbs
+<span class="k">*</span>.<span class="k">*</span>                                             <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span><span class="k">*</span><span class="o">]</span>
+                                                <span class="o">[</span><span class="k">*</span><span class="o">]</span>                 <span class="o">[]</span>               <span class="o">[</span><span class="k">*</span><span class="o">]</span>
+selfsubjectaccessreviews.authorization.k8s.io   <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span>create]
+selfsubjectrulesreviews.authorization.k8s.io    <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span>create]
+                                                <span class="o">[</span>/api/<span class="k">*</span><span class="o">]</span>            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/api]              <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/apis/<span class="k">*</span><span class="o">]</span>           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/apis]             <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/healthz]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/livez]            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/openapi/<span class="k">*</span><span class="o">]</span>        <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/openapi]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/readyz]           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/version/]         <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/version]          <span class="o">[]</span>               <span class="o">[</span>get]
+</code></pre></div></div>
+
+<p>It’s also possible (if you have the <code class="language-plaintext highlighter-rouge">impersonate</code> right) to run this command as other users to see what their rights look like. So for example to look up the rights of the <code class="language-plaintext highlighter-rouge">ttl-controller</code> in the <code class="language-plaintext highlighter-rouge">kube-system</code> namespace</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--as</span><span class="o">=</span>system:serviceaccount:kube-system:ttl-controller auth can-i <span class="nt">--list</span>
+Resources                                       Non-Resource URLs                     Resource Names   Verbs
+events                                          <span class="o">[]</span>                                    <span class="o">[]</span>               <span class="o">[</span>create patch update]
+events.events.k8s.io                            <span class="o">[]</span>                                    <span class="o">[]</span>               <span class="o">[</span>create patch update]
+selfsubjectaccessreviews.authorization.k8s.io   <span class="o">[]</span>                                    <span class="o">[]</span>               <span class="o">[</span>create]
+selfsubjectrulesreviews.authorization.k8s.io    <span class="o">[]</span>                                    <span class="o">[]</span>               <span class="o">[</span>create]
+                                                <span class="o">[</span>/.well-known/openid-configuration]   <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/api/<span class="k">*</span><span class="o">]</span>                              <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/api]                                <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/apis/<span class="k">*</span><span class="o">]</span>                             <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/apis]                               <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/healthz]                            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/livez]                              <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/openapi/<span class="k">*</span><span class="o">]</span>                          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/openapi]                            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/openid/v1/jwks]                     <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/readyz]                             <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/version/]                           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                <span class="o">[</span>/version]                            <span class="o">[]</span>               <span class="o">[</span>get]
+nodes                                           <span class="o">[]</span>                                    <span class="o">[]</span>               <span class="o">[</span>list patch update watch]
+</code></pre></div></div>
+
+<h3 id="third-party">Third Party</h3>
+
+<p>In addition to using kubectl there are a wide variety of third party tools which can be used to help assess RBAC rights. There’s a longer list <a href="https://www.container-security.site/general_information/tools_list.html#rbac-assessment-tools">here</a> but a couple of interesting ones are :-</p>
+
+<ul>
+  <li><a href="https://github.com/alcideio/rbac-tool">rbac-tool</a> - RBAC Toolbox from Alcide. This has a variety of very useful functions like graphing RBAC and doing an analysis for “risky” permissions granted to cluster users.</li>
+  <li><a href="https://github.com/cyberark/KubiScan">Kubiscan</a> - Another tool which can scan for risky permissions, this one from Cyberark.</li>
+  <li><a href="https://github.com/appvia/krane">krane</a> - RBAC static analysis and visualisation tool from Appvia.</li>
+  <li><a href="https://github.com/PaloAltoNetworks/rbac-police">RBAC Police</a> - RBAC analysis tool from Unit42 with an extensible policy library.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>I think it’s clear from this post that auditing Kubernetes authorization can be a bit of a tricky task. Kubernetes flexible architecture makes it difficult to provide generalized auditing tools as the way that clusters are implemented, with multiple authorization modes and the way the RBAC system works makes being definitive about user rights difficult.</p>
+
+<p>Tools are a great way to get started with understanding cluster rights, but we always have to be aware that they can only tell you what they can see within the scope of their operation.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(26)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Auditing RBAC - Redux&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/" title="Fun with Capabilities">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -99,7 +99,7 @@
 
 
 <div id="bio" class="text-center">
-	Security Geek, Penetration Testing, Docker, Ruby, Hillwalking
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
 </div>
 
 
@@ -152,6 +152,43 @@
   <h1>Raesene's Ramblings </h1>
 </div>
 
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
+    9th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/05/09/client_security/">Client Security, It's important!</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>This one is one of my recurrant rants, so I thought I'd post it while I think about it....<br />
+Why do large corporations, spend loads of money securing their perimiter, a fair quantity on their core line of business servers and very little securing corporate desktops...<br />
+If someone can compromise a desktop PC, they can get all the rest of the access they need very easily, they can also easily compromise your core servers...<br />
+Here's one scenario of many.<br />
+1st step - Get local administrator rights on a corporate PC running windows.  Easily done by booting off a CD grabbing the SAM file and cracking the password.   In most networks I've seen the local admin password is the same on all the PC's<br />
+2nd step - find out the IP address or machine name of an admin level persons desktop.  shouldn't be too hard if you are in the same building, if you're not something like an HTML e-mail with a web-bug in it would do the trick.....<br />
+3rd step - connect to their PC using the local administrator account and install a keylogger.<br />
+4th step - grab all the passwords as they type them! if you're feeling fancy, install a remote control program on their workstation then log on to their machine as them and connect to the servers they administer.  At that point it would be very hard for mechanisms like IDS to know that you're not the administrator of the system.....<br />
+How do you mitigate this?<br />
+One way would be to deploy 2-factor authentication for all your admins.  If you use RSA tokens or some other form of one-time password, it would cut back on the window of opportunity.<br />
+Another option would be to put desktop firewalls on all admin (or potentiallly all) PC's and configure a reasonable ruleset on them which only allows inbound connections from specific subnets, as required to maintain the system.<br />
+Another option (only applicable to this particular attack) would be to specify different local administrator passwors for each PC (might be a bit hard to administer though)</p>
+
+    
+    
+  </div>
+
+</article>
 
 
 <article class="home">
@@ -399,33 +436,6 @@ A online portscanner, to go with <a href="http://grc.com"> grc's shields up </a>
     
     <p>An interesting article over at computerworld <a title="Spyware in the office - Computerworld" href="http://www.computerworld.com/securitytopics/security/story/0,10801,92554,00.html">Spyware in the office </a>.<br />
 The existance of spyware on corporate networks is definately not a good thing.  Apart from the obvious reasons or potential leaks of confidential information or excess traffic being generated, there is the problem that deploying code on a complex platform could cause other, business critical, applications to stop working...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    22nd,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2004/04/22/encrpyted_mail/">Encrpyted mail that doesn't interfere with A-V</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Over at ZDNet there's an article <a title="PGP software gains antivirus defense - News - ZDNet" href="http://zdnet.com.com/2100-1105_2-5191597.html">PGP software gains antivirus defense </a>.<br />
-This capability is very useful, getting round one of the problems of encrypted mail, which is that the content is hidden from any security or other inspection mechanisms, like A-V.</p>
 
     
     
