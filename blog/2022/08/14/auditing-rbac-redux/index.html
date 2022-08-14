@@ -189,7 +189,7 @@
   <li><code class="language-plaintext highlighter-rouge">ClusterRole</code> + <code class="language-plaintext highlighter-rouge">RoleBinding</code> == Rights provided at a namespace level</li>
 </ul>
 
-<p>Within RBAC there are some other nuances to be aware of as well. Firstly Kubernetes does not have a fixed list of “verbs” that can be applied to resources, in addition to the expected CREATE, READ, UPDATE, DELETE you can do things like <a href="https://blog.aquasec.com/kubernetes-verbs">educate dolphins</a>. Then in terms of the resources themselves, in addition to the standard set that are shipped as part of Kubernetes, there will likely be a large number of custom resources created by software installed in the cluster, for example most CNI providers will have several CRDs relating to networking objects.</p>
+<p>Within RBAC there are some other nuances to be aware of as well. Firstly Kubernetes does not have a fixed list of “verbs” that can be applied to resources, in addition to the expected CREATE, GET, PATCH, DELETE you can do things like <a href="https://blog.aquasec.com/kubernetes-verbs">educate dolphins</a>. Then in terms of the resources themselves, in addition to the standard set that are shipped as part of Kubernetes, there will likely be a large number of custom resources created by software installed in the cluster, for example most CNI providers will have several CRDs relating to networking objects.</p>
 
 <p>So for a comprehensive audit, it’s necessary to understand all the services which are plugged into the Kubernetes API (e.g. operators) and how they are set-up from an authorization perspective.</p>
 
@@ -203,7 +203,7 @@
 
 <p>First up there are some in-built capabilities within <code class="language-plaintext highlighter-rouge">kubectl</code> which can be handy. The <code class="language-plaintext highlighter-rouge">kubectl auth can-i</code> command can be used as a starting point, although it’s a bit limited when it comes to the unusual verbs we mentioned before.</p>
 
-<p>Running <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code> will provide a decent list of rights available</p>
+<p>Running <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code> will provide a decent list of rights available via RBAC (but won’t include rights through Webhook authorization)</p>
 
 <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl auth can-i <span class="nt">--list</span>
 Resources                                       Non-Resource URLs   Resource Names   Verbs
