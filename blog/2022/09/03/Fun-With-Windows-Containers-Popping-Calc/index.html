@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Fun with Windows Containers - Popping Calc</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Fun with Windows Containers - Popping Calc </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   September 
+	   3rd,
+	     
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>Windows containers don’t get quite the use of their Linux brethren, but they’re an interesting topic and one that’s seeing more adopting as enterprises move to Containerization. Whilst, from a Docker/Kubernetes perspective, they look relatively similar to Linux containers, the underlying isolation mechanisms are entirely different. A new development in this is the provision of “host process” containers, so I thought it would be fun to take a look at what’s possible with them, but first some background…</p>
+
+<h1 id="background">Background</h1>
+
+<h2 id="isolation-options">Isolation Options</h2>
+
+<p>There are two isolation options available to users of Windows containers, Process-isolated Windows Server containers and Hyper-V isolated Windows Server containers. <a href="https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/hyperv-container">Microsoft’s documentation</a> goes into a lot of detail about the two, but a key difference is that process containers use the same kernel (like Linux containers) whereas Hyper-V isolation provides a full operating system kernel per container and uses hypervisor isolation.</p>
+
+<p>Importantly to quote <a href="https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria">Microsoft’s documentation on container security</a> <code class="language-plaintext highlighter-rouge">Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not.</code></p>
+
+<p>With that said whilst Microsoft don’t consider process containers to provide a security boundary, they have decided that some container breakouts should be considered privilege escalation and have fixed <a href="https://googleprojectzero.blogspot.com/2021/04/who-contains-containers.html">issues related to this</a> in the past.</p>
+
+<h2 id="windows-containers-and-kubernetes">Windows Containers and Kubernetes</h2>
+
+<p>It’s possible to use Windows containers as part of a Kubernetes cluster, although you still need Linux based control plane servers. When running Windows containers in a Kubernetes cluster, <a href="https://kubernetes.io/docs/concepts/windows/intro/#windows-containers-in-kubernetes">Hyper-V isolation is not supported</a>, so containers will use process based isolation</p>
+
+<h1 id="host-process-containers">Host Process Containers</h1>
+
+<p>This is a new feature in Kubernetes which is currently in beta and scheduled to reach GA in Kubernetes 1.26, although it should work on any cluster at 1.23 or higher out of the box. The idea of this feature is to replicate the <a href="https://github.com/kubernetes/enhancements/issues/1981">privileged container feature in Linux</a>, which essentially removes security isolation layers between the container and the host. This is intended to be used by system level components that need additional access to the underlying host, for example CNI providers.</p>
+
+<h2 id="getting-a-container-to-pop-calc-">Getting a container to pop calc :)</h2>
+
+<p>With the background out of the way and 2-node cluster set-up (Calico have some <a href="https://projectcalico.docs.tigera.io/getting-started/windows-calico/quickstart">good documentation</a> on the setup process), the question obviously is “can we get a container workload to pop calc on a cluster node!”.</p>
+
+<p>The way I approached this was to use <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/psexec">psexec</a> to execute a process on my cluster node. We just need a manifest which references an image containing that program and we should be able to execute programs there.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">wintest</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/windows-powertools</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">$env:CONTAINER_SANDBOX_MOUNT_POINT</span><span class="se">\\</span><span class="s">pstools</span><span class="se">\\</span><span class="s">psexec.exe"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">-i"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">1"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">-accepteula"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">c:</span><span class="se">\\</span><span class="s">windows</span><span class="se">\\</span><span class="s">system32</span><span class="se">\\</span><span class="s">calc.exe"</span><span class="pi">]</span>
+  <span class="na">securityContext</span><span class="pi">:</span>
+    <span class="na">windowsOptions</span><span class="pi">:</span>
+      <span class="na">hostProcess</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">runAsUserName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NT</span><span class="nv"> </span><span class="s">AUTHORITY</span><span class="se">\\</span><span class="s">SYSTEM"</span>
+  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">nodeSelector</span><span class="pi">:</span>
+    <span class="s2">"</span><span class="s">kubernetes.io/os"</span><span class="err">:</span> <span class="s">windows</span>
+</code></pre></div></div>
+
+<p>A couple of interesting points from the manifest. I found that passing <code class="language-plaintext highlighter-rouge">-i 1</code> was needed to get the program to execute in the interactive session running on the server. Also you can specify <code class="language-plaintext highlighter-rouge">NT AUTHORITY\\SYSTEM</code> as the running user which gives you an idea of the privileges available to a host process container. We also use a <code class="language-plaintext highlighter-rouge">nodeSelector</code> field to ensure that this container will run on a Windows node in our cluster.</p>
+
+<p>If you wanted to replicate this on every Windows node in a cluster, you’d just use a daemonset instead of a pod.</p>
+
+<p>To save people from the hassle of setting up a cluster to test this, here’s a quick video</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KbcG2tWsmt0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>If you’re planning to run Windows containers under Kubernetes, it’s important to make sure you’re restricting this new feature appropriately. Admission Control solutions like <a href="https://kyverno.io/">Kyverno</a> or <a href="https://github.com/open-policy-agent/gatekeeper">OPA Gatekeeper</a> can be used to restrict this.</p>
+
+<p>Also this is an interesting area to dig into more, as I’d guess we’ll see its usage increase over time.</p>
+
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(27)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with Windows Containers - Popping Calc&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/08/14/auditing-rbac-redux/" title="Auditing RBAC - Redux">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

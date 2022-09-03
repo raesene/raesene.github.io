@@ -7,6 +7,72 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with Windows Containers - Popping Calc</title>
+				<description>&lt;p&gt;Windows containers don’t get quite the use of their Linux brethren, but they’re an interesting topic and one that’s seeing more adopting as enterprises move to Containerization. Whilst, from a Docker/Kubernetes perspective, they look relatively similar to Linux containers, the underlying isolation mechanisms are entirely different. A new development in this is the provision of “host process” containers, so I thought it would be fun to take a look at what’s possible with them, but first some background…&lt;/p&gt;
+
+&lt;h1 id=&quot;background&quot;&gt;Background&lt;/h1&gt;
+
+&lt;h2 id=&quot;isolation-options&quot;&gt;Isolation Options&lt;/h2&gt;
+
+&lt;p&gt;There are two isolation options available to users of Windows containers, Process-isolated Windows Server containers and Hyper-V isolated Windows Server containers. &lt;a href=&quot;https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/hyperv-container&quot;&gt;Microsoft’s documentation&lt;/a&gt; goes into a lot of detail about the two, but a key difference is that process containers use the same kernel (like Linux containers) whereas Hyper-V isolation provides a full operating system kernel per container and uses hypervisor isolation.&lt;/p&gt;
+
+&lt;p&gt;Importantly to quote &lt;a href=&quot;https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria&quot;&gt;Microsoft’s documentation on container security&lt;/a&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not.&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;With that said whilst Microsoft don’t consider process containers to provide a security boundary, they have decided that some container breakouts should be considered privilege escalation and have fixed &lt;a href=&quot;https://googleprojectzero.blogspot.com/2021/04/who-contains-containers.html&quot;&gt;issues related to this&lt;/a&gt; in the past.&lt;/p&gt;
+
+&lt;h2 id=&quot;windows-containers-and-kubernetes&quot;&gt;Windows Containers and Kubernetes&lt;/h2&gt;
+
+&lt;p&gt;It’s possible to use Windows containers as part of a Kubernetes cluster, although you still need Linux based control plane servers. When running Windows containers in a Kubernetes cluster, &lt;a href=&quot;https://kubernetes.io/docs/concepts/windows/intro/#windows-containers-in-kubernetes&quot;&gt;Hyper-V isolation is not supported&lt;/a&gt;, so containers will use process based isolation&lt;/p&gt;
+
+&lt;h1 id=&quot;host-process-containers&quot;&gt;Host Process Containers&lt;/h1&gt;
+
+&lt;p&gt;This is a new feature in Kubernetes which is currently in beta and scheduled to reach GA in Kubernetes 1.26, although it should work on any cluster at 1.23 or higher out of the box. The idea of this feature is to replicate the &lt;a href=&quot;https://github.com/kubernetes/enhancements/issues/1981&quot;&gt;privileged container feature in Linux&lt;/a&gt;, which essentially removes security isolation layers between the container and the host. This is intended to be used by system level components that need additional access to the underlying host, for example CNI providers.&lt;/p&gt;
+
+&lt;h2 id=&quot;getting-a-container-to-pop-calc-&quot;&gt;Getting a container to pop calc :)&lt;/h2&gt;
+
+&lt;p&gt;With the background out of the way and 2-node cluster set-up (Calico have some &lt;a href=&quot;https://projectcalico.docs.tigera.io/getting-started/windows-calico/quickstart&quot;&gt;good documentation&lt;/a&gt; on the setup process), the question obviously is “can we get a container workload to pop calc on a cluster node!”.&lt;/p&gt;
+
+&lt;p&gt;The way I approached this was to use &lt;a href=&quot;https://docs.microsoft.com/en-us/sysinternals/downloads/psexec&quot;&gt;psexec&lt;/a&gt; to execute a process on my cluster node. We just need a manifest which references an image containing that program and we should be able to execute programs there.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;wintest&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/windows-powertools&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$env:CONTAINER_SANDBOX_MOUNT_POINT&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pstools&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;psexec.exe&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-i&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-accepteula&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;c:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;windows&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;system32&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;calc.exe&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;securityContext&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;windowsOptions&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;hostProcess&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;runAsUserName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;NT&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;AUTHORITY&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;SYSTEM&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;hostNetwork&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;nodeSelector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubernetes.io/os&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;windows&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A couple of interesting points from the manifest. I found that passing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-i 1&lt;/code&gt; was needed to get the program to execute in the interactive session running on the server. Also you can specify &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NT AUTHORITY\\SYSTEM&lt;/code&gt; as the running user which gives you an idea of the privileges available to a host process container. We also use a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodeSelector&lt;/code&gt; field to ensure that this container will run on a Windows node in our cluster.&lt;/p&gt;
+
+&lt;p&gt;If you wanted to replicate this on every Windows node in a cluster, you’d just use a daemonset instead of a pod.&lt;/p&gt;
+
+&lt;p&gt;To save people from the hassle of setting up a cluster to test this, here’s a quick video&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/KbcG2tWsmt0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;If you’re planning to run Windows containers under Kubernetes, it’s important to make sure you’re restricting this new feature appropriately. Admission Control solutions like &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt; or &lt;a href=&quot;https://github.com/open-policy-agent/gatekeeper&quot;&gt;OPA Gatekeeper&lt;/a&gt; can be used to restrict this.&lt;/p&gt;
+
+&lt;p&gt;Also this is an interesting area to dig into more, as I’d guess we’ll see its usage increase over time.&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 03 Sep 2022 17:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/09/03/Fun-With-Windows-Containers-Popping-Calc/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/03/Fun-With-Windows-Containers-Popping-Calc/</guid>
+			</item>
+		
+			<item>
 				<title>Auditing RBAC - Redux</title>
 				<description>&lt;p&gt;I was doing some reading on the topic of Kubernetes RBAC this week and I realised that a good article on the topic of auditing RBAC by &lt;a href=&quot;https://twitter.com/antitree/&quot;&gt;Mark Manning&lt;/a&gt; had unfortunately succumbed to bitrot (Although the wayback machine &lt;a href=&quot;https://web.archive.org/web/20200709085334/https://www.nccgroup.com/us/about-us/newsroom-and-events/blog/2019/august/tools-and-methods-for-auditing-kubernetes-rbac-policies/&quot;&gt;still has a copy&lt;/a&gt;), so I thought it would be a good opportunity to revisit the topic as there are some interesting nuances to it.&lt;/p&gt;
 
@@ -845,68 +911,6 @@ EOF
 				<pubDate>Sat, 03 Jul 2021 20:00:39 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2021/07/03/containers-and-low-ports/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/07/03/containers-and-low-ports/</guid>
-			</item>
-		
-			<item>
-				<title>A Census of Kubernetes Clusters</title>
-				<description>&lt;p&gt;I’ve always been a fan of spelunking around in Internet data sets to see what interesting things I can find, so when I saw that &lt;a href=&quot;https://censys.io/&quot;&gt;Censys&lt;/a&gt; had a new version of their search site, and that it had classified data about Kubernetes clusters, I had to have a look around :) Before I talk about the results, I will say I was very impressed by their new offering, the search speed is amazing for the amount of data and there’s some really useful search filters, some of which I’m using here.&lt;/p&gt;
-
-&lt;p&gt;So with access to the data my goal was to see what information I can find out about Internet facing Kubernetes clusters. There are quite a lot of these around mainly because a lot of managed Kubernetes vendors have defaulted to making the API server Internet accessible by default (top security tip is, turn that off if you don’t need it!)&lt;/p&gt;
-
-&lt;h2 id=&quot;finding-kubernetes-servers-on-the-internet&quot;&gt;Finding Kubernetes Servers on the Internet&lt;/h2&gt;
-
-&lt;p&gt;So our first question is, “how do we know we’ve found a Kubernetes server?”. The first option takes advantage of a peculiarity of how Kubernetes does TLS certificates. In a standard cluster, the API server will have a number of Subject Alternative Name fields which are predictable and consistent. For example, if I dump the API server TLS cert from a kind cluster, I get the following in the SAN field&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;DNS:kind-control-plane, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, DNS:localhost, IP Address:10.96.0.1, IP Address:172.18.0.2, IP Address:127.0.0.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Names like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubernetes.default.svc.cluster.local&lt;/code&gt; have been present in pretty much every cluster I’ve looked at, so are probably a reasonable place to start. Censys allows you to search for names in a cert, so with a search like &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.tls.certificates.leaf_data.names%3D%22kubernetes.default.svc.cluster.local%22&quot;&gt;this&lt;/a&gt; we can get some results.&lt;/p&gt;
-
-&lt;p&gt;At the time of writing that’s returning 776795 results, a fair few clusters! This leads on to another question though which is, What versions of Kubernetes are running here?&lt;/p&gt;
-
-&lt;h2 id=&quot;using-kubernetes-unauthenticated-version-endpoint&quot;&gt;Using Kubernetes Unauthenticated Version Endpoint&lt;/h2&gt;
-
-&lt;p&gt;An interesting point about the Kubernetes API server is that, by default, many clusters will make the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint available on the API server without authentication. This endpoint returns specific information like the specific version of Kubernetes in use and the version of golang used when compiling it. Another top security tip is, disable this if you don’t need it!&lt;/p&gt;
-
-&lt;p&gt;However fortunately for our census, many Kubernetes distributions don’t disable this option. In the past I’ve considered scanning the Internet for this info., so I was very happy to find out that Censys had done the hard work for me, and it’s available as a query in their new search API.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.kubernetes.version_info.git_version%3D%22%2A%22&quot;&gt;This Search&lt;/a&gt; will give us a list of all the servers which return that information. At just over 90,000 results, that’s not a bad place to start.&lt;/p&gt;
-
-&lt;p&gt;We can then use the very handy “report” feature to automatically extract all the versions and a count for each one. The report can be seen &lt;a href=&quot;https://search.censys.io/search/report?resource=hosts&amp;amp;q=services.kubernetes.version_info.git_version%3D%22*%22&amp;amp;field=services.kubernetes.version_info.git_version&amp;amp;num_buckets=1000&quot;&gt;here&lt;/a&gt;. From that we can see a couple of interesting points immediately. The first one is that many of the clusters have customized version strings, due the distribution vendor modifying the API server binary. Fortunately most of the vendors put a noticable pattern (e.g. ‘gke’ for GKE) so we can form some conclusions about which distributions we’re seeing.&lt;/p&gt;
-
-&lt;h2 id=&quot;splitting-down-the-distributions&quot;&gt;Splitting down the Distributions&lt;/h2&gt;
-
-&lt;p&gt;Looking through the identified distributions, the two largest are GKE and EKS, somewhat unsurprisingly. Based on a lack of any AKS distributions, it looks like Microsoft are blocking access to the version endpoint by default.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kubernetes-distros-censys.png&quot; alt=&quot;Distributions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In addition to the big 3 managed distributions, I noticed quite a lot for IKS (IBM’s managed Kubernetes) and OpenShift. Worth noting if you’re looking at the data, OpenShift doesn’t include their name in the version string but have a tell-tale pattern with a hex string at the end (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v1.9.1+a0ce1bc657&lt;/code&gt;)&lt;/p&gt;
-
-&lt;h2 id=&quot;what-versions-are-in-use&quot;&gt;What Versions are In Use?&lt;/h2&gt;
-
-&lt;p&gt;The next interesting question is, what Kubernetes versions are in use? A bit of data manipulation is needed to get the major version from each running cluster, but at the end of it we end up with a chart like this&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/Kubernetes_versions-censys.png&quot; alt=&quot;Distributions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;First up, there’s &lt;em&gt;a lot&lt;/em&gt; of unsupported Kubernetes out there. Looking at the major distributions out there, most have dropped support for anything older than 1.17. Based on this, there’s at least 26% of clusters running unsupported versions.&lt;/p&gt;
-
-&lt;p&gt;In particularly notable results, there’s two clusters running Kubernetes 1.2! Both of them appear to be OpenShift clusters.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-else-is-there-to-find&quot;&gt;What else is there to find?&lt;/h2&gt;
-
-&lt;p&gt;I’m just getting started on the search for interesting things, but one thing I noticed by looking through the clusters, you can also find other interesting things. One point I noted was that there are currently over 600 systems running the famous Weave &lt;a href=&quot;https://microservices-demo.github.io/&quot;&gt;Sock Shop&lt;/a&gt; demonstration App. (Censys Search &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=%22WeaveSocks+Demo+App%22&quot;&gt;here&lt;/a&gt;)&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Amusing results aside, there’s a couple of important points which come out of this data. The first one is that it’s quite easy to fingerprint Kubernetes clusters on the Internet, either via distinctive TLS certificates, or exposed API endpoints.&lt;/p&gt;
-
-&lt;p&gt;The second point is the number of companies running unsupported Kubernetes versions exposed to the Internet. These clusters are unlikely to receive security patches, so they could be a single CVE away from compromise.&lt;/p&gt;
-
-&lt;p&gt;In general, from a security standpoint, I’d very much recommend not exposing your API server directly to the Internet unless you really need to. And if you do, make sure you keep it running a supported version of the software!&lt;/p&gt;
-</description>
-				<pubDate>Sat, 05 Jun 2021 15:00:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/</guid>
 			</item>
 		
 	</channel>
