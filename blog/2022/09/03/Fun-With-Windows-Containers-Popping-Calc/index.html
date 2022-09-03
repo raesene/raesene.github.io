@@ -207,13 +207,43 @@
     <span class="s2">"</span><span class="s">kubernetes.io/os"</span><span class="err">:</span> <span class="s">windows</span>
 </code></pre></div></div>
 
-<p>A couple of interesting points from the manifest. I found that passing <code class="language-plaintext highlighter-rouge">-i 1</code> was needed to get the program to execute in the interactive session running on the server. Also you can specify <code class="language-plaintext highlighter-rouge">NT AUTHORITY\\SYSTEM</code> as the running user which gives you an idea of the privileges available to a host process container. We also use a <code class="language-plaintext highlighter-rouge">nodeSelector</code> field to ensure that this container will run on a Windows node in our cluster.</p>
+<p>A couple of interesting points from the manifest. I found that passing <code class="language-plaintext highlighter-rouge">-i 1</code> was needed to get the program to execute in the interactive session running on the server (you can specify a higher integer to get other interactive sessions on the server). Also you can specify <code class="language-plaintext highlighter-rouge">NT AUTHORITY\\SYSTEM</code> as the running user which gives you an idea of the privileges available to a host process container. We also use a <code class="language-plaintext highlighter-rouge">nodeSelector</code> field to ensure that this container will run on a Windows node in our cluster.</p>
 
 <p>If you wanted to replicate this on every Windows node in a cluster, you’d just use a daemonset instead of a pod.</p>
 
 <p>To save people from the hassle of setting up a cluster to test this, here’s a quick video</p>
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/KbcG2tWsmt0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+
+<h2 id="getting-shell-on-the-host">Getting shell on the host</h2>
+
+<p>If you’re looking for something a bit more interactive to look around the node(s), a manifest like this will start up and pause long enough for you to connect to the host</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">winshell</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">winshell</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">raesene/windows-powertools</span>
+    <span class="na">command</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">powershell.exe</span>
+    <span class="pi">-</span> <span class="s">-command</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">start-sleep</span><span class="nv"> </span><span class="s">-seconds</span><span class="nv"> </span><span class="s">600"</span>
+  <span class="na">securityContext</span><span class="pi">:</span>
+    <span class="na">windowsOptions</span><span class="pi">:</span>
+      <span class="na">hostProcess</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="na">runAsUserName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NT</span><span class="nv"> </span><span class="s">AUTHORITY</span><span class="se">\\</span><span class="s">SYSTEM"</span>
+  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">nodeSelector</span><span class="pi">:</span>
+    <span class="s2">"</span><span class="s">kubernetes.io/os"</span><span class="err">:</span> <span class="s">windows</span>
+</code></pre></div></div>
+
+<p>You can then get a nice interactive shell using kubectl</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nb">exec</span> <span class="nt">-it</span> winshell <span class="nt">--</span> cmd.exe
+</code></pre></div></div>
 
 <h1 id="conclusion">Conclusion</h1>
 
