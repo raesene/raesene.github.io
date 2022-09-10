@@ -179,7 +179,7 @@
 
 <p>There’s a couple of recommendations in this section which require specific attention. In section 1.2 the guidance recommends avoiding the use of generic administration accounts, and in Kubernetes this would apply to the first account commonly created with clusters (kubernetes-admin) as well as any other generic account.</p>
 
-<p>Additionally in section 1.3 there is a recommendation to ensure that all credentials used can be revoked. This is particularly significant to Kubernetes as it means that client certificate authentication and the Kubernetes TokenRequest API should be used with extreme care as neither have a revocation system in place.</p>
+<p>Additionally in section 1.3 there is a recommendation to ensure that all credentials used can be revoked. This is particularly significant to Kubernetes as it means that client certificate authentication and the Kubernetes TokenRequest API should be used with extreme care as neither have a revocation system in place (without either re-issuing all certificates for the cluster in the case of client certificate authentication, or deleting the serviceaccount/pod/secret tied to the token in the case of the TokenRequest API)</p>
 
 <p>Also, section 1.5 will apply to the automatic provisioning of service accounts to Kubernetes workloads, which is a common default. The recommendation here is to only supply API server credentials to workloads where explicitly required.</p>
 
