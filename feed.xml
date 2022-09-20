@@ -7,6 +7,45 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The Challenges of Assessing Kubernetes clusters for PCI Compliance</title>
+				<description>&lt;p&gt;After talking about the release of PCIs recommendations for containers and container orchestration environments, and how it could be applied to Kubernetes clusters in my &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;last blog&lt;/a&gt; I thought that it might be a good idea to discuss some of the general challenges that assessors and auditors might have when looking at Kubernetes environments, as there’s quite a few variables that you need to account for.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-is-kubernetes&quot;&gt;What is Kubernetes?&lt;/h2&gt;
+
+&lt;p&gt;Whilst there is the &lt;a href=&quot;https://github.com/kubernetes/kubernetes&quot;&gt;open source project&lt;/a&gt; that’s not how most companies will deploy Kubernetes, instead they’ll make use of a “Kubernetes distribution”. To be a certified Kubernetes distribution software has to pass &lt;a href=&quot;https://www.cncf.io/certification/software-conformance/&quot;&gt;conformance testing&lt;/a&gt; which ensures that it will operate as expected, so there will be a level of common functionality to all Kubernetes distributions. However, there is still a lot of latitude that distribution providers have in terms of the exact configuration and operating model, which an auditor needs to be aware of. At the moment there are 65 different certified distributions 51 different certified “hosted” Kubernetes and 23 different certified installers.&lt;/p&gt;
+
+&lt;h2 id=&quot;managed-against-unmanaged&quot;&gt;Managed against Unmanaged&lt;/h2&gt;
+
+&lt;p&gt;Fundamentally there are two different groups of Kubernetes distributions. A managed distribution occurs where the provider manages the control plane (API Server, Controller manager, scheduler and etcd) and the customer has access to, and manages the workloads that run on the cluster (and possibly manages the worker nodes). Major examples of this kind of approach are Amazon EKS, Azure AKS and Google’s GKE.&lt;/p&gt;
+
+&lt;p&gt;In a managed installation typically there is no access to look at the configuration of the control plane. This means that from an audit perspective any requirements that relate to precise configuration of the control plane components (for example flags set on the API server) will either be assessed via the provider’s control panels/APIs or in some cases they can’t be directly assessed at all! For some managed distributions there is a CIS benchmark, but if not an auditor will need to look at each requirement to see what the cloud providers defaults are.&lt;/p&gt;
+
+&lt;p&gt;In an unmanaged distribution (e.g. Kubeadm, Rancher), the cluster operator typically has full access to the control plane and can configure any of the components as needed. From an auditing perspective this is easier as everything can be assessed. However there is a general challenge in that things like exact file locations and names are not prescribed by the Kubernetes conformance testing, so you can’t assume that things will always be in the same place.&lt;/p&gt;
+
+&lt;p&gt;I’ll also call out at this point &lt;a href=&quot;https://www.redhat.com/en/technologies/cloud-computing/openshift&quot;&gt;Red Hat Openshift&lt;/a&gt; as it’s kind of a special case. It is a certified Kubernetes but it varies more from core Kubernetes in how it operates, so ideally when assessing it (either in managed or unmanaged form) guidelines being followed should be specifically designed for OpenShift. There is a CIS benchmark for it, so that may be useful.&lt;/p&gt;
+
+&lt;h2 id=&quot;kubernetes-versions&quot;&gt;Kubernetes Versions&lt;/h2&gt;
+
+&lt;p&gt;Another variable that needs to be accounted for when assessing a Kubernetes cluster is the version of Kubernetes in use. Kubernetes used to release a new version every 3 months and now does so every 4 months. Whilst only the last 3 versions are in support, many clusters are now running unsupported versions so there is a requirement to know about a variety of versions.&lt;/p&gt;
+
+&lt;p&gt;One reason why this is important is that the Kubernetes project will introduce new configuration options and deprecate others from version to version. One good example is the “Insecure API port”. This setting went through a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/91506&quot;&gt;process of deprecation&lt;/a&gt; over a large number of versions. Initially it defaulted to being available over &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;127.0.0.1:8080&lt;/code&gt; the default then changed to not being on by default, but still available, to not being available but the flag was still present, to not being available at all. Obviously if you use an audit guide for the wrong version of Kubernetes this could lead to a false positive or false negative result.&lt;/p&gt;
+
+&lt;p&gt;Another variable that changes over time with Kubernetes is that API versions change. Basically an API can be in “alpha” (not enabled by default), “beta” (which used to be enabled by default but since Kubernetes 1.24 new beta APIs will not be), “GA” always enabled, “deprecated” shouldn’t be used but still works or removed where it no longer works. One API which is relevant to auditors, which went through some of this process is PodSecurityPolicy, which was a core feature of Kubernetes security for some versions. Its path was alpha–&amp;gt;beta–&amp;gt;deprecated–&amp;gt;removed, but as beta APIs were generally enabled, it was in use by a large number of clusters.&lt;/p&gt;
+
+&lt;p&gt;The overall gist of this section is to emphasise the importance of matching the guidance/audit standard you’re using to the version of Kubernetes you’re reviewing. Older guides will often lead to incorrect results as defaults change over time. There are some benchmarks (like the CIS benchmarks) which have different benchmarks for different versions of Kubernetes, but in general this will require reviewers to dig into Kubernetes documentation (and sometimes github issues) to find out what the correct settings are.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;The goal of this post was really just to describe some of the complexities that you need to be aware of when assessing or auditing a Kubernetes cluster, it’s important not to take a “one size fits all” approach and to tailor the review to the distribution and version that’s being assessed. I’d expect that over time more assessment guides will be made available. Also I’d expect we’ll see more automated tooling which can help with compliance reviews, however it’s important to note that automated tools have to try and deal with all this complexity as well and some of the requirements in the PCI recommendations do not lend themselves to full automation.&lt;/p&gt;
+
+&lt;p&gt;Also whilst there are challenges in the precise detail of assessing Kubernetes cluster, that doesn’t mean we can’t come up with general guidance for the PCI Container Orchestration Recommendations and in the next post(s) I’ll take a look at that topic.&lt;/p&gt;
+</description>
+				<pubDate>Tue, 20 Sep 2022 07:45:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Guidance for Containers and Container Orchestration Tools</title>
 				<description>&lt;p&gt;Yesterday, the &lt;a href=&quot;https://blog.pcisecuritystandards.org/new-information-supplement-guidance-for-containers-and-container-orchestration-tools?utm_campaign=Stakeholder%20Engagement&amp;amp;utm_content=220770109&amp;amp;utm_medium=social&amp;amp;utm_source=twitter&amp;amp;hss_channel=tw-20256309&quot;&gt;PCI Council issued a new information supplement&lt;/a&gt; that should be of specific interest to anyone using container technologies like Docker and podman and Container orchestration technologies like Kubernetes and OpenShift to process cardholder transactions.&lt;/p&gt;
 
@@ -911,114 +950,6 @@ FIELDS:
 				<pubDate>Mon, 01 Nov 2021 08:50:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/</guid>
-			</item>
-		
-			<item>
-				<title>Restricting Docker Access With a Reverse Proxy</title>
-				<description>&lt;p&gt;One of the things that comes up a lot with Docker security is that, by default, the authorization model is all or nothing. Essentially any user or process that has access to the Docker socket (or Docker TCP port if it’s configured to listen on a network) can use any of its functions. This means that from a security standpoint essentially any user with Docker access can get root on the host &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;easily&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This is a bit of a problem if you have something like monitoring software, which you want to be able to get stats on running containers, but you don’t really want it to have access to all of Docker’s functionality. So I was wondering, what would be a good way to restrict it, so you can let the monitoring software see the information it needs, without giving it root rights to the host.&lt;/p&gt;
-
-&lt;h2 id=&quot;http-apis-and-reverse-proxies&quot;&gt;HTTP APIs and Reverse Proxies&lt;/h2&gt;
-
-&lt;p&gt;As Docker is essentially an HTTP API, one idea would be to use a reverse proxy to sit in front of it and filter what paths are available. Ideally it would be good to have a proxy that understands unix socket files, so we don’t need to expose Docker on the network to make it work. Luckily a brief bit of searching showed me there were some good options and in particular &lt;a href=&quot;https://caddyserver.com/&quot;&gt;Caddy&lt;/a&gt; looked like it would fit the bill. As an aside the initial version of Caddy I tried (v2.4.3) would hang with some Docker responses but the latest version (v2.4.5) should be fine.&lt;/p&gt;
-
-&lt;p&gt;Before I get into the details, I’ll mention this is just a PoC, I wouldn’t rely on it in production without more work and testing, but the basics work fine :)&lt;/p&gt;
-
-&lt;h2 id=&quot;setting-up-a-docker-reverse-proxy-with-caddy&quot;&gt;Setting up a Docker Reverse Proxy with Caddy&lt;/h2&gt;
-
-&lt;p&gt;After installing Caddy the first thing to do was make sure it worked the way I expected. For that a simple Caddyfile like this one does the trick&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
-  debug
-}
-
-
-http://localhost:2379 {
-  reverse_proxy unix///var/run/docker.sock
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This will expose a network port of 2379/TCP and just send on any requests to the Docker socket. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;debug&lt;/code&gt; stanza at the top just gets Caddy to output verbose information which is handy when working out what’s happening.&lt;/p&gt;
-
-&lt;p&gt;With that in place we can just tell Docker to connect to that port and see if it works using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-H&lt;/code&gt; switch&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker -H tcp://localhost:2379 info
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;That works just fine and we can see in the Caddy debug log, the requests going through the proxy to Docker&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;2021/09/05 08:37:07.052 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {&quot;upstream&quot;: &quot;unix///var/run/docker.sock&quot;, &quot;request&quot;: {&quot;remote_addr&quot;: &quot;127.0.0.1:55376&quot;, &quot;proto&quot;: &quot;HTTP/1.1&quot;, &quot;method&quot;: &quot;HEAD&quot;, &quot;host&quot;: &quot;localhost:2379&quot;, &quot;uri&quot;: &quot;/_ping&quot;, &quot;headers&quot;: {&quot;User-Agent&quot;: [&quot;Docker-Client/20.10.8 (linux)&quot;], &quot;X-Forwarded-Proto&quot;: [&quot;http&quot;], &quot;X-Forwarded-For&quot;: [&quot;127.0.0.1&quot;]}}, &quot;headers&quot;: {&quot;Pragma&quot;: [&quot;no-cache&quot;], &quot;Server&quot;: [&quot;Docker/20.10.8 (linux)&quot;], &quot;Date&quot;: [&quot;Sun, 05 Sep 2021 08:37:07 GMT&quot;], &quot;Api-Version&quot;: [&quot;1.41&quot;], &quot;Content-Length&quot;: [&quot;0&quot;], &quot;Content-Type&quot;: [&quot;text/plain; charset=utf-8&quot;], &quot;Cache-Control&quot;: [&quot;no-cache, no-store, must-revalidate&quot;], &quot;Docker-Experimental&quot;: [&quot;false&quot;], &quot;Ostype&quot;: [&quot;linux&quot;]}, &quot;status&quot;: 200}
-2021/09/05 08:37:07.067 DEBUG   http.handlers.reverse_proxy     upstream roundtrip      {&quot;upstream&quot;: &quot;unix///var/run/docker.sock&quot;, &quot;request&quot;: {&quot;remote_addr&quot;: &quot;127.0.0.1:55376&quot;, &quot;proto&quot;: &quot;HTTP/1.1&quot;, &quot;method&quot;: &quot;GET&quot;, &quot;host&quot;: &quot;localhost:2379&quot;, &quot;uri&quot;: &quot;/v1.41/info&quot;, &quot;headers&quot;: {&quot;X-Forwarded-For&quot;: [&quot;127.0.0.1&quot;], &quot;User-Agent&quot;: [&quot;Docker-Client/20.10.8 (linux)&quot;], &quot;X-Forwarded-Proto&quot;: [&quot;http&quot;]}}, &quot;headers&quot;: {&quot;Api-Version&quot;: [&quot;1.41&quot;], &quot;Content-Type&quot;: [&quot;application/json&quot;], &quot;Docker-Experimental&quot;: [&quot;false&quot;], &quot;Ostype&quot;: [&quot;linux&quot;], &quot;Server&quot;: [&quot;Docker/20.10.8 (linux)&quot;], &quot;Date&quot;: [&quot;Sun, 05 Sep 2021 08:37:07 GMT&quot;]}, &quot;status&quot;: 200}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This information is useful because it lets us know what paths we need to whitelist for our restrictive proxy. It’s important to try and whitelist the paths you definitely need and not try to blacklist the paths you don’t need, otherwise one missing path could ruin your whole day.&lt;/p&gt;
-
-&lt;p&gt;With that setup in place, we can just run all the Docker commands we want our monitoring software to do and build out a set of paths that should be allowed by the proxy. My set ended up like this.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
-  debug
-}
-
-http://localhost:2379 {
-  @infourl {
-    method GET
-    path /v1.41/info
-  }
-
-  @pingurl {
-    method HEAD
-    path /_ping
-  }
-
-  @versionurl {
-    method GET
-    path /v1.41/version
-  }
-
-  @eventsurl {
-    method GET
-    path /v1.41/events
-  }
-
-  @statsurl {
-    method GET
-    path /v1.41/stats
-  }
-
-  @containerstatsurl {
-    method GET
-    path /v1.41/containers/*/stats
-  }
-
-  @containersurl {
-    method GET
-    path /v1.41/containers/json
-  }
-
-  reverse_proxy @pingurl unix///var/run/docker.sock
-  reverse_proxy @infourl unix///var/run/docker.sock
-  reverse_proxy @versionurl unix///var/run/docker.sock
-  reverse_proxy @eventsurl unix///var/run/docker.sock
-  reverse_proxy @statsurl unix///var/run/docker.sock
-  reverse_proxy @containerstatsurl unix///var/run/docker.sock
-  reverse_proxy @containersurl unix///var/run/docker.sock
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With that set of paths in place, software should be able to gather stats, list Docker engine information and list the running containers.  If the client tries any other operation it just produces an EOF error.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker -H tcp://localhost:2379 images
-EOF
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;So this is one option for trying to provide a restricted view of the Docker API for things like monitoring tools. Getting to something production ready would obviously require more work, but the basic concept is interesting.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 05 Sep 2021 09:50:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2021/09/05/restricting-docker-access-with-a-proxy/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/09/05/restricting-docker-access-with-a-proxy/</guid>
 			</item>
 		
 	</channel>
