@@ -175,7 +175,7 @@
 
 <p><strong>Best Practice</strong> - All access to orchestration tools components and supporting services for example, monitoring from users or other services should be configured to require authentication and individual accountability.</p>
 
-<p>Requiring authentication for API access is a pretty obvious first control and there’s a couple of ways in which this requirement applies to Kubernetes, the APIs provided by Kubernetes itself and then supporting service APIs.</p>
+<p><strong>Details</strong> - Requiring authentication for API access is a pretty obvious first control and there’s a couple of ways in which this requirement applies to Kubernetes, the APIs provided by Kubernetes itself and then supporting service APIs.</p>
 
 <h3 id="kubernetes-apis">Kubernetes APIs</h3>
 
@@ -257,7 +257,7 @@
 
 <p><strong>Best Practice</strong> - All user credentials used to authenticate to the orchestration should be tied to specific individuals. Generic credentials should not be used. When a default account is present and cannot be deleted, changing the default password to a strong unique password and then disabling the account will prevent a malicious individual from re-enabling the account and gaining access with the default password.</p>
 
-<p>In terms of managing this recommendation for Kubernetes there’s one key area to consider. Most Kubernetes distributions and services will provide an initial user which is created as part of the cluster setup. This user generally has full access to the cluster via the <a href="https://blog.aquasec.com/kubernetes-authorization">system:masters</a> group and a generic name (for example <code class="language-plaintext highlighter-rouge">kubernetes-admin</code>). This account should not be used for general administration as obviously there’s no way to audit access using it (and also its rights cannot be easily revoked).</p>
+<p><strong>Details</strong> - In terms of managing this recommendation for Kubernetes there’s one key area to consider. Most Kubernetes distributions and services will provide an initial user which is created as part of the cluster setup. This user generally has full access to the cluster via the <a href="https://blog.aquasec.com/kubernetes-authorization">system:masters</a> group and a generic name (for example <code class="language-plaintext highlighter-rouge">kubernetes-admin</code>). This account should not be used for general administration as obviously there’s no way to audit access using it (and also its rights cannot be easily revoked).</p>
 
 <ul>
   <li>Ensure that if a default administrator account is provided by the Kubernetes distribution or service, this account is not used for general administrative purposes. Instead it should be held in an appropriate secrets management system and used for “break glass” purposes only.</li>
@@ -269,7 +269,7 @@
 
 <p><strong>Best Practice</strong> -  All credentials used by the orchestration system should be revokable.</p>
 
-<p>This requirement is a fairly obvious one when considering authentication to secure systems. We want to have the option to revoke any credentials that are present for the cluster in case a user has their credentials compromised and also to ensure that our joiners/movers/leavers processes are able to ensure that users only have access to systems that is required by their role.</p>
+<p><strong>Details</strong> - This requirement is a fairly obvious one when considering authentication to secure systems. We want to have the option to revoke any credentials that are present for the cluster in case a user has their credentials compromised and also to ensure that our joiners/movers/leavers processes are able to ensure that users only have access to systems that is required by their role.</p>
 
 <p>This requirement is particularly important when the system in question is Internet facing as <a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/">many Kubernetes clusters</a> are.</p>
 
@@ -320,7 +320,7 @@
 
 <p><strong>Best Practice</strong> - Authentication mechanisms used by the orchestration system should store credentials in a properly secured datastore.</p>
 
-<p>There’s a couple of places where Kubernetes credentials might be stored insecurely. The first relates to the <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file">static token file</a> authentication option that Kubernetes provides. This isn’t (in my experience) widely used, but it is an option. A cluster using this option stores tokens in clear text on the Control plane nodes of the cluster</p>
+<p><strong>Details</strong> - There’s a couple of places where Kubernetes credentials might be stored insecurely. The first relates to the <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file">static token file</a> authentication option that Kubernetes provides. This isn’t (in my experience) widely used, but it is an option. A cluster using this option stores tokens in clear text on the Control plane nodes of the cluster</p>
 
 <ul>
   <li>Static token authentication should not be used.</li>
@@ -338,7 +338,7 @@
 
 <p><strong>Best Practices</strong> - a. Credentials for the orchestration system should only be provided to services running in the cluster where explicitly required. b. Service accounts should be configured for least privilege. The level of rights they will have is dependent on how the cluster RBAC is configured.</p>
 
-<p>This recommendation strays a little into authorization but it’s basically looking to address service account token security when applied to Kubernetes. As we mentioned earlier Kubernetes, by default, will give every workload in the cluster a service account token which can be used to access the Kubernetes API server. This can lead to security problems as they can end up with excessive access if there’s a mistake made in RBAC configuration on the cluster. For example I’ve seen cases where installing a 3rd party product to a cluster adds <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights to the <code class="language-plaintext highlighter-rouge">default</code> service account token in the <code class="language-plaintext highlighter-rouge">default</code> namespace. This meant that every other workload in that namespace could get <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights! So there’s a couple of Kubernetes recommendations for this section :-</p>
+<p><strong>Details</strong> - This recommendation strays a little into authorization but it’s basically looking to address service account token security when applied to Kubernetes. As we mentioned earlier Kubernetes, by default, will give every workload in the cluster a service account token which can be used to access the Kubernetes API server. This can lead to security problems as they can end up with excessive access if there’s a mistake made in RBAC configuration on the cluster. For example I’ve seen cases where installing a 3rd party product to a cluster adds <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights to the <code class="language-plaintext highlighter-rouge">default</code> service account token in the <code class="language-plaintext highlighter-rouge">default</code> namespace. This meant that every other workload in that namespace could get <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights! So there’s a couple of Kubernetes recommendations for this section :-</p>
 
 <ul>
   <li>Ensure that <code class="language-plaintext highlighter-rouge">automountServiceAccountToken: false</code> is set on every service account and pod unless they are specifically required.</li>
@@ -352,7 +352,7 @@
 
 <p><strong>Best Practice</strong> Interactive users accessing container orchestration APIs should use multi-factor authentication (MFA).</p>
 
-<p>From a Kubernetes perspective a recommendation to use MFA for administrative access essentially requires the use of external authentication for any production cluster. For managed Kubernetes clsuter this would generally lead to the use of the cloud IAM service provided by the CSP (e.g. AWS, GCP, Azure) and ensuring that MFA is setup there. For on-premises clusters something like OIDC authentication integrated with an enterprise IAM solution with MFA would be used.</p>
+<p><strong>Details</strong> - From a Kubernetes perspective a recommendation to use MFA for administrative access essentially requires the use of external authentication for any production cluster. For managed Kubernetes clsuter this would generally lead to the use of the cloud IAM service provided by the CSP (e.g. AWS, GCP, Azure) and ensuring that MFA is setup there. For on-premises clusters something like OIDC authentication integrated with an enterprise IAM solution with MFA would be used.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
