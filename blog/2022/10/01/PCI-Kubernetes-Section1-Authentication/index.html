@@ -185,7 +185,7 @@
 
 <h4 id="kubernetes-api-server">Kubernetes API Server</h4>
 
-<p>This listens on a variety of ports depending on the distribution in use. Common options are 443/TCP, 6443/TCP and 8443/TCP. In most distributions the <code class="language-plaintext highlighter-rouge">anonymous-auth</code> flag will be set to true. this provides access to unauthenticated users to specific paths specified in the RBAC configuration of the cluster. For example in a Kubeadm cluster the following paths are available without authentication</p>
+<p>This listens on a variety of ports depending on the distribution in use. Common options are 443/TCP, 6443/TCP and 8443/TCP. In most distributions the <code class="language-plaintext highlighter-rouge">anonymous-auth</code> flag will be set to <code class="language-plaintext highlighter-rouge">true</code>. This provides access to unauthenticated users to specific paths specified in the RBAC configuration of the cluster. For example in a Kubeadm cluster the following paths are available without authentication</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">rules</span><span class="pi">:</span>
 <span class="pi">-</span> <span class="na">nonResourceURLs</span><span class="pi">:</span>
