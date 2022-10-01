@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PCI Compliance for Kubernetes in detail - Part 1 - Authentication</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>PCI Compliance for Kubernetes in detail - Part 1 - Authentication </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   1st,
+	     
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>Having taken a high-level look at how the <a href="https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/">PCI guidance for container orchestration could apply to Kubernetes environments</a>, and some of the <a href="https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/">challenges in auditing/assessing Kubernetes environments</a>, I thought it would make sense to start getting into the details of the recommendations and see how in-scope organizations could look at meeting their requirements when using Kubernetes. Whilst this post is structured round the PCI recommendations, it would hopefully be helpful in general for Kubernetes security.</p>
+
+<h1 id="section-1---authentication">Section 1 - Authentication</h1>
+
+<p>The first section of the risks and good practices table starts with Authentication. Obviously this is a key security control in most environments and something which companies need to consider. It’s also a slightly tricky topic in Kubernetes, as the authentication options provided by the base open source project aren’t generally considered suitable for production use, leaving distribution makers and cluster operators with the task of ensuring that secure authentication is in place on their clusters. Some of the PCI recommendations do reflect this challenge.</p>
+
+<h2 id="section-11">Section 1.1</h2>
+
+<p><strong>Threat</strong> - Unauthenticated access to APIs is provided by the container orchestration tool, allowing unauthorized modification of workloads.
+<strong>Best Practice</strong> - All access to orchestration tools components and supporting services for example, monitoring from users or other services should be configured to require authentication and individual accountability.</p>
+
+<p>Requiring authentication for API access is a pretty obvious first control and there’s a couple of ways in which this requirement applies to Kubernetes, the APIs provided by Kubernetes itself and then supporting service APIs.</p>
+
+<h3 id="kubernetes-apis">Kubernetes APIs</h3>
+
+<p>Kubernetes runs a number of services which are exposed to the network. In general these require authentication for any sensitive operations although there is often some level of anonymous access required for some paths and when hardening or auditing a cluster, removing that access might be considered.</p>
+
+<p>An important point when reviewing or securing these APIs is that in managed Kubernetes distributions (e.g. EKS, GKE, AKS) it is not possible for cluster operators to directly change the configuration of most of the APIs unless the cloud provider makes that available. The exception is the Kubelet which runs on worker nodes which are available to the cluster operator (unless it uses a “serverless” model like EKS Fargate)</p>
+
+<h4 id="kubernetes-api-server">Kubernetes API Server</h4>
+
+<p>This listens on a variety of ports depending on the distribution in use. Common options are 443/TCP, 6443/TCP and 8443/TCP. In most distributions the <code class="language-plaintext highlighter-rouge">anonymous-auth</code> flag will be set to true. this provides access to unauthenticated users to specific paths specified in the RBAC configuration of the cluster. For example in a Kubeadm cluster the following paths are available without authentication</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">nonResourceURLs</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">/healthz</span>
+  <span class="pi">-</span> <span class="s">/livez</span>
+  <span class="pi">-</span> <span class="s">/readyz</span>
+  <span class="pi">-</span> <span class="s">/version</span>
+  <span class="pi">-</span> <span class="s">/version/</span>
+  <span class="na">verbs</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">get</span>
+</code></pre></div></div>
+
+<p>These are generally for liveness checks, but the <code class="language-plaintext highlighter-rouge">/version</code> endpoint does provide information useful to attackers like precise version information.</p>
+
+<p>In terms of compliance recommendations for the API server the main one is</p>
+
+<ul>
+  <li>Disable anonymous authentication where possible, where it is required, ensure that minimal paths are available to unauthenticated users.</li>
+</ul>
+
+<h4 id="controller-manager">Controller Manager</h4>
+
+<p>Access to the controller manager is generally allowed over port 10257/TCP (can vary with version and distribution). In terms of anonymous access a small number of paths can be specified as a command line flag to allow access, the default settings is as below</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>--authorization-always-allow-paths strings     Default: "/healthz,/readyz,/livez"
+</code></pre></div></div>
+
+<p>In terms of recommendations :-</p>
+
+<ul>
+  <li>Review paths which are allowed for anonymous access to ensure that no sensitive data is accessible without authentication.</li>
+</ul>
+
+<h4 id="scheduler">Scheduler</h4>
+
+<p>Access to the scheduler is generally allowed over port 10259/TCP (can vary with version and distribution). In terms of access this is very similar to the controller manager, the same parameter and default exists, and the recommendation would be the same. In general for both these services there aren’t a lot of good reasons for direct access so outside of health checking there shouldn’t be much of a requirement for unauthenticated access.</p>
+
+<h4 id="kubelet">Kubelet</h4>
+
+<p>The Kubelet runs on every worker node (and possibly control plane nodes). Access is via 10250/TCP. The kubelet’s configuration with regards to anonymous access is a bit odd and not the same as either the scheduler or controller manager. anonymous access defaults to being allowed, so it’s a requirement of the distribution that they disable it (either on the command line or in the kubelet’s configuration file).</p>
+
+<p>Requests to the root path of the server will return 404, but requests to meaningful paths (like <code class="language-plaintext highlighter-rouge">/pods/</code>) will return 401 (if anonymous authentication is disabled) or 403 (if anonymous authentication is enabled).</p>
+
+<ul>
+  <li>Ensure that Kubelet anonymous authentication is disabled unless explicitly required for the operation of the cluster.</li>
+</ul>
+
+<h4 id="etcd">Etcd</h4>
+
+<p>Etcd, whilst not specifically part of the Kubernetes project, is a core part of most Kubernetes distributions. Generally it listens on ports 2379/TCP and 2380/TCP. In most Kubernetes distributions there’s no anonymous access to it by default, client certificate authentication is used, so the recommendations are quite simple</p>
+
+<ul>
+  <li>Ensure that etcd is configured to require authentication for all requests.</li>
+</ul>
+
+<h3 id="supporting-services">Supporting Services</h3>
+
+<p>The guidance also references supporting services. this is a bit of a general term and in Kubernetes cluster’s you’ll find a lot of supporting services for things like logging, monitoring, application lifecycle management and others. There have been a bit of a history of services not requiring authentication by default, and even in some cases not providing the option of authentication, so it’s an important point to consider.</p>
+
+<p>So the recommendation here is a bit generic, and will require cluster operators (and auditors) to do some investigation of clusters they’re securing or reviewing.</p>
+
+<ul>
+  <li>Review all services deployed to the cluster and ensure that they are not available without authentication. Specifically the services should not rely on the container network as being “trusted” and should still require authentication for requests from any location.</li>
+</ul>
+
+<h2 id="section-12">Section 1.2</h2>
+
+<p><strong>Threat</strong> - Generic administrator accounts are in place for container orchestration tool management. The use of these accounts would prevent the non-repudiation of individuals with administrator account access.
+<strong>Best Practice</strong> - All user credentials used to authenticate to the orchestration should be tied to specific individuals. Generic credentials should not be used. When a default account is present and cannot be deleted, changing the default password to a strong unique password and then disabling the account will prevent a malicious individual from re-enabling the account and gaining access with the default password.</p>
+
+<p>In terms of managing this recommendation for Kubernetes there’s one key area to consider. Most Kubernetes distributions and services will provide an initial user which is created as part of the cluster setup. This user generally has full access to the cluster via the <a href="https://blog.aquasec.com/kubernetes-authorization">system:masters</a> group and a generic name (for example <code class="language-plaintext highlighter-rouge">kubernetes-admin</code>). This account should not be used for general administration as obviously there’s no way to audit access using it (and also its rights cannot be easily revoked).</p>
+
+<ul>
+  <li>Ensure that if a default administrator account is provided by the Kubernetes distribution or service, this account is not used for general administrative purposes. Instead it should be held in an appropriate secrets management system and used for “break glass” purposes only.</li>
+</ul>
+
+<h2 id="section-13">Section 1.3</h2>
+
+<p><strong>Threat</strong> - Credentials, such as client certificates, do not provide for revocation. Lost credentials present a risk of unauthorized access to cluster APIs.
+<strong>Best Practice</strong> -  All credentials used by the orchestration system should be revokable.</p>
+
+<p>This requirement is a fairly obvious one when considering authentication to secure systems. We want to have the option to revoke any credentials that are present for the cluster in case a user has their credentials compromised and also to ensure that our joiners/movers/leavers processes are able to ensure that users only have access to systems that is required by their role.</p>
+
+<p>This requirement is particularly important when the system in question is Internet facing as <a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/">many Kubernetes clusters</a> are.</p>
+
+<p>Where this is somewhat complex in Kubernetes is that the most commonly used forms of authentication available in the base open source project do not allow for revocation.</p>
+
+<h3 id="client-certificate-authentication">Client Certificate Authentication</h3>
+
+<p>One of the main authentication methods available in Kubernetes is client certificate authentication. It’s used by internal components for authentication (e.g. the kubelet uses a client certificate to communicate with the Kubernetes API server), often the default first user account provided on cluster setup will be a client certificate, and there is an API provided by the Kubernetes API server to create new client certificates for authentication.</p>
+
+<p>From a PCI compliance standpoint the challenge is that there is <a href="https://github.com/kubernetes/kubernetes/issues/18982">no support for client revocation</a>, so this form of authentication should not be used where other options exist. Whilst it is likely not possible to completely eliminate client certificate authentication, it should be avoided for user authentication.</p>
+
+<ul>
+  <li>
+    <p>If the cluster provides a client certificate user as part of initial setup, this user should <em>not</em> be used for general administration, instead it should be removed from the Kubernetes servers and stored in a secrets management system where it can be used in the event of a “break glass” situation.</p>
+  </li>
+  <li>
+    <p>Access to the CertificateSigningRequest (CSR) API in Kubernetes should be restricted to only specific cases (e.g. Kubelet certificate rotation) to avoid users generating and approving new client certificates. Where access to this API is required, it should be audited and reviewed regularly.</p>
+  </li>
+  <li>
+    <p>In unmanaged Kubernetes, access to the signing key should be very carefully controlled and audited (these files typically live with the Kubernetes configuration files).</p>
+  </li>
+</ul>
+
+<p>For managed Kubernetes the picture of whether this feature is available is mixed. In Microsoft AKS it’s possible to get a client certificate issued (indeed that’s the default) and the CSR API is available. In Google GKE the first user doesn’t use client certificates but the CSR API is available. In Amazon EKS, the first user is not a client certificate and the CSR API does not work for issuing new user accounts (<a href="https://github.com/aws/containers-roadmap/issues/1604#issuecomment-1089918625">this may or may not be a bug</a>, it’s undocumented)</p>
+
+<h3 id="service-account-tokens">Service Account Tokens</h3>
+
+<p><a href="https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/">Service accounts</a> are used by Kubernetes workloads to authenticate to the Kubernetes API server where needed. Somewhat unusually these are provided to every workload by default, so operators need to actively disable them if not required.</p>
+
+<p>In older versions of Kubernetes (up to 1.24) by default the service account tokens were based on Kubernetes secrets. These tokens did not expire and cannot be revoked without deleting the service account they were associated with. In 1.24+ the tokens used by service accounts are based on Kubernetes TokenRequest API. These tokens have an expiry but still require the object they are associated with to be deleted for revocation.</p>
+
+<p>So in terms of managing these tokens as close as possible to the PCI guidance there’s a couple of recommendations</p>
+
+<ul>
+  <li>
+    <p>Don’t mount service account tokens into cluster workloads unless specifically required.</p>
+  </li>
+  <li>
+    <p>Where service account tokens are required, make use of the TokenRequest API and ensure that token lifespan is as short as practical.</p>
+  </li>
+</ul>
+
+<p>Past these specific recommendations to do with Kubernetes defaults, recommendations will be specific to the Kubernetes distribution handles authentication.</p>
+
+<h2 id="section-14">Section 1.4</h2>
+
+<p><strong>Threat</strong> - Credentials used to access administrative accounts for either containers or container orchestration tools are stored insecurely, leading to unauthorized access to containers or  sensitive data.
+<strong>Best Practice</strong> - Authentication mechanisms used by the orchestration system should store credentials in a properly secured datastore.</p>
+
+<p>There’s a couple of places where Kubernetes credentials might be stored insecurely. The first relates to the <a href="https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file">static token file</a> authentication option that Kubernetes provides. This isn’t (in my experience) widely used, but it is an option. A cluster using this option stores tokens in clear text on the Control plane nodes of the cluster</p>
+
+<ul>
+  <li>Static token authentication should not be used.</li>
+</ul>
+
+<p>However there’s another place where credentials can effectively be stored in clear on disk, and that’s the more commonly used client certificate authentication option. Control plane nodes will have private keys for the API server and certificate authority held in unencrypted format, and node will have Kubelet private keys. This is pretty unavoidable so in general the goal here is to minimize access to them and audit any access that does occur.</p>
+
+<ul>
+  <li>Access to Kubernetes X.509 key files should be restricted to authorised administrative users.</li>
+</ul>
+
+<h2 id="section-15">Section 1.5</h2>
+
+<p><strong>Threat</strong> - Availability of automatic credentials for any workloads running in the cluster. These credentials are susceptible to abuse, particularly if given excessive rights.
+<strong>Best Practices</strong> - a. Credentials for the orchestration system should only be provided to services running in the cluster where explicitly required. b. Service accounts should be configured for least privilege. The level of rights they will have is dependent on how the cluster RBAC is configured.</p>
+
+<p>This recommendation strays a little into authorization but it’s basically looking to address service account token security when applied to Kubernetes. As we mentioned earlier Kubernetes, by default, will give every workload in the cluster a service account token which can be used to access the Kubernetes API server. This can lead to security problems as they can end up with excessive access if there’s a mistake made in RBAC configuration on the cluster. For example I’ve seen cases where installing a 3rd party product to a cluster adds <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights to the <code class="language-plaintext highlighter-rouge">default</code> service account token in the <code class="language-plaintext highlighter-rouge">default</code> namespace. This meant that every other workload in that namespace could get <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights! So there’s a couple of Kubernetes recommendations for this section :-</p>
+
+<ul>
+  <li>Ensure that <code class="language-plaintext highlighter-rouge">automountServiceAccountToken: false</code> is set on every service account and pod unless they are specifically required.</li>
+  <li>Avoid using the <code class="language-plaintext highlighter-rouge">default</code> service account token, each workload that needs Kubernetes API server access should be provided a specific service account</li>
+  <li>Ensure that Service account tokens are not granted excessive privileges. Review manifests that give them rights.</li>
+</ul>
+
+<h2 id="section-16">Section 1.6</h2>
+
+<p><strong>Threat</strong> - Static credentials i.e., passwords used by administrators or service accounts are susceptible to credential stuffing, phishing, keystroke logging, local discovery, extortion,  password spray, and brute force attacks
+<strong>Best Practice</strong> Interactive users accessing container orchestration APIs should use multi-factor authentication (MFA).</p>
+
+<p>From a Kubernetes perspective a recommendation to use MFA for administrative access essentially requires the use of external authentication for any production cluster. For managed Kubernetes clsuter this would generally lead to the use of the cloud IAM service provided by the CSP (e.g. AWS, GCP, Azure) and ensuring that MFA is setup there. For on-premises clusters something like OIDC authentication integrated with an enterprise IAM solution with MFA would be used.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Authentication is one of the more challenging aspects of Kubernetes security as it’s not something the open source project focuses on heavily, with the expectation that distribution/service providers can add suitable additional controls. There are some definite areas to be aware of though as in-built authentication methods are often still available even when a more secure alternative has been provided.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(30)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 1 - Authentication&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/" title="The Challenges of Assessing Kubernetes clusters for PCI Compliance">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -7,6 +7,202 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 1 - Authentication</title>
+				<description>&lt;p&gt;Having taken a high-level look at how the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;PCI guidance for container orchestration could apply to Kubernetes environments&lt;/a&gt;, and some of the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;challenges in auditing/assessing Kubernetes environments&lt;/a&gt;, I thought it would make sense to start getting into the details of the recommendations and see how in-scope organizations could look at meeting their requirements when using Kubernetes. Whilst this post is structured round the PCI recommendations, it would hopefully be helpful in general for Kubernetes security.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-1---authentication&quot;&gt;Section 1 - Authentication&lt;/h1&gt;
+
+&lt;p&gt;The first section of the risks and good practices table starts with Authentication. Obviously this is a key security control in most environments and something which companies need to consider. It’s also a slightly tricky topic in Kubernetes, as the authentication options provided by the base open source project aren’t generally considered suitable for production use, leaving distribution makers and cluster operators with the task of ensuring that secure authentication is in place on their clusters. Some of the PCI recommendations do reflect this challenge.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-11&quot;&gt;Section 1.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Unauthenticated access to APIs is provided by the container orchestration tool, allowing unauthorized modification of workloads.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - All access to orchestration tools components and supporting services for example, monitoring from users or other services should be configured to require authentication and individual accountability.&lt;/p&gt;
+
+&lt;p&gt;Requiring authentication for API access is a pretty obvious first control and there’s a couple of ways in which this requirement applies to Kubernetes, the APIs provided by Kubernetes itself and then supporting service APIs.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubernetes-apis&quot;&gt;Kubernetes APIs&lt;/h3&gt;
+
+&lt;p&gt;Kubernetes runs a number of services which are exposed to the network. In general these require authentication for any sensitive operations although there is often some level of anonymous access required for some paths and when hardening or auditing a cluster, removing that access might be considered.&lt;/p&gt;
+
+&lt;p&gt;An important point when reviewing or securing these APIs is that in managed Kubernetes distributions (e.g. EKS, GKE, AKS) it is not possible for cluster operators to directly change the configuration of most of the APIs unless the cloud provider makes that available. The exception is the Kubelet which runs on worker nodes which are available to the cluster operator (unless it uses a “serverless” model like EKS Fargate)&lt;/p&gt;
+
+&lt;h4 id=&quot;kubernetes-api-server&quot;&gt;Kubernetes API Server&lt;/h4&gt;
+
+&lt;p&gt;This listens on a variety of ports depending on the distribution in use. Common options are 443/TCP, 6443/TCP and 8443/TCP. In most distributions the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;anonymous-auth&lt;/code&gt; flag will be set to true. this provides access to unauthenticated users to specific paths specified in the RBAC configuration of the cluster. For example in a Kubeadm cluster the following paths are available without authentication&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;nonResourceURLs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/healthz&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/livez&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/readyz&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/version&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/version/&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;get&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;These are generally for liveness checks, but the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint does provide information useful to attackers like precise version information.&lt;/p&gt;
+
+&lt;p&gt;In terms of compliance recommendations for the API server the main one is&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Disable anonymous authentication where possible, where it is required, ensure that minimal paths are available to unauthenticated users.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;controller-manager&quot;&gt;Controller Manager&lt;/h4&gt;
+
+&lt;p&gt;Access to the controller manager is generally allowed over port 10257/TCP (can vary with version and distribution). In terms of anonymous access a small number of paths can be specified as a command line flag to allow access, the default settings is as below&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;--authorization-always-allow-paths strings     Default: &quot;/healthz,/readyz,/livez&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In terms of recommendations :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Review paths which are allowed for anonymous access to ensure that no sensitive data is accessible without authentication.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;scheduler&quot;&gt;Scheduler&lt;/h4&gt;
+
+&lt;p&gt;Access to the scheduler is generally allowed over port 10259/TCP (can vary with version and distribution). In terms of access this is very similar to the controller manager, the same parameter and default exists, and the recommendation would be the same. In general for both these services there aren’t a lot of good reasons for direct access so outside of health checking there shouldn’t be much of a requirement for unauthenticated access.&lt;/p&gt;
+
+&lt;h4 id=&quot;kubelet&quot;&gt;Kubelet&lt;/h4&gt;
+
+&lt;p&gt;The Kubelet runs on every worker node (and possibly control plane nodes). Access is via 10250/TCP. The kubelet’s configuration with regards to anonymous access is a bit odd and not the same as either the scheduler or controller manager. anonymous access defaults to being allowed, so it’s a requirement of the distribution that they disable it (either on the command line or in the kubelet’s configuration file).&lt;/p&gt;
+
+&lt;p&gt;Requests to the root path of the server will return 404, but requests to meaningful paths (like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/pods/&lt;/code&gt;) will return 401 (if anonymous authentication is disabled) or 403 (if anonymous authentication is enabled).&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Ensure that Kubelet anonymous authentication is disabled unless explicitly required for the operation of the cluster.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;etcd&quot;&gt;Etcd&lt;/h4&gt;
+
+&lt;p&gt;Etcd, whilst not specifically part of the Kubernetes project, is a core part of most Kubernetes distributions. Generally it listens on ports 2379/TCP and 2380/TCP. In most Kubernetes distributions there’s no anonymous access to it by default, client certificate authentication is used, so the recommendations are quite simple&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Ensure that etcd is configured to require authentication for all requests.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;supporting-services&quot;&gt;Supporting Services&lt;/h3&gt;
+
+&lt;p&gt;The guidance also references supporting services. this is a bit of a general term and in Kubernetes cluster’s you’ll find a lot of supporting services for things like logging, monitoring, application lifecycle management and others. There have been a bit of a history of services not requiring authentication by default, and even in some cases not providing the option of authentication, so it’s an important point to consider.&lt;/p&gt;
+
+&lt;p&gt;So the recommendation here is a bit generic, and will require cluster operators (and auditors) to do some investigation of clusters they’re securing or reviewing.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Review all services deployed to the cluster and ensure that they are not available without authentication. Specifically the services should not rely on the container network as being “trusted” and should still require authentication for requests from any location.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-12&quot;&gt;Section 1.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Generic administrator accounts are in place for container orchestration tool management. The use of these accounts would prevent the non-repudiation of individuals with administrator account access.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - All user credentials used to authenticate to the orchestration should be tied to specific individuals. Generic credentials should not be used. When a default account is present and cannot be deleted, changing the default password to a strong unique password and then disabling the account will prevent a malicious individual from re-enabling the account and gaining access with the default password.&lt;/p&gt;
+
+&lt;p&gt;In terms of managing this recommendation for Kubernetes there’s one key area to consider. Most Kubernetes distributions and services will provide an initial user which is created as part of the cluster setup. This user generally has full access to the cluster via the &lt;a href=&quot;https://blog.aquasec.com/kubernetes-authorization&quot;&gt;system:masters&lt;/a&gt; group and a generic name (for example &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubernetes-admin&lt;/code&gt;). This account should not be used for general administration as obviously there’s no way to audit access using it (and also its rights cannot be easily revoked).&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Ensure that if a default administrator account is provided by the Kubernetes distribution or service, this account is not used for general administrative purposes. Instead it should be held in an appropriate secrets management system and used for “break glass” purposes only.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-13&quot;&gt;Section 1.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Credentials, such as client certificates, do not provide for revocation. Lost credentials present a risk of unauthorized access to cluster APIs.
+&lt;strong&gt;Best Practice&lt;/strong&gt; -  All credentials used by the orchestration system should be revokable.&lt;/p&gt;
+
+&lt;p&gt;This requirement is a fairly obvious one when considering authentication to secure systems. We want to have the option to revoke any credentials that are present for the cluster in case a user has their credentials compromised and also to ensure that our joiners/movers/leavers processes are able to ensure that users only have access to systems that is required by their role.&lt;/p&gt;
+
+&lt;p&gt;This requirement is particularly important when the system in question is Internet facing as &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;many Kubernetes clusters&lt;/a&gt; are.&lt;/p&gt;
+
+&lt;p&gt;Where this is somewhat complex in Kubernetes is that the most commonly used forms of authentication available in the base open source project do not allow for revocation.&lt;/p&gt;
+
+&lt;h3 id=&quot;client-certificate-authentication&quot;&gt;Client Certificate Authentication&lt;/h3&gt;
+
+&lt;p&gt;One of the main authentication methods available in Kubernetes is client certificate authentication. It’s used by internal components for authentication (e.g. the kubelet uses a client certificate to communicate with the Kubernetes API server), often the default first user account provided on cluster setup will be a client certificate, and there is an API provided by the Kubernetes API server to create new client certificates for authentication.&lt;/p&gt;
+
+&lt;p&gt;From a PCI compliance standpoint the challenge is that there is &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/18982&quot;&gt;no support for client revocation&lt;/a&gt;, so this form of authentication should not be used where other options exist. Whilst it is likely not possible to completely eliminate client certificate authentication, it should be avoided for user authentication.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;If the cluster provides a client certificate user as part of initial setup, this user should &lt;em&gt;not&lt;/em&gt; be used for general administration, instead it should be removed from the Kubernetes servers and stored in a secrets management system where it can be used in the event of a “break glass” situation.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Access to the CertificateSigningRequest (CSR) API in Kubernetes should be restricted to only specific cases (e.g. Kubelet certificate rotation) to avoid users generating and approving new client certificates. Where access to this API is required, it should be audited and reviewed regularly.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;In unmanaged Kubernetes, access to the signing key should be very carefully controlled and audited (these files typically live with the Kubernetes configuration files).&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For managed Kubernetes the picture of whether this feature is available is mixed. In Microsoft AKS it’s possible to get a client certificate issued (indeed that’s the default) and the CSR API is available. In Google GKE the first user doesn’t use client certificates but the CSR API is available. In Amazon EKS, the first user is not a client certificate and the CSR API does not work for issuing new user accounts (&lt;a href=&quot;https://github.com/aws/containers-roadmap/issues/1604#issuecomment-1089918625&quot;&gt;this may or may not be a bug&lt;/a&gt;, it’s undocumented)&lt;/p&gt;
+
+&lt;h3 id=&quot;service-account-tokens&quot;&gt;Service Account Tokens&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/&quot;&gt;Service accounts&lt;/a&gt; are used by Kubernetes workloads to authenticate to the Kubernetes API server where needed. Somewhat unusually these are provided to every workload by default, so operators need to actively disable them if not required.&lt;/p&gt;
+
+&lt;p&gt;In older versions of Kubernetes (up to 1.24) by default the service account tokens were based on Kubernetes secrets. These tokens did not expire and cannot be revoked without deleting the service account they were associated with. In 1.24+ the tokens used by service accounts are based on Kubernetes TokenRequest API. These tokens have an expiry but still require the object they are associated with to be deleted for revocation.&lt;/p&gt;
+
+&lt;p&gt;So in terms of managing these tokens as close as possible to the PCI guidance there’s a couple of recommendations&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Don’t mount service account tokens into cluster workloads unless specifically required.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Where service account tokens are required, make use of the TokenRequest API and ensure that token lifespan is as short as practical.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Past these specific recommendations to do with Kubernetes defaults, recommendations will be specific to the Kubernetes distribution handles authentication.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-14&quot;&gt;Section 1.4&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Credentials used to access administrative accounts for either containers or container orchestration tools are stored insecurely, leading to unauthorized access to containers or  sensitive data.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - Authentication mechanisms used by the orchestration system should store credentials in a properly secured datastore.&lt;/p&gt;
+
+&lt;p&gt;There’s a couple of places where Kubernetes credentials might be stored insecurely. The first relates to the &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file&quot;&gt;static token file&lt;/a&gt; authentication option that Kubernetes provides. This isn’t (in my experience) widely used, but it is an option. A cluster using this option stores tokens in clear text on the Control plane nodes of the cluster&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Static token authentication should not be used.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;However there’s another place where credentials can effectively be stored in clear on disk, and that’s the more commonly used client certificate authentication option. Control plane nodes will have private keys for the API server and certificate authority held in unencrypted format, and node will have Kubelet private keys. This is pretty unavoidable so in general the goal here is to minimize access to them and audit any access that does occur.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Access to Kubernetes X.509 key files should be restricted to authorised administrative users.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-15&quot;&gt;Section 1.5&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Availability of automatic credentials for any workloads running in the cluster. These credentials are susceptible to abuse, particularly if given excessive rights.
+&lt;strong&gt;Best Practices&lt;/strong&gt; - a. Credentials for the orchestration system should only be provided to services running in the cluster where explicitly required. b. Service accounts should be configured for least privilege. The level of rights they will have is dependent on how the cluster RBAC is configured.&lt;/p&gt;
+
+&lt;p&gt;This recommendation strays a little into authorization but it’s basically looking to address service account token security when applied to Kubernetes. As we mentioned earlier Kubernetes, by default, will give every workload in the cluster a service account token which can be used to access the Kubernetes API server. This can lead to security problems as they can end up with excessive access if there’s a mistake made in RBAC configuration on the cluster. For example I’ve seen cases where installing a 3rd party product to a cluster adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; service account token in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; namespace. This meant that every other workload in that namespace could get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights! So there’s a couple of Kubernetes recommendations for this section :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Ensure that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;automountServiceAccountToken: false&lt;/code&gt; is set on every service account and pod unless they are specifically required.&lt;/li&gt;
+  &lt;li&gt;Avoid using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; service account token, each workload that needs Kubernetes API server access should be provided a specific service account&lt;/li&gt;
+  &lt;li&gt;Ensure that Service account tokens are not granted excessive privileges. Review manifests that give them rights.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-16&quot;&gt;Section 1.6&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Static credentials i.e., passwords used by administrators or service accounts are susceptible to credential stuffing, phishing, keystroke logging, local discovery, extortion,  password spray, and brute force attacks
+&lt;strong&gt;Best Practice&lt;/strong&gt; Interactive users accessing container orchestration APIs should use multi-factor authentication (MFA).&lt;/p&gt;
+
+&lt;p&gt;From a Kubernetes perspective a recommendation to use MFA for administrative access essentially requires the use of external authentication for any production cluster. For managed Kubernetes clsuter this would generally lead to the use of the cloud IAM service provided by the CSP (e.g. AWS, GCP, Azure) and ensuring that MFA is setup there. For on-premises clusters something like OIDC authentication integrated with an enterprise IAM solution with MFA would be used.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Authentication is one of the more challenging aspects of Kubernetes security as it’s not something the open source project focuses on heavily, with the expectation that distribution/service providers can add suitable additional controls. There are some definite areas to be aware of though as in-built authentication methods are often still available even when a more secure alternative has been provided.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 01 Oct 2022 14:45:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</guid>
+			</item>
+		
+			<item>
 				<title>The Challenges of Assessing Kubernetes clusters for PCI Compliance</title>
 				<description>&lt;p&gt;After talking about the release of PCIs recommendations for containers and container orchestration environments, and how it could be applied to Kubernetes clusters in my &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;last blog&lt;/a&gt; I thought that it might be a good idea to discuss some of the general challenges that assessors and auditors might have when looking at Kubernetes environments, as there’s quite a few variables that you need to account for.&lt;/p&gt;
 
@@ -851,105 +1047,6 @@ extra-default-secret   kubernetes.io/service-account-token   3      4s
 				<pubDate>Sat, 06 Nov 2021 08:50:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with CRDs - Overwriting core types</title>
-				<description>&lt;p&gt;I was playing around with CRDs today when I wondered “what would happen if I tried to overwrite one of Kubernetes’ core object types? The results weren’t what I expected, so thought it was worth writing it down, in case it comes as a surprise to others :) &lt;strong&gt;N.B. There’s an update at the bottom which sheds more light on what happens when you do this&lt;/strong&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;whats-a-crd&quot;&gt;What’s a CRD?&lt;/h2&gt;
-
-&lt;p&gt;Kubernetes Custom Resources are a way to extend the core Kubernetes API with custom types. They’re heavily used by various programs which extend Kubernetes functionality, and a common feature of most clusters.  In general, Custom Resources have their own group so, for example if you use Cilium for your kubernetes networking, you’ll have CRDs like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ciliumendpoints.cilium.io&lt;/code&gt; which is the ciliumendpoint object in the cilium.io group.&lt;/p&gt;
-
-&lt;h2 id=&quot;overwriting-core-kubernetes-crds&quot;&gt;Overwriting core Kubernetes CRDs&lt;/h2&gt;
-
-&lt;p&gt;So an obvious question for a curious goose is, what happens if I try to create a CRD with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k8s.io&lt;/code&gt; group, which is used by a lot of core Kubernetes objects. Well, let’s find out !&lt;/p&gt;
-
-&lt;p&gt;If we write a basic CRD which starts like this&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;apiextensions.k8s.io/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;CustomResourceDefinition&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;networkpolicies.networking.k8s.io&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;we get an error when we create it. The error handily tells us that we need an annotation added to create a CRD in this group&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The CustomResourceDefinition &quot;networkpolicies.networking.k8s.io&quot; is invalid: metadata.annotations[api-approved.kubernetes.io]: Required value: protected groups must have approval annotation &quot;api-approved.kubernetes.io&quot;, see https://github.com/kubernetes/enhancements/pull/1111
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;There’s no validation on the contents of this annotation, so I just took the sample one from the GH issue. After I did that, it works! The first time I created a CRD overwriting the Network Policy object, I had it as a namespace scoped object and the results were unexpected.&lt;/p&gt;
-
-&lt;p&gt;Checking &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get crds&lt;/code&gt; shows that it created ok (The one I created didn’t have an egress field)&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get crds
-NAME                                CREATED AT
-networkpolicies.networking.k8s.io   2021-11-01T19:28:04Z
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;but if I use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl explain&lt;/code&gt; on the object, the definition I get back is the original core object.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl explain networkpolicies.networking.k8s.io.spec
-KIND:     NetworkPolicy
-VERSION:  networking.k8s.io/v1
-
-RESOURCE: spec &amp;lt;Object&amp;gt;
-
-DESCRIPTION:
-     Specification of the desired behavior for this NetworkPolicy.
-
-     NetworkPolicySpec provides the specification of a NetworkPolicy
-
-FIELDS:
-   egress       &amp;lt;[]Object&amp;gt;
-     List of egress rules to be applied to the selected pods. Outgoing traffic
-     is allowed if there are no NetworkPolicies selecting the pod (and cluster
-     policy otherwise allows the traffic), OR if the traffic matches at least
-     one egress rule across all of the NetworkPolicy objects whose podSelector
-     matches the pod. If this field is empty then this NetworkPolicy limits all
-     outgoing traffic (and serves solely to ensure that the pods it selects are
-     isolated by default). This field is beta-level in 1.8
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Also if I try to create a sample network policy which uses the original object type, it works ok. So the CRD is there, but it’s not working.&lt;/p&gt;
-
-&lt;p&gt;What happens if you change the scope in the CRD from namespaced to cluster? Well now, it shows in the CRD list &lt;em&gt;and&lt;/em&gt; it’s overwritten the object definition retrieved by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl explain&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl explain networkpolicies.networking.k8s.io.spec
-KIND:     NetworkPolicy
-VERSION:  networking.k8s.io/v1
-
-RESOURCE: spec &amp;lt;Object&amp;gt;
-
-DESCRIPTION:
-     &amp;lt;empty&amp;gt;
-
-FIELDS:
-   name &amp;lt;string&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and if I try to create a Network Policy, I get an error showing that it doesn’t understand those field, so this has overwritten the core object.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;error: error validating &quot;sample-netpol.yaml&quot;: error validating data: [ValidationError(NetworkPolicy.spec): unknown field &quot;egress&quot; in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field &quot;ingress&quot; in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field &quot;podSelector&quot; in io.k8s.networking.v1.NetworkPolicy.spec, ValidationError(NetworkPolicy.spec): unknown field &quot;policyTypes&quot; in io.k8s.networking.v1.NetworkPolicy.spec]; if you choose to ignore these errors, turn validation off with --validate=false
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;other-examples&quot;&gt;Other examples&lt;/h2&gt;
-
-&lt;p&gt;There’s more prodding at this to be done, but a fun additional one I noticed is that if you try to create a CRD with a name of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;users.authentication.k8s.io&lt;/code&gt; it creates, but the result isn’t visible in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl api-resources&lt;/code&gt; and you can’t use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl explain&lt;/code&gt; on it, even though it’s not overwriting a visible Object type.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;From a security standpoint, the takeaway here is, don’t let anyone create CRDs in your cluster unless you really really trust them, &lt;del&gt;as they can modify Kubernetes core behaviour&lt;/del&gt;. Also if you’re planning to appear on Rawkode’s klustered show, you could try this and hope the cluster fixers don’t read my blog :)&lt;/p&gt;
-
-&lt;h2 id=&quot;update-03112021&quot;&gt;Update 03/11/2021&lt;/h2&gt;
-
-&lt;p&gt;Curious to get some details on was going on behind the scenes and possible security implications, I asked on k8s slack (a great source of information), and the inimitable &lt;a href=&quot;https://twitter.com/liggitt&quot;&gt;Jordan Liggitt&lt;/a&gt; was able to explain it. It seems like this doesn’t actually overwrite the core Kubernetes types, but what it does do is modify OpenAPI schemes used by clients like Kubectl to validate data being passed to the API server. So, in effect this could break tooling or produce odd behaviour but isn’t modifying the core Kubernetes API. There’s an issue in the &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/106056&quot;&gt;Kubernetes Github repo&lt;/a&gt; with more info.&lt;/p&gt;
-
-&lt;p&gt;To me, it’s still interesting, but in a slightly different way as it illuminates how some of the different components in Kubernetes work together and some of the possible complexity when unusual or unexpected changes are made.&lt;/p&gt;
-</description>
-				<pubDate>Mon, 01 Nov 2021 08:50:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/</guid>
 			</item>
 		
 	</channel>
