@@ -7,6 +7,67 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 2 - Authorization</title>
+				<description>&lt;p&gt;This is the 2nd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;previous installment&lt;/a&gt; looked at authentication, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-2---authorization&quot;&gt;Section 2 - Authorization&lt;/h1&gt;
+
+&lt;p&gt;Authorization is generally the second step, after authentication, in providing users access to a system’s resources and Kubernetes is no different in that regard. Kubernetes supports a number of different types of authorization, and uses a cumulative method to assess a client’s rights, so it’s important to understand the supported methods in a given cluster and review each of them.&lt;/p&gt;
+
+&lt;p&gt;The Kubernetes documentation has a good list of &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules&quot;&gt;authorization modes&lt;/a&gt;. In general the most used authorization methods, for user access, are RBAC and Webhook authorization which is sometimes used by managed Kubernetes distributions to integrate with Cloud IAM services. Node authorization is a specialist mode designed to control the rights of kubelet services and ABAC is generally no longer in use.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-21&quot;&gt;Section 2.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Excessive access rights to the container orchestration API could allow users to modify workloads without authorization.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Access granted to orchestration systems for users or services should be on a least privilege basis. Blanket administrative access should not be used.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This is a fairly standard “least privilege” style security recommendation but there are a couple of Kubernetes specific cases to consider. Firstly, Kubernetes has a number of built-in clusterroles (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;edit&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;view&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt;) which provide a general set of resource access. clusters should not make use of those roles but instead ensure that they review what access users actually require and provide only that access. In particular &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; should not be used as this provides completely unrestricted access to the cluster using wildcard (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*&lt;/code&gt;) operators.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-22&quot;&gt;Section 2.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Excessive access rights to the container orchestration tools may be provided through the use of hard-coded access groups.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - a. All access granted to the orchestration tool should be capable of modification. b. Access groups should not be hard-coded.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - With Kubernetes there is one specific instance where a hard-coded admin group is used, which is the use of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group. Any user or service which is a member of this group automatically has cluster-admin access. It’s important to note that this access works even if all RBAC rules are removed and any requests from a user in this group are not even sent to authorization webhooks for review, they’re just approved at the API server level.&lt;/p&gt;
+
+&lt;p&gt;This group was put in place to provide a “break glass” access in the case that a cluster operator had broken the RBAC system, however it is often used by Kubernetes distributions with the first user in the cluster, which can lead to cluster operators continuing to use it for general administration.&lt;/p&gt;
+
+&lt;p&gt;Users and services should not be added to this group. If a credential with this access is required, it should be held in a secrets management system and accessed only when required.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-23&quot;&gt;Section 2.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Accounts may accumulate permissions without documented approvals.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Use manual and automated means to regularly audit implemented permissions.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - On the face of is, this is a pretty general requirement to review authorization to Kubernetes clusters on a regular basis, however there are some nuances which should be understood when reviewing Kubernetes authorization.&lt;/p&gt;
+
+&lt;p&gt;As mentioned earlier there are multiple authorization methods, so if a cluster has RBAC and Webhook authorization activated, the rights contained in both systems need to be reviewed.&lt;/p&gt;
+
+&lt;p&gt;In-built Kubernetes tooling (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt;) only takes accounts of the rights supplied via RBAC so it’s important to note that other tools are needed for webhook authorization reviews.&lt;/p&gt;
+
+&lt;p&gt;Then we come to the sticky problem which we mentioned in the authentication post, that Kubernetes doesn’t have a user database. What Kubernetes RBAC does is just take the usernames, group names, requested resource, and requested action and match them against the rules in the RBAC system. It has no idea, for example, how many users are in a group. This makes traditional authorization review techniques a bit tricky.&lt;/p&gt;
+
+&lt;p&gt;Essentially the only way to do it reliably is to look at each enabled authentication method, and then go to the repository of user information for that method and get things like group memberships there, an approach which should work for things like OIDC authentication.&lt;/p&gt;
+
+&lt;p&gt;A tricky point here is around client certificate authentication as there is generally no record of what the content of an approved client certificate was, after it’s been approved, so you’re reliant on some form of external record keeping to assess access of client certificates.&lt;/p&gt;
+
+&lt;p&gt;Another thing to be aware of when reviewing access to Kubernetes clusters is that there are quite a few resources that can allow for privilege escalation, so they need to be accounted for in the review. There’s a Kubernetes documentation page covering &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks&quot;&gt;privilege escalation risks&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Another area to watch for when using automated RBAC review tooling is that Kubernetes doesn’t make it easy/possible to enumerate all resource types and operations (this post on &lt;a href=&quot;https://blog.aquasec.com/kubernetes-verbs&quot;&gt;virtual verbs&lt;/a&gt; in Kubernetes has some details), so care should be taken when relying on them.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;The PCI recommendations for Authorization are a pretty standard set of good practices for multi-user systems, however enforcing them for Kubernetes does require people to take account of some peculiarities in how Kubernetes operates when implementing them. In our next part we’ll be looking at section 3 of the guidance on the topic of Workload security.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 08 Oct 2022 14:40:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 1 - Authentication</title>
 				<description>&lt;p&gt;Having taken a high-level look at how the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;PCI guidance for container orchestration could apply to Kubernetes environments&lt;/a&gt;, and some of the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;challenges in auditing/assessing Kubernetes environments&lt;/a&gt;, I thought it would make sense to start getting into the details of the recommendations and see how in-scope organizations could look at meeting their requirements when using Kubernetes. Whilst this post is structured round the PCI recommendations, it would hopefully be helpful in general for Kubernetes security.&lt;/p&gt;
 
@@ -240,7 +301,7 @@
 
 &lt;p&gt;The goal of this post was really just to describe some of the complexities that you need to be aware of when assessing or auditing a Kubernetes cluster, it’s important not to take a “one size fits all” approach and to tailor the review to the distribution and version that’s being assessed. I’d expect that over time more assessment guides will be made available. Also I’d expect we’ll see more automated tooling which can help with compliance reviews, however it’s important to note that automated tools have to try and deal with all this complexity as well and some of the requirements in the PCI recommendations do not lend themselves to full automation.&lt;/p&gt;
 
-&lt;p&gt;Also whilst there are challenges in the precise detail of assessing Kubernetes cluster, that doesn’t mean we can’t come up with general guidance for the PCI Container Orchestration Recommendations and in the next post(s) I’ll take a look at that topic.&lt;/p&gt;
+&lt;p&gt;Also whilst there are challenges in the precise detail of assessing Kubernetes cluster, that doesn’t mean we can’t come up with general guidance for the PCI Container Orchestration Recommendations and in the next post(s) I’ll take a look at that topic, starting with the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;Authentication section&lt;/a&gt;&lt;/p&gt;
 </description>
 				<pubDate>Tue, 20 Sep 2022 07:45:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/</link>
@@ -349,7 +410,7 @@
 
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 
-&lt;p&gt;It’s good to see additional guidance for container orchestration environments being developed as these technologies are more widely used in regulated environments. with this guidance there are definitely some challenging areas for Kubernetes based environments where defaults will need to be adapted to include PCI’s recommendations.&lt;/p&gt;
+&lt;p&gt;It’s good to see additional guidance for container orchestration environments being developed as these technologies are more widely used in regulated environments. with this guidance there are definitely some challenging areas for Kubernetes based environments where defaults will need to be adapted to include PCI’s recommendations. Next time we’ll take a look at the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;challenges in assessing the security of Kubernetes clusters for PCI compliance&lt;/a&gt;&lt;/p&gt;
 </description>
 				<pubDate>Sat, 10 Sep 2022 08:45:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/</link>
@@ -1003,56 +1064,6 @@ extra-default-secret   kubernetes.io/service-account-token   3      4s
 				<pubDate>Sat, 12 Feb 2022 14:50:39 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with unicode - messing with output</title>
-				<description>&lt;p&gt;This week there was some research published from Cambridge university called “&lt;a href=&quot;https://www.trojansource.codes/&quot;&gt;Trojan Codes&lt;/a&gt;”, around the potential risks of RTL unicode characters in source code. Whilst this is very much not a new problem, there have been various pieces of research over the years about the difficulties of handling unicode characters, it seemed like a good cue to look at this kind of issue in the context of Kubernetes. So far I’ve not found any security issues caused by this, but I found a couple of things which could be of interest, so thought I’d write it down, in case it’s useful to anyone.&lt;/p&gt;
-
-&lt;h2 id=&quot;putting-unicode-into-kubernetes-manifests&quot;&gt;Putting unicode into Kubernetes manifests&lt;/h2&gt;
-
-&lt;p&gt;So, how do you actually put RTL style codes into Kubernetes manifests? Essentially the format is something like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;\U0000202E&quot;&lt;/code&gt; and putting these codes in a manifest can will change how the information is stored and displayed by Kubernetes. So a concrete example would look like this&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRoleBinding&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;creationTimestamp&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;null&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;roleRef&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;subjects&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;User&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\U0000202E&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nimda-retsulc&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\U0000202C&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;If you create that manifest and then retrieve it, you can see that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;name&lt;/code&gt; in the output shows as cluster-admin with a couple of white spaces in front of it.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/rtl-unicode.png&quot; alt=&quot;rtl in manifest&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;other-possible-unicode--output-corruption-fun&quot;&gt;Other possible unicode &amp;amp; output corruption fun&lt;/h2&gt;
-
-&lt;p&gt;Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; character is a Cryllic character)&lt;/p&gt;
-
-&lt;p&gt;Another way I noticed that you can possibly corrupt output is by changing the content of an X.509 certificate, there’s more details on that &lt;a href=&quot;https://github.com/kubernetes/kubectl/issues/888&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;where-might-this-cause-a-problem&quot;&gt;Where might this cause a problem?&lt;/h2&gt;
-
-&lt;p&gt;So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to &lt;a href=&quot;https://github.com/kubernetes/kubectl/issues/888&quot;&gt;this issue&lt;/a&gt; in how CSR information can be represented.&lt;/p&gt;
-
-&lt;p&gt;Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.&lt;/p&gt;
-
-&lt;p&gt;It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;The complexities which go with unicode characters are definitely one to be aware of with regards to their possible security impact. There have been multiple cases in the past where security vulnerabilities have occurred due to misinterpretation of UTF-8 input, and I’m sure there will be more in the future :)&lt;/p&gt;
-</description>
-				<pubDate>Sat, 06 Nov 2021 08:50:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2021/11/06/fun-with-unicode/</guid>
 			</item>
 		
 	</channel>

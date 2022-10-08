@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PCI Compliance for Kubernetes in detail - Part 2 - Authorization</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>PCI Compliance for Kubernetes in detail - Part 2 - Authorization </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   8th,
+	   
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>This is the 2nd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The <a href="https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/">previous installment</a> looked at authentication, and there’s also an <a href="https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/">overview post</a> and some notes on the <a href="https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/">complexity of assessing security in Kubernetes</a> which might be worth reading before getting in to this part.</p>
+
+<h1 id="section-2---authorization">Section 2 - Authorization</h1>
+
+<p>Authorization is generally the second step, after authentication, in providing users access to a system’s resources and Kubernetes is no different in that regard. Kubernetes supports a number of different types of authorization, and uses a cumulative method to assess a client’s rights, so it’s important to understand the supported methods in a given cluster and review each of them.</p>
+
+<p>The Kubernetes documentation has a good list of <a href="https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules">authorization modes</a>. In general the most used authorization methods, for user access, are RBAC and Webhook authorization which is sometimes used by managed Kubernetes distributions to integrate with Cloud IAM services. Node authorization is a specialist mode designed to control the rights of kubelet services and ABAC is generally no longer in use.</p>
+
+<h2 id="section-21">Section 2.1</h2>
+
+<p><strong>Threat</strong> - Excessive access rights to the container orchestration API could allow users to modify workloads without authorization.</p>
+
+<p><strong>Best Practice</strong> - Access granted to orchestration systems for users or services should be on a least privilege basis. Blanket administrative access should not be used.</p>
+
+<p><strong>Details</strong> - This is a fairly standard “least privilege” style security recommendation but there are a couple of Kubernetes specific cases to consider. Firstly, Kubernetes has a number of built-in clusterroles (<code class="language-plaintext highlighter-rouge">edit</code>, <code class="language-plaintext highlighter-rouge">view</code> and <code class="language-plaintext highlighter-rouge">cluster-admin</code>) which provide a general set of resource access. clusters should not make use of those roles but instead ensure that they review what access users actually require and provide only that access. In particular <code class="language-plaintext highlighter-rouge">cluster-admin</code> should not be used as this provides completely unrestricted access to the cluster using wildcard (<code class="language-plaintext highlighter-rouge">*</code>) operators.</p>
+
+<h2 id="section-22">Section 2.2</h2>
+
+<p><strong>Threat</strong> - Excessive access rights to the container orchestration tools may be provided through the use of hard-coded access groups.</p>
+
+<p><strong>Best Practice</strong> - a. All access granted to the orchestration tool should be capable of modification. b. Access groups should not be hard-coded.</p>
+
+<p><strong>Details</strong> - With Kubernetes there is one specific instance where a hard-coded admin group is used, which is the use of the <code class="language-plaintext highlighter-rouge">system:masters</code> group. Any user or service which is a member of this group automatically has cluster-admin access. It’s important to note that this access works even if all RBAC rules are removed and any requests from a user in this group are not even sent to authorization webhooks for review, they’re just approved at the API server level.</p>
+
+<p>This group was put in place to provide a “break glass” access in the case that a cluster operator had broken the RBAC system, however it is often used by Kubernetes distributions with the first user in the cluster, which can lead to cluster operators continuing to use it for general administration.</p>
+
+<p>Users and services should not be added to this group. If a credential with this access is required, it should be held in a secrets management system and accessed only when required.</p>
+
+<h2 id="section-23">Section 2.3</h2>
+
+<p><strong>Threat</strong> - Accounts may accumulate permissions without documented approvals.</p>
+
+<p><strong>Best Practice</strong> - Use manual and automated means to regularly audit implemented permissions.</p>
+
+<p><strong>Details</strong> - On the face of is, this is a pretty general requirement to review authorization to Kubernetes clusters on a regular basis, however there are some nuances which should be understood when reviewing Kubernetes authorization.</p>
+
+<p>As mentioned earlier there are multiple authorization methods, so if a cluster has RBAC and Webhook authorization activated, the rights contained in both systems need to be reviewed.</p>
+
+<p>In-built Kubernetes tooling (e.g. <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code>) only takes accounts of the rights supplied via RBAC so it’s important to note that other tools are needed for webhook authorization reviews.</p>
+
+<p>Then we come to the sticky problem which we mentioned in the authentication post, that Kubernetes doesn’t have a user database. What Kubernetes RBAC does is just take the usernames, group names, requested resource, and requested action and match them against the rules in the RBAC system. It has no idea, for example, how many users are in a group. This makes traditional authorization review techniques a bit tricky.</p>
+
+<p>Essentially the only way to do it reliably is to look at each enabled authentication method, and then go to the repository of user information for that method and get things like group memberships there, an approach which should work for things like OIDC authentication.</p>
+
+<p>A tricky point here is around client certificate authentication as there is generally no record of what the content of an approved client certificate was, after it’s been approved, so you’re reliant on some form of external record keeping to assess access of client certificates.</p>
+
+<p>Another thing to be aware of when reviewing access to Kubernetes clusters is that there are quite a few resources that can allow for privilege escalation, so they need to be accounted for in the review. There’s a Kubernetes documentation page covering <a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks">privilege escalation risks</a></p>
+
+<p>Another area to watch for when using automated RBAC review tooling is that Kubernetes doesn’t make it easy/possible to enumerate all resource types and operations (this post on <a href="https://blog.aquasec.com/kubernetes-verbs">virtual verbs</a> in Kubernetes has some details), so care should be taken when relying on them.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>The PCI recommendations for Authorization are a pretty standard set of good practices for multi-user systems, however enforcing them for Kubernetes does require people to take account of some peculiarities in how Kubernetes operates when implementing them. In our next part we’ll be looking at section 3 of the guidance on the topic of Workload security.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(31)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 2 - Authorization&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/" title="PCI Compliance for Kubernetes in detail - Part 1 - Authentication">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
