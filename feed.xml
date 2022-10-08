@@ -263,6 +263,8 @@
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 
 &lt;p&gt;Authentication is one of the more challenging aspects of Kubernetes security as it’s not something the open source project focuses on heavily, with the expectation that distribution/service providers can add suitable additional controls. There are some definite areas to be aware of though as in-built authentication methods are often still available even when a more secure alternative has been provided.&lt;/p&gt;
+
+&lt;p&gt;Next time, we’ll move on to section 2 of the PCI guidance, on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;authorization&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 01 Oct 2022 14:45:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</link>
