@@ -159,6 +159,36 @@
   <span class="post-date">
     
     June
+    3rd,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/06/03/data_tagging_re/">Data Tagging requisites..</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Rational Security: Profiling Data At the Network-Layer and Controlling It's Movement Is a Bad Thing?" href="http://rationalsecurity.typepad.com/blog/2007/06/profiling_data_.html">Rational Security: Profiling Data At the Network-Layer and Controlling It's Movement Is a Bad Thing?</a><br />
+Well I'm gong to try and answer Hoffs question on standards I think need to exist before ADAPT or any other data classification and security programme will work... But first thing a question of my own..  Where does he get all those cool graphics!<br />
+Anyway so we're tagging all our data. For that to happen I'm thinking that the tags need to be attached to each "document" that flows over the network.  Now we've got a wide variety of documents in place we've got all our MS office docs. we've got XML files we've got binary blobs from proprietary programs, we've got encrypted files.  Many of these have no native facility to insert any sort of metadata tag.  So without that how do we attach a meaningful tag to the data?  If we modify the document in infrastructure after it's been constructed our device which does this will need to understand every data/file format that we want to tag, and I think that's a very tricky thing to do.<br />
+So I think that in order to do this effectively you need a standard which all programs which construct documents will use to tag their data, so that all the infrastructure devices can read those tags and act on them...<br />
+Now the question I've got for Hoff is ... transparent to users.. how will that happen and the tags will still be meaningful to the business?  To do that it seems to me that the device/network will need to make assumptions about the appropriate tags for all of a users data?  From my experience users will create and process documents at a variety of sensitivities and classifications in a given day, and the only person who understands the significance of their documents is the user themselves.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
     2nd,
     
     2007
@@ -422,34 +452,6 @@ All in all a great conference, I'll definitely hope to get back next year.  The 
     
     
     <p>Well that's the blog back online after more than a week, just before I was off to the <a href="http://www.owasp.org">OWASP Conference</a> (Of which more later), the power supply in my server blew!  after some frustration with moving disks and volume groups in Linux I decided to wait until I got back and re-build on a Virtual machine...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    3rd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/05/03/some_cool_new_t/">Some cool new tech things I've been playing with</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've been having some fun sorting out some cool new tech. for my house.  I've been looking for something to replace the large tower box I've got running my file/print &amp; website for a while. Mainly so I can separate them and not be hosting any extneral services on the same machine as I'm hosting internal services.<br />
-So I've been looking for small, quiet, cheap Linux boxes to use for a webserver and I came across the <a href="http://www.buffalo-technology.com/products/network-storage/linkstation/linkstation-pro/">Buffalo Linkstation Pro</a>.  It only costs 99 pounds in the UK and is designed as a NAS device, however in common with most of these kinds of devices, it's really a small ARM-based computer running Linux.  So following a quick trip to the excellent <a href="http://84.16.234.138//index.php?title=Main_Page"> Linkstation wiki</a> some downloading and following of instructions to re-flash the device, I've now got a debian Linux server with 128MB RAM and a 250GB hard drive all for under a hundred quid!!<br />
-The other thing I set-up for the first time the other night was <a href="http://tor.eff.org/">tor</a>, mainly to see how easy or difficult it would be.  the answer is (on Fedora Core 6 at least) pretty easy, two package installs and a couple of edits to config files and I'm surfing anonymously.  It's a bit slow but apart from that seems to do what it says on the tin.  Very handy to test source IP address restrictions if you're using them.</p>
 
     
     

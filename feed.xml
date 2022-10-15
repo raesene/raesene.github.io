@@ -7,6 +7,93 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security</title>
+				<description>&lt;p&gt;This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;previous installment&lt;/a&gt; looked at authorization, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-3---workload-security&quot;&gt;Section 3 - Workload Security&lt;/h1&gt;
+
+&lt;p&gt;Running containers is obviously the main thing that most Kubernetes clusters are responsible for, so it makes sense that there’s a section of the guidance dedicated to them. Before we talk about the specific recommendations, it’s important to cover off a couple of base concepts.&lt;/p&gt;
+
+&lt;p&gt;Containers are just Linux (or Windows) processes. When run under Kubernetes the defaults for both is to use operating system features to isolate those processes from each other and the underlying host. So you can think of Kubernetes as essentially distributed remote command execution :)&lt;/p&gt;
+
+&lt;p&gt;By default, with no additional controls, any user who can launch containers into a cluster can get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; access to the underlying cluster node simply (I’ve covered how to do that before with &lt;a href=&quot;https://raesene.github.io/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/&quot;&gt;the most pointless kubernetes command ever&lt;/a&gt; which is based on &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;the most pointless docker command ever&lt;/a&gt; from Ian Miell)).&lt;/p&gt;
+
+&lt;p&gt;Docker, and by extension Kubernetes, have a flexible security model where individual restrictions can be removed or enhanced. The defaults were generally chosen for ease of operation, so it’s not surprising that they need specific hardening recommendations for production PCI environments.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-31&quot;&gt;Section 3.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Access to shared resources on the underlying host permits container breakouts to occur, compromising the security of shared resources.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workloads running in the orchestration system should be configured to prevent access to the underlying cluster nodes by default. Where granted, any access to resources provided by the nodes should be provided on a least privilege basis, and the use of “privileged” mode containers should be specifically avoided.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - So as we’ve mentioned Kubernetes requires specific additional controls to be put in place to stop containers getting access to underlying cluster resources. The mention of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;privileged&lt;/code&gt; in the recommendation refers to the Docker &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--privileged&lt;/code&gt; flag which essentially just removes all the security isolation between a container and the underlying node. It’s sometimes used as a shortcut to avoid having to work out exactly what access a container needs to the underlying node.&lt;/p&gt;
+
+&lt;p&gt;In terms of how these restrictions are put in place, the picture can be a bit complex. In older versions of Kubernetes a feature called Pod Security Policy was available which could be used to restrict workloads. However this was removed &lt;a href=&quot;https://kubernetes.io/blog/2022/08/23/podsecuritypolicy-the-historical-context/&quot;&gt;in the latest version of Kubernetes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;There is a replacement feature within Kubernetes, which can be used to implement restrictions on Workloads called &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-admission/&quot;&gt;Pod Security Admission&lt;/a&gt;, however this may not be suitably flexible for all companies needs, so many organizations make use of external admission control software to place restrictions on workloads running in the cluster. In the open source world, prominent options for this include &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt;, &lt;a href=&quot;https://github.com/open-policy-agent/gatekeeper&quot;&gt;OPA Gatekeeper&lt;/a&gt;, &lt;a href=&quot;https://www.jspolicy.com/&quot;&gt;jsPolicy&lt;/a&gt; and &lt;a href=&quot;https://www.kubewarden.io/&quot;&gt;Kubewarden&lt;/a&gt;. Also a special note for OpenShift here which has it’s own mechanism &lt;a href=&quot;https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html&quot;&gt;Security Context Constraints&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Having covered how restrictions on workloads would be put in place, we also need to think about what restrictions to put in place. At this point it’s important to note that some system workloads do need access to the underlying cluster nodes to operate, so for example the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-proxy&lt;/code&gt; component needs to modify networking components so will need access to that.&lt;/p&gt;
+
+&lt;p&gt;For general workloads the goal is to avoid giving them rights that would allow for access to the underlying host. The Kubernetes project has created &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/&quot;&gt;Pod Security Standards&lt;/a&gt; to document which settings are needed (as there are quite a few). Enforcing at least the &lt;strong&gt;baseline&lt;/strong&gt; policy and ideally using the &lt;strong&gt;restricted&lt;/strong&gt; policy for all general workloads should prevent the processes running in containers from accessing the underlying host.&lt;/p&gt;
+
+&lt;p&gt;So if you’re reviewing a cluster for PCI there’s a couple of actions&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Ensure that one of the systems that can be used to restrict workloads is in place and operational&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Review the policies applied to the workloads in the cluster to assess how well they meet the requirements of Pod Security Standards.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-32&quot;&gt;Section 3.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - The use of non-specific versions of container images could facilitate a supply chain attack where a malicious version of the image is pushed to a registry by an attacker.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workload definitions/manifests should target specific known versions of any container images. This should be done via a reliable mechanism checking the cryptographic signatures of images. If signatures are not available, message-digests should be used.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Container images are the standard way of packaging the software that will run on your Kubernetes clusters, and they’re typically pulled from container registries, either public ones like Docker Hub or private ones under the organization’s control. Obviously it’s important to ensure (as much as possible) that you know what’s inside the container image before you run it. Within registries versions of images are typically denoted based on “tags” and if you don’t specify a tag you get whatever the latest version of that image is, which is clearly not great in terms of knowing what you’re running.&lt;/p&gt;
+
+&lt;p&gt;Also, depending on the registry, it may be possible to change what image a tag points to, so again it’s not ideal to rely solely on image tags, although if an internal registry is used it might be possible to establish trust based on how that registry and its tags are managed. Without additional software, one option is to use images based on a specific SHA-256 hash, a mechanism which is generally supported by container software, although it’s important to note that this is quite a cumbersome thing to do as it means you need to change the hash &lt;em&gt;every&lt;/em&gt; time the image is patched or changed in any way.&lt;/p&gt;
+
+&lt;p&gt;It’s also possible to use digital signing to improve the trust in the workloads you run, but this does require additional software. Specifically it need a signing tool to sign the images and also software to validate the signatures when the container images are deployed to the Kubernetes cluster. For the first part the most common tool is &lt;a href=&quot;https://github.com/sigstore/cosign&quot;&gt;cosign&lt;/a&gt;, and it’s possible to validate cosign signed images using the admission control software we mentioned in the previous section.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Ensure that all images running in the cluster use either a tag (supported by processes to ensure tag integrity), SHA-256 hash or digital signatures to validate their integrity.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Review how these mechanisms are enforced, reviewing admission controller policies that are in use on the cluster.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;section-33&quot;&gt;Section 3.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Containers retrieved from untrusted sources may contain malware or exploitable vulnerabilities&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All container images running in the cluster should come from trusted sources.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This requirement goes alongside the previous one, in making the point that container image assurance is a key concern for Kubernetes. It’s important to note that in the vast majority of cases, Container registries do not curate their images so there is a risk of supply chain attacks at that level.&lt;/p&gt;
+
+&lt;p&gt;The safest option is to ensure that all images running in the cluster are sourced from a container registry that is under the control of the organization, and that security checks are carried out whenever new images are added to this registry. This does add overhead to managing the cluster as 3rd party software (e.g. helm charts) will generally assume that it can pull images from whichever registry the software vendor uses.&lt;/p&gt;
+
+&lt;p&gt;Where images need to be sourced from external registries mechanisms like using specific SHA-256 hashes or signed images can help to provide assurances that the images can be trusted (assuming of course you trust the project/vendor that created those images).&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;All images should come from either an internally controlled registry or where coming from external sources be validated before deployment.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Workload security is a fundamental part of any container security architecture. PCI’s requirements are (as with previous parts) fairly general good practices, however implementing them in a Kubernetes environment could require considerable effort. Planning out how to comply with these requirements is best done during a planning phase, to reduce the potential for impact to running workloads.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 15 Oct 2022 09:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 2 - Authorization</title>
 				<description>&lt;p&gt;This is the 2nd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;previous installment&lt;/a&gt; looked at authentication, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
 
@@ -922,150 +1009,6 @@ kube-dns   ClusterIP   10.96.0.10   &amp;lt;none&amp;gt;        53/UDP,53/TCP,91
 				<pubDate>Sat, 11 Jun 2022 09:10:39 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with secrets - Where did they go?</title>
-				<description>&lt;p&gt;Before I get into this post a quick note that there is no dramatic payoff here, it’s just playing around with something that surprised me in Kubernetes, to understand a bit about what’s going on.&lt;/p&gt;
-
-&lt;p&gt;Kubernetes clusters make use of secrets for a variety of purposes and (for the time being) one of the main ones is to provide credentials to service accounts, so that the workloads running in a cluster can authenticate to the API server. The reason I say “for the time being” is that this feature is being replaced by &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-token-volume&quot;&gt;Bound Service Account Token Volumes&lt;/a&gt;, but that’s a matter for another post.&lt;/p&gt;
-
-&lt;p&gt;The way it usually works is that, when you create a service account, Kubernetes will automatically create a secret to go along with it, and then when you specify that service account is to be used in your workload, Kubernetes will automatically mount the secret into the workload for you.&lt;/p&gt;
-
-&lt;p&gt;Whilst this is usually automatic, when I was chatting to &lt;a href=&quot;https://twitter.com/christophetd&quot;&gt;Christophe&lt;/a&gt; the other day, he mentioned that you can manually create secrets and add an annotation to them specifying a service account name. When you do that, Kubernetes will automatically populate the secret with a service account token for that service account.&lt;/p&gt;
-
-&lt;p&gt;When playing around with this and creating new secrets, I noticed something odd. If you specify a service account name that doesn’t exist in your namespace when creating your secret, while kubectl tells you the creation happens ok, the secret never actually appears!. So as an example, if you get a secret like this&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Secret&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;build-robot-secret&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;kubernetes.io/service-account.name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;build-robot&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubernetes.io/service-account-token&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;save it in a file called, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;build-robot-secre.yaml&lt;/code&gt; and do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl create -f build-robot-secret.yaml&lt;/code&gt; you get&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; base-secret.yaml
-secret/build-robot-secret created
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;but then if you do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get secrets&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get secrets
-NAME                  TYPE                                  DATA   AGE
-default-token-nxrbt   kubernetes.io/service-account-token   3      40m
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;it’s nowhere to be seen!&lt;/p&gt;
-
-&lt;h2 id=&quot;working-out-whats-happening&quot;&gt;Working out what’s happening&lt;/h2&gt;
-
-&lt;p&gt;So we have a mystery, what is causing our secret (which is valid kubernetes YAML) to seem to be created but apparently vanish after creation. The first thought I had was, maybe it’s being created but not displayed. So to check that, we can look at the contents of the cluster’s etcd database. It’s the canonical store of information for a cluster, so generally a good place to look.&lt;/p&gt;
-
-&lt;p&gt;To do this, I set-up a cluster with etcd authentication turned off (to make things easier to check), using the etcd-noauth playbook from &lt;a href=&quot;https://github.com/raesene/kube_security_lab/&quot;&gt;kube-security-lab&lt;/a&gt;. with that set-up we can rerun our secret creation loop and see what does or doesn’t show up in etcd, using etcdctl.  The layout of the database is pretty straightforward, so we just ask it to show us the contents of /registry/secrets/default, which is all the secrets in the default namespace.&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; etcdctl &lt;span class=&quot;nt&quot;&gt;--insecure-transport&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--insecure-skip-tls-verify&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--endpoints&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;172.18.0.3:2379 get /registry/secrets/default &lt;span class=&quot;nt&quot;&gt;--prefix&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--keys-only&lt;/span&gt;
-/registry/secrets/default/default-token-nxrbt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Looking at the output, we can see it’s just our default service account token. So now we know that the secret isn’t persisted. Next question is, what happens if we change an existing secret which points to a valid service account, and make it point to an invalid one.&lt;/p&gt;
-
-&lt;p&gt;We can create a valid one like this&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Secret&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;extra-default-secret&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;kubernetes.io/service-account.name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;default&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kubernetes.io/service-account-token&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and if we do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get secrets&lt;/code&gt; once we’ve created it, we can see it’s there&lt;/p&gt;
-
-&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;❯ kubectl get secrets
-NAME                   TYPE                                  DATA   AGE
-default-token-nxrbt    kubernetes.io/service-account-token   3      5h20m
-extra-default-secret   kubernetes.io/service-account-token   3      4s
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;ok so now if we do &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl edit secret extra-default-secret&lt;/code&gt; and change the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;service-account.name&lt;/code&gt; field to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;test&lt;/code&gt; what’ll happen… The answer turns out to be that the edit succeeds and the secret vanishes! Checking etcd as above confirms that our secret has gone from the datastore too.&lt;/p&gt;
-
-&lt;h2 id=&quot;why-does-that-happen&quot;&gt;Why does that happen?&lt;/h2&gt;
-
-&lt;p&gt;Knowing a bit about Kubernetes I’ve got a fair idea of why this happens, I’d expect it to be done by one of the &lt;a href=&quot;https://kubernetes.io/docs/concepts/architecture/controller/&quot;&gt;controllers&lt;/a&gt; that Kubernetes use to manage cluster state. There are a wide range of controllers which run as part of the controller-manager component and what they do (roughly) is run a loop watching the state of a certain class of object looking at the desired state. They then make changes to the configuration of the cluster to ensure it stays in that desired state.&lt;/p&gt;
-
-&lt;p&gt;Looking at the docs for &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#token-controller&quot;&gt;Kubernetes service accounts&lt;/a&gt; we see this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;TokenController runs as part of kube-controller-manager. It acts asynchronously. It:
-
-    watches ServiceAccount creation and creates a corresponding ServiceAccount token Secret to allow API access.
-    watches ServiceAccount deletion and deletes all corresponding ServiceAccount token Secrets.
-    watches ServiceAccount token Secret addition, and ensures the referenced ServiceAccount exists, and adds a token to the Secret if needed.
-    watches Secret deletion and removes a reference from the corresponding ServiceAccount if needed.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So it seems likely, although the docs don’t mention it deleting secrets that don’t match to an existing service account, that this component will be the one deleting our secrets, but how do we check?&lt;/p&gt;
-
-&lt;p&gt;Well Kubernetes auditing should be able to help us here, as all the controllers in Kubernetes send their requests via the API server, so we can look at what happens when we try to create our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;build-robot-secret&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Running the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl create&lt;/code&gt; from earlier on that cluster confirms the hypothesis. There’s three events which happen.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;A create event from the kubernetes-admin user (which is the name of the default first user in a kubeadm cluster)&lt;/li&gt;
-  &lt;li&gt;A get event from the tokens-controller. Interestingly here the “user” is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:kube-controller-manager&lt;/code&gt; but the user agent indicates that it’s the tokens-controller.&lt;/li&gt;
-  &lt;li&gt;A delete event from the tokens-controller that looks like this&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;kind&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Event&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;apiVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;audit.k8s.io/v1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;level&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;RequestResponse&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;auditID&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ef0f48eb-a606-4f50-afcd-517268a5cd2e&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;stage&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ResponseComplete&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;requestURI&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/api/v1/namespaces/default/secrets/build-robot-secret&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;verb&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;delete&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;user&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;username&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;system:kube-controller-manager&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;groups&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;system:authenticated&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;sourceIPs&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;172.18.0.3&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;userAgent&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kube-controller-manager/v1.21.1 (linux/amd64) kubernetes/5e58841/tokens-controller&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;objectRef&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;resource&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;secrets&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;namespace&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;default&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;build-robot-secret&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;apiVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;v1&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;responseStatus&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;metadata&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;status&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Success&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;code&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;200&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;requestObject&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;kind&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;DeleteOptions&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;apiVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;v1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;preconditions&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;uid&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;16c9f476-34fe-48a0-b623-100f7de93d0f&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-    &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Like I mentioned at the top of this post, nothing earthshaking here, but it’s kind of interesting to dig into how Kubernetes controllers which keep the cluster in a desired state are constantly watching and changing resources.&lt;/p&gt;
-
-&lt;p&gt;In terms of impact, outside of a niche scenario where someone was allowed to edit secrets but not delete them, there’s probably no major impact here, but it might help someone understand why a secret that looked like it got created ok, was no longer present in their cluster!&lt;/p&gt;
-</description>
-				<pubDate>Sat, 12 Feb 2022 14:50:39 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/</guid>
 			</item>
 		
 	</channel>

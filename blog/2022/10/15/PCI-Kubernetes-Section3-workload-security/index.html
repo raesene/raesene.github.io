@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   15th,
+	   
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The <a href="https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/">previous installment</a> looked at authorization, and there’s also an <a href="https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/">overview post</a> and some notes on the <a href="https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/">complexity of assessing security in Kubernetes</a> which might be worth reading before getting in to this part.</p>
+
+<h1 id="section-3---workload-security">Section 3 - Workload Security</h1>
+
+<p>Running containers is obviously the main thing that most Kubernetes clusters are responsible for, so it makes sense that there’s a section of the guidance dedicated to them. Before we talk about the specific recommendations, it’s important to cover off a couple of base concepts.</p>
+
+<p>Containers are just Linux (or Windows) processes. When run under Kubernetes the defaults for both is to use operating system features to isolate those processes from each other and the underlying host. So you can think of Kubernetes as essentially distributed remote command execution :)</p>
+
+<p>By default, with no additional controls, any user who can launch containers into a cluster can get <code class="language-plaintext highlighter-rouge">root</code> access to the underlying cluster node simply (I’ve covered how to do that before with <a href="https://raesene.github.io/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/">the most pointless kubernetes command ever</a> which is based on <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">the most pointless docker command ever</a> from Ian Miell)).</p>
+
+<p>Docker, and by extension Kubernetes, have a flexible security model where individual restrictions can be removed or enhanced. The defaults were generally chosen for ease of operation, so it’s not surprising that they need specific hardening recommendations for production PCI environments.</p>
+
+<h2 id="section-31">Section 3.1</h2>
+
+<p><strong>Threat</strong> - Access to shared resources on the underlying host permits container breakouts to occur, compromising the security of shared resources.</p>
+
+<p><strong>Best Practice</strong> - Workloads running in the orchestration system should be configured to prevent access to the underlying cluster nodes by default. Where granted, any access to resources provided by the nodes should be provided on a least privilege basis, and the use of “privileged” mode containers should be specifically avoided.</p>
+
+<p><strong>Details</strong> - So as we’ve mentioned Kubernetes requires specific additional controls to be put in place to stop containers getting access to underlying cluster resources. The mention of <code class="language-plaintext highlighter-rouge">privileged</code> in the recommendation refers to the Docker <code class="language-plaintext highlighter-rouge">--privileged</code> flag which essentially just removes all the security isolation between a container and the underlying node. It’s sometimes used as a shortcut to avoid having to work out exactly what access a container needs to the underlying node.</p>
+
+<p>In terms of how these restrictions are put in place, the picture can be a bit complex. In older versions of Kubernetes a feature called Pod Security Policy was available which could be used to restrict workloads. However this was removed <a href="https://kubernetes.io/blog/2022/08/23/podsecuritypolicy-the-historical-context/">in the latest version of Kubernetes</a>.</p>
+
+<p>There is a replacement feature within Kubernetes, which can be used to implement restrictions on Workloads called <a href="https://kubernetes.io/docs/concepts/security/pod-security-admission/">Pod Security Admission</a>, however this may not be suitably flexible for all companies needs, so many organizations make use of external admission control software to place restrictions on workloads running in the cluster. In the open source world, prominent options for this include <a href="https://kyverno.io/">Kyverno</a>, <a href="https://github.com/open-policy-agent/gatekeeper">OPA Gatekeeper</a>, <a href="https://www.jspolicy.com/">jsPolicy</a> and <a href="https://www.kubewarden.io/">Kubewarden</a>. Also a special note for OpenShift here which has it’s own mechanism <a href="https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html">Security Context Constraints</a>.</p>
+
+<p>Having covered how restrictions on workloads would be put in place, we also need to think about what restrictions to put in place. At this point it’s important to note that some system workloads do need access to the underlying cluster nodes to operate, so for example the <code class="language-plaintext highlighter-rouge">kube-proxy</code> component needs to modify networking components so will need access to that.</p>
+
+<p>For general workloads the goal is to avoid giving them rights that would allow for access to the underlying host. The Kubernetes project has created <a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/">Pod Security Standards</a> to document which settings are needed (as there are quite a few). Enforcing at least the <strong>baseline</strong> policy and ideally using the <strong>restricted</strong> policy for all general workloads should prevent the processes running in containers from accessing the underlying host.</p>
+
+<p>So if you’re reviewing a cluster for PCI there’s a couple of actions</p>
+
+<ul>
+  <li>
+    <p>Ensure that one of the systems that can be used to restrict workloads is in place and operational</p>
+  </li>
+  <li>
+    <p>Review the policies applied to the workloads in the cluster to assess how well they meet the requirements of Pod Security Standards.</p>
+  </li>
+</ul>
+
+<h2 id="section-32">Section 3.2</h2>
+
+<p><strong>Threat</strong> - The use of non-specific versions of container images could facilitate a supply chain attack where a malicious version of the image is pushed to a registry by an attacker.</p>
+
+<p><strong>Best Practice</strong> - Workload definitions/manifests should target specific known versions of any container images. This should be done via a reliable mechanism checking the cryptographic signatures of images. If signatures are not available, message-digests should be used.</p>
+
+<p><strong>Details</strong> - Container images are the standard way of packaging the software that will run on your Kubernetes clusters, and they’re typically pulled from container registries, either public ones like Docker Hub or private ones under the organization’s control. Obviously it’s important to ensure (as much as possible) that you know what’s inside the container image before you run it. Within registries versions of images are typically denoted based on “tags” and if you don’t specify a tag you get whatever the latest version of that image is, which is clearly not great in terms of knowing what you’re running.</p>
+
+<p>Also, depending on the registry, it may be possible to change what image a tag points to, so again it’s not ideal to rely solely on image tags, although if an internal registry is used it might be possible to establish trust based on how that registry and its tags are managed. Without additional software, one option is to use images based on a specific SHA-256 hash, a mechanism which is generally supported by container software, although it’s important to note that this is quite a cumbersome thing to do as it means you need to change the hash <em>every</em> time the image is patched or changed in any way.</p>
+
+<p>It’s also possible to use digital signing to improve the trust in the workloads you run, but this does require additional software. Specifically it need a signing tool to sign the images and also software to validate the signatures when the container images are deployed to the Kubernetes cluster. For the first part the most common tool is <a href="https://github.com/sigstore/cosign">cosign</a>, and it’s possible to validate cosign signed images using the admission control software we mentioned in the previous section.</p>
+
+<ul>
+  <li>
+    <p>Ensure that all images running in the cluster use either a tag (supported by processes to ensure tag integrity), SHA-256 hash or digital signatures to validate their integrity.</p>
+  </li>
+  <li>
+    <p>Review how these mechanisms are enforced, reviewing admission controller policies that are in use on the cluster.</p>
+  </li>
+</ul>
+
+<h2 id="section-33">Section 3.3</h2>
+
+<p><strong>Threat</strong> - Containers retrieved from untrusted sources may contain malware or exploitable vulnerabilities</p>
+
+<p><strong>Best Practice</strong> - All container images running in the cluster should come from trusted sources.</p>
+
+<p><strong>Details</strong> - This requirement goes alongside the previous one, in making the point that container image assurance is a key concern for Kubernetes. It’s important to note that in the vast majority of cases, Container registries do not curate their images so there is a risk of supply chain attacks at that level.</p>
+
+<p>The safest option is to ensure that all images running in the cluster are sourced from a container registry that is under the control of the organization, and that security checks are carried out whenever new images are added to this registry. This does add overhead to managing the cluster as 3rd party software (e.g. helm charts) will generally assume that it can pull images from whichever registry the software vendor uses.</p>
+
+<p>Where images need to be sourced from external registries mechanisms like using specific SHA-256 hashes or signed images can help to provide assurances that the images can be trusted (assuming of course you trust the project/vendor that created those images).</p>
+
+<ul>
+  <li>All images should come from either an internally controlled registry or where coming from external sources be validated before deployment.</li>
+</ul>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Workload security is a fundamental part of any container security architecture. PCI’s requirements are (as with previous parts) fairly general good practices, however implementing them in a Kubernetes environment could require considerable effort. Planning out how to comply with these requirements is best done during a planning phase, to reduce the potential for impact to running workloads.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(32)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 3 - Workload Security&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/" title="PCI Compliance for Kubernetes in detail - Part 2 - Authorization">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
