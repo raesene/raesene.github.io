@@ -7,6 +7,59 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 4 - Network Security</title>
+				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Network security.&lt;/p&gt;
+
+&lt;p&gt;Before getting into the details of how the PCI recommendations might apply, it’s worth touching briefly on how Kubernetes networking works, at a high level.&lt;/p&gt;
+
+&lt;p&gt;Networking is one of the areas where Kubernetes delegates responsibility to third party components via a well defined API, in this case the Container Networking Interface (CNI). This means that there can be a wide variety of implementations, which can make assessing cluster security tricky to talk about generally. At a high level there’s two ways that networking is approached in Kubernetes :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Overlay Networking&lt;/strong&gt; - Here a separate network space is established for the containers running in the cluster. The CNI component allows all containers to talk to each other in a shared IP address space, regardless of the architecture of the underlying network topology. This has advantages in simplicity of operation. One point to note here is that although typically the overlay network isn’t accessible from the underlying network, this isn’t a security mechanism as &lt;a href=&quot;https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/&quot;&gt;Kubernetes nodes are routers&lt;/a&gt; so other hosts on the same subnet as a Kubernetes cluster can get access to containers unless additional restrictions are in place.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Direct Networking&lt;/strong&gt; - An alternative approach is to provide containers with IP addresses on the same network as the underlying nodes. This is a relatively common implementation from cloud managed Kubernetes distributions such as &lt;a href=&quot;https://github.com/Azure/azure-container-networking/blob/master/docs/cni.md&quot;&gt;AKS&lt;/a&gt; and &lt;a href=&quot;https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html&quot;&gt;EKS&lt;/a&gt;. This removes the complexity of having a separate overlay network, but does mean that things like dealing with possible IP address exhaustion on the network can become a challenge.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In either case the default for Kubernetes is to allow unrestricted access to and from containers running in the cluster, so there is a requirement to add restrictions to lock this down from its initial open state.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-41&quot;&gt;Section 4.1&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Container technologies with container networks that do not support network segmentation or restriction allow unauthorized network access between containers.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - Container orchestration tool networks should be configured on a default deny basis, with access explicitly required only for the operation of the applications being allowed.
+&lt;strong&gt;Details&lt;/strong&gt; - There’s a couple of pieces that need to be checked and configured in Kubernetes to address this recommendation. The first is ensuring that the Container Networking solution (CNI) in place supports Kubernetes network policies which are used to restrict network traffic. Whilst most do there are some, like Flannel, which do not.&lt;/p&gt;
+
+&lt;p&gt;Assuming that the CNI is in place, the next step is to ensure that a default deny policy is in place for each Kubernetes namespace. The way that network policies work, there needs to be an &lt;em&gt;ingress&lt;/em&gt; and &lt;em&gt;egress&lt;/em&gt; policy per namespace applying that policy and the policies must apply to every workload. In general network policies are applied using workload selectors and if there are no policies that apply to a given workload, all traffic is allowed in that direction, so it’s important to ensure that the base deny policy is in place. There’s a good example of this kind of policy &lt;a href=&quot;https://github.com/ahmetb/kubernetes-network-policy-recipes/blob/master/03-deny-all-non-whitelisted-traffic-in-the-namespace.md&quot;&gt;here&lt;/a&gt; (as well as a lot of other good network policy examples).&lt;/p&gt;
+
+&lt;p&gt;Another point to mention here is that some CNIs (e.g. Calico or Cilium) have extended the network policy model and have their own network policy style objects which can apply default policies more easily. When reviewing a cluster, it is important to first check the CNI in use and then check both base network policies &lt;em&gt;and&lt;/em&gt; the additional network policy types, if they’re supported.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-42&quot;&gt;Section 4.2&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Access from the container or other networks to the orchestration component and administrative APIs could allow privilege escalation attacks.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - Access to orchestration system components and other administrative APIs should be restricted using an explicit allow-list of IP addresses.
+&lt;strong&gt;Details&lt;/strong&gt; - This is another area where there aren’t any policies implemented by default so it requires configuration on a per cluster basis. From within the cluster this would likely be handled by the first section, so in terms of additional requirements we’re looking at access to orchestration APIs from external sources. For unmanaged Kubernetes this needs to be handled by adding network firewall restrictions to the IP addresses of the control plane and worker nodes in the cluster. For managed Kubernetes, generally access to the Kubernetes API server is handled at a cloud configuration layer. It’s worth noting that the “big 3” managed cloud distributions all default to placing the Kubernetes API server directly on the Internet with no IP address restrictions, however they do support restricting access to whitelisted ranges or making it only available from cloud internal IP address ranges.&lt;/p&gt;
+
+&lt;h1 id=&quot;section-43&quot;&gt;Section 4.3&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Unencrypted traffic with management APIs is allowed as a default setting, allowing packet sniffing or spoofing attacks
+&lt;strong&gt;Best Practice&lt;/strong&gt; - All traffic with orchestration system components APIs should be over encrypted connections, ensuring encryption key rotation meets PCI key and secret requirements.
+&lt;strong&gt;Details&lt;/strong&gt; - From a core Kubernetes perspective, the default management API access should be encrypted, however there are a couple of legacy Kubernetes management APIs which allow for unencrypted access, and care should be taken to ensure that these are not activated or used. Firstly the Kubernetes insecure API operates over an unencrypted connection to port 8080/TCP by default. This API should never be enabled as, in addition to not requiring encryption, it does not require authentication!  The other core Kubernetes API which may be available without encryption is the read-only Kubelet service which defaults to being available on port 10255/TCP on any nodes that have the Kubelet running. Whilst this service is read-only it does include information which may be sensitive and like the insecure API service, it does not have authentication support, so should not be used in production clusters.&lt;/p&gt;
+
+&lt;p&gt;In addition to core Kubernetes APIs, it’s worth noting that supporting systems (e.g. logging and monitoring) should require encryption for access where they are communicating across any network, including the container network.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Network security is another core part of creating a secure Kubernetes environment and, like workload security which we covered last time, Kubernetes default position is not to have any restrictions in place, so it falls to cluster operators to ensure that Kubernetes environments are appropriately locked down.&lt;/p&gt;
+
+</description>
+				<pubDate>Sun, 23 Oct 2022 11:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security</title>
 				<description>&lt;p&gt;This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;previous installment&lt;/a&gt; looked at authorization, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
 
@@ -926,89 +979,6 @@ nodes                                           &lt;span class=&quot;o&quot;&gt;
 				<pubDate>Sun, 03 Jul 2022 09:10:39 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</guid>
-			</item>
-		
-			<item>
-				<title>Escaping the Nested Doll with Tailscale</title>
-				<description>&lt;p&gt;There are lots of tools which we can use in the container ecosystem to easily create and test applications, but sometimes the networking they create can get a little complex, making it hard to work with and troubleshoot. I came across a scenario recently (for a workshop in Kubecon) where I needed to access a GUI application deployed in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster running in an EC2 instance on AWS, from my laptop. The solution I came up with was to use &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and as it seemed like a nice way to solve the problem, I thought it was worth documenting.&lt;/p&gt;
-
-&lt;h2 id=&quot;setting-up-our-nested-doll&quot;&gt;Setting up our Nested Doll&lt;/h2&gt;
-
-&lt;p&gt;Let’s lay out the different networks we’re working with to show up the problem. My client machine is on a LAN and has an assigned IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;192.168.41.70&lt;/code&gt; (like most home networks I’m using NAT to access the Internet).&lt;/p&gt;
-
-&lt;p&gt;I create an EC2 instance, which gets assigned an external IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;52.56.82.230&lt;/code&gt; which is in one of AWS’ subnets. SSH’ing to that host I get an IP address on my AWS subnet of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.31.3.70&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ip addr
-ens5: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 9001 qdisc mq state UP group default qlen 1000
-    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 06:82:28:cc:5d:6c brd ff:ff:ff:ff:ff:ff
-    altname enp0s5
-    inet 172.31.3.70/20 brd 172.31.15.255 scope global dynamic ens5
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then I install Docker and KinD on the EC2. Creating a KinD cluster sets up a new Docker container which acts as my node. That container has an IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;kind-control-plane ip addr
-eth0@if6: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 1500 qdisc noqueue state UP group default
-    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then I create a pod in my KinD cluster with the web application that I want to access, which gets an IP address assigned in the pod network range for the cluster of 10.244.0.5&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get po &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; wide
-NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
-webserver   1/1     Running   0          13m   10.244.0.5   kind-control-plane   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;When all’s said and done, it ends up looking a bit like this&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/nested-doll.png&quot; alt=&quot;nested doll&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;So how do we get easy access to our website?&lt;/p&gt;
-
-&lt;h2 id=&quot;enter-tailscale&quot;&gt;Enter Tailscale&lt;/h2&gt;
-
-&lt;p&gt;Tailscale is a VPN like product that can be installed on a wide range of devices and essentially creates an overlay network for you that means that devices that you connect can easily access services on any other device in the network. As part of this they have a number of ways of deploying Tailscale to Kubernetes clusters, so you can access your services. In this case probably the easiest to setup is the &lt;a href=&quot;https://tailscale.com/kb/1185/kubernetes/#subnet-router&quot;&gt;subnet router&lt;/a&gt; where we can essentially give access to any workload in the Kubernetes pod network by deploying a Tailscale pod to act as a router.&lt;/p&gt;
-
-&lt;p&gt;Once we follow the Tailscale instructions for creating our Kubernetes Subnet router and &lt;a href=&quot;https://tailscale.com/kb/1019/subnets/#step-3-enable-subnet-routes-from-the-admin-console&quot;&gt;authorize the subnet&lt;/a&gt; in the admin panel, our networking looks a bit like this&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/nested-doll-with-tailscale.png&quot; alt=&quot;nested doll with tailscale&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;and if we browse to the pod IP address of our web server (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.5&lt;/code&gt;) from our local PC, up pops the deployed application, like magic!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-webapp-access.png&quot; alt=&quot;webapp over tailscale&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;addendum---getting-cluster-dns&quot;&gt;Addendum - Getting Cluster DNS&lt;/h2&gt;
-
-&lt;p&gt;So a question on this post from &lt;a href=&quot;https://twitter.com/blair_drummond/status/1535952970352930816?s=20&amp;amp;t=9LG336wUxUe36Qjm4BFGwA&quot;&gt;Blair Drummond&lt;/a&gt; was can you get cluster DNS working for this setup? The answer is yes, although it might be a bit fiddly. Let’s walk through an example. For this example to work it’s important, when following the Tailscale instructions above, that you add a route for the service IP address range in Kubernetes as well as the pod IP address range.&lt;/p&gt;
-
-&lt;p&gt;Next, we need to expose our Pod that we created earlier with a service. Services in Kubernetes get DNS names which can be addressed.&lt;/p&gt;
-
-&lt;p&gt;We can do this with something like&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl expose pod webserver &lt;span class=&quot;nt&quot;&gt;--port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;80 &lt;span class=&quot;nt&quot;&gt;--target-port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;80
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once we’ve done that, we nee to tell Tailscale to use the Kubernetes DNS service for our service domain of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default.svc.cluster.local&lt;/code&gt;. We can do that in the Tailscale DNS section of their admin app.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-cluster-dns.png&quot; alt=&quot;webapp over tailscale&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The nameserver IP address we’re using here is the Kubernetes DNS service&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get svc &lt;span class=&quot;nt&quot;&gt;-n&lt;/span&gt; kube-system
-NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;S&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;                  AGE
-kube-dns   ClusterIP   10.96.0.10   &amp;lt;none&amp;gt;        53/UDP,53/TCP,9153/TCP   13m
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once we’ve got that setup we can reach our webserver that we deployed with a DNS name of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[SERVICENAME].default.svc.cluster.local&lt;/code&gt; and it should work fine :)&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;It’s pretty easy to end up with complex network setups when playing around in container land, especially once you add the complexities of Kubernetes pod network to the mix. Fortunately there are solutions out there that make it easier to work with all of this and let you get access wherever you need it :)&lt;/p&gt;
-</description>
-				<pubDate>Sat, 11 Jun 2022 09:10:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/</guid>
 			</item>
 		
 	</channel>

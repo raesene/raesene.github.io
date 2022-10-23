@@ -159,6 +159,39 @@
   <span class="post-date">
     
     December
+    14th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2008/12/14/what_is_penetra/">What is Penetration Testing?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I'm planning to do a series of posts about penetration testing over the next couple of weeks so I thought I should start in the obvious place of defining what it actually is.<br />
+You'd think this would be relatively straightforward, but the term "penetration testing" is mis-used all over the place.  Some people use it to refer to vulnerability assessment, some people use it to refer to Web Application Security Assessment, and a lot of business people use it to refer generically to any and all security assessment activity.<br />
+So what actually is it?  Well for me, a penetration test is a scenario based assessment where the tester will actually try to exploit security vulnerabilities in a system or systems (depending on the scope) and then leverage those exploited vulnerabilities to gain further access to systems within the scope of the assessment which may be accessible after exploiting the initial vulnerability.<br />
+So that's what it is, why is it important to use the term correctly?<br />
+Well, different security assessment types have different characteristics and provide the owner of the system with different levels of assurance, so it's important to make sure everyone's talking about the same thing.<br />
+For example, vulnerability assessment is typically primarily tool based (eg, Nessus), focuses on networking/Operating System/maybe database level problems and doesn't usually exploit the vulnerabilities found.  Pretty low risk to the systems under test (usually) but won't provide definite confirmation of problems and typically doesn't look at web applications, so it won't cover all the attack surface of a typical web application exposed over the Internet.<br />
+So if someone calls a vulnerability assessment a penetration test (and this is pretty common, in my experience) there's a good chance that someone's going to be disappointed in the results...<br />
+From the definition I used there's a couple of areas that can be very important to define correctly when conducting a test, so next time, I'm planning to go over some of the common problems and misconceptions in scoping penetration tests.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
     10th,
     
     2008
@@ -460,43 +493,6 @@ So controls which are likely to be effective in this space could be :-</p>
     <p>I've been reading quite a few posts about Microsofts COFEE toolkit which seems to be designed to help forensics investigators get evidence from (presumably windows based) PCs.<br />
 It's amazing to see how many sources on the Internet took the original article <a href="http://seattletimes.nwsource.com/html/microsoft/2004379751_msftlaw29.html">here</a> from the Seattle times and came to the conclusion that this was some magical box of tricks that would instantly bypass windows security, as opposed to just being a useful collection of forensics tools, examples of this response are <a href="http://gizmodo.com/385476/microsoft-cofee-wont-perk-you-up-but-it-will-instamagically-hack-your-computer">here</a>, <a href="http://artofinfosec.com/56/hackers-holy-grail-redefined-by-microsoft/">here</a>, <a href="http://reddit.com/info/6hj9y/comments/">here</a> and <a href="http://tech.slashdot.org/article.pl?sid=08/04/29/1441215"> here</a><br />
 Luckily someone at the Seattle Times did some follow-up with Microsoft to confirm that it's actually just a collection of forensics tools and doesn't bypass windows security <a href="http://blog.seattletimes.nwsource.com/techtracks/2008/04/looking_for_answers_on_microsofts_cofee_device.html"> here </a></p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    24th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2008/04/24/pci_66_clarific/">PCI 6.6 clarification - Am I missing something?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Recently there have been some clarifications around a couple of sections of the PCI-DSS, in particular one on <a href="https://www.pcisecuritystandards.org/pdfs/infosupp_6_6_applicationfirewalls_codereviews.pdf">section 6.6 </a>.<br />
-This update has created some comment and articles but none of the ones I've read has focused on the main point, as far as I can see...<br />
-<b>Previously there were two options for satisfying Section 6.6</b></p>
-<ul>
-<li> A Code Review (either manual or tool assisted) of in-scope web applications, or</li>
-<li>Placement of an appropriately configured Web Application Firewall to protect the application</li>
-</ul>
-<p><b>Now (unless I'm reading this incorrectly) there's an additional one</b><br />
-Completion of a manual or assisted web application vulnerability review...<br />
-The confusing part is that this third option isn't split out but is listed under the "application code review" section.<br />
-My feeling is that this'll affect a lot of merchants (and vendors) if they were planning on either spending money on WAFs or Code reviews and will now use a standard web application review (which they may already be undertaking as part of other security work....)<br />
-Another interesting point which I don't know the answer to is whether a single review which covered both penetration testing techniques and web application assessment techniques could be used to satisfy 6.6 and 11.3...</p>
 
     
     

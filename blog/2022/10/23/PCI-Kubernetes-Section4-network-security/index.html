@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PCI Compliance for Kubernetes in detail - Part 4 - Network Security</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>PCI Compliance for Kubernetes in detail - Part 4 - Network Security </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   October 
+	   23rd,
+	     
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Network security.</p>
+
+<p>Before getting into the details of how the PCI recommendations might apply, it’s worth touching briefly on how Kubernetes networking works, at a high level.</p>
+
+<p>Networking is one of the areas where Kubernetes delegates responsibility to third party components via a well defined API, in this case the Container Networking Interface (CNI). This means that there can be a wide variety of implementations, which can make assessing cluster security tricky to talk about generally. At a high level there’s two ways that networking is approached in Kubernetes :-</p>
+
+<ul>
+  <li>
+    <p><strong>Overlay Networking</strong> - Here a separate network space is established for the containers running in the cluster. The CNI component allows all containers to talk to each other in a shared IP address space, regardless of the architecture of the underlying network topology. This has advantages in simplicity of operation. One point to note here is that although typically the overlay network isn’t accessible from the underlying network, this isn’t a security mechanism as <a href="https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/">Kubernetes nodes are routers</a> so other hosts on the same subnet as a Kubernetes cluster can get access to containers unless additional restrictions are in place.</p>
+  </li>
+  <li>
+    <p><strong>Direct Networking</strong> - An alternative approach is to provide containers with IP addresses on the same network as the underlying nodes. This is a relatively common implementation from cloud managed Kubernetes distributions such as <a href="https://github.com/Azure/azure-container-networking/blob/master/docs/cni.md">AKS</a> and <a href="https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html">EKS</a>. This removes the complexity of having a separate overlay network, but does mean that things like dealing with possible IP address exhaustion on the network can become a challenge.</p>
+  </li>
+</ul>
+
+<p>In either case the default for Kubernetes is to allow unrestricted access to and from containers running in the cluster, so there is a requirement to add restrictions to lock this down from its initial open state.</p>
+
+<h1 id="section-41">Section 4.1</h1>
+
+<p><strong>Threat</strong> - Container technologies with container networks that do not support network segmentation or restriction allow unauthorized network access between containers.
+<strong>Best Practice</strong> - Container orchestration tool networks should be configured on a default deny basis, with access explicitly required only for the operation of the applications being allowed.
+<strong>Details</strong> - There’s a couple of pieces that need to be checked and configured in Kubernetes to address this recommendation. The first is ensuring that the Container Networking solution (CNI) in place supports Kubernetes network policies which are used to restrict network traffic. Whilst most do there are some, like Flannel, which do not.</p>
+
+<p>Assuming that the CNI is in place, the next step is to ensure that a default deny policy is in place for each Kubernetes namespace. The way that network policies work, there needs to be an <em>ingress</em> and <em>egress</em> policy per namespace applying that policy and the policies must apply to every workload. In general network policies are applied using workload selectors and if there are no policies that apply to a given workload, all traffic is allowed in that direction, so it’s important to ensure that the base deny policy is in place. There’s a good example of this kind of policy <a href="https://github.com/ahmetb/kubernetes-network-policy-recipes/blob/master/03-deny-all-non-whitelisted-traffic-in-the-namespace.md">here</a> (as well as a lot of other good network policy examples).</p>
+
+<p>Another point to mention here is that some CNIs (e.g. Calico or Cilium) have extended the network policy model and have their own network policy style objects which can apply default policies more easily. When reviewing a cluster, it is important to first check the CNI in use and then check both base network policies <em>and</em> the additional network policy types, if they’re supported.</p>
+
+<h1 id="section-42">Section 4.2</h1>
+
+<p><strong>Threat</strong> - Access from the container or other networks to the orchestration component and administrative APIs could allow privilege escalation attacks.
+<strong>Best Practice</strong> - Access to orchestration system components and other administrative APIs should be restricted using an explicit allow-list of IP addresses.
+<strong>Details</strong> - This is another area where there aren’t any policies implemented by default so it requires configuration on a per cluster basis. From within the cluster this would likely be handled by the first section, so in terms of additional requirements we’re looking at access to orchestration APIs from external sources. For unmanaged Kubernetes this needs to be handled by adding network firewall restrictions to the IP addresses of the control plane and worker nodes in the cluster. For managed Kubernetes, generally access to the Kubernetes API server is handled at a cloud configuration layer. It’s worth noting that the “big 3” managed cloud distributions all default to placing the Kubernetes API server directly on the Internet with no IP address restrictions, however they do support restricting access to whitelisted ranges or making it only available from cloud internal IP address ranges.</p>
+
+<h1 id="section-43">Section 4.3</h1>
+
+<p><strong>Threat</strong> - Unencrypted traffic with management APIs is allowed as a default setting, allowing packet sniffing or spoofing attacks
+<strong>Best Practice</strong> - All traffic with orchestration system components APIs should be over encrypted connections, ensuring encryption key rotation meets PCI key and secret requirements.
+<strong>Details</strong> - From a core Kubernetes perspective, the default management API access should be encrypted, however there are a couple of legacy Kubernetes management APIs which allow for unencrypted access, and care should be taken to ensure that these are not activated or used. Firstly the Kubernetes insecure API operates over an unencrypted connection to port 8080/TCP by default. This API should never be enabled as, in addition to not requiring encryption, it does not require authentication!  The other core Kubernetes API which may be available without encryption is the read-only Kubelet service which defaults to being available on port 10255/TCP on any nodes that have the Kubelet running. Whilst this service is read-only it does include information which may be sensitive and like the insecure API service, it does not have authentication support, so should not be used in production clusters.</p>
+
+<p>In addition to core Kubernetes APIs, it’s worth noting that supporting systems (e.g. logging and monitoring) should require encryption for access where they are communicating across any network, including the container network.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Network security is another core part of creating a secure Kubernetes environment and, like workload security which we covered last time, Kubernetes default position is not to have any restrictions in place, so it falls to cluster operators to ensure that Kubernetes environments are appropriately locked down.</p>
+
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(33)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 4 - Network Security&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/" title="PCI Compliance for Kubernetes in detail - Part 3 - Workload Security">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
