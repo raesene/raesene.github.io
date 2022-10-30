@@ -62,7 +62,7 @@
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 5 - PKI</title>
-				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI.&lt;/p&gt;
+				<description>&lt;p&gt;This is the fifth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI.&lt;/p&gt;
 
 &lt;p&gt;This section gets into an area that’s fairly well trodden for financial services companies which is PKI management. Organizations that are used to more traditional approaches to PKIs might be somewhat surprised by how Kubernetes makes use of Public Key Infrastructure.&lt;/p&gt;
 
@@ -146,7 +146,7 @@
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;Network security is another core part of creating a secure Kubernetes environment and, like workload security which we covered last time, Kubernetes default position is not to have any restrictions in place, so it falls to cluster operators to ensure that Kubernetes environments are appropriately locked down.&lt;/p&gt;
+&lt;p&gt;Network security is another core part of creating a secure Kubernetes environment and, like workload security which we covered last time, Kubernetes default position is not to have any restrictions in place, so it falls to cluster operators to ensure that Kubernetes environments are appropriately locked down. Next time we’ll be looking at the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/&quot;&gt;PKI Recommendations&lt;/a&gt;&lt;/p&gt;
 
 </description>
 				<pubDate>Sun, 23 Oct 2022 11:27:00 +0100</pubDate>
@@ -234,7 +234,7 @@
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;Workload security is a fundamental part of any container security architecture. PCI’s requirements are (as with previous parts) fairly general good practices, however implementing them in a Kubernetes environment could require considerable effort. Planning out how to comply with these requirements is best done during a planning phase, to reduce the potential for impact to running workloads.&lt;/p&gt;
+&lt;p&gt;Workload security is a fundamental part of any container security architecture. PCI’s requirements are (as with previous parts) fairly general good practices, however implementing them in a Kubernetes environment could require considerable effort. Planning out how to comply with these requirements is best done during a planning phase, to reduce the potential for impact to running workloads. Next time we’ll be looking at the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/&quot;&gt;Network Security Recommendations&lt;/a&gt;&lt;/p&gt;
 </description>
 				<pubDate>Sat, 15 Oct 2022 09:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</link>
@@ -295,7 +295,7 @@
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;The PCI recommendations for Authorization are a pretty standard set of good practices for multi-user systems, however enforcing them for Kubernetes does require people to take account of some peculiarities in how Kubernetes operates when implementing them. In our next part we’ll be looking at section 3 of the guidance on the topic of Workload security.&lt;/p&gt;
+&lt;p&gt;The PCI recommendations for Authorization are a pretty standard set of good practices for multi-user systems, however enforcing them for Kubernetes does require people to take account of some peculiarities in how Kubernetes operates when implementing them. In our next part we’ll be l&lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;ooking at section 3 of the guidance on the topic of Workload security&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 08 Oct 2022 14:40:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</link>
