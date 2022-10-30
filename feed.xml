@@ -36,9 +36,22 @@
 
 &lt;p&gt;For remote access, when I’m travelling, I use the amazing &lt;a href=&quot;https://tailscale.com/&quot;&gt;tailscale&lt;/a&gt; and it installed with no problems at all (from &lt;a href=&quot;https://github.com/tailscale/tailscale/issues/5218&quot;&gt;this&lt;/a&gt; looks like version 1.32 added the ARM64 package), which is nice.&lt;/p&gt;
 
+&lt;h2 id=&quot;uefi-settings&quot;&gt;UEFI Settings&lt;/h2&gt;
+
+&lt;p&gt;I got a request to add the UEFI configuration settings here, so this is the four sets of options when you boot to the BIOS (N.B. you need to use the mini-displayport video out rather than USB-C for this)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/volterra-uefi-information.jpeg&quot; alt=&quot;volterra uefi information&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/volterra-uefi-security.jpeg&quot; alt=&quot;volterra uefi security&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/volterra-uefi-boot.jpeg&quot; alt=&quot;volterra uefi boot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/volterra-uefi-management.jpeg&quot; alt=&quot;volterra uefi management&quot; /&gt;&lt;/p&gt;
+
 &lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
 
 &lt;p&gt;Project Volterra seems to be a useful dev box for ARM64 work and so far it’s working out pretty well. The small form-factor and low power draw make it an attractive option for a headless box that can run a decent range of workloads and, in containerization land anyway, software support is pretty good.&lt;/p&gt;
+
 </description>
 				<pubDate>Sun, 30 Oct 2022 08:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/</link>
