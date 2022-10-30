@@ -158,6 +158,58 @@
 
   <span class="post-date">
     
+    July
+    31st,
+    
+    2022
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/">Fun with Capabilities</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series <a href="https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work">here</a> and <a href="https://blog.container-solutions.com/linux-capabilities-in-practice">here</a>) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    3rd,
+    
+    2022
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/">Let's talk about Kubernetes on the Internet</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There’s been a couple of studies recently released by security research companies about exposed Kubernetes clusters on the Internet, and whilst it’s nice to see the security industry focusing a bit more on Kubernetes, some of the analysis misses some of the details of why Kubernetes clusters are exposed to the Internet and what some of the results mean, so I thought it would be a good opportunity to <a href="https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/">revist</a> this topic, also as there have been some developments in what information can be found via Internet search engines.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     June
     11th,
     
@@ -354,58 +406,6 @@
     
     
     <p>Container image signing has been a bit of a gap in the security landscape, so I’m always interested in seeing new projects starting up which address it. Docker Content Trust/Notary never really gained traction in v1, and whilst v2 looks very interesting, it’s still in the design phase (AFAIK).</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    16th,
-    
-    2021
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2021/01/16/Getting-Into-A-Bind-with-Kubernetes/">Getting into a bind with Kubernetes</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Following on from <a href="https://raesene.github.io/blog/2020/12/12/Escalating_Away/">looking at the escalate verb in Kubernetes RBAC</a>, I thought it would be worth looking at another one of the unusual verbs you can see in Kubernetes RBAC, bind.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    3rd,
-    
-    2021
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2021/01/03/Kubernetes-is-a-router/">Kubernetes is a router</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>One of the interesting areas of Kubernetes to explore is how it handles networking, and this is a quick post looking at one assumption which can be made about Kubernetes networking and how it doesn’t always hold. Whilst Kubernetes can assign pod IP addresses on the same LAN as the host VM, it’s more normal for the CNI to hand out IP addresses from a separate range, and then implement some kind of overlay networking between the cluster nodes to get traffic from pods on one node, to pods on other nodes. As part of this duty, Kubernetes nodes will often act as routers, so if you can get traffic to the node they’ll happily forward it on.</p>
 
     
     

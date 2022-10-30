@@ -165,6 +165,62 @@
   </span>
 
   <h2>
+    <a href="https://raesene.github.io/blog/2006/10/05/people_finding/">People finding new uses for Google's Code search engine</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>&lt;a title=&quot;Death By Comet </p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
+    5th,
+    
+    2006
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2006/10/05/really_interest/">Really interesting study on the prevalence of SQL injection</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Michael Sutton's Blog : How Prevalent Are SQL Injection Vulnerabilities?" href="http://portal.spidynamics.com/blogs/msutton/archive/2006/09/26/How-Prevalent-Are-SQL-Injection-Vulnerabilities_3F00_.aspx">Michael Sutton's Blog : How Prevalent Are SQL Injection Vulnerabilities?</a><br />
+Really interesting study showing that of a sample population of web apps. live on the Internet 11.3% had SQL injection vulnerabilities.<br />
+I also thought it was very interesting to see how a combination of the googleAPI and some relatively simple coding can be turned into a very powerful vulnerability finding mechanism.<br />
+I've been doing some SQL injection work on recent tests and it's amazing how much information you can get from a database through one error message, it's pretty trivial (especially if automated) to enumerate all tables on a database and all databases on a server assuming (which tends to be the case) that the database server hasn't been hardened and the user being used by the web application hasn't been restricted (again tends to be the case)<br />
+Thinking about it, it's a little surprising that no-one's gone the extra step and done an automation that auto-roots servers with SQL injection vulns...  It would be a fair bit harder than a buffer overflow (lots more variables to take account of like differing database servers and differing results from the initial injection allowing different queries to work) but given the reduced efficacy of worms attacking publicly available services (there's not really been a repeat of slammer in recent years) it would seem to be a viable attack path...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    October
+    5th,
+    
+    2006
+  </span>
+
+  <h2>
     <a href="https://raesene.github.io/blog/2006/10/05/mega_rails_chea/">Mega Rails cheatsheet</a>
   </h2>
 
@@ -370,63 +426,6 @@ Cross Site Request Forgery is one of those vulnerability classes that can be a b
 I've started having a look at my little rails app. I'm writing with a security persons hat on and one of the problems I've run into is that you can't by default use the h() function with an in place edit control.  So this link has a solution for that...<br />
 One quirk seemed to be when I put in the XSS code &lt;/span&gt;&lt;script&gt;alert("xss")&lt;/script&gt;&lt;span&gt; using in_place_edit it escapes it ok, but then each time I click into the field and then click ok it re-escapces the contents, giving an ever expanding field...<br />
 still main thing is it gets rid of the xss problem (well from a security point of view anyway)</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    20th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2006/09/20/tutorial_on_pag/">Tutorial on pagination and sorting</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>&lt;a title=&quot;How to paginate, sort and search a table with Ajax and Rails </p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    19th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2006/09/19/malware_to_defe/">Malware to defeat virtual keyboards</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Banking Trojan Captures User's Screen in Video Clip" href="http://blog.hispasec.com/virustotal/8">Banking Trojan Captures User's Screen in Video Clip</a><br />
-A good write-up and video of malware designed to capture information from users using virtual keyboards.<br />
-It's just another indication that banks and other E-Commerce sites will need to come up with something more robust if they really want to make phishing impractical for attackers...<br />
-Personally I'd be interested to try a combination of RSA SecureID and Intrusion detection/prevention.<br />
-It works like this.  the SecureID forces an attacker to do an in-line attack 'cause they've only got a less than 60 second window to use the credentials successfully, and this should increase the visibility of the traffic patterns.  For example if you've got 10 users who've always come from different UK based IP addresses in the past, and suddenly they're all coming from the same non-UK based ip address, then that could be a good time to block the session.<br />
-It would be difficult to tune, but I think once you'd baselined users it would be possible to build up a reasonable enough pattern to allow for some form of anomoly detection.</p>
 
     
     

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kind of Insecure Test Clusters</title>
+	<title>Project Volterra - ARM Desktop</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kind of Insecure Test Clusters </h1>
+  <h1>Project Volterra - ARM Desktop </h1>
 </div>
 	
 <article>
@@ -157,60 +157,43 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   4th,
+	   October 
+	   30th,
 	   
-	   2019
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+	  <p>As a bit of a change from all the PCI/Kubernetes posts, I thought I’d write up my initial impressions of the new <a href="https://blogs.windows.com/windowsdeveloper/2022/10/24/available-today-windows-dev-kit-2023-aka-project-volterra/">project volterra</a> Windows ARM dev kit, that I got this week. I’ve been interested in getting an ARM based desktop machine for a while now, but never seen anything that quite hit the mark in terms of performance/pricing.</p>
 
-<p>For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.</p>
+<h2 id="physical-and-specification">Physical and Specification</h2>
 
-<p>So when I heard about <a href="https://kind.sigs.k8s.io/">kind</a> on an episode of Heptio’s <a href="https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ">TGIK</a> I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.</p>
+<p>After unboxing the device, we’re left with a fairly small compact system, with a brick style power pack.</p>
 
-<p>Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.</p>
+<p><img src="https://raesene.github.io/assets/media/volterra.jpg" alt="volterra" /></p>
 
-<p>What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.</p>
+<p>So far in use, it’s been very quiet and although it’s meant to have a fan (as reported <a href="https://blogs.windows.com/windowsdeveloper/2022/10/24/available-today-windows-dev-kit-2023-aka-project-volterra/">here</a>) I’ve not heard it in use at all. In terms of power drain, when switched on and left at a Windows desktop, it seemed to be drawing ~4 watts, so not too thirsty.</p>
 
-<p>Kind supports a <code class="language-plaintext highlighter-rouge">--config</code> option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to <a href="https://twitter.com/BenTheElder">@BenTheElder</a> and <a href="https://twitter.com/mauilion">@mauillon</a> for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.</p>
+<h2 id="container-tooling-setup">Container Tooling Setup</h2>
 
-<p>The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.</p>
+<p>My goal was to set the device up to do containerization work and some development, so I wanted to see what tools would work ok. A first port of call was getting WSL2 up and running so I could SSH directly into that environment. Here I found that the WSL2 setup in the windows app store doesn’t currently work with Windows OpenSSH server, so doing a <a href="https://learn.microsoft.com/en-us/windows/wsl/install-manual">WSL manual install</a> was necessary to get it setup. However once I got that done, it worked pretty well.</p>
 
-<p>To provide a concrete example, the config below will create a cluster with the insecure port running on the API server</p>
+<p>Next step was to get Docker up and running. At the moment Docker Desktop doesn’t have a Windows ARM build that I can see, so I just installed docker-ce directly inside WSL using <a href="https://docs.docker.com/engine/install/ubuntu/">Docker’s install process</a>. The only niggle there is that it needs starting manually with <code class="language-plaintext highlighter-rouge">sudo service docker start</code>.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: "0.0.0.0"
-        insecure-port: "8080"
-</code></pre></div></div>
+<p>After I got Docker running next step was having local Kubernetes clusters with <a href="https://kind.sigs.k8s.io/">KinD</a>, this works out of the box as do any of the Golang tools I’ve tried so far, as ARM64 on Linux is pretty well supported.</p>
 
-<p>Once you’ve got kind installed and this is present as a YAML file you can just run</p>
+<p>Another tool I use a lot is VS Code and this installed no problems, probably unsurprisingly as Microsoft want this device to be a dev kit :) I had less success with GitHub Desktop though as there doesn’t appear to be an ARM64 version available at the moment, so command line <code class="language-plaintext highlighter-rouge">git</code> is it!</p>
 
-<p><code class="language-plaintext highlighter-rouge">kind --config insecure-port.yaml --name insecure create cluster</code></p>
+<h2 id="other-tools">Other Tools</h2>
 
-<p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="language-plaintext highlighter-rouge">docker0</code> interface.</p>
+<p>There’s some other things I wanted to potentially use on this device. First one is the note taking tool I use <a href="https://obsidian.md/">Obsdian</a>. Here I was pleasantly surprised  to find that they have a Windows ARM64 build on the download page, which works no problem at all!</p>
 
-<p>So you can get the IP address of that interface from <code class="language-plaintext highlighter-rouge">docker inspect insecure-control-plane</code></p>
+<p>Next up was dropbox for file synchronization, and unfortunately as far as I can see there’s currently no Windows ARM64 version available.</p>
 
-<p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="language-plaintext highlighter-rouge">172.17.0.3</code>)</p>
+<p>For remote access, when I’m travelling, I use the amazing <a href="https://tailscale.com/">tailscale</a> and it installed with no problems at all (from <a href="https://github.com/tailscale/tailscale/issues/5218">this</a> looks like version 1.32 added the ARM64 package), which is nice.</p>
 
-<p><code class="language-plaintext highlighter-rouge">curl http://172.17.0.3:8080/</code></p>
+<h2 id="conclusion">Conclusion</h2>
 
-<p>I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github <a href="https://github.com/raesene/kind-of-insecure">here</a></p>
+<p>Project Volterra seems to be a useful dev box for ARM64 work and so far it’s working out pretty well. The small form-factor and low power draw make it an attractive option for a headless box that can run a decent range of workloads and, in containerization land anyway, software support is pretty good.</p>
 
 	  </div>
 
@@ -220,8 +203,8 @@ nodes:
 		  
 		  
 			 
-				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(34)</span>
+				<li><a href="https://raesene.github.io/categories/index.html#ARM-ref">
+					ARM <span>(1)</span>
 					
 				</a></li>
 			
@@ -236,7 +219,7 @@ nodes:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kind of Insecure Test Clusters&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Project Volterra - ARM Desktop&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -264,10 +247,10 @@ nodes:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/" title="PCI Compliance for Kubernetes in detail - Part 5 - PKI">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

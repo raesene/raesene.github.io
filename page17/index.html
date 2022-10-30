@@ -158,6 +158,66 @@
 
   <span class="post-date">
     
+    January
+    9th,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2008/01/09/new_years_resol/">New Years Resolution - Ask your Software vendors about security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>It's the time of year for New resolutions, so I was thinking about what security people could do differently to help make 2008 better than 2007 for software security.<br />
+One thing I came up with.  Speak to your purchasing people (if you've got some) or anyone else who approves software purchases in your company and get a criteria added to your purchasing policy that requires software vendors to explain how they ensure the security of the software they're selling you.<br />
+After all, software companies are selling you products to help you run your business, and these days if they're selling you vulnerable products it's quite likely to have a negative effect on your company, either through security breaches which exploit the vulnerabilities or through the time you have to spend patching the software they provide.<br />
+Now I'm not suggesting that any software you buy will be perfect, but if you make software security a criteria in whether you purchase "package A" or "package B" you give the vendors an incentive to improve the security of their software.<br />
+Of course there's the problem of how you actually evaluate their claims...  At one level there's the obvious case of listening to what they tell you and asking some searching questions like<br />
+"how many vulnerabilities has your product had in the last year" and "what's your policy towards vulnerability researchers and disclosure".  Beware of companies who say that their sofware has no vulnerabilities.  It's very likely that their either lying or in denial!<br />
+Above that another option would be getting your suppliers to submit their software for an independent 3rd party assessment (like the ones <a href="http://www.veracode.com">Veracode</a> supply).  This probably works best for large companies buying critical applications, but I think it's a good idea, in principle anyway, as it helps validate a software suppliers claims of security.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
+    25th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/12/25/warning_googles/">Practical use of CSRF attacks in the wild</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>http://www.davidairey.co.uk/google-gmail-security-hijack/<br />
+Here's an example of bad-guys using CSRF attacks try and extort money from domain name holders.  Interestingly it's the first example of practical use of this kind of attack I've seen.<br />
+Although the vulnerability in GMail that seems to have been exploited is now fixed, I bet this won't be the last time we see this form of attack in use, and it does give an example of the kind of damage that a CSRF attack can cause...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     December
     8th,
     
@@ -401,80 +461,6 @@ At work, there's the rise of application service providers and "software as a se
 So it means that getting your password policy right is actually getting more important.<br />
 The problem I've seen is that many companies don't actually risk assess their password policies.  They set one level for users and one for "super users" regardless of the system location and other controls.  Combined with that you get "best practice" principles that seem really inappropriate for most systems and it can be quite a mess....<br />
 Over a series of posts I'll look at some examples of where password policies could do with some attention, any feedback/comments welcome :)</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    25th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/09/25/risk_assessed_p/">Risk Assessed Password Policies - Password Rotation</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've been meaning to blog about some of the reading I've been doing recently on password policies, but an article in the latest <a href="http://www.net-security.org/insecuremag.php">Insecure Magazine</a> tipped me over the edge into writing..<br />
-In the article on password management on page 59 the author mentions some elements of a "best practices" password policy which include password rotation every 30 days as a good thing.<br />
-I've seen this repeated in many places but I'm not sure where it came from.  My opinion is that, in many cases, 30 day password rotation is actually a very bad thing, both from a user experience point of view and also from a security point of view.  It's one of those things that gets put in password policies without any real thought of the consequences.<br />
-The reasons I've seen stated for rotating passwords are</p>
-<ol>
-<li><b>Mitigate password sharing.</b>  This doesn't really hold any water, if a user shares their password then they can just share the next one.  A much better control is to educate the users <b>never</b> to share their password no matter who asks.  This also has the side effect of helping mitigate some social engineering attacks</li>
-<li><b>Reducing the window that someone has to crack a password hash</b>.  There may be some circumstances where this may help out but really who's to say that it'll be a specific number of days for a password crack.  From my experience of auditing windows passwords, you either get it real quick with a hybrid dictionary attack or rainbow tables(in which case the rotation doesn't really help, or you don't get it at all (if you've set password length over about 9 characters most attackers won't be able to brute force a password with a decently designed algorithm.<br />
-A better mitigation for this risk would be to ensure that password hashes are protected in transit (eg with SSL) and on hosts.</li>
-</ol>
-<p>Also password rotation has several possible side-effects which actively reduce security</p>
-<ol>
-<li><b>Sequence passwords.</b>  Most users when faced with a password rotation will choose a sequence password eg  ([password1], [password2], etc), so once an attacker knows one password for the user, they'll pretty easily guess the next one.</li>
-<li><b>Helpdesk password reset fatigue.</b>  Password rotation (along with some other aspects of password policies I'll come onto later) causes a large number of calls to a help desk.  From a security standpoint, we want a password reset request to be an alert that someone is trying to attack one of our systems, but if the people being made aware of that alert (the helpdesk) are swarmed with "false positives" in the form of users forgetting their passwords, inevitably real alerts will be lost in the morass.  In order to make password resets an effective control, we should be trying to minimize the number of times that the process is invoked (while maintaining the security of the password system obviously)
-</li>
-</ol>
-<p>There are other elements of "classical" password policies that are just about as annoying, but I'll leave them  for next time.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    10th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/09/10/appropriate_tru/">Appropriate trust on the Internet</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There's an interesting story at <a href="http://www.theregister.co.uk/2007/09/10/misuse_of_tor_led_to_embassy_password_breach/">The Register</a> about the recent leaking of embassy credentials amongst others, by an individual in Sweden.<br />
-The story is that someone set up some <a href="http://tor.eff.org/">Tor</a> exit nodes and then sniffed the traffic that came out over them.<br />
-There's several interesting points that come out from this, I think.</p>
-<ul>
-<li><b>Understand the type of security provided by a system.</b>  Tor is not end-to-end encryption and you are trusting the exit node as you would trust an ISP router.</li>
-<li><b>What was done here can be done by any ISP employee.</b>  A Tor exit node is essentially like an ISP router.  Anything that can be gained by sniffing a TOR exit node could also be gained by any employee of an ISP for the traffic that that ISP handles.</li>
-<li><b>Embassy users are logging on to their services in the clear!?</b>  The main problem here seems to be that embassy staff are logging on to e-mail systems in the clear over an untrusted network (the Internet).  It seems odd that they'd go to the trouble of using Tor to anonymise their traffic but not go to the trouble of using SSL or an equivalent to protect their logon credentials end-to-end...</li>
-</ul>
 
     
     

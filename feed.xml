@@ -7,6 +7,80 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Project Volterra - ARM Desktop</title>
+				<description>&lt;p&gt;As a bit of a change from all the PCI/Kubernetes posts, I thought I’d write up my initial impressions of the new &lt;a href=&quot;https://blogs.windows.com/windowsdeveloper/2022/10/24/available-today-windows-dev-kit-2023-aka-project-volterra/&quot;&gt;project volterra&lt;/a&gt; Windows ARM dev kit, that I got this week. I’ve been interested in getting an ARM based desktop machine for a while now, but never seen anything that quite hit the mark in terms of performance/pricing.&lt;/p&gt;
+
+&lt;h2 id=&quot;physical-and-specification&quot;&gt;Physical and Specification&lt;/h2&gt;
+
+&lt;p&gt;After unboxing the device, we’re left with a fairly small compact system, with a brick style power pack.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/volterra.jpg&quot; alt=&quot;volterra&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;So far in use, it’s been very quiet and although it’s meant to have a fan (as reported &lt;a href=&quot;https://blogs.windows.com/windowsdeveloper/2022/10/24/available-today-windows-dev-kit-2023-aka-project-volterra/&quot;&gt;here&lt;/a&gt;) I’ve not heard it in use at all. In terms of power drain, when switched on and left at a Windows desktop, it seemed to be drawing ~4 watts, so not too thirsty.&lt;/p&gt;
+
+&lt;h2 id=&quot;container-tooling-setup&quot;&gt;Container Tooling Setup&lt;/h2&gt;
+
+&lt;p&gt;My goal was to set the device up to do containerization work and some development, so I wanted to see what tools would work ok. A first port of call was getting WSL2 up and running so I could SSH directly into that environment. Here I found that the WSL2 setup in the windows app store doesn’t currently work with Windows OpenSSH server, so doing a &lt;a href=&quot;https://learn.microsoft.com/en-us/windows/wsl/install-manual&quot;&gt;WSL manual install&lt;/a&gt; was necessary to get it setup. However once I got that done, it worked pretty well.&lt;/p&gt;
+
+&lt;p&gt;Next step was to get Docker up and running. At the moment Docker Desktop doesn’t have a Windows ARM build that I can see, so I just installed docker-ce directly inside WSL using &lt;a href=&quot;https://docs.docker.com/engine/install/ubuntu/&quot;&gt;Docker’s install process&lt;/a&gt;. The only niggle there is that it needs starting manually with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo service docker start&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;After I got Docker running next step was having local Kubernetes clusters with &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt;, this works out of the box as do any of the Golang tools I’ve tried so far, as ARM64 on Linux is pretty well supported.&lt;/p&gt;
+
+&lt;p&gt;Another tool I use a lot is VS Code and this installed no problems, probably unsurprisingly as Microsoft want this device to be a dev kit :) I had less success with GitHub Desktop though as there doesn’t appear to be an ARM64 version available at the moment, so command line &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; is it!&lt;/p&gt;
+
+&lt;h2 id=&quot;other-tools&quot;&gt;Other Tools&lt;/h2&gt;
+
+&lt;p&gt;There’s some other things I wanted to potentially use on this device. First one is the note taking tool I use &lt;a href=&quot;https://obsidian.md/&quot;&gt;Obsdian&lt;/a&gt;. Here I was pleasantly surprised  to find that they have a Windows ARM64 build on the download page, which works no problem at all!&lt;/p&gt;
+
+&lt;p&gt;Next up was dropbox for file synchronization, and unfortunately as far as I can see there’s currently no Windows ARM64 version available.&lt;/p&gt;
+
+&lt;p&gt;For remote access, when I’m travelling, I use the amazing &lt;a href=&quot;https://tailscale.com/&quot;&gt;tailscale&lt;/a&gt; and it installed with no problems at all (from &lt;a href=&quot;https://github.com/tailscale/tailscale/issues/5218&quot;&gt;this&lt;/a&gt; looks like version 1.32 added the ARM64 package), which is nice.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Project Volterra seems to be a useful dev box for ARM64 work and so far it’s working out pretty well. The small form-factor and low power draw make it an attractive option for a headless box that can run a decent range of workloads and, in containerization land anyway, software support is pretty good.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 30 Oct 2022 08:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/</guid>
+			</item>
+		
+			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 5 - PKI</title>
+				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI.&lt;/p&gt;
+
+&lt;p&gt;This section gets into an area that’s fairly well trodden for financial services companies which is PKI management. Organizations that are used to more traditional approaches to PKIs might be somewhat surprised by how Kubernetes makes use of Public Key Infrastructure.&lt;/p&gt;
+
+&lt;p&gt;In a “vanilla” Kubernetes cluster, there will generally by three entirely separate Certificate authorities each with their own keys (details &lt;a href=&quot;https://kubernetes.io/docs/setup/best-practices/certificates/&quot;&gt;here&lt;/a&gt;). The first one is the main CA for the cluster, this is used for cases where components or users want to authenticate to the Kubernetes API server. certificates signed by this CA are trusted by the API server and can be used by other components as well.&lt;/p&gt;
+
+&lt;p&gt;The second CA is used for authentication between the API server and etcd. This is needed as the way that etcd runs in Kubernetes clusters, it provides full access to any client certificate issued by a specified CA, so if it used the main CA any user with access to a client certificate would be able to extract all the contents of the etcd database (leading to a privilege escalation issue).&lt;/p&gt;
+
+&lt;p&gt;The third one is used where there are “extension API servers” in the cluster, but typically the keys are created even if that feature is not used. From a security perspective the first thing to note is that the certificate authority private keys will be held in the clear on control plane node disks, so controlling access to those directories (and auditing access to them) is important. when looking at managed Kubernetes where typically the cluster operator doesn’t have access to the control plane nodes, this isn’t as much of an issue.&lt;/p&gt;
+
+&lt;p&gt;Another security consideration, as we’ve mentioned &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;before&lt;/a&gt; when covering authentication, Kubernetes &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/18982&quot;&gt;doesn’t support certificate revocation&lt;/a&gt;, so it can be difficult to manage risks around compromised private keys.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-51&quot;&gt;Section 5.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Inability of some container orchestration tool products to support revocation of certificates may lead to misuse of a stolen or lost certificate by attackers
+&lt;strong&gt;Best Practice&lt;/strong&gt; - a. Where revocation of certificates is not supported, certificate-based authentication should not be used. b. Rotate certificates as required by PCI or customer policies or if any containers are compromised.
+&lt;strong&gt;Details&lt;/strong&gt; - This point essentially duplicates section 1.3 in the authentication section of the guidance. To re-state what was said there essentially organizations should avoid using Kubernetes client certificate authentication wherever possible. Where the cluster uses client certificate authentication for the initial user provided with the cluster, that credential should be stored safely offline and not used for general cluster administration duties.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-52&quot;&gt;Section 5.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - PKI and Certificate Authority services integrated within container orchestration tools may not provide sufficient security outside of the container orchestration tool environment, which could lead to exploitation of other services that attempt to use this chain of trust.
+&lt;strong&gt;Best Practice&lt;/strong&gt; - The certificates issued by orchestration tools should not be trusted outside of the container orchestrator environment, as the container orchestrator’s Certificate Authority private key can have weaker protection than other enterprise PKI trust chains.
+&lt;strong&gt;Details&lt;/strong&gt; - This ties to the points mentioned at the top of this blog around how Kubernetes does PKI key management. Having on-line private keys without passphrase protection means that any attacker who is able to get even temporary read access to the CA key will be able to persistently be able to create certificates for that CA. Where an organisation using Kubernetes needs to use a PKI they should use an externally managed one, for example making use of cloud service provider key management services.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;PKIs are essentially intertwined with Kubernetes architecture, but in general for production PCI clusters it’s likely the companies should only use Kubernetes PKI options where absolutely required and instead use externally managed PKI services for any other requirements they may have.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 29 Oct 2022 11:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 4 - Network Security</title>
 				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Network security.&lt;/p&gt;
 
@@ -768,223 +842,6 @@ nodes                                           &lt;span class=&quot;o&quot;&gt;
 				<pubDate>Sun, 14 Aug 2022 09:10:39 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/08/14/auditing-rbac-redux/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/08/14/auditing-rbac-redux/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with Capabilities</title>
-				<description>&lt;p&gt;Capabilities are an interesting area of Linux security and one which has some application to containers. Whilst the details of how they work have been well documented (I’d recommend reading Adrian Mouat’s two part series &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-why-they-exist-and-how-they-work&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://blog.container-solutions.com/linux-capabilities-in-practice&quot;&gt;here&lt;/a&gt;) I thought it was worth looking at a couple of neat tricks we can use do with file capabilities when using containers.&lt;/p&gt;
-
-&lt;h2 id=&quot;using-file-capabilities-when-youre-not-root&quot;&gt;Using File Capabilities when you’re not root&lt;/h2&gt;
-
-&lt;p&gt;Sometimes, in containerized environments, we are restricted from running as the root user, a notable example being OpenShift, which restricts that by default. However generally in those cases we’ll still get the default set of capabilities that most Linux container runtimes provide. This gives us what are called “bounding” capabilities, but the tricky part is, how do we use those when we’re not running as root?&lt;/p&gt;
-
-&lt;p&gt;Well if you can specify a container image that you control, the answer is to set capabilities on programs inside the image, that way when you use those programs you’ll be able to use the capabilities granted.&lt;/p&gt;
-
-&lt;p&gt;Let’s look at a practical example. In the Dockerfile for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raesene/alpine-noroot-containertools&lt;/code&gt; I’ve got the line&lt;/p&gt;
-
-&lt;div class=&quot;language-Dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;RUN &lt;/span&gt;setcap &lt;span class=&quot;s1&quot;&gt;'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'&lt;/span&gt; /bin/busybox
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This sets all the capabilities from the Default Docker set on the busybox program inside this container, and busybox provides all the utilities like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chmod&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chown&lt;/code&gt; so I can run those commands with the capabilities I’ve specified. There’s a couple of useful side effects to doing this. The first is I can change the permissions of files in the image that I don’t own&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/capability-change-file-perm-in-image.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;fun, but not really that useful as you can always just change the permissions inside the image while you’re building it. A slightly more useful use case is that if you’re mounting files inside the container from the underlying host, you don’t have to worry about who owns those files or the permissions on them as you can just change the perms, using your file capabilities.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/capability-change-file-perm-on-mounted-dir.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This is a handy way to get round the problem where you’re running your non-root containers, but don’t want to have to remember to change the permissions on files you mount in from the underlying host.&lt;/p&gt;
-
-&lt;h2 id=&quot;moving-files-with-capabilities&quot;&gt;Moving files with Capabilities&lt;/h2&gt;
-
-&lt;p&gt;One challenge, when working with file capabilities, is that it can be hard to move them around without losing the capabilities. Utilities like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cp&lt;/code&gt; will generally strip capabilities when they’re used. So if you have a file with capabilities how do you move it somewhere?&lt;/p&gt;
-
-&lt;p&gt;The answer is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tar&lt;/code&gt; which supports that idea. You can create a tar file using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--xattrs&lt;/code&gt; flag and then when you un-tar use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--xattrs-include='security.*'&lt;/code&gt; flag to ensure they’re retained. A notable restriction is that to un-tar using that flag, you need to be root. Another restriction is that not all implementations of tar support those flags (e.g. some versions of busybox).&lt;/p&gt;
-
-&lt;p&gt;So to demo this we’ll use an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ubuntu:22.04&lt;/code&gt; image. Our goal is going to be, starting as an ordinary user on the host with Docker rights, get a copy of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim&lt;/code&gt; that will let us edit files owned by root like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/passwd&lt;/code&gt; (N.B. this isn’t really a security hole as Docker access == root in most cases, but it’s fun :) )&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/start-container-with-mapped-dir.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Once we’ve got it running first install &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;libcap2-bin&lt;/code&gt; which lets us set file capabilities. With those installed we can run this to set our file capabilities.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;setcap &lt;span class=&quot;s1&quot;&gt;'cap_net_raw,cap_net_bind_service,cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_sys_chroot,cap_mknod,cap_audit_write,cap_setfcap=+ep'&lt;/span&gt; /usr/bin/vim.basic
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now we can tar our copy of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim.basic&lt;/code&gt; up in our mounted directory, and then untar it in the same place (so that the capabilities are preserved)&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tar-file-capabilities.png&quot; alt=&quot;change file perm inside image&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Now, with our copy of vim that has caps ready, exit the container and try to edit a file that we should not have access to on the host, and it should work just fine, thanks to the capabilities applied (specifically &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DAC_OVERRIDE&lt;/code&gt;)&lt;/p&gt;
-
-&lt;p&gt;To bring it all together here’s a video showing all the steps&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/Ha7PRo1OnCE&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;File capabilities are an interesting area to explore when working with containers (and in Linux in general) whilst the security model has been pretty well thought out, there are cases where you can make use of them to allow things that might otherwise be tricky :)&lt;/p&gt;
-
-</description>
-				<pubDate>Sun, 31 Jul 2022 09:10:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/07/31/Fun-With-Capabilities/</guid>
-			</item>
-		
-			<item>
-				<title>Let's talk about Kubernetes on the Internet</title>
-				<description>&lt;p&gt;There’s been a couple of studies recently released by security research companies about exposed Kubernetes clusters on the Internet, and whilst it’s nice to see the security industry focusing a bit more on Kubernetes, some of the analysis misses some of the details of why Kubernetes clusters are exposed to the Internet and what some of the results mean, so I thought it would be a good opportunity to &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;revist&lt;/a&gt; this topic, also as there have been some developments in what information can be found via Internet search engines.&lt;/p&gt;
-
-&lt;h2 id=&quot;background---kubernetes-network-footprint&quot;&gt;Background - Kubernetes Network footprint&lt;/h2&gt;
-
-&lt;p&gt;Kubernetes is made up of a number of REST APIs which are commonly exposed on network ports. We’ve got&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/&quot;&gt;Kubernetes API server&lt;/a&gt;. commonly exposed on 443/TCP, 6443/TCP or 8443/TCP.&lt;/li&gt;
-  &lt;li&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/&quot;&gt;Kubelet&lt;/a&gt;. Commonly exposed on 10250/TCP and (in older clusters) 10255/TCP&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://etcd.io/&quot;&gt;Etcd&lt;/a&gt; - Commonly exposed on 2379/TCP and 2380/TCP&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;There’s also an additional set of listening ports but in &lt;em&gt;most&lt;/em&gt; clusters these will be bound to localhost, so won’t show up in our Internet scanning&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/&quot;&gt;Kubernetes Controller Manager&lt;/a&gt;. Defaults to 10257/TCP in recent Kubernetes version.&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/&quot;&gt;Kubernetes Scheduler&lt;/a&gt;. Defaults to 10259/TCP in recent Kubernetes versions.&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/&quot;&gt;Kube-Proxy&lt;/a&gt;. Defaults to 10256/TCP.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;So from an Internet scanning perspective we’ve got a range of ports to look for. The API Server, Kubelet and etcd are also likely to be the most significant from a security standpoint, if they’re mis-configured, so it makes sense to focus there.&lt;/p&gt;
-
-&lt;h2 id=&quot;finding-kubernetes-clusters&quot;&gt;Finding Kubernetes Clusters&lt;/h2&gt;
-
-&lt;p&gt;So now we know the network ports and services we’re looking for, how can we reliably identify that what we’re talking to is a Kubernetes service?&lt;/p&gt;
-
-&lt;h3 id=&quot;kubernetes-api-server&quot;&gt;Kubernetes API Server&lt;/h3&gt;
-
-&lt;h4 id=&quot;tls-certificate-information&quot;&gt;TLS Certificate Information&lt;/h4&gt;
-
-&lt;p&gt;Kubernetes API servers are secured by TLS and as they are contacted by clients both inside and outside the cluster, they need to make sure they have name fields which match the various ways they can be contacted. This is handled by putting information into the Subject Alternative Name field in their certificates.&lt;/p&gt;
-
-&lt;p&gt;If we look at a standard &lt;a href=&quot;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/&quot;&gt;Kubeadm&lt;/a&gt; cluster we can see some of that information.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; ssl-cert: Subject: commonName=kube-apiserver
-| Subject Alternative Name: DNS:kubeadm2nodemaster, DNS:kubernetes, DNS:kubernetes.default, DNS:kubernetes.default.svc, DNS:kubernetes.default.svc.cluster.local, IP Address:10.96.0.1, IP Address:192.168.41.77
-| Issuer: commonName=kubernetes
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;From this there’s a couple of points that are worth noting. Firstly internal cluster IP addresses are leaked (useful for Internet based attackers doing reconnaissance), secondly there are names that will typically appear on &lt;em&gt;every&lt;/em&gt; Kubernetes cluster, making identification easy. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubernetes.default.svc.cluster.local&lt;/code&gt; is the DNS name used for clients inside the cluster network to connect to the API server so will be present in pretty much every cluster.&lt;/p&gt;
-
-&lt;h4 id=&quot;response-codes&quot;&gt;Response codes&lt;/h4&gt;
-
-&lt;p&gt;In addition to the TLS certificate information we can also tell some things about an API server based on the response codes we get. For most clusters, if you try to curl the root path of the API server you’ll get a response something like this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k https://192.168.41.77:6443
-{
-  &quot;kind&quot;: &quot;Status&quot;,
-  &quot;apiVersion&quot;: &quot;v1&quot;,
-  &quot;metadata&quot;: {
-
-  },
-  &quot;status&quot;: &quot;Failure&quot;,
-  &quot;message&quot;: &quot;forbidden: User \&quot;system:anonymous\&quot; cannot get path \&quot;/\&quot;&quot;,
-  &quot;reason&quot;: &quot;Forbidden&quot;,
-  &quot;details&quot;: {
-
-  },
-  &quot;code&quot;: 403
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;What this indicates is that we are being authenticated to the API server (so anonymous authentication is enabled, which is the default) but that we’re not authorized to get that URL. You can see from the response that we’ve been assigned the username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; which is given to any requests made without other credentials.&lt;/p&gt;
-
-&lt;p&gt;Whilst 403 responses are the most common from the API server, a Kubernetes API server will respond with a 401 (unauthorized) instead. The most obvious one would be if anonymous authentication is disabled on the API server. Also if HTTP basic authentication (only available till 1.19) or token authentication are enabled and an incorrect set of credentials provided a 401 will also be returned.&lt;/p&gt;
-
-&lt;p&gt;Obviously there’s another option for response codes which is 200. This would occur for a path which is permitted for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; user or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; group. In default Kubernetes there are still a couple of paths that this’ll work for. Most notably for the purposes of fingerprinting Kubernetes clusters &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; will generally be visible. Requests to that path will return something like this, which provides quite a bit of information about the running software.&lt;/p&gt;
-
-&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;major&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;minor&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;21&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;v1.21.2&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitCommit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;092fbfbf53427de67cac1e9fa54aaa09a28371d7&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;gitTreeState&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;clean&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;buildDate&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2021-06-16T12:53:14Z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;goVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;go1.16.5&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;compiler&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;gc&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;platform&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;linux/amd64&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;kubelet&quot;&gt;Kubelet&lt;/h3&gt;
-
-&lt;p&gt;Typically identifying the Kubelet is relatively straightforward as there aren’t a large number of common services which use 10250/TCP and/or 10255/TCP.&lt;/p&gt;
-
-&lt;h4 id=&quot;kubelet-response-codes&quot;&gt;Kubelet Response Codes&lt;/h4&gt;
-
-&lt;p&gt;Usually the Kubelet will return a 404 response when the root path it queried. This indicates that anonymous authentication is enabled (which is the default) but that it doesn’t have anything present at that URL. Querying a valid path for the API (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/pods&lt;/code&gt;) will return a 401 unauthorized message, unless the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;alwaysAllow&lt;/code&gt; authorization mechanism is set-up, when that path would return a list of the pods on the node.&lt;/p&gt;
-
-&lt;p&gt;In the event that 10255/TCP is visible on a cluster (only older versions) this is the unauthenticated Kubelet “read-only” port which will return a detailed list of pods running on the node.&lt;/p&gt;
-
-&lt;h3 id=&quot;etcd&quot;&gt;etcd&lt;/h3&gt;
-
-&lt;p&gt;Like the Kubelet etcd runs on a reasonably unusual set of ports (2379/TCP and 2380/TCP). A running etcd instance may not be related to a Kubernetes cluster as it can be used independently, but when seen along-side ports like 10250/TCP it’s a fair bet it’s support a Kubernetes installation.&lt;/p&gt;
-
-&lt;p&gt;When supporting Kubernetes, etcd will almost always be set-up with client certificate authentication only, so requests will just be rejected with a bad certificate error like this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl: (35) error:14094412:SSL routines:ssl3_read_bytes:sslv3 alert bad certificate
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;finding-kubernetes-clusters-on-the-internet&quot;&gt;Finding Kubernetes Clusters on the Internet&lt;/h2&gt;
-
-&lt;p&gt;So now we know what we’re looking for, how do we find it? Luckily, there are multiple Internet search engines which provide filters to make finding Kubernetes ports easy. &lt;a href=&quot;https://shodan.io&quot;&gt;Shodan&lt;/a&gt;, &lt;a href=&quot;https://censys.io/&quot;&gt;Censys&lt;/a&gt; and &lt;a href=&quot;https://www.binaryedge.io/&quot;&gt;Binary Edge&lt;/a&gt; are all options. In addition to pre-packed filters we can also use certain features of how Kubernetes to identify services listening on the Internet (or any other network).&lt;/p&gt;
-
-&lt;p&gt;Of the three Shodan currently finds the most servers, to let’s look at some of the options to find things there. Some of the query results below will require a shodan account to look at so I’ve put screenshots for some of the more interesting information.&lt;/p&gt;
-
-&lt;h3 id=&quot;basic-information-for-exposed-clusters&quot;&gt;Basic Information for exposed clusters&lt;/h3&gt;
-
-&lt;p&gt;The most basic search available is one for &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22&quot;&gt;product:”Kubernetes”&lt;/a&gt;. This currently returns 1.3M results. Of these ~240k are Kubelets, so that leaves us with a bit over a million likely Kubernetes API servers.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-product-kubernetes.png&quot; alt=&quot;shodan basic results&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;So the first question that likely occurs is “why are there so many Kubernetes services on the Internet?”. Whilst there’s a number of reasons, the major one comes down to the defaults used by the 3 major managed Kubernetes services, EKS, AKS and GKE. All of these services default to putting the API server directly on the Internet, and we can see evidence of this from Shodan’s reporting of the netblock owners for the various exposed services.&lt;/p&gt;
-
-&lt;p&gt;Looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=org&quot;&gt;organizations&lt;/a&gt; for this we can see the largest are Google, Amazon and Microsoft respectively and that they account for well over 600k of the exposed services.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kubernetes-orgs.png&quot; alt=&quot;shodan org results&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The next likely interesting point is around the versions of Kubernetes running on the exposed services. Shodan (like the other Internet search engines) pull that information out by querying the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint where it’s exposed.&lt;/p&gt;
-
-&lt;p&gt;Looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=version&quot;&gt;version information&lt;/a&gt; we can see a couple of interesting things. Firstly we see EKS and GKE versions there but not AKS. This is because, by default, both Amazon and Google make that endpoint available without authentication and Microsoft does not.&lt;/p&gt;
-
-&lt;p&gt;Looking at the top versions available the other interesting point is that, while most are recent’ish, they’re still falling behind the latest available (1.24) and quite a large number of clusters are running unsupported versions.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-exposed-versions.png&quot; alt=&quot;shodan version results&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;response-code-variations&quot;&gt;Response code variations&lt;/h3&gt;
-
-&lt;p&gt;One of the things that was reported on by other research was around the response codes for Kubernetes API servers. Looking at the information on Shodan we can see something quite interesting about the split of responses. The majority of API servers respond with the 403 forbidden code as shown &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+403&quot;&gt;here&lt;/a&gt; and looking at the responses for 401 unauthorized &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+401&quot;&gt;here&lt;/a&gt; what we can see is that the vast majority of them are in Microsoft’s netblock space. The likely explanation here is that Microsoft’s AKS product is that they’re disabling anonymous authentication to the API server or they’re using some kind of additional load balancer or proxy in front of the API servers which is returning 401 to requests to the root path.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kubernetes-401.png&quot; alt=&quot;shodan 401 response code results&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;kubelets&quot;&gt;Kubelets&lt;/h3&gt;
-
-&lt;p&gt;Searching for what we know about Kubelets, we can see &lt;a href=&quot;https://www.shodan.io/search?query=product%3A%22Kubernetes%22+http.status%3A%22404%22+port%3A%2210250%22&quot;&gt;results for a response code of 404 on port 10250/TCP&lt;/a&gt;. It’s kind of interesting that there are as many results as this as, while there’s some reasons why you might want the API server directly connected to the Internet, there’s not many reasons to directly expose the Kubelet.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-kublets-exposed.png&quot; alt=&quot;shodan kubelet results&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;etcd-1&quot;&gt;Etcd&lt;/h3&gt;
-
-&lt;p&gt;Tracking down etcd hosts is a little more difficult. As, by default, they won’t actually form a connection without a valid client certificate. We can look at Shodan’s data for &lt;a href=&quot;https://www.shodan.io/search?query=port%3A%222379%22&quot;&gt;port 2379&lt;/a&gt;. In there there’s a subset of results for a product of etcd and looking at &lt;a href=&quot;https://www.shodan.io/search?query=port%3A%222379%22+product%3A%22etcd%22&quot;&gt;the results&lt;/a&gt; what’s interesting is that these are essentially unauthenticated etcd services, which may or may not be related to Kubernetes clusters.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shodan-unauth-etcd.png&quot; alt=&quot;shodan unauth etcd results&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;The goal here was just to record a bit of information about Kubernetes network attack surface, some of the tricks of identifying Kubernetes clusters based on their responses to basic requests and look at what information is visible on the Internet relating to exposed Kubernetes services.&lt;/p&gt;
-
-&lt;p&gt;Possibly the most important point here is that if you’re using one of the major managed Kubernetes distributions, you’re possibly exposing more information than you want to via the exposed API server port, and if you can, it’s a good idea to remove that exposure by restricting access to your cluster.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 03 Jul 2022 09:10:39 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/</guid>
 			</item>
 		
 	</channel>

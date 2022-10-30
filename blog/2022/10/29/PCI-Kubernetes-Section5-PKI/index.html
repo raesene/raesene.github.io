@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kind of Insecure Test Clusters</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 5 - PKI</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kind of Insecure Test Clusters </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 5 - PKI </h1>
 </div>
 	
 <article>
@@ -157,60 +157,39 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   4th,
+	   October 
+	   29th,
 	   
-	   2019
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+	  <p>This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI.</p>
 
-<p>For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.</p>
+<p>This section gets into an area that’s fairly well trodden for financial services companies which is PKI management. Organizations that are used to more traditional approaches to PKIs might be somewhat surprised by how Kubernetes makes use of Public Key Infrastructure.</p>
 
-<p>So when I heard about <a href="https://kind.sigs.k8s.io/">kind</a> on an episode of Heptio’s <a href="https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ">TGIK</a> I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.</p>
+<p>In a “vanilla” Kubernetes cluster, there will generally by three entirely separate Certificate authorities each with their own keys (details <a href="https://kubernetes.io/docs/setup/best-practices/certificates/">here</a>). The first one is the main CA for the cluster, this is used for cases where components or users want to authenticate to the Kubernetes API server. certificates signed by this CA are trusted by the API server and can be used by other components as well.</p>
 
-<p>Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.</p>
+<p>The second CA is used for authentication between the API server and etcd. This is needed as the way that etcd runs in Kubernetes clusters, it provides full access to any client certificate issued by a specified CA, so if it used the main CA any user with access to a client certificate would be able to extract all the contents of the etcd database (leading to a privilege escalation issue).</p>
 
-<p>What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.</p>
+<p>The third one is used where there are “extension API servers” in the cluster, but typically the keys are created even if that feature is not used. From a security perspective the first thing to note is that the certificate authority private keys will be held in the clear on control plane node disks, so controlling access to those directories (and auditing access to them) is important. when looking at managed Kubernetes where typically the cluster operator doesn’t have access to the control plane nodes, this isn’t as much of an issue.</p>
 
-<p>Kind supports a <code class="language-plaintext highlighter-rouge">--config</code> option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to <a href="https://twitter.com/BenTheElder">@BenTheElder</a> and <a href="https://twitter.com/mauilion">@mauillon</a> for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.</p>
+<p>Another security consideration, as we’ve mentioned <a href="https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/">before</a> when covering authentication, Kubernetes <a href="https://github.com/kubernetes/kubernetes/issues/18982">doesn’t support certificate revocation</a>, so it can be difficult to manage risks around compromised private keys.</p>
 
-<p>The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.</p>
+<h2 id="section-51">Section 5.1</h2>
 
-<p>To provide a concrete example, the config below will create a cluster with the insecure port running on the API server</p>
+<p><strong>Threat</strong> - Inability of some container orchestration tool products to support revocation of certificates may lead to misuse of a stolen or lost certificate by attackers
+<strong>Best Practice</strong> - a. Where revocation of certificates is not supported, certificate-based authentication should not be used. b. Rotate certificates as required by PCI or customer policies or if any containers are compromised.
+<strong>Details</strong> - This point essentially duplicates section 1.3 in the authentication section of the guidance. To re-state what was said there essentially organizations should avoid using Kubernetes client certificate authentication wherever possible. Where the cluster uses client certificate authentication for the initial user provided with the cluster, that credential should be stored safely offline and not used for general cluster administration duties.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: "0.0.0.0"
-        insecure-port: "8080"
-</code></pre></div></div>
+<h2 id="section-52">Section 5.2</h2>
 
-<p>Once you’ve got kind installed and this is present as a YAML file you can just run</p>
+<p><strong>Threat</strong> - PKI and Certificate Authority services integrated within container orchestration tools may not provide sufficient security outside of the container orchestration tool environment, which could lead to exploitation of other services that attempt to use this chain of trust.
+<strong>Best Practice</strong> - The certificates issued by orchestration tools should not be trusted outside of the container orchestrator environment, as the container orchestrator’s Certificate Authority private key can have weaker protection than other enterprise PKI trust chains.
+<strong>Details</strong> - This ties to the points mentioned at the top of this blog around how Kubernetes does PKI key management. Having on-line private keys without passphrase protection means that any attacker who is able to get even temporary read access to the CA key will be able to persistently be able to create certificates for that CA. Where an organisation using Kubernetes needs to use a PKI they should use an externally managed one, for example making use of cloud service provider key management services.</p>
 
-<p><code class="language-plaintext highlighter-rouge">kind --config insecure-port.yaml --name insecure create cluster</code></p>
+<h1 id="conclusion">Conclusion</h1>
 
-<p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="language-plaintext highlighter-rouge">docker0</code> interface.</p>
-
-<p>So you can get the IP address of that interface from <code class="language-plaintext highlighter-rouge">docker inspect insecure-control-plane</code></p>
-
-<p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="language-plaintext highlighter-rouge">172.17.0.3</code>)</p>
-
-<p><code class="language-plaintext highlighter-rouge">curl http://172.17.0.3:8080/</code></p>
-
-<p>I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github <a href="https://github.com/raesene/kind-of-insecure">here</a></p>
+<p>PKIs are essentially intertwined with Kubernetes architecture, but in general for production PCI clusters it’s likely the companies should only use Kubernetes PKI options where absolutely required and instead use externally managed PKI services for any other requirements they may have.</p>
 
 	  </div>
 
@@ -236,7 +215,7 @@ nodes:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kind of Insecure Test Clusters&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 5 - PKI&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -264,10 +243,10 @@ nodes:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/" title="PCI Compliance for Kubernetes in detail - Part 4 - Network Security">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">Next &rarr;</a></li>
+		  <li class="next"><a href="https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/" title="Project Volterra - ARM Desktop">Next &rarr;</a></li>
 		  
 		</ul>
 
