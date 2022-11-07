@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - cAdvisor</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - cAdvisor </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management </h1>
 </div>
 	
 <article>
@@ -157,72 +157,46 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   October 
-	   14th,
+	   November 
+	   6th,
 	   
-	   2016
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>So following on from my post about the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kube-exploit</a>, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.</p>
+	  <p>This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management.</p>
 
-<p>So first obvious thing to look at is the network attack surface. Open ports are a first option for an attacker who gets unauthorised access to a system.</p>
+<p>Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.</p>
 
-<p>This cluster has three nodes on <code class="language-plaintext highlighter-rouge">192.168.41.233</code> , <code class="language-plaintext highlighter-rouge">192.168.41.201</code> and <code class="language-plaintext highlighter-rouge">192.168.41.232</code> so we can start with</p>
+<p>Also containers are ephemeral so manually adding secrets to them at runtime won’t be effective, as the container may be rescheduled to another server at any time, where it would be re-created from the image. So we need some automated way of injecting any credentials required by the container when it starts on a given Kubernetes cluster node.</p>
 
-<p><code class="language-plaintext highlighter-rouge">nmap -sT -n -p- 192.168.41.201,232,233</code></p>
+<p>The general answer to that is some form of secrets management system, which can handle providing the right secrets to the right containers, when they start-up. Kubernetes has an in-built <a href="https://kubernetes.io/docs/concepts/configuration/secret/">secrets</a> facility, which is one option. These are just items stored in the Kubernetes datastore and provided as configured to containers. Some people using Kubernetes have been known to use ConfigMaps for storing secrets, but this isn’t a great idea (for reasons I detailed <a href="https://blog.aquasec.com/kubernetes-configmap-secrets">here</a>).</p>
 
-<p>From that, we can see that there are some interesting ports to look at.  The first one I noticed is 4194/TCP.  On the cluster this is used by cAdvisor which provides metrics about your containers and is, by default, available without authentication.</p>
+<p>A point that regularly gets raised about Kubernetes secrets is that, by default, they’re not encrypted on disk. Kubernetes provides an option to ensure that this happens, but it needs to be configured. For managed Kubernetes services (e.g. EKS, GKE, AKS) the etcd database is stored by the cloud provider so it’s arguable about how much difference it makes encrypting on disk, but generally the option is still available.</p>
 
-<p>This provides quite a bit of information about the configuration of the cluster like a process list</p>
+<p>In addition to Kubernetes in-built features, there are a wide range of external dedicated secrets management services which will work with Kubernetes. Either cloud provider based options or software like <a href="https://www.vaultproject.io/">Hashicorp Vault</a> can be used.</p>
 
-<p><img src="https://raesene.github.io/assets/media/cadvisor_processes.png" alt="cadvisor process" /></p>
+<p>So with a general background on this topic, what does PCI specifically recommend.</p>
 
-<p>and some details on the configuration of the docker daemon on the host</p>
+<h2 id="section-61">Section 6.1</h2>
 
-<p><img src="https://raesene.github.io/assets/media/cadvisor_docker.png" alt="cadvisor docker" /></p>
+<p><strong>Threat</strong> - Inappropriately stored secrets, including credentials, provided through the container orchestration tool, could be leaked to  unauthorized users or attackers with some level of access to the environment.</p>
 
-<p>There’s also a set of handy API endpoints if you want to dump the information in JSON format.  For example, to get the spec for all the containers running on a host you can just go to <code class="language-plaintext highlighter-rouge">http://192.168.41.233:4194/api/v2.0/spec?recursive=true</code> and get output like</p>
+<p><strong>Best Practice</strong> - All secrets needed for the operation of applications hosted on the orchestration platform should be held in encrypted
+dedicated secrets management systems.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    "/docker/0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f": {
-        "creation_time": "2016-10-09T03:55:54.113949226+01:00",
-        "aliases": [
-            "k8s_weave-npc.27539310_weave-net-xf53p_kube-system_af83b2df-8683-11e6-849b-000c29d33879_f938e1de",
-            "0598e0682955545ef27486ce3c04d62b6e1dc15496fb8072c297f2b548e7e10f"
-        ],
-        "namespace": "docker",
-        "labels": {
-            "io.kubernetes.container.hash": "27539310",
-            "io.kubernetes.container.name": "weave-npc",
-            "io.kubernetes.container.restartCount": "0",
-            "io.kubernetes.container.terminationMessagePath": "/dev/termination-log",
-            "io.kubernetes.pod.name": "weave-net-xf53p",
-            "io.kubernetes.pod.namespace": "kube-system",
-            "io.kubernetes.pod.terminationGracePeriod": "30",
-            "io.kubernetes.pod.uid": "af83b2df-8683-11e6-849b-000c29d33879"
-        },
-        "has_cpu": true,
-        "cpu": {
-            "limit": 10,
-            "max_limit": 0,
-            "mask": "0-1"
-        },
-        "has_memory": true,
-        "memory": {
-            "limit": 9223372036854771712,
-            "reservation": 9223372036854771712
-        },
-        "has_custom_metrics": false,
-        "has_network": false,
-        "has_filesystem": true,
-        "has_diskio": true,
-        "image": "weaveworks/weave-npc:1.7.0"
-    },
-</code></pre></div></div>
+<p><strong>Details</strong> - The intent of this best practice is really around the points discussed above, which is that storing secrets in images, or using general configuration management systems is not appropriate and should be avoided. Also the requirement for encryption means that , if using Kubernetes secrets, you need to enable the option that makes them encrypted on-disk.</p>
 
-<p>This isn’t as serious an issue as the kubelet exploit of course, but still something you’d want to change in your deployment of Kubernetes to harden it.</p>
+<h2 id="section-62">Section 6.2</h2>
 
-<p>After noting this I had a look through the Kubernetes issue list and it looks like this is a <a href="https://github.com/kubernetes/kubernetes/issues/11710">known issue</a> but unfortunately not one with a clear fix for now, so it’d need something like an iptables rule applied to restrict access to it.</p>
+<p><strong>Threat</strong> - Secrets stored without version control could lead to an outage if a compromise occurs and there is a requirement to rotate them quickly.</p>
 
+<p><strong>Best Practice</strong> - Apply version control for secrets, so it is easy to refresh or revoke it in case of a compromise.</p>
+
+<p><strong>Details</strong> - This is really an availability concern, rather than one around the confidentiality of the secrets. Applying it with base Kubernetes secrets would likely require manual work to define versions of secrets.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Secrets management is an inevitable part of container based deployments, and something which needs to be carefully considered when moving to a system like Kubernetes. The PCI recommendations are as with most of them, fairly general good practice, but there are a couple of specifics which apply in Kubernetes to be considered.</p>
 
 	  </div>
 
@@ -248,7 +222,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - cAdvisor&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -276,10 +250,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/" title="Kubernetes - From Container to Cluster">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/" title="Project Volterra - ARM Desktop">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2017/04/02/Kubernetes-Service-Tokens/" title="Kubernetes Attack Surface - Service Tokens">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
