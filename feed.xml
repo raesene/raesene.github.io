@@ -7,6 +7,46 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 6 - Container Orchestration Tool Auditing</title>
+				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature.&lt;/p&gt;
+
+&lt;p&gt;When looking at Kubernetes auditing the first thing to check is, whether it’s enabled or not. The default is not to enable auditing in base Kubernetes, so it requires cluster operators to either configure it directly on the API server (for unmanaged distributions), or to check whether it’s enabled via their Cloud Service Provider interface (for managed distributions).&lt;/p&gt;
+
+&lt;p&gt;The next thing to investigate is, what exactly is going to be audited. In unmanaged clusters, the operator has flexibility to defined exactly what it is they’re going to audit. Kubernetes auditing feature is pretty flexible, allowing for different operations to be captures at different levels or indeed to explicitly avoid capturing specific activity that might be noisy and not interesting from a security perspective. What most policies do have specific activities either captured or blocked and then have a catch-all at the end to handle any cases that are not specifically handled.&lt;/p&gt;
+
+&lt;p&gt;In managed clusters, typically there is one audit policy, which is the one defined by the CSP. It can be a bit tricky to find out exactly what the setting is, as it’s often not well documented. My current best guess for the three major providers is below (any pointers on better sources appreciated :))&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/Azure/aks-engine/blob/master/parts/k8s/addons/audit-policy.yaml&quot;&gt;AKS&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://aws.github.io/aws-eks-best-practices/security/docs/detective/&quot;&gt;EKS&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/kubernetes/blob/release-1.10/cluster/gce/gci/configure-helper.sh#L706&quot;&gt;GKE&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When reviewing an audit policy, it’s worth understanding what’s captured at the different levels of auditing. Generally metadata will capture a lot of the information that you might want to review, like the user making the request and the URL of the API endpoint that’ll tell you what they did. In some cases you might want to capture the full request, which has more details of exactly what was done.&lt;/p&gt;
+
+&lt;p&gt;Another point to note when looking at Kubernetes auditing is that there is a limitation if you’re trying to track down whether a specific user carried out a specific action (not an uncommon scenario). The Audit log doesn’t capture the source of the credential used to authenticate to the cluster, so if there are multiple credentials for a given user (quite likely if an attacker has access to the CertificateSigningRequest or TokenRequest APIs) there’s no easy way to tell if it was really that user, or a cloned credential.&lt;/p&gt;
+
+&lt;p&gt;In terms of specific recommendations from the PCI guidance document, there’s just the one.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-71&quot;&gt;Section 7.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Existing inventory management and logging solutions may not suffice due to the ephemeral nature of containers and container orchestration tools integration.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Access to the orchestration system API(s) should be audited and monitored for indications of unauthorized access. Audit logs
+should be securely stored on a centralized system.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - The goal of this recommendation is really to say that you need specific auditing that understands containers and container orchestration, which for Kubernetes is going to be the auditing feature. The second part of this recommendation is a pretty standard piece of good practice which is that you shouldn’t only store the audit logs on the cluster servers, but instead ensure that their securely stored on a centralized system so that, if an attacker compromises a cluster control plane node, you don’t risk them corrupting the audit logs themselves.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture&lt;/p&gt;
+</description>
+				<pubDate>Sat, 12 Nov 2022 10:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
 				<description>&lt;p&gt;This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management.&lt;/p&gt;
 
@@ -136,7 +176,7 @@ dedicated secrets management systems.&lt;/p&gt;
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;PKIs are essentially intertwined with Kubernetes architecture, but in general for production PCI clusters it’s likely the companies should only use Kubernetes PKI options where absolutely required and instead use externally managed PKI services for any other requirements they may have.&lt;/p&gt;
+&lt;p&gt;PKIs are essentially intertwined with Kubernetes architecture, but in general for production PCI clusters it’s likely the companies should only use Kubernetes PKI options where absolutely required and instead use externally managed PKI services for any other requirements they may have. Next time we’ll be looking at the &lt;a href=&quot;https://raesene.github.io/blog/2022/11/06/PCI-Kubernetes-Section6-Secrets-Management/&quot;&gt;Secrets Management Recommendations&lt;/a&gt;&lt;/p&gt;
 </description>
 				<pubDate>Sat, 29 Oct 2022 11:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/</link>
@@ -700,102 +740,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sat, 10 Sep 2022 08:45:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with Windows Containers - Popping Calc</title>
-				<description>&lt;p&gt;Windows containers don’t get quite the use of their Linux brethren, but they’re an interesting topic and one that’s seeing more adopting as enterprises move to Containerization. Whilst, from a Docker/Kubernetes perspective, they look relatively similar to Linux containers, the underlying isolation mechanisms are entirely different. A new development in this is the provision of “host process” containers, so I thought it would be fun to take a look at what’s possible with them, but first some background…&lt;/p&gt;
-
-&lt;h1 id=&quot;background&quot;&gt;Background&lt;/h1&gt;
-
-&lt;h2 id=&quot;isolation-options&quot;&gt;Isolation Options&lt;/h2&gt;
-
-&lt;p&gt;There are two isolation options available to users of Windows containers, Process-isolated Windows Server containers and Hyper-V isolated Windows Server containers. &lt;a href=&quot;https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/hyperv-container&quot;&gt;Microsoft’s documentation&lt;/a&gt; goes into a lot of detail about the two, but a key difference is that process containers use the same kernel (like Linux containers) whereas Hyper-V isolation provides a full operating system kernel per container and uses hypervisor isolation.&lt;/p&gt;
-
-&lt;p&gt;Importantly to quote &lt;a href=&quot;https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria&quot;&gt;Microsoft’s documentation on container security&lt;/a&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not.&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;With that said whilst Microsoft don’t consider process containers to provide a security boundary, they have decided that some container breakouts should be considered privilege escalation and have fixed &lt;a href=&quot;https://googleprojectzero.blogspot.com/2021/04/who-contains-containers.html&quot;&gt;issues related to this&lt;/a&gt; in the past.&lt;/p&gt;
-
-&lt;h2 id=&quot;windows-containers-and-kubernetes&quot;&gt;Windows Containers and Kubernetes&lt;/h2&gt;
-
-&lt;p&gt;It’s possible to use Windows containers as part of a Kubernetes cluster, although you still need Linux based control plane servers. When running Windows containers in a Kubernetes cluster, &lt;a href=&quot;https://kubernetes.io/docs/concepts/windows/intro/#windows-containers-in-kubernetes&quot;&gt;Hyper-V isolation is not supported&lt;/a&gt;, so containers will use process based isolation&lt;/p&gt;
-
-&lt;h1 id=&quot;host-process-containers&quot;&gt;Host Process Containers&lt;/h1&gt;
-
-&lt;p&gt;This is a new feature in Kubernetes which is currently in beta and scheduled to reach GA in Kubernetes 1.26, although it should work on any cluster at 1.23 or higher out of the box. The idea of this feature is to replicate the &lt;a href=&quot;https://github.com/kubernetes/enhancements/issues/1981&quot;&gt;privileged container feature in Linux&lt;/a&gt;, which essentially removes security isolation layers between the container and the host. This is intended to be used by system level components that need additional access to the underlying host, for example CNI providers.&lt;/p&gt;
-
-&lt;h2 id=&quot;getting-a-container-to-pop-calc-&quot;&gt;Getting a container to pop calc :)&lt;/h2&gt;
-
-&lt;p&gt;With the background out of the way and 2-node cluster set-up (Calico have some &lt;a href=&quot;https://projectcalico.docs.tigera.io/getting-started/windows-calico/quickstart&quot;&gt;good documentation&lt;/a&gt; on the setup process), the question obviously is “can we get a container workload to pop calc on a cluster node!”.&lt;/p&gt;
-
-&lt;p&gt;The way I approached this was to use &lt;a href=&quot;https://docs.microsoft.com/en-us/sysinternals/downloads/psexec&quot;&gt;psexec&lt;/a&gt; to execute a process on my cluster node. We just need a manifest which references an image containing that program and we should be able to execute programs there.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;wintest&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/windows-powertools&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;$env:CONTAINER_SANDBOX_MOUNT_POINT&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pstools&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;psexec.exe&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-i&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;1&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-accepteula&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;c:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;windows&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;system32&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;calc.exe&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;securityContext&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;windowsOptions&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hostProcess&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;runAsUserName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;NT&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;AUTHORITY&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;SYSTEM&quot;&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;hostNetwork&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;nodeSelector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubernetes.io/os&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;windows&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;A couple of interesting points from the manifest. I found that passing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-i 1&lt;/code&gt; was needed to get the program to execute in the interactive session running on the server (you can specify a higher integer to get other interactive sessions on the server). Also you can specify &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NT AUTHORITY\\SYSTEM&lt;/code&gt; as the running user which gives you an idea of the privileges available to a host process container. We also use a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodeSelector&lt;/code&gt; field to ensure that this container will run on a Windows node in our cluster.&lt;/p&gt;
-
-&lt;p&gt;If you wanted to replicate this on every Windows node in a cluster, you’d just use a daemonset instead of a pod.&lt;/p&gt;
-
-&lt;p&gt;To save people from the hassle of setting up a cluster to test this, here’s a quick video&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/KbcG2tWsmt0&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-
-&lt;h2 id=&quot;getting-shell-on-the-host&quot;&gt;Getting shell on the host&lt;/h2&gt;
-
-&lt;p&gt;If you’re looking for something a bit more interactive to look around the node(s), a manifest like this will start up and pause long enough for you to connect to the host&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;winshell&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;winshell&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/windows-powertools&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;powershell.exe&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;-command&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;start-sleep&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;-seconds&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;600&quot;&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;securityContext&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;windowsOptions&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;hostProcess&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;runAsUserName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;NT&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;AUTHORITY&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\\&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;SYSTEM&quot;&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;hostNetwork&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;nodeSelector&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;kubernetes.io/os&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;windows&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;You can then get a nice interactive shell using kubectl&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; winshell &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; cmd.exe
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;If you’re planning to run Windows containers under Kubernetes, it’s important to make sure you’re restricting this new feature appropriately. Admission Control solutions like &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt; or &lt;a href=&quot;https://github.com/open-policy-agent/gatekeeper&quot;&gt;OPA Gatekeeper&lt;/a&gt; can be used to restrict this.&lt;/p&gt;
-
-&lt;p&gt;Also this is an interesting area to dig into more, as I’d guess we’ll see its usage increase over time.&lt;/p&gt;
-
-</description>
-				<pubDate>Sat, 03 Sep 2022 17:00:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/09/03/Fun-With-Windows-Containers-Popping-Calc/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/03/Fun-With-Windows-Containers-Popping-Calc/</guid>
 			</item>
 		
 	</channel>
