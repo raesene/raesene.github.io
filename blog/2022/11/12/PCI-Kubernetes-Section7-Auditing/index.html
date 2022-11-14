@@ -167,9 +167,9 @@
 
 <p>When looking at Kubernetes auditing the first thing to check is, whether it’s enabled or not. The default is not to enable auditing in base Kubernetes, so it requires cluster operators to either configure it directly on the API server (for unmanaged distributions), or to check whether it’s enabled via their Cloud Service Provider interface (for managed distributions).</p>
 
-<p>The next thing to investigate is, what exactly is going to be audited. In unmanaged clusters, the operator has flexibility to defined exactly what it is they’re going to audit. Kubernetes auditing feature is pretty flexible, allowing for different operations to be captures at different levels or indeed to explicitly avoid capturing specific activity that might be noisy and not interesting from a security perspective. What most policies do have specific activities either captured or blocked and then have a catch-all at the end to handle any cases that are not specifically handled.</p>
+<p>The next thing to investigate is, what exactly is going to be audited. In unmanaged clusters, the operator has flexibility to defined exactly what it is they’re going to audit. Kubernetes auditing feature is pretty flexible, allowing for different operations to be captured at different levels or indeed to explicitly avoid capturing specific activity that might be noisy and not interesting from a security perspective. What most policies do have specific activities either captured or blocked and then have a catch-all at the end to handle any cases that are not specifically handled.</p>
 
-<p>In managed clusters, typically there is one audit policy, which is the one defined by the CSP. It can be a bit tricky to find out exactly what the setting is, as it’s often not well documented. My current best guess for the three major providers is below (any pointers on better sources appreciated :))</p>
+<p>In managed clusters, typically there is one audit policy, which is the one defined by the CSP and which can’t be changed. It can be a bit tricky to find out exactly what the setting is, as it’s often not well documented. My current best guess for the three major providers is below (any pointers on better sources appreciated :))</p>
 
 <ul>
   <li><a href="https://github.com/Azure/aks-engine/blob/master/parts/k8s/addons/audit-policy.yaml">AKS</a></li>
