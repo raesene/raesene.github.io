@@ -7,7 +7,7 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 6 - Container Orchestration Tool Auditing</title>
+				<title>PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing</title>
 				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature.&lt;/p&gt;
 
 &lt;p&gt;When looking at Kubernetes auditing the first thing to check is, whether it’s enabled or not. The default is not to enable auditing in base Kubernetes, so it requires cluster operators to either configure it directly on the API server (for unmanaged distributions), or to check whether it’s enabled via their Cloud Service Provider interface (for managed distributions).&lt;/p&gt;
