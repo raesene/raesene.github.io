@@ -7,6 +7,82 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
+				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security, which follows on from the last part about Container monitoring.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s two in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-91&quot;&gt;Section 9.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;h2 id=&quot;section-92&quot;&gt;Section 9.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+</description>
+				<pubDate>Sat, 26 Nov 2022 10:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/11/26/PCI-Kubernetes-Section9-Runtime-Security/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/26/PCI-Kubernetes-Section9-Runtime-Security/</guid>
+			</item>
+		
+			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring</title>
+				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Container monitoring is another topic where it’s important to consider the way that Kubernetes clusters operate, as standard approaches to monitoring might not be sufficient. There’s a couple of properties to consider when designing container monitoring.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Containers are ephemeral - Containers running in a Kubernetes cluster can be moved around by automated processes like the Kubernetes scheduler, to ensure the smooth running of the environment. This means that any local monitoring on a cluster node is unlikely to capture all relevant logs. It also means that logging must be centralised so that all logs relating to an application running in containers can be queried from one place (operators connecting to every node in a cluster to look for container logs would &lt;em&gt;not&lt;/em&gt; be a sensible solution)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Whilst containers are generally (but not always) Linux processes, you can’t really rely on host level monitoring when running applications in containers as, at a host level, there isn’t sufficient context to make sensible security decisions. To give a specific example, imagine a host level security monitoring tool sees suspicious behaviour in the namespace of an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx&lt;/code&gt; webserver. Whilst it can report that, it doesn’t know that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx&lt;/code&gt; process in question belongs to a specific Kubernetes pod, in a specific Kubernetes Deployment, in a specific Kubernetes namespace, that’s owned by a specific team in the company. All of that context is really needed to ensure that teams can find and react to security issues quickly.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The result of this is that any security monitoring system for a Kubernetes cluster has to be Kubernetes aware and centralized to be really effective, and when reviewing the security of in-scope clusters, it’s important to ensure that this is in place.&lt;/p&gt;
+
+&lt;p&gt;In addition to capturing container logs, it’s also important to have monitoring in place that can detect attempts by attackers to compromise containers or breakout to the underlying host. Again it’s important that this tooling is container aware (for example understands how namespaces are used in containers) to be really effective.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s two in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-81&quot;&gt;Section 8.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Local logging solutions will not allow for appropriate correlation of security events where containers are regularly destroyed.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Centralized logging of container activity should be implemented and allow for correlation of events across instances of the same container&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - On Kubernetes there are a wide range of approaches to centralized container monitoring. Generally logs from individual cluster nodes will be transferred to a cloud hosted or on-premises service, with sufficient information to ensure that it’s possible to correlate which Kubernetes resource they belonged to.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-82&quot;&gt;Section 8.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Without appropriate detection facilities, the ephemeral nature of containers may allow attackers to execute attacks unnoticed.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Controls should be implemented to detect the adding and execution of new binaries and unauthorized modification of container files to running containers.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - For Kubernetes this will typically mean deploying an open source or commercial container runtime security product. These products should be designed to capture attacks occurring in Kubernetes containers and as with the log monitoring, store them in a centralized location. Typically these products will have a ruleset allowing for detection of common container attacks, and ideally should allow for custom rules to be added by the cluster operator to reflect specific risks in their environment.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Container monitoring is another area where the controls we need are similar to non-containerized environments but, due to the nature of container based architectures, it’s important to ensure that the deployed solutions take account of their environment. The use of Kubernetes specifically may not affect how those tools operate, but it’s important that the tools are Kubernetes aware so that they can provide all the relevant information to operators about possible attacks occurring in monitored clusters.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 19 Nov 2022 10:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing</title>
 				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature.&lt;/p&gt;
 
@@ -39,7 +115,7 @@ should be securely stored on a centralized system.&lt;/p&gt;
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture&lt;/p&gt;
+&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture important security activities if correctly configured.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 12 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</link>
@@ -592,154 +668,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sat, 01 Oct 2022 14:45:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</guid>
-			</item>
-		
-			<item>
-				<title>The Challenges of Assessing Kubernetes clusters for PCI Compliance</title>
-				<description>&lt;p&gt;After talking about the release of PCIs recommendations for containers and container orchestration environments, and how it could be applied to Kubernetes clusters in my &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;last blog&lt;/a&gt; I thought that it might be a good idea to discuss some of the general challenges that assessors and auditors might have when looking at Kubernetes environments, as there’s quite a few variables that you need to account for.&lt;/p&gt;
-
-&lt;h2 id=&quot;what-is-kubernetes&quot;&gt;What is Kubernetes?&lt;/h2&gt;
-
-&lt;p&gt;Whilst there is the &lt;a href=&quot;https://github.com/kubernetes/kubernetes&quot;&gt;open source project&lt;/a&gt; that’s not how most companies will deploy Kubernetes, instead they’ll make use of a “Kubernetes distribution”. To be a certified Kubernetes distribution software has to pass &lt;a href=&quot;https://www.cncf.io/certification/software-conformance/&quot;&gt;conformance testing&lt;/a&gt; which ensures that it will operate as expected, so there will be a level of common functionality to all Kubernetes distributions. However, there is still a lot of latitude that distribution providers have in terms of the exact configuration and operating model, which an auditor needs to be aware of. At the moment there are 65 different certified distributions 51 different certified “hosted” Kubernetes and 23 different certified installers.&lt;/p&gt;
-
-&lt;h2 id=&quot;managed-against-unmanaged&quot;&gt;Managed against Unmanaged&lt;/h2&gt;
-
-&lt;p&gt;Fundamentally there are two different groups of Kubernetes distributions. A managed distribution occurs where the provider manages the control plane (API Server, Controller manager, scheduler and etcd) and the customer has access to, and manages the workloads that run on the cluster (and possibly manages the worker nodes). Major examples of this kind of approach are Amazon EKS, Azure AKS and Google’s GKE.&lt;/p&gt;
-
-&lt;p&gt;In a managed installation typically there is no access to look at the configuration of the control plane. This means that from an audit perspective any requirements that relate to precise configuration of the control plane components (for example flags set on the API server) will either be assessed via the provider’s control panels/APIs or in some cases they can’t be directly assessed at all! For some managed distributions there is a CIS benchmark, but if not an auditor will need to look at each requirement to see what the cloud providers defaults are.&lt;/p&gt;
-
-&lt;p&gt;In an unmanaged distribution (e.g. Kubeadm, Rancher), the cluster operator typically has full access to the control plane and can configure any of the components as needed. From an auditing perspective this is easier as everything can be assessed. However there is a general challenge in that things like exact file locations and names are not prescribed by the Kubernetes conformance testing, so you can’t assume that things will always be in the same place.&lt;/p&gt;
-
-&lt;p&gt;I’ll also call out at this point &lt;a href=&quot;https://www.redhat.com/en/technologies/cloud-computing/openshift&quot;&gt;Red Hat Openshift&lt;/a&gt; as it’s kind of a special case. It is a certified Kubernetes but it varies more from core Kubernetes in how it operates, so ideally when assessing it (either in managed or unmanaged form) guidelines being followed should be specifically designed for OpenShift. There is a CIS benchmark for it, so that may be useful.&lt;/p&gt;
-
-&lt;h2 id=&quot;kubernetes-versions&quot;&gt;Kubernetes Versions&lt;/h2&gt;
-
-&lt;p&gt;Another variable that needs to be accounted for when assessing a Kubernetes cluster is the version of Kubernetes in use. Kubernetes used to release a new version every 3 months and now does so every 4 months. Whilst only the last 3 versions are in support, many clusters are now running unsupported versions so there is a requirement to know about a variety of versions.&lt;/p&gt;
-
-&lt;p&gt;One reason why this is important is that the Kubernetes project will introduce new configuration options and deprecate others from version to version. One good example is the “Insecure API port”. This setting went through a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/91506&quot;&gt;process of deprecation&lt;/a&gt; over a large number of versions. Initially it defaulted to being available over &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;127.0.0.1:8080&lt;/code&gt; the default then changed to not being on by default, but still available, to not being available but the flag was still present, to not being available at all. Obviously if you use an audit guide for the wrong version of Kubernetes this could lead to a false positive or false negative result.&lt;/p&gt;
-
-&lt;p&gt;Another variable that changes over time with Kubernetes is that API versions change. Basically an API can be in “alpha” (not enabled by default), “beta” (which used to be enabled by default but since Kubernetes 1.24 new beta APIs will not be), “GA” always enabled, “deprecated” shouldn’t be used but still works or removed where it no longer works. One API which is relevant to auditors, which went through some of this process is PodSecurityPolicy, which was a core feature of Kubernetes security for some versions. Its path was alpha–&amp;gt;beta–&amp;gt;deprecated–&amp;gt;removed, but as beta APIs were generally enabled, it was in use by a large number of clusters.&lt;/p&gt;
-
-&lt;p&gt;The overall gist of this section is to emphasise the importance of matching the guidance/audit standard you’re using to the version of Kubernetes you’re reviewing. Older guides will often lead to incorrect results as defaults change over time. There are some benchmarks (like the CIS benchmarks) which have different benchmarks for different versions of Kubernetes, but in general this will require reviewers to dig into Kubernetes documentation (and sometimes github issues) to find out what the correct settings are.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;The goal of this post was really just to describe some of the complexities that you need to be aware of when assessing or auditing a Kubernetes cluster, it’s important not to take a “one size fits all” approach and to tailor the review to the distribution and version that’s being assessed. I’d expect that over time more assessment guides will be made available. Also I’d expect we’ll see more automated tooling which can help with compliance reviews, however it’s important to note that automated tools have to try and deal with all this complexity as well and some of the requirements in the PCI recommendations do not lend themselves to full automation.&lt;/p&gt;
-
-&lt;p&gt;Also whilst there are challenges in the precise detail of assessing Kubernetes cluster, that doesn’t mean we can’t come up with general guidance for the PCI Container Orchestration Recommendations and in the next post(s) I’ll take a look at that topic, starting with the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;Authentication section&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Tue, 20 Sep 2022 07:45:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Guidance for Containers and Container Orchestration Tools</title>
-				<description>&lt;p&gt;Yesterday, the &lt;a href=&quot;https://blog.pcisecuritystandards.org/new-information-supplement-guidance-for-containers-and-container-orchestration-tools?utm_campaign=Stakeholder%20Engagement&amp;amp;utm_content=220770109&amp;amp;utm_medium=social&amp;amp;utm_source=twitter&amp;amp;hss_channel=tw-20256309&quot;&gt;PCI Council issued a new information supplement&lt;/a&gt; that should be of specific interest to anyone using container technologies like Docker and podman and Container orchestration technologies like Kubernetes and OpenShift to process cardholder transactions.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://docs-prv.pcisecuritystandards.org/Guidance%20Document/Containers%20and%20Container%20Orchestration%20Tools/Guidance-for-Containers-and-Container-Ochestration-Tools-v1_0.pdf&quot;&gt;The Guidance&lt;/a&gt; has been in development since last year and is intended to provide more specific information about how PCI in-scope entities should secure containerized environments.&lt;/p&gt;
-
-&lt;p&gt;Whilst the whole document has a lot of information and is well worth a read, probably the most interesting section to a lot of companies is likely to be the threat and best practice table (3.1). This table has 16 sections of recommendations for the secure operation of containers and container orchestration tools.&lt;/p&gt;
-
-&lt;p&gt;The guidance provided by the PCI council is intentionally vendor agnostic but it’s possible to derive how it might apply to the most common container orchestration environment, Kubernetes.&lt;/p&gt;
-
-&lt;p&gt;To help out with this I’ve released a &lt;a href=&quot;https://raesene.github.io/assets/media/pci-k8s-mappingv1.0.xlsx&quot;&gt;spreadsheet&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/assets/media/pci-k8s-mapping-v1.0.pdf&quot;&gt;PDF&lt;/a&gt; adding some suggestions, based on my personal experience of Kubernetes security, in how the guidance might apply to Kubernetes environments, as there’s a number of areas that will need some consideration to apply their recommendations.&lt;/p&gt;
-
-&lt;p&gt;Whilst I’d recommend reading the whole document of course, here are some areas I’d highlight as likely needing specific attention in Kubernetes based environments :-&lt;/p&gt;
-
-&lt;h2 id=&quot;1-authentication&quot;&gt;1. Authentication&lt;/h2&gt;
-
-&lt;p&gt;There’s a couple of recommendations in this section which require specific attention. In section 1.2 the guidance recommends avoiding the use of generic administration accounts, and in Kubernetes this would apply to the first account commonly created with clusters (kubernetes-admin) as well as any other generic account.&lt;/p&gt;
-
-&lt;p&gt;Additionally in section 1.3 there is a recommendation to ensure that all credentials used can be revoked. This is particularly significant to Kubernetes as it means that client certificate authentication and the Kubernetes TokenRequest API should be used with extreme care as neither have a revocation system in place (without either re-issuing all certificates for the cluster in the case of client certificate authentication, or deleting the serviceaccount/pod/secret tied to the token in the case of the TokenRequest API)&lt;/p&gt;
-
-&lt;p&gt;Also, section 1.5 will apply to the automatic provisioning of service accounts to Kubernetes workloads, which is a common default. The recommendation here is to only supply API server credentials to workloads where explicitly required.&lt;/p&gt;
-
-&lt;p&gt;Lastly in Section 1.6 a recommendation for administrative users to use MFA to authenticate to cluster APIs. Again, this would require the use of an external authentication system as none of the in-built Kubernetes authentication mechanisms support MFA.&lt;/p&gt;
-
-&lt;h2 id=&quot;2-authorization&quot;&gt;2. Authorization&lt;/h2&gt;
-
-&lt;p&gt;In addition to the generic recommendation use least privileged access in section 2.1, which would include avoiding the use of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; clusterrole in Kubernetes, section 2.2 explicitly recommends against using “hard coded access groups”. The best known of these in Kubernetes is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group, which should not be used for general administration as it is only required in “break glass” scenarios where the RBAC system is unavailable.&lt;/p&gt;
-
-&lt;h2 id=&quot;3-workload-security&quot;&gt;3. Workload security&lt;/h2&gt;
-
-&lt;p&gt;There are a couple of quite important recommendations in this section. 3.1 requires that workloads in the cluster are prevented from accessing the underlying cluster node resources. In Kubernetes that requires either the use of &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-admission/&quot;&gt;pod security admission&lt;/a&gt; or a 3rd party admission controller like &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt; or &lt;a href=&quot;https://github.com/open-policy-agent/gatekeeper&quot;&gt;OPA Gatekeeper&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Next section 3.2 recommends that containers run in the cluster target known versions. Ideally this should be done by checking cryptographic signatures on images (for example with &lt;a href=&quot;https://github.com/sigstore/cosign&quot;&gt;cosign&lt;/a&gt;) or failing that SHA-digests. The reason for this being that tags on container images are generally mutable so don’t reliably point to the same content.&lt;/p&gt;
-
-&lt;p&gt;There’s also a general recommendation in section 3.3 to source images for production systems from an in-house controlled container registry.&lt;/p&gt;
-
-&lt;h2 id=&quot;4-network-security&quot;&gt;4. Network Security&lt;/h2&gt;
-
-&lt;p&gt;Possibly the most important recommendation here is, in section 3.1, to use a default deny network policy in Kubernetes clusters. this can be done by ensuring that a default policy is set on every namespace addressing both ingress and egress traffic, with specific requirements being specified to white-list access on top of that.&lt;/p&gt;
-
-&lt;p&gt;There’s also a recommendation in section 4.2 to avoid having administrative APIs (like the Kubernetes API server) exposed to the general Internet. This is &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;something I’ve written about before&lt;/a&gt; as there are a lot of clusters visible on the Internet.&lt;/p&gt;
-
-&lt;h2 id=&quot;5-pki&quot;&gt;5. PKI&lt;/h2&gt;
-
-&lt;p&gt;In section 5.1 there’s another reminder to avoid using certificate-based authentication if revocation is not supported, which is the case in Kubernetes. Whilst this form of authentication is required for system-component –&amp;gt; system-component authentication it should not be used for user or service based authentication.&lt;/p&gt;
-
-&lt;h2 id=&quot;6-secrets-management&quot;&gt;6. Secrets Management&lt;/h2&gt;
-
-&lt;p&gt;In section 6.1 the guidance recommends using a dedicate secrets management tool for storing sensitive information. In Kubernetes one pattern I’ve seen that should definitely be avoided here is using config maps to store secret information as they would not comply with this recommendation.&lt;/p&gt;
-
-&lt;h2 id=&quot;7-container-orchestration-tool-auditing&quot;&gt;7. Container Orchestration Tool Auditing&lt;/h2&gt;
-
-&lt;p&gt;Section 7.1 recommends not only that auditing is enabled (which is often not the default with Kubernetes distributions) but that audit logs are stored and processed on a centralized system to avoid the risk of tampering.&lt;/p&gt;
-
-&lt;h2 id=&quot;8-container-monitoring&quot;&gt;8. Container Monitoring&lt;/h2&gt;
-
-&lt;p&gt;Section 8.1 applies similar guidance to the previous section recommending that container logs are stored centrally to ensure their availability in the case of a security incident.&lt;/p&gt;
-
-&lt;p&gt;Section 8.2 recommends that container security monitoring tools that can detect unauthorized modification of container files (e.g. &lt;a href=&quot;https://www.aquasec.com/products/tracee/&quot;&gt;Tracee&lt;/a&gt;, &lt;a href=&quot;https://falco.org/&quot;&gt;Falco&lt;/a&gt; or &lt;a href=&quot;https://github.com/cilium/tetragon&quot;&gt;Tetragon&lt;/a&gt;)&lt;/p&gt;
-
-&lt;h2 id=&quot;9-container-runtime-security&quot;&gt;9. Container Runtime Security&lt;/h2&gt;
-
-&lt;p&gt;Section 9.1 recommends that for high-risk workloads hypervisor (e.g. Firecracker) or sandbox (e.g. gVisor) style isolation is considered, due to the larger attack surface of standard Linux container isolation.&lt;/p&gt;
-
-&lt;p&gt;Section 9.2 will be specifically relevant to anyone using Windows containers in PCI environments. As I talked about &lt;a href=&quot;https://raesene.github.io/blog/2022/09/03/Fun-With-Windows-Containers-Popping-Calc/&quot;&gt;last week&lt;/a&gt; Windows process isolated containers are not considered by Microsoft to provide a security barrier, so Hyper-V based containers should be used to provide appropriate isolation. A complicating factor here is that currently Hyper-V based Windows containers are not supported under Kubernetes.&lt;/p&gt;
-
-&lt;h2 id=&quot;10-patching&quot;&gt;10. Patching&lt;/h2&gt;
-
-&lt;p&gt;Section 10.1 makes the recommendation that security patches are applied to all container orchestration tools. One challenge in Kubernetes environments is staying within the support window of the product (currently 12 months) so attention should be paid to this.&lt;/p&gt;
-
-&lt;p&gt;Section 10.2 recommends that cluster nodes are regularly upgraded. Of specific importance here is Linux kernel upgrades where nodes will likely need rebooted for them to take effect.&lt;/p&gt;
-
-&lt;p&gt;Section 10.3 recommends that container images are regularly scanned updated and the containers redeployed so that those updates are effective in the cluster.&lt;/p&gt;
-
-&lt;h2 id=&quot;11-resource-management&quot;&gt;11. Resource Management&lt;/h2&gt;
-
-&lt;p&gt;Section 11.1 recommends that all workloads in a cluster have resource limits applied. With containers sharing resources on cluster nodes, it is generally important to try and reduce the risk of noisy neighbours.&lt;/p&gt;
-
-&lt;h2 id=&quot;12-container-images-building&quot;&gt;12. Container images building&lt;/h2&gt;
-
-&lt;p&gt;The recommendations in this section aren’t really specific to container orchestration, they apply wherever containers are used in in-scope environments.&lt;/p&gt;
-
-&lt;p&gt;A recommendation to use minimal base images in a registry under the organization’s control are covered in 12.1 and 12.2, while a standard piece of container security advice to run containers as non-root users is mentioned in section 12.3.&lt;/p&gt;
-
-&lt;h2 id=&quot;13-registry&quot;&gt;13. Registry&lt;/h2&gt;
-
-&lt;p&gt;The recommendations in this section relate to the security of container image registries. Section 13.3 recommends integrating container vulnerability scanning into the registry to ensure that images are regularly scanned and updated.&lt;/p&gt;
-
-&lt;h2 id=&quot;14-version-management&quot;&gt;14. Version Management&lt;/h2&gt;
-
-&lt;p&gt;This section covers some best practices related to ensuring that version management is used for cluster resource.&lt;/p&gt;
-
-&lt;h2 id=&quot;15-configuration-management&quot;&gt;15. Configuration Management&lt;/h2&gt;
-
-&lt;p&gt;This section deals with ensuring that testing and configuration standards are in place for all container/container orchestration components.&lt;/p&gt;
-
-&lt;h2 id=&quot;16-segmentation&quot;&gt;16. Segmentation&lt;/h2&gt;
-
-&lt;p&gt;This section relates to segmentation of clusters. Recommendation 16.1 covers the idea that dedicated clusters should be used for high-security components with 16.2 covering the idea of using dedicated node pools where that’s not possible. In general, effectively creating &lt;em&gt;security&lt;/em&gt; segmentation on Kubernetes is a difficult task requiring isolation of workloads, the network and Kubernetes API services. Generallym the surest security barrier is placed at the cluster level.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;It’s good to see additional guidance for container orchestration environments being developed as these technologies are more widely used in regulated environments. with this guidance there are definitely some challenging areas for Kubernetes based environments where defaults will need to be adapted to include PCI’s recommendations. Next time we’ll take a look at the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;challenges in assessing the security of Kubernetes clusters for PCI compliance&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Sat, 10 Sep 2022 08:45:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/</guid>
 			</item>
 		
 	</channel>

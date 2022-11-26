@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - etcd</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - etcd </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security </h1>
 </div>
 	
 <article>
@@ -157,52 +157,33 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   May 
-	   1st,
-	     
-	   2017
+	   November 
+	   26th,
+	   
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
+	  <p>This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security, which follows on from the last part about Container monitoring.</p>
 
-<p>So keeping access to this limited is pretty important for a secure cluster.  Depending on how your distribution of Kubernetes sets things up, there’s a number of different default configurations you might see.</p>
+<p>In terms of the PCI requirements there’s two in this section.</p>
 
-<p>Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.</p>
+<h2 id="section-91">Section 9.1</h2>
 
-<p>However the problem with localhost binding only is that it doesn’t really allow for clustered etcd setups.  If you want to have multiple etcd databases to allow some redundancy you need to allow for communications between datastores.</p>
+<p><strong>Threat</strong> -</p>
 
-<p>In these cases port 2379/TCP and 2380/TCP are likely to be exposed on the network.  2379 is for client –&gt; etcd communications, and 2380 is for communications between the different nodes in the etcd cluster.</p>
+<p><strong>Best Practice</strong> -</p>
 
-<p>Its at this point that you’ll want to be well acquainted with the CoreOS guidelines on <a href="https://coreos.com/etcd/docs/latest/op-guide/security.html">etcd security</a>.  This lays out the options that are available.  Basically etcd uses client certificate authentication, but there’s a couple of important points to note</p>
+<p><strong>Details</strong> -</p>
 
-<ul>
-  <li>
-    <p>There’s no checking of information in the certificate CN or SAN fields, so any valid certificate will allow access. So its probably worth using a dedicated certificate authority for the etcd cluster, and not using certificate issued by another CA (such as the one you’re using for general Kubernetes setup).</p>
-  </li>
-  <li>
-    <p>With etcd and Kubernetes the setup is all or nothing, there’s no authorisation used, so be very careful with which clients are allowed access to the etcd datastore.</p>
-  </li>
-</ul>
+<h2 id="section-92">Section 9.2</h2>
 
-<p>So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?</p>
+<p><strong>Threat</strong> -</p>
 
-<p>You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried with curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(</p>
+<p><strong>Best Practice</strong> -</p>
 
-<p>etcdctl can be acquired by downloading an etcd release like <a href="https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz">this one</a> and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like <a href="https://hub.docker.com/r/raesene/alpine-containertools/">this image</a> which has it already installed.</p>
+<p><strong>Details</strong> -</p>
 
-<p>once you’ve got etcdctl installed, you can query the API with something like</p>
-
-<p><code class="language-plaintext highlighter-rouge">etcdctl --endpoint=http://[etcd_server_ip]:2379 ls</code></p>
-
-<p>If you get back <code class="language-plaintext highlighter-rouge">/registry</code> you’re likely dealing with a v2 install (Kubernetes 1.5 or lower) and you can easily wander through and explore the config.  In particular the <code class="language-plaintext highlighter-rouge">/registry/secrets/default</code> path is likely to be of interest as it may contain the default service token which can provide elevated rights to the cluster.</p>
-
-<p>If you get back a blank line from the initial query its reasonably likely that you’ve got a v3 cluster and getting the data out is a bit different.</p>
-
-<p>First up you need to let etcdctl know that you’re dealing with v3, so <code class="language-plaintext highlighter-rouge">export ETCDCTL_API=3</code> is needed.</p>
-
-<p>Once you’ve got that environment variable set, you should see a different set of etcdctl commands as being available, including <code class="language-plaintext highlighter-rouge">etcdctl snapshot save</code> .  You can use this command to dump an instance of the etcd database to a file on disk.</p>
-
-<p>This database is in the boltdb format, so it’s possible to read the file using something like <a href="https://github.com/br0xen/boltbrowser">boltbrowser</a>.  Unfortunately the format of the data will be a bit broken as it’s serialized in proto format (more details in <a href="https://github.com/coreos/etcd/issues/7723">this github issue</a>), but you can likely still extract some useful information, if that’s your goal.</p>
+<h1 id="conclusion">Conclusion</h1>
 
 
 	  </div>
@@ -229,7 +210,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - etcd&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -257,10 +238,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2017/04/15/Container-Testing-small-tools-container/" title="Container Testing - A small tools container with SSH">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/" title="PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/" title="Keeping your Docker builds fresh">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

