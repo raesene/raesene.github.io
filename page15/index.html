@@ -158,46 +158,6 @@
 
   <span class="post-date">
     
-    May
-    4th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/05/04/metasploit_reso/">Metasploit Resources</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So I've been playing a bit with Metasploit over the holiday weekend (hey what are days off for..), and as usual when researching stuff, I've come across a load of links I don't want to lose track of, so I'll put them up here, may be useful to someone else as well..<br />
-I'll refrain from the really obvious linking to the project homepage, as if you're looking for metasploit links, I'd guess you've found it already :)<br />
-<b>Pre-Exploitation Information</b></p>
-<ul>
-<li><a href="http://synjunkie.blogspot.com/2008/10/metasploit-payloads-msfpayload.html"> Good set of examples for using msfpayload to create executable payloads</a></li>
-<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/creating-malicious-executables-using-metasploit">More msfpayload information</a></li>
-<li><a href="http://www.darkoperator.com/blog/2009/4/25/evil-packaging-on-osx-with-xcode-and-metasploit.html">Interesting worked example of msfpayload setup on osx</a></li>
-<li><a href="http://www.gamelinux.org/?cat=17">Interesting write-up on eval_php for for webserver compromise</a></li>
-</ul>
-<p><b>Post-Exploitation (meterpreter and the like) Information</b></p>
-<ul>
-<li><a href="http://carnal0wnage.blogspot.com/2009/04/more-on-working-with-incognito-and.html">Post on meterpreter usage</a>.  Has some interesting points on what can be done with Meterpreter.</li>
-<li><a href="http://www.kecoak-elektronik.net/log/2009/03/01/fun-and-profit-with-meterpreter/"> Interesting post on using meterpreter again</a> Some information on using meterpreter scripts like killav to stop exploits being detected, and timestomp to make discovery harder.</li>
-<li><a href="http://sites.google.com/site/visitabhiluck/Home/technical-writing/post-exploitation-activities"> Article from the Metasploit wikibook on post-exploitation activities</a></li>
-</ul>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
     March
     31st,
     
@@ -522,6 +482,38 @@ So they're seriously expecting people to pay 36% more for an eBook which is a di
 Looking through some of the other prices, this doesn't appear to be a limited aberration either, the differential is higher for hard back books (a concept which makes zero sense in an eBook world) but the prices seem uniformly higher for eBooks than physical ones.<br />
 Now I do see that for some applications where physical books are impractical eBooks , whatever the cost, could make sense.<br />
 But for recreational reading, the chances that large numbers of book lovers (many of whom are attached to the experience of physical books anyway) will change for a more expensive, more restrictive, electronic implementation are pretty slim!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    22nd,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2008/07/22/dns_vulnerabili/">DNS vulnerability - are there any other mitigations apart from patching?</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Well as I'm sure everyone is aware the details of the DNS flaw that <a href="http://www.doxpara.com">Dan Kaminsky</a> found have been disseminated round the 'net a bit early.<br />
+I'm not going to get into the politics of whether that's a good thing/bad thing or how urgent patching is as it's been done to death elsewhere...<br />
+I was thinking though about how it may be possible to mitigate this in other ways than patching...<br />
+Having heard the detailed explanation from matasano on the vulnerability,  wouldn't it be possible to mitigate this by changing the behaviour of the authoritative name server..?<br />
+If I'm understandning things correctly as the authoritative name server for a domain you'd see a whole load of requests for invalid subdomains to your domain (eg, AAAA.MYDOMAIN.COM AAAB.MYDOMAIN.COM) and usually you just respond with NXDOMAIN.  Now the attacker is relying on you responding NXDOMAIN so he can respond with the additional RR of your real website, say, WWW.MYDOMAIN.COM.<br />
+Would it be possible to change your behaviour to respond as the attacker would do with the RR for your valid hosts, so causing the caching DNS server to cache them on the first attempt and preventing the attacker from getting the incorrect entries in first..?  The attacker is relying on guessing port and transaction ID so won't get there in the first attempt, so it would seem that this would potentially mitigate the problem..<br />
+That said I'm no DNS expert so this may well be off base...</p>
 
     
     
