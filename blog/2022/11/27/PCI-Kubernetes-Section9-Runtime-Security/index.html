@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Attack Surface - etcd</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Attack Surface - etcd </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security </h1>
 </div>
 	
 <article>
@@ -157,53 +157,47 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   May 
-	   1st,
-	     
-	   2017
+	   November 
+	   27th,
+	   
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
+	  <p>This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on <a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/">workload security</a>. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers.</p>
 
-<p>So keeping access to this limited is pretty important for a secure cluster.  Depending on how your distribution of Kubernetes sets things up, there’s a number of different default configurations you might see.</p>
+<p>This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node <em>but</em> there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into <a href="https://www.container-security.site/attackers/container_breakout_vulnerabilities.html">container breakout attacks</a>.</p>
 
-<p>Some, like kubeadm, will bind etcd to the localhost interface only.  In this kind of setup an attacker would need to get access to the master node in order to get access to the API interface, so the exposure is somewhat limited.</p>
+<p>There are way to use container style workflows and Kubernetes while improving the level of isolation provided. Typically the trade-off is that improved isolation has a level of performance impact, and sometimes workloads need more access to the host than can be provided.</p>
 
-<p>However the problem with localhost binding only is that it doesn’t really allow for clustered etcd setups.  If you want to have multiple etcd databases to allow some redundancy you need to allow for communications between datastores.</p>
+<p>Some approaches to addressing this problem include <a href="https://gvisor.dev/">gVisor</a> and <a href="https://katacontainers.io/">katacontainers</a>. Additionally, another approach which could work where you have need higher levels of workload isolation, is to use a “serverless” style approach with something like AWS Fargate, working with an EKS cluster, as here there should be no user accessible underlying node to be accessed, and container isolation is handled by the cloud service provider.</p>
 
-<p>In these cases port 2379/TCP and 2380/TCP are likely to be exposed on the network.  2379 is for client –&gt; etcd communications, and 2380 is for communications between the different nodes in the etcd cluster.</p>
+<p>Windows containers also face a similar split with “process based” containers and Hyper-V containers being available for use, however there is a challenge when using Kubernetes.</p>
 
-<p>Its at this point that you’ll want to be well acquainted with the CoreOS guidelines on <a href="https://coreos.com/etcd/docs/latest/op-guide/security.html">etcd security</a>.  This lays out the options that are available.  Basically etcd uses client certificate authentication, but there’s a couple of important points to note</p>
+<p>Microsoft specifically state that “<a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria">Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not</a>”, so where a security boundary is required, Hyper-V containers must be used.</p>
 
-<ul>
-  <li>
-    <p>There’s no checking of information in the certificate CN or SAN fields, so any valid certificate will allow access. So its probably worth using a dedicated certificate authority for the etcd cluster, and not using certificate issued by another CA (such as the one you’re using for general Kubernetes setup).</p>
-  </li>
-  <li>
-    <p>With etcd and Kubernetes the setup is all or nothing, there’s no authorisation used, so be very careful with which clients are allowed access to the etcd datastore.</p>
-  </li>
-</ul>
+<p>In Kubernetes however <a href="https://kubernetes.io/docs/concepts/windows/intro/#windows-nodes-in-kubernetes">Hyper-V containers are not supported</a>, so unless a serverless container option is available, high-risk workloads need to be run on a separate cluster.</p>
 
-<p>So say you’re reviewing a cluster and want to assess the etcd security posture, what’s the approach?</p>
+<p>In terms of the PCI requirements there’s two in this section.</p>
 
-<p>You’ll likely need a copy of etcdctl to query the service.  Older versions can be queried with curl, but in newer Kubernetes installs, they’ve moved to gRPC and curl doesn’t work any more :(</p>
+<h2 id="section-91">Section 9.1</h2>
 
-<p>etcdctl can be acquired by downloading an etcd release like <a href="https://github.com/coreos/etcd/releases/download/v3.1.5/etcd-v3.1.5-linux-amd64.tar.gz">this one</a> and getting it from the tarball.  Alternatively if you can deploy containers to the cluster, you could deploy something like <a href="https://hub.docker.com/r/raesene/alpine-containertools/">this image</a> which has it already installed.</p>
+<p><strong>Threat</strong> - The default security posture of Linux process-based containers provides a large attack surface using a shared Linux kernel. Without hardening, it may be susceptible to exploits that allow for container escape.</p>
 
-<p>once you’ve got etcdctl installed, you can query the API with something like</p>
+<p><strong>Best Practice</strong> - Where high-risk workloads are identified, consideration should be given to using either container runtimes that provide hypervisor-level isolation for the workload or dedicated security sandboxes.</p>
 
-<p><code class="language-plaintext highlighter-rouge">etcdctl --endpoint=http://[etcd_server_ip]:2379 ls</code></p>
+<p><strong>Details</strong> - Once “high-risk” workloads have been identified, it should be possible to check whether the Kubernetes clusters in use are making appropriate use of additional isolation techniques. Typically to implement something like gVisor the workloads would specify the runtime needed using an annotation in the manifest (<code class="language-plaintext highlighter-rouge">runtimeClassName: gvisor</code>). Alternatively if managed Kubernetes is in use, checking to see if a serverless container style was in use could be carried out.</p>
 
-<p>If you get back <code class="language-plaintext highlighter-rouge">/registry</code> you’re likely dealing with a v2 install (Kubernetes 1.5 or lower) and you can easily wander through and explore the config.  In particular the <code class="language-plaintext highlighter-rouge">/registry/secrets/default</code> path is likely to be of interest as it may contain the default service token which can provide elevated rights to the cluster.</p>
+<h2 id="section-92">Section 9.2</h2>
 
-<p>If you get back a blank line from the initial query its reasonably likely that you’ve got a v3 cluster and getting the data out is a bit different.</p>
+<p><strong>Threat</strong> - Windows process-based containers do not provide a security barrier (per Microsoft’s guidance) allowing for possible container break-out.</p>
 
-<p>First up you need to let etcdctl know that you’re dealing with v3, so <code class="language-plaintext highlighter-rouge">export ETCDCTL_API=3</code> is needed.</p>
+<p><strong>Best Practice</strong> - Where Windows containers are used to run application containers, Hyper-V isolation should be deployed in-line with Microsoft’s security guidance.</p>
 
-<p>Once you’ve got that environment variable set, you should see a different set of etcdctl commands as being available, including <code class="language-plaintext highlighter-rouge">etcdctl snapshot save</code> .  You can use this command to dump an instance of the etcd database to a file on disk.</p>
+<p><strong>Details</strong> - As mentioned above for Kubernetes if high-risk containers are being run in Windows nodes, either a serverless option or separate clusters would be needed.</p>
 
-<p>This database is in the boltdb format, so it’s possible to read the file using something like <a href="https://github.com/br0xen/boltbrowser">boltbrowser</a>.  Unfortunately the format of the data will be a bit broken as it’s serialized in proto format (more details in <a href="https://github.com/coreos/etcd/issues/7723">this github issue</a>), but you can likely still extract some useful information, if that’s your goal.</p>
+<h1 id="conclusion">Conclusion</h1>
 
+<p>The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed.</p>
 
 	  </div>
 
@@ -229,7 +223,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Attack Surface - etcd&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -257,10 +251,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2017/04/15/Container-Testing-small-tools-container/" title="Container Testing - A small tools container with SSH">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/" title="PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2017/07/09/Keeping-your-Docker-Builds-Fresh/" title="Keeping your Docker builds fresh">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
