@@ -7,6 +7,55 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 10 - Patching</title>
+				<description>&lt;p&gt;This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching.&lt;/p&gt;
+
+&lt;p&gt;Whilst patching is a common part of the security landscape, there are a couple of specific considerations when applying it containerized environments.&lt;/p&gt;
+
+&lt;p&gt;The first one is around patching applications running in containers. As the containers themselves are ephemeral, it’s not advisable to patch running instances. Instead the image that the container is based on needs to be patched, that new image needs to be pushed to a container registry and then new instances of the containers deployed to the Kubernetes cluster.&lt;/p&gt;
+
+&lt;p&gt;The second consideration is patching Kubernetes itself. The open source project has a policy to provide patches for the current version and previous two released versions (and then provide patches for up to two months after that initial support period has ended). However, most cluster operators to not use Kubernetes directly, instead they make use of one of the many Kubernetes distributions. The support policy for these distributions will vary, although in general they don’t provide a huge amount of additional support over the base level of support provided by the Kubernetes project itself.&lt;/p&gt;
+
+&lt;p&gt;The recent &lt;a href=&quot;https://www.datadoghq.com/container-report/&quot;&gt;Datadog container survey&lt;/a&gt; noted that quite a lot of clusters are not running on the latest version of Kubernetes, indeed the most deployed version at the time of the survey was 1.21, despite 1.24 being available to install.&lt;/p&gt;
+
+&lt;p&gt;The last thing to note about patching Kubernetes environments is the importance of patching the underlying cluster nodes. This can often be overlooked as nodes tend to be a less visible part of the cluster, and often don’t go through the same CI/CD process as containers do. It is especially important that the operating system kernel and CRI components (e.g. Containerd or CRI-O) are patched regularly, as a missing patch could lead to a container breakout. On that note the Datadog survey did note that 30% of cluster nodes using Containerd were running an unsupported version, indicating that this is an area that needs to be addressed.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s three in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-101&quot;&gt;Section 10.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Outdated container orchestration tool components can be vulnerable to exploits that allow for the compromise of the installed cluster or workloads.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All container orchestration tools should be supported and receive regular security patches, either from the core project or back-ported by the orchestration system vendor.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - For this requirement, it’s important to find out the support lifecycle of the software in use, there’s a note of some common ones for Kubernetes distributions &lt;a href=&quot;https://www.container-security.site/general_information/support_lifecycles.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-102&quot;&gt;Section 10.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Vulnerabilities present on container orchestration tool hosts (commonly Linux VMs) will allow for compromise of container orchestration tools and other components.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Host operating system of all the nodes that are part of a cluster controlled by a container orchestration tool should be patched and kept up to date. With the ability to reschedule workloads dynamically, each node can be patched one at a time, without a maintenance window.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - In addition to making sure that operating system patches are applied, it’s important that where a kernel security patch has been applied, the node(s) in question have been rebooted such that the updated kernel is in use (unless hot-patching techniques are being used).&lt;/p&gt;
+
+&lt;h2 id=&quot;section-103&quot;&gt;Section 10.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - As container orchestration tools commonly run as containers in the clusters, any container with vulnerabilities may allow compromise of container orchestration tools.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All container images used for applications running in the cluster should be regularly scanned for vulnerabilities, patches should be regularly applied, and the patched images redeployed to the cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Reviewing a cluster for this best practice can be achieved using container scanning tools like &lt;a href=&quot;https://github.com/aquasecurity/trivy&quot;&gt;Trivy&lt;/a&gt; or &lt;a href=&quot;https://github.com/anchore/grype&quot;&gt;grype&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Like many of the sections of the PCI guidance the topic in question is fairly common good practice, however as we’ve discussed there are a couple of specific considerations when applying it to Kubernetes environments.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 03 Dec 2022 14:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
 				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers.&lt;/p&gt;
 
@@ -88,7 +137,7 @@
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;Container monitoring is another area where the controls we need are similar to non-containerized environments but, due to the nature of container based architectures, it’s important to ensure that the deployed solutions take account of their environment. The use of Kubernetes specifically may not affect how those tools operate, but it’s important that the tools are Kubernetes aware so that they can provide all the relevant information to operators about possible attacks occurring in monitored clusters.&lt;/p&gt;
+&lt;p&gt;Container monitoring is another area where the controls we need are similar to non-containerized environments but, due to the nature of container based architectures, it’s important to ensure that the deployed solutions take account of their environment. The use of Kubernetes specifically may not affect how those tools operate, but it’s important that the tools are Kubernetes aware so that they can provide all the relevant information to operators about possible attacks occurring in monitored clusters. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/&quot;&gt;Runtime Security&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>Sat, 19 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</link>
@@ -128,7 +177,7 @@ should be securely stored on a centralized system.&lt;/p&gt;
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture important security activities if correctly configured.&lt;/p&gt;
+&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture important security activities if correctly configured. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/&quot;&gt;Monitoring&lt;/a&gt;&lt;/p&gt;
 </description>
 				<pubDate>Sat, 12 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</link>
@@ -477,210 +526,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sat, 08 Oct 2022 14:40:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 1 - Authentication</title>
-				<description>&lt;p&gt;Having taken a high-level look at how the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;PCI guidance for container orchestration could apply to Kubernetes environments&lt;/a&gt;, and some of the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;challenges in auditing/assessing Kubernetes environments&lt;/a&gt;, I thought it would make sense to start getting into the details of the recommendations and see how in-scope organizations could look at meeting their requirements when using Kubernetes. Whilst this post is structured round the PCI recommendations, it would hopefully be helpful in general for Kubernetes security.&lt;/p&gt;
-
-&lt;h1 id=&quot;section-1---authentication&quot;&gt;Section 1 - Authentication&lt;/h1&gt;
-
-&lt;p&gt;The first section of the risks and good practices table starts with Authentication. Obviously this is a key security control in most environments and something which companies need to consider. It’s also a slightly tricky topic in Kubernetes, as the authentication options provided by the base open source project aren’t generally considered suitable for production use, leaving distribution makers and cluster operators with the task of ensuring that secure authentication is in place on their clusters. Some of the PCI recommendations do reflect this challenge.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-11&quot;&gt;Section 1.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Unauthenticated access to APIs is provided by the container orchestration tool, allowing unauthorized modification of workloads.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All access to orchestration tools components and supporting services for example, monitoring from users or other services should be configured to require authentication and individual accountability.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Requiring authentication for API access is a pretty obvious first control and there’s a couple of ways in which this requirement applies to Kubernetes, the APIs provided by Kubernetes itself and then supporting service APIs.&lt;/p&gt;
-
-&lt;h3 id=&quot;kubernetes-apis&quot;&gt;Kubernetes APIs&lt;/h3&gt;
-
-&lt;p&gt;Kubernetes runs a number of services which are exposed to the network. In general these require authentication for any sensitive operations although there is often some level of anonymous access required for some paths and when hardening or auditing a cluster, removing that access might be considered.&lt;/p&gt;
-
-&lt;p&gt;An important point when reviewing or securing these APIs is that in managed Kubernetes distributions (e.g. EKS, GKE, AKS) it is not possible for cluster operators to directly change the configuration of most of the APIs unless the cloud provider makes that available. The exception is the Kubelet which runs on worker nodes which are available to the cluster operator (unless it uses a “serverless” model like EKS Fargate)&lt;/p&gt;
-
-&lt;h4 id=&quot;kubernetes-api-server&quot;&gt;Kubernetes API Server&lt;/h4&gt;
-
-&lt;p&gt;This listens on a variety of ports depending on the distribution in use. Common options are 443/TCP, 6443/TCP and 8443/TCP. In most distributions the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;anonymous-auth&lt;/code&gt; flag will be set to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;true&lt;/code&gt;. This provides access to unauthenticated users to specific paths specified in the RBAC configuration of the cluster. For example in a Kubeadm cluster the following paths are available without authentication&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;nonResourceURLs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/healthz&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/livez&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/readyz&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/version&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/version/&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;get&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;These are generally for liveness checks, but the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint does provide information useful to attackers like precise version information.&lt;/p&gt;
-
-&lt;p&gt;In terms of compliance recommendations for the API server the main one is&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Disable anonymous authentication where possible, where it is required, ensure that minimal paths are available to unauthenticated users.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;controller-manager&quot;&gt;Controller Manager&lt;/h4&gt;
-
-&lt;p&gt;Access to the controller manager is generally allowed over port 10257/TCP (can vary with version and distribution). In terms of anonymous access a small number of paths can be specified as a command line flag to allow access, the default settings is as below&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;--authorization-always-allow-paths strings     Default: &quot;/healthz,/readyz,/livez&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;In terms of recommendations :-&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Review paths which are allowed for anonymous access to ensure that no sensitive data is accessible without authentication.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;scheduler&quot;&gt;Scheduler&lt;/h4&gt;
-
-&lt;p&gt;Access to the scheduler is generally allowed over port 10259/TCP (can vary with version and distribution). In terms of access this is very similar to the controller manager, the same parameter and default exists, and the recommendation would be the same. In general for both these services there aren’t a lot of good reasons for direct access so outside of health checking there shouldn’t be much of a requirement for unauthenticated access.&lt;/p&gt;
-
-&lt;h4 id=&quot;kubelet&quot;&gt;Kubelet&lt;/h4&gt;
-
-&lt;p&gt;The Kubelet runs on every worker node (and possibly control plane nodes). Access is via 10250/TCP. The kubelet’s configuration with regards to anonymous access is a bit odd and not the same as either the scheduler or controller manager. anonymous access defaults to being allowed, so it’s a requirement of the distribution that they disable it (either on the command line or in the kubelet’s configuration file).&lt;/p&gt;
-
-&lt;p&gt;Requests to the root path of the server will return 404, but requests to meaningful paths (like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/pods/&lt;/code&gt;) will return 401 (if anonymous authentication is disabled) or 403 (if anonymous authentication is enabled).&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Ensure that Kubelet anonymous authentication is disabled unless explicitly required for the operation of the cluster.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&quot;etcd&quot;&gt;Etcd&lt;/h4&gt;
-
-&lt;p&gt;Etcd, whilst not specifically part of the Kubernetes project, is a core part of most Kubernetes distributions. Generally it listens on ports 2379/TCP and 2380/TCP. In most Kubernetes distributions there’s no anonymous access to it by default, client certificate authentication is used, so the recommendations are quite simple&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Ensure that etcd is configured to require authentication for all requests.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;supporting-services&quot;&gt;Supporting Services&lt;/h3&gt;
-
-&lt;p&gt;The guidance also references supporting services. this is a bit of a general term and in Kubernetes cluster’s you’ll find a lot of supporting services for things like logging, monitoring, application lifecycle management and others. There have been a bit of a history of services not requiring authentication by default, and even in some cases not providing the option of authentication, so it’s an important point to consider.&lt;/p&gt;
-
-&lt;p&gt;So the recommendation here is a bit generic, and will require cluster operators (and auditors) to do some investigation of clusters they’re securing or reviewing.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Review all services deployed to the cluster and ensure that they are not available without authentication. Specifically the services should not rely on the container network as being “trusted” and should still require authentication for requests from any location.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-12&quot;&gt;Section 1.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Generic administrator accounts are in place for container orchestration tool management. The use of these accounts would prevent the non-repudiation of individuals with administrator account access.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All user credentials used to authenticate to the orchestration should be tied to specific individuals. Generic credentials should not be used. When a default account is present and cannot be deleted, changing the default password to a strong unique password and then disabling the account will prevent a malicious individual from re-enabling the account and gaining access with the default password.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - In terms of managing this recommendation for Kubernetes there’s one key area to consider. Most Kubernetes distributions and services will provide an initial user which is created as part of the cluster setup. This user generally has full access to the cluster via the &lt;a href=&quot;https://blog.aquasec.com/kubernetes-authorization&quot;&gt;system:masters&lt;/a&gt; group and a generic name (for example &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubernetes-admin&lt;/code&gt;). This account should not be used for general administration as obviously there’s no way to audit access using it (and also its rights cannot be easily revoked).&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Ensure that if a default administrator account is provided by the Kubernetes distribution or service, this account is not used for general administrative purposes. Instead it should be held in an appropriate secrets management system and used for “break glass” purposes only.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-13&quot;&gt;Section 1.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Credentials, such as client certificates, do not provide for revocation. Lost credentials present a risk of unauthorized access to cluster APIs.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; -  All credentials used by the orchestration system should be revokable.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This requirement is a fairly obvious one when considering authentication to secure systems. We want to have the option to revoke any credentials that are present for the cluster in case a user has their credentials compromised and also to ensure that our joiners/movers/leavers processes are able to ensure that users only have access to systems that is required by their role.&lt;/p&gt;
-
-&lt;p&gt;This requirement is particularly important when the system in question is Internet facing as &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;many Kubernetes clusters&lt;/a&gt; are.&lt;/p&gt;
-
-&lt;p&gt;Where this is somewhat complex in Kubernetes is that the most commonly used forms of authentication available in the base open source project do not allow for revocation.&lt;/p&gt;
-
-&lt;h3 id=&quot;client-certificate-authentication&quot;&gt;Client Certificate Authentication&lt;/h3&gt;
-
-&lt;p&gt;One of the main authentication methods available in Kubernetes is client certificate authentication. It’s used by internal components for authentication (e.g. the kubelet uses a client certificate to communicate with the Kubernetes API server), often the default first user account provided on cluster setup will be a client certificate, and there is an API provided by the Kubernetes API server to create new client certificates for authentication.&lt;/p&gt;
-
-&lt;p&gt;From a PCI compliance standpoint the challenge is that there is &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/18982&quot;&gt;no support for client revocation&lt;/a&gt;, so this form of authentication should not be used where other options exist. Whilst it is likely not possible to completely eliminate client certificate authentication, it should be avoided for user authentication.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;If the cluster provides a client certificate user as part of initial setup, this user should &lt;em&gt;not&lt;/em&gt; be used for general administration, instead it should be removed from the Kubernetes servers and stored in a secrets management system where it can be used in the event of a “break glass” situation.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Access to the CertificateSigningRequest (CSR) API in Kubernetes should be restricted to only specific cases (e.g. Kubelet certificate rotation) to avoid users generating and approving new client certificates. Where access to this API is required, it should be audited and reviewed regularly.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;In unmanaged Kubernetes, access to the signing key should be very carefully controlled and audited (these files typically live with the Kubernetes configuration files).&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For managed Kubernetes the picture of whether this feature is available is mixed. In Microsoft AKS it’s possible to get a client certificate issued (indeed that’s the default) and the CSR API is available. In Google GKE the first user doesn’t use client certificates but the CSR API is available. In Amazon EKS, the first user is not a client certificate and the CSR API does not work for issuing new user accounts (&lt;a href=&quot;https://github.com/aws/containers-roadmap/issues/1604#issuecomment-1089918625&quot;&gt;this may or may not be a bug&lt;/a&gt;, it’s undocumented)&lt;/p&gt;
-
-&lt;h3 id=&quot;service-account-tokens&quot;&gt;Service Account Tokens&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/&quot;&gt;Service accounts&lt;/a&gt; are used by Kubernetes workloads to authenticate to the Kubernetes API server where needed. Somewhat unusually these are provided to every workload by default, so operators need to actively disable them if not required.&lt;/p&gt;
-
-&lt;p&gt;In older versions of Kubernetes (up to 1.24) by default the service account tokens were based on Kubernetes secrets. These tokens did not expire and cannot be revoked without deleting the service account they were associated with. In 1.24+ the tokens used by service accounts are based on Kubernetes TokenRequest API. These tokens have an expiry but still require the object they are associated with to be deleted for revocation.&lt;/p&gt;
-
-&lt;p&gt;So in terms of managing these tokens as close as possible to the PCI guidance there’s a couple of recommendations&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Don’t mount service account tokens into cluster workloads unless specifically required.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Where service account tokens are required, make use of the TokenRequest API and ensure that token lifespan is as short as practical.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Past these specific recommendations to do with Kubernetes defaults, recommendations will be specific to the Kubernetes distribution handles authentication.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-14&quot;&gt;Section 1.4&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Credentials used to access administrative accounts for either containers or container orchestration tools are stored insecurely, leading to unauthorized access to containers or  sensitive data.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Authentication mechanisms used by the orchestration system should store credentials in a properly secured datastore.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - There’s a couple of places where Kubernetes credentials might be stored insecurely. The first relates to the &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authentication/#static-token-file&quot;&gt;static token file&lt;/a&gt; authentication option that Kubernetes provides. This isn’t (in my experience) widely used, but it is an option. A cluster using this option stores tokens in clear text on the Control plane nodes of the cluster&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Static token authentication should not be used.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;However there’s another place where credentials can effectively be stored in clear on disk, and that’s the more commonly used client certificate authentication option. Control plane nodes will have private keys for the API server and certificate authority held in unencrypted format, and node will have Kubelet private keys. This is pretty unavoidable so in general the goal here is to minimize access to them and audit any access that does occur.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Access to Kubernetes X.509 key files should be restricted to authorised administrative users.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-15&quot;&gt;Section 1.5&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Availability of automatic credentials for any workloads running in the cluster. These credentials are susceptible to abuse, particularly if given excessive rights.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practices&lt;/strong&gt; - a. Credentials for the orchestration system should only be provided to services running in the cluster where explicitly required. b. Service accounts should be configured for least privilege. The level of rights they will have is dependent on how the cluster RBAC is configured.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This recommendation strays a little into authorization but it’s basically looking to address service account token security when applied to Kubernetes. As we mentioned earlier Kubernetes, by default, will give every workload in the cluster a service account token which can be used to access the Kubernetes API server. This can lead to security problems as they can end up with excessive access if there’s a mistake made in RBAC configuration on the cluster. For example I’ve seen cases where installing a 3rd party product to a cluster adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; service account token in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; namespace. This meant that every other workload in that namespace could get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights! So there’s a couple of Kubernetes recommendations for this section :-&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Ensure that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;automountServiceAccountToken: false&lt;/code&gt; is set on every service account and pod unless they are specifically required.&lt;/li&gt;
-  &lt;li&gt;Avoid using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;default&lt;/code&gt; service account token, each workload that needs Kubernetes API server access should be provided a specific service account&lt;/li&gt;
-  &lt;li&gt;Ensure that Service account tokens are not granted excessive privileges. Review manifests that give them rights.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-16&quot;&gt;Section 1.6&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Static credentials i.e., passwords used by administrators or service accounts are susceptible to credential stuffing, phishing, keystroke logging, local discovery, extortion,  password spray, and brute force attacks.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; Interactive users accessing container orchestration APIs should use multi-factor authentication (MFA).&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - From a Kubernetes perspective a recommendation to use MFA for administrative access essentially requires the use of external authentication for any production cluster. For managed Kubernetes clsuter this would generally lead to the use of the cloud IAM service provided by the CSP (e.g. AWS, GCP, Azure) and ensuring that MFA is setup there. For on-premises clusters something like OIDC authentication integrated with an enterprise IAM solution with MFA would be used.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Authentication is one of the more challenging aspects of Kubernetes security as it’s not something the open source project focuses on heavily, with the expectation that distribution/service providers can add suitable additional controls. There are some definite areas to be aware of though as in-built authentication methods are often still available even when a more secure alternative has been provided.&lt;/p&gt;
-
-&lt;p&gt;Next time, we’ll move on to section 2 of the PCI guidance, on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;authorization&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 01 Oct 2022 14:45:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/</guid>
 			</item>
 		
 	</channel>

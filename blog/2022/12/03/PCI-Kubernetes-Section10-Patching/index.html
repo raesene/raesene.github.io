@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 10 - Patching</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 10 - Patching </h1>
 </div>
 	
 <article>
@@ -157,47 +157,53 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   November 
-	   27th,
-	   
+	   December 
+	   3rd,
+	     
 	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on <a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/">workload security</a>. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers.</p>
+	  <p>This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching.</p>
 
-<p>This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node <em>but</em> there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into <a href="https://www.container-security.site/attackers/container_breakout_vulnerabilities.html">container breakout attacks</a>.</p>
+<p>Whilst patching is a common part of the security landscape, there are a couple of specific considerations when applying it containerized environments.</p>
 
-<p>There are way to use container style workflows and Kubernetes while improving the level of isolation provided. Typically the trade-off is that improved isolation has a level of performance impact, and sometimes workloads need more access to the host than can be provided.</p>
+<p>The first one is around patching applications running in containers. As the containers themselves are ephemeral, it’s not advisable to patch running instances. Instead the image that the container is based on needs to be patched, that new image needs to be pushed to a container registry and then new instances of the containers deployed to the Kubernetes cluster.</p>
 
-<p>Some approaches to addressing this problem include <a href="https://gvisor.dev/">gVisor</a> and <a href="https://katacontainers.io/">katacontainers</a>. Additionally, another approach which could work where you have need higher levels of workload isolation, is to use a “serverless” style approach with something like AWS Fargate, working with an EKS cluster, as here there should be no user accessible underlying node to be accessed, and container isolation is handled by the cloud service provider.</p>
+<p>The second consideration is patching Kubernetes itself. The open source project has a policy to provide patches for the current version and previous two released versions (and then provide patches for up to two months after that initial support period has ended). However, most cluster operators to not use Kubernetes directly, instead they make use of one of the many Kubernetes distributions. The support policy for these distributions will vary, although in general they don’t provide a huge amount of additional support over the base level of support provided by the Kubernetes project itself.</p>
 
-<p>Windows containers also face a similar split with “process based” containers and Hyper-V containers being available for use, however there is a challenge when using Kubernetes.</p>
+<p>The recent <a href="https://www.datadoghq.com/container-report/">Datadog container survey</a> noted that quite a lot of clusters are not running on the latest version of Kubernetes, indeed the most deployed version at the time of the survey was 1.21, despite 1.24 being available to install.</p>
 
-<p>Microsoft specifically state that “<a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria">Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not</a>”, so where a security boundary is required, Hyper-V containers must be used.</p>
+<p>The last thing to note about patching Kubernetes environments is the importance of patching the underlying cluster nodes. This can often be overlooked as nodes tend to be a less visible part of the cluster, and often don’t go through the same CI/CD process as containers do. It is especially important that the operating system kernel and CRI components (e.g. Containerd or CRI-O) are patched regularly, as a missing patch could lead to a container breakout. On that note the Datadog survey did note that 30% of cluster nodes using Containerd were running an unsupported version, indicating that this is an area that needs to be addressed.</p>
 
-<p>In Kubernetes however <a href="https://kubernetes.io/docs/concepts/windows/intro/#windows-nodes-in-kubernetes">Hyper-V containers are not supported</a>, so unless a serverless container option is available, high-risk workloads need to be run on a separate cluster.</p>
+<p>In terms of the PCI requirements there’s three in this section.</p>
 
-<p>In terms of the PCI requirements there’s two in this section.</p>
+<h2 id="section-101">Section 10.1</h2>
 
-<h2 id="section-91">Section 9.1</h2>
+<p><strong>Threat</strong> - Outdated container orchestration tool components can be vulnerable to exploits that allow for the compromise of the installed cluster or workloads.</p>
 
-<p><strong>Threat</strong> - The default security posture of Linux process-based containers provides a large attack surface using a shared Linux kernel. Without hardening, it may be susceptible to exploits that allow for container escape.</p>
+<p><strong>Best Practice</strong> - All container orchestration tools should be supported and receive regular security patches, either from the core project or back-ported by the orchestration system vendor.</p>
 
-<p><strong>Best Practice</strong> - Where high-risk workloads are identified, consideration should be given to using either container runtimes that provide hypervisor-level isolation for the workload or dedicated security sandboxes.</p>
+<p><strong>Details</strong> - For this requirement, it’s important to find out the support lifecycle of the software in use, there’s a note of some common ones for Kubernetes distributions <a href="https://www.container-security.site/general_information/support_lifecycles.html">here</a>.</p>
 
-<p><strong>Details</strong> - Once “high-risk” workloads have been identified, it should be possible to check whether the Kubernetes clusters in use are making appropriate use of additional isolation techniques. Typically to implement something like gVisor the workloads would specify the runtime needed using an annotation in the manifest (<code class="language-plaintext highlighter-rouge">runtimeClassName: gvisor</code>). Alternatively if managed Kubernetes is in use, checking to see if a serverless container style was in use could be carried out.</p>
+<h2 id="section-102">Section 10.2</h2>
 
-<h2 id="section-92">Section 9.2</h2>
+<p><strong>Threat</strong> - Vulnerabilities present on container orchestration tool hosts (commonly Linux VMs) will allow for compromise of container orchestration tools and other components.</p>
 
-<p><strong>Threat</strong> - Windows process-based containers do not provide a security barrier (per Microsoft’s guidance) allowing for possible container break-out.</p>
+<p><strong>Best Practice</strong> - Host operating system of all the nodes that are part of a cluster controlled by a container orchestration tool should be patched and kept up to date. With the ability to reschedule workloads dynamically, each node can be patched one at a time, without a maintenance window.</p>
 
-<p><strong>Best Practice</strong> - Where Windows containers are used to run application containers, Hyper-V isolation should be deployed in-line with Microsoft’s security guidance.</p>
+<p><strong>Details</strong> - In addition to making sure that operating system patches are applied, it’s important that where a kernel security patch has been applied, the node(s) in question have been rebooted such that the updated kernel is in use (unless hot-patching techniques are being used).</p>
 
-<p><strong>Details</strong> - As mentioned above for Kubernetes if high-risk containers are being run in Windows nodes, either a serverless option or separate clusters would be needed.</p>
+<h2 id="section-103">Section 10.3</h2>
+
+<p><strong>Threat</strong> - As container orchestration tools commonly run as containers in the clusters, any container with vulnerabilities may allow compromise of container orchestration tools.</p>
+
+<p><strong>Best Practice</strong> - All container images used for applications running in the cluster should be regularly scanned for vulnerabilities, patches should be regularly applied, and the patched images redeployed to the cluster.</p>
+
+<p><strong>Details</strong> - Reviewing a cluster for this best practice can be achieved using container scanning tools like <a href="https://github.com/aquasecurity/trivy">Trivy</a> or <a href="https://github.com/anchore/grype">grype</a>.</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed.</p>
+<p>Like many of the sections of the PCI guidance the topic in question is fairly common good practice, however as we’ve discussed there are a couple of specific considerations when applying it to Kubernetes environments.</p>
 
 	  </div>
 
@@ -223,7 +229,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 10 - Patching&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -251,10 +257,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/" title="PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/" title="PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/" title="PCI Compliance for Kubernetes in detail - Part 10 - Patching">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
