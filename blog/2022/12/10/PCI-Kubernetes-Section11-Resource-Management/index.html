@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management </h1>
 </div>
 	
 <article>
@@ -157,46 +157,35 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   November 
-	   6th,
+	   December 
+	   10th,
 	   
 	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
+	  <p>This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
-<p>Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.</p>
+<p>When looking at resource management in containerized environments, the first thing to consider is that because most containers are just processes running on a shared kernel, there is a risk that a single container could consume all of the resources available on a node. Also, unlike virtual machine based environments, by default there are no resource constraints in place.</p>
 
-<p>Also containers are ephemeral so manually adding secrets to them at runtime won’t be effective, as the container may be rescheduled to another server at any time, where it would be re-created from the image. So we need some automated way of injecting any credentials required by the container when it starts on a given Kubernetes cluster node.</p>
+<p>As a result, it’s important to define limits on obvious resources like CPU and memory and also things like processes (to stop a fork-bomb in a container from taking down the node). Container tooling will let you define these limits and, under the covers, Linux cgroups will be used to enforce them.</p>
 
-<p>The general answer to that is some form of secrets management system, which can handle providing the right secrets to the right containers, when they start-up. Kubernetes has an in-built <a href="https://kubernetes.io/docs/concepts/configuration/secret/">secrets</a> facility, which is one option. These are just items stored in the Kubernetes datastore and provided as configured to containers. Some people using Kubernetes have been known to use ConfigMaps for storing secrets, but this isn’t a great idea (for reasons I detailed <a href="https://blog.aquasec.com/kubernetes-configmap-secrets">here</a>).</p>
+<p>Within Kubernetes there are a number of ways to define resource limits, workloads should define their own requests for resources in <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">their spec</a> and then these are combined with <a href="https://kubernetes.io/docs/concepts/policy/resource-quotas/">ResourceQuota</a> objects defined at a namespace level.</p>
 
-<p>A point that regularly gets raised about Kubernetes secrets is that, by default, they’re not encrypted on disk. Kubernetes provides an option to ensure that this happens, but it needs to be configured. For managed Kubernetes services (e.g. EKS, GKE, AKS) the etcd database is stored by the cloud provider so it’s arguable about how much difference it makes encrypting on disk, but generally the option is still available.</p>
+<p>Having this information in place will help the Kubernetes scheduler to make better decisions about where to place workloads, and also to ensure that the workloads don’t consume more resources than they are allowed to.</p>
 
-<p>In addition to Kubernetes in-built features, there are a wide range of external dedicated secrets management services which will work with Kubernetes. Either cloud provider based options or software like <a href="https://www.vaultproject.io/">Hashicorp Vault</a> can be used.</p>
+<p>In terms of the PCI requirements there’s just one in this section.</p>
 
-<p>So with a general background on this topic, what does PCI specifically recommend.</p>
+<h2 id="section-111">Section 11.1</h2>
 
-<h2 id="section-61">Section 6.1</h2>
+<p><strong>Threat</strong> - A compromised container could disrupt the operation of applications due to excessive use of shared resources.</p>
 
-<p><strong>Threat</strong> - Inappropriately stored secrets, including credentials, provided through the container orchestration tool, could be leaked to  unauthorized users or attackers with some level of access to the environment.</p>
+<p><strong>Best Practice</strong> - All workloads running via a container orchestration system should have defined resource limits to reduce the risk of “noisy neighbors” causing availability issues with workloads in the same cluster.</p>
 
-<p><strong>Best Practice</strong> - All secrets needed for the operation of applications hosted on the orchestration platform should be held in encrypted
-dedicated secrets management systems.</p>
-
-<p><strong>Details</strong> - The intent of this best practice is really around the points discussed above, which is that storing secrets in images, or using general configuration management systems is not appropriate and should be avoided. Also the requirement for encryption means that , if using Kubernetes secrets, you need to enable the option that makes them encrypted on-disk.</p>
-
-<h2 id="section-62">Section 6.2</h2>
-
-<p><strong>Threat</strong> - Secrets stored without version control could lead to an outage if a compromise occurs and there is a requirement to rotate them quickly.</p>
-
-<p><strong>Best Practice</strong> - Apply version control for secrets, so it is easy to refresh or revoke it in case of a compromise.</p>
-
-<p><strong>Details</strong> - This is really an availability concern, rather than one around the confidentiality of the secrets. Applying it with base Kubernetes secrets would likely require manual work to define versions of secrets.</p>
+<p><strong>Details</strong> -  To assess whether this is in place, an assessor would look for <code class="language-plaintext highlighter-rouge">ResourceQuota</code> objects in the cluster, and also for resource limits defined in the workload specs.</p>
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>Secrets management is an inevitable part of container based deployments, and something which needs to be carefully considered when moving to a system like Kubernetes. The PCI recommendations are as with most of them, fairly general good practice, but there are a couple of specifics which apply in Kubernetes to be considered.</p>
+<p>Resource management in containerized environments is something which requires particular attention, when compared to using virtual machines or physical servers as the default position of having no constraints and the shared kernel means that a single container can consume all of the resources available on a node. This is why it’s important to define resource limits for all containers, and to ensure that the limits are enforced.</p>
 
 	  </div>
 
@@ -222,7 +211,7 @@ dedicated secrets management systems.</p>
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 11 - Resource Management&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -250,10 +239,10 @@ dedicated secrets management systems.</p>
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/" title="Project Volterra - ARM Desktop">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/" title="PCI Compliance for Kubernetes in detail - Part 10 - Patching">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/" title="PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

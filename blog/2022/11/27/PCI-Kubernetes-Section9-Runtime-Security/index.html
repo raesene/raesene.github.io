@@ -163,7 +163,7 @@
 	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on <a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/">workload security</a>. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers.</p>
+	  <p>This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on <a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/">workload security</a>. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
 <p>This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node <em>but</em> there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into <a href="https://www.container-security.site/attackers/container_breakout_vulnerabilities.html">container breakout attacks</a>.</p>
 
@@ -197,7 +197,7 @@
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed.</p>
+<p>The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed. Next time we’ll be looking at <a href="https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/">Patching</a>.</p>
 
 	  </div>
 
@@ -208,7 +208,7 @@
 		  
 			 
 				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(39)</span>
+					Kubernetes <span>(40)</span>
 					
 				</a></li>
 			

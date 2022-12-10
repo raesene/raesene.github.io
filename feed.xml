@@ -7,8 +7,39 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management</title>
+				<description>&lt;p&gt;This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;When looking at resource management in containerized environments, the first thing to consider is that because most containers are just processes running on a shared kernel, there is a risk that a single container could consume all of the resources available on a node. Also, unlike virtual machine based environments, by default there are no resource constraints in place.&lt;/p&gt;
+
+&lt;p&gt;As a result, it’s important to define limits on obvious resources like CPU and memory and also things like processes (to stop a fork-bomb in a container from taking down the node). Container tooling will let you define these limits and, under the covers, Linux cgroups will be used to enforce them.&lt;/p&gt;
+
+&lt;p&gt;Within Kubernetes there are a number of ways to define resource limits, workloads should define their own requests for resources in &lt;a href=&quot;https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/&quot;&gt;their spec&lt;/a&gt; and then these are combined with &lt;a href=&quot;https://kubernetes.io/docs/concepts/policy/resource-quotas/&quot;&gt;ResourceQuota&lt;/a&gt; objects defined at a namespace level.&lt;/p&gt;
+
+&lt;p&gt;Having this information in place will help the Kubernetes scheduler to make better decisions about where to place workloads, and also to ensure that the workloads don’t consume more resources than they are allowed to.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s just one in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-111&quot;&gt;Section 11.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - A compromised container could disrupt the operation of applications due to excessive use of shared resources.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All workloads running via a container orchestration system should have defined resource limits to reduce the risk of “noisy neighbors” causing availability issues with workloads in the same cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  To assess whether this is in place, an assessor would look for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ResourceQuota&lt;/code&gt; objects in the cluster, and also for resource limits defined in the workload specs.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Resource management in containerized environments is something which requires particular attention, when compared to using virtual machines or physical servers as the default position of having no constraints and the shared kernel means that a single container can consume all of the resources available on a node. This is why it’s important to define resource limits for all containers, and to ensure that the limits are enforced.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 10 Dec 2022 07:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 10 - Patching</title>
-				<description>&lt;p&gt;This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching.&lt;/p&gt;
+				<description>&lt;p&gt;This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Whilst patching is a common part of the security landscape, there are a couple of specific considerations when applying it containerized environments.&lt;/p&gt;
 
@@ -57,7 +88,7 @@
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
-				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers.&lt;/p&gt;
+				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node &lt;em&gt;but&lt;/em&gt; there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into &lt;a href=&quot;https://www.container-security.site/attackers/container_breakout_vulnerabilities.html&quot;&gt;container breakout attacks&lt;/a&gt;.&lt;/p&gt;
 
@@ -91,7 +122,7 @@
 
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed.&lt;/p&gt;
+&lt;p&gt;The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/&quot;&gt;Patching&lt;/a&gt;.&lt;/p&gt;
 </description>
 				<pubDate>Sun, 27 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/</link>
@@ -100,7 +131,7 @@
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring</title>
-				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Container monitoring is another topic where it’s important to consider the way that Kubernetes clusters operate, as standard approaches to monitoring might not be sufficient. There’s a couple of properties to consider when designing container monitoring.&lt;/p&gt;
 
@@ -146,7 +177,7 @@
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing</title>
-				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature.&lt;/p&gt;
+				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;When looking at Kubernetes auditing the first thing to check is, whether it’s enabled or not. The default is not to enable auditing in base Kubernetes, so it requires cluster operators to either configure it directly on the API server (for unmanaged distributions), or to check whether it’s enabled via their Cloud Service Provider interface (for managed distributions).&lt;/p&gt;
 
@@ -186,7 +217,7 @@ should be securely stored on a centralized system.&lt;/p&gt;
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
-				<description>&lt;p&gt;This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management.&lt;/p&gt;
+				<description>&lt;p&gt;This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.&lt;/p&gt;
 
@@ -282,7 +313,7 @@ dedicated secrets management systems.&lt;/p&gt;
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 5 - PKI</title>
-				<description>&lt;p&gt;This is the fifth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI.&lt;/p&gt;
+				<description>&lt;p&gt;This is the fifth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This section gets into an area that’s fairly well trodden for financial services companies which is PKI management. Organizations that are used to more traditional approaches to PKIs might be somewhat surprised by how Kubernetes makes use of Public Key Infrastructure.&lt;/p&gt;
 
@@ -323,7 +354,7 @@ dedicated secrets management systems.&lt;/p&gt;
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 4 - Network Security</title>
-				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Network security.&lt;/p&gt;
+				<description>&lt;p&gt;This is the fourth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Network security. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Before getting into the details of how the PCI recommendations might apply, it’s worth touching briefly on how Kubernetes networking works, at a high level.&lt;/p&gt;
 
@@ -382,7 +413,7 @@ dedicated secrets management systems.&lt;/p&gt;
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security</title>
-				<description>&lt;p&gt;This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;previous installment&lt;/a&gt; looked at authorization, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
+				<description>&lt;p&gt;This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;previous installment&lt;/a&gt; looked at authorization, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h1 id=&quot;section-3---workload-security&quot;&gt;Section 3 - Workload Security&lt;/h1&gt;
 
@@ -465,67 +496,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sat, 15 Oct 2022 09:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 2 - Authorization</title>
-				<description>&lt;p&gt;This is the 2nd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;previous installment&lt;/a&gt; looked at authentication, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part.&lt;/p&gt;
-
-&lt;h1 id=&quot;section-2---authorization&quot;&gt;Section 2 - Authorization&lt;/h1&gt;
-
-&lt;p&gt;Authorization is generally the second step, after authentication, in providing users access to a system’s resources and Kubernetes is no different in that regard. Kubernetes supports a number of different types of authorization, and uses a cumulative method to assess a client’s rights, so it’s important to understand the supported methods in a given cluster and review each of them.&lt;/p&gt;
-
-&lt;p&gt;The Kubernetes documentation has a good list of &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/authorization/#authorization-modules&quot;&gt;authorization modes&lt;/a&gt;. In general the most used authorization methods, for user access, are RBAC and Webhook authorization which is sometimes used by managed Kubernetes distributions to integrate with Cloud IAM services. Node authorization is a specialist mode designed to control the rights of kubelet services and ABAC is generally no longer in use.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-21&quot;&gt;Section 2.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Excessive access rights to the container orchestration API could allow users to modify workloads without authorization.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Access granted to orchestration systems for users or services should be on a least privilege basis. Blanket administrative access should not be used.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This is a fairly standard “least privilege” style security recommendation but there are a couple of Kubernetes specific cases to consider. Firstly, Kubernetes has a number of built-in clusterroles (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;edit&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;view&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt;) which provide a general set of resource access. clusters should not make use of those roles but instead ensure that they review what access users actually require and provide only that access. In particular &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; should not be used as this provides completely unrestricted access to the cluster using wildcard (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*&lt;/code&gt;) operators.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-22&quot;&gt;Section 2.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Excessive access rights to the container orchestration tools may be provided through the use of hard-coded access groups.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - a. All access granted to the orchestration tool should be capable of modification. b. Access groups should not be hard-coded.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - With Kubernetes there is one specific instance where a hard-coded admin group is used, which is the use of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group. Any user or service which is a member of this group automatically has cluster-admin access. It’s important to note that this access works even if all RBAC rules are removed and any requests from a user in this group are not even sent to authorization webhooks for review, they’re just approved at the API server level.&lt;/p&gt;
-
-&lt;p&gt;This group was put in place to provide a “break glass” access in the case that a cluster operator had broken the RBAC system, however it is often used by Kubernetes distributions with the first user in the cluster, which can lead to cluster operators continuing to use it for general administration.&lt;/p&gt;
-
-&lt;p&gt;Users and services should not be added to this group. If a credential with this access is required, it should be held in a secrets management system and accessed only when required.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-23&quot;&gt;Section 2.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Accounts may accumulate permissions without documented approvals.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Use manual and automated means to regularly audit implemented permissions.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - On the face of is, this is a pretty general requirement to review authorization to Kubernetes clusters on a regular basis, however there are some nuances which should be understood when reviewing Kubernetes authorization.&lt;/p&gt;
-
-&lt;p&gt;As mentioned earlier there are multiple authorization methods, so if a cluster has RBAC and Webhook authorization activated, the rights contained in both systems need to be reviewed.&lt;/p&gt;
-
-&lt;p&gt;In-built Kubernetes tooling (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt;) only takes accounts of the rights supplied via RBAC so it’s important to note that other tools are needed for webhook authorization reviews.&lt;/p&gt;
-
-&lt;p&gt;Then we come to the sticky problem which we mentioned in the authentication post, that Kubernetes doesn’t have a user database. What Kubernetes RBAC does is just take the usernames, group names, requested resource, and requested action and match them against the rules in the RBAC system. It has no idea, for example, how many users are in a group. This makes traditional authorization review techniques a bit tricky.&lt;/p&gt;
-
-&lt;p&gt;Essentially the only way to do it reliably is to look at each enabled authentication method, and then go to the repository of user information for that method and get things like group memberships there, an approach which should work for things like OIDC authentication.&lt;/p&gt;
-
-&lt;p&gt;A tricky point here is around client certificate authentication as there is generally no record of what the content of an approved client certificate was, after it’s been approved, so you’re reliant on some form of external record keeping to assess access of client certificates.&lt;/p&gt;
-
-&lt;p&gt;Another thing to be aware of when reviewing access to Kubernetes clusters is that there are quite a few resources that can allow for privilege escalation, so they need to be accounted for in the review. There’s a Kubernetes documentation page covering &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks&quot;&gt;privilege escalation risks&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Another area to watch for when using automated RBAC review tooling is that Kubernetes doesn’t make it easy/possible to enumerate all resource types and operations (this post on &lt;a href=&quot;https://blog.aquasec.com/kubernetes-verbs&quot;&gt;virtual verbs&lt;/a&gt; in Kubernetes has some details), so care should be taken when relying on them.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;The PCI recommendations for Authorization are a pretty standard set of good practices for multi-user systems, however enforcing them for Kubernetes does require people to take account of some peculiarities in how Kubernetes operates when implementing them. In our next part we’ll be l&lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;ooking at section 3 of the guidance on the topic of Workload security&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 08 Oct 2022 14:40:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/</guid>
 			</item>
 		
 	</channel>
