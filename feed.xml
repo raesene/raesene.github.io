@@ -7,6 +7,63 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building</title>
+				<description>&lt;p&gt;This is the twelfth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Image Building. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This section overlaps somewhat with &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;section 3 on workload security&lt;/a&gt;, but expands it with some specific concerns that need to be addressed about how companies build container images.&lt;/p&gt;
+
+&lt;p&gt;Image building is a fundamental part of the container lifecycle, so it’s important to understand how to do it securely, and there’s a couple of aspects to this.&lt;/p&gt;
+
+&lt;p&gt;The first one is the user that the containers run as. By default, Docker and similar tools run containers as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user. Whilst there are some restrictions placed on the container even when it’s root, ideally images should be built to run as non-root users and then this restriction should be enforced by Kubernetes admission control. One reason for this is that running as root tends to give a process more access to the Linux kernel meaning that there are more opportunities to exploit Linux kernel vulnerabilities that may exist in the shared kernel of the host.&lt;/p&gt;
+
+&lt;p&gt;The second aspect is the base image that is used to build the container image. The base image is the starting point for the image, and it’s important to make sure that it’s up to date and that it’s not been tampered with. This is especially important if the base image is being pulled from a public registry, as there’s a risk that it’s been compromised. It’s also important to make sure that the base image is as minimal as possible, as this reduces the attack surface of the image, and improves maintainability.&lt;/p&gt;
+
+&lt;p&gt;In general, for images an organization are building internally, it’s also a good idea to try and standardize on a small set of base images. This eases the burden of keeping the images up to date, and also makes it easier to audit the images to make sure that they’re not using any vulnerable packages.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s four in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-121&quot;&gt;Section 12.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Container base images downloaded from untrusted sources, or which contain unnecessary packages, increase the risk of supply chain attacks&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Application container images should be built from trusted, up-to-date minimal base images.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Reviewing a cluster for this requirement is a little tricky, as it’s not something that can be easily checked by looking at the cluster. The best way to check for this is to look at the Dockerfiles that are used to build the images, and speak to the developers to understand the process being used to maintain the base images.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-122&quot;&gt;Section 12.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Base images downloaded from external container image registries can introduce malware, backdoors, and vulnerabilities.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - A set of common base container images should be maintained in a container registry that is under the entity’s control.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  For this requirement looking at the container images in use in the cluster can be helpful. There will be a mix of internally maintained and externally maintained images, and it’s important to understand the process for managing the externally maintained images.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-123&quot;&gt;Section 12.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - The default position of Linux containers, which is to run as root, could increase the risk of a container breakout.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Container images should be built to run as a standard (non-root) user.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Generally when enforcing this requirement, an external admission control system (e.g. Kyverno or OPA Gatekeeper) will be in use, so reviewing policies should confirm that this is being enforced. Alternatively reviewing Dockerfiles for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;USER&lt;/code&gt; directive and/or Kubernetes manifests to confirm that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runAsNonRoot&lt;/code&gt; flag is being set can be helpful.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-124&quot;&gt;Section 12.4&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Application secrets (i.e., cloud API credentials) embedded in container images can facilitate unauthorized access.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Secrets should never be included in application images. Where secrets are required during the building of an image (for example to provide credentials for accessing source code) this process should leverage container builder techniques to ensure that the secret will not be present in the final image.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Reviewing running containers with secrets scanning software like &lt;a href=&quot;https://aquasecurity.github.io/trivy/v0.27.1/docs/secret/scanning/&quot;&gt;Trivy&lt;/a&gt; can be helpful here, however it’s worth noting that this kind of software can be false-positive heavy. Dockerfiles can also be helpful to note any secrets being added to the image. Another good approach would be to understand the organization’s approach to secrets management.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Container image building is a fundamental part of the container lifecycle, and it’s important to understand how to do it securely. This post has looked at some of the PCI requirements that are relevant to this process, and how to review for them.&lt;/p&gt;
+</description>
+				<pubDate>Mon, 12 Dec 2022 14:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management</title>
 				<description>&lt;p&gt;This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -409,93 +466,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sun, 23 Oct 2022 11:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 3 - Workload Security</title>
-				<description>&lt;p&gt;This is the 3rd part of an in-depth look at how companies running Kubernetes can approach implementing the recommendation of PCI’s guidance for container orchestration. The &lt;a href=&quot;https://raesene.github.io/blog/2022/10/08/PCI-Kubernetes-Section2-Authorization/&quot;&gt;previous installment&lt;/a&gt; looked at authorization, and there’s also an &lt;a href=&quot;https://raesene.github.io/blog/2022/09/10/PCI-Guidance-for-containers-and-container-orchestration-tools/&quot;&gt;overview post&lt;/a&gt; and some notes on the &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;complexity of assessing security in Kubernetes&lt;/a&gt; which might be worth reading before getting in to this part. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h1 id=&quot;section-3---workload-security&quot;&gt;Section 3 - Workload Security&lt;/h1&gt;
-
-&lt;p&gt;Running containers is obviously the main thing that most Kubernetes clusters are responsible for, so it makes sense that there’s a section of the guidance dedicated to them. Before we talk about the specific recommendations, it’s important to cover off a couple of base concepts.&lt;/p&gt;
-
-&lt;p&gt;Containers are just Linux (or Windows) processes. When run under Kubernetes the defaults for both is to use operating system features to isolate those processes from each other and the underlying host. So you can think of Kubernetes as essentially distributed remote command execution :)&lt;/p&gt;
-
-&lt;p&gt;By default, with no additional controls, any user who can launch containers into a cluster can get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; access to the underlying cluster node simply (I’ve covered how to do that before with &lt;a href=&quot;https://raesene.github.io/blog/2019/04/01/The-most-pointless-kubernetes-command-ever/&quot;&gt;the most pointless kubernetes command ever&lt;/a&gt; which is based on &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;the most pointless docker command ever&lt;/a&gt; from Ian Miell)).&lt;/p&gt;
-
-&lt;p&gt;Docker, and by extension Kubernetes, have a flexible security model where individual restrictions can be removed or enhanced. The defaults were generally chosen for ease of operation, so it’s not surprising that they need specific hardening recommendations for production PCI environments.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-31&quot;&gt;Section 3.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Access to shared resources on the underlying host permits container breakouts to occur, compromising the security of shared resources.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workloads running in the orchestration system should be configured to prevent access to the underlying cluster nodes by default. Where granted, any access to resources provided by the nodes should be provided on a least privilege basis, and the use of “privileged” mode containers should be specifically avoided.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - So as we’ve mentioned Kubernetes requires specific additional controls to be put in place to stop containers getting access to underlying cluster resources. The mention of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;privileged&lt;/code&gt; in the recommendation refers to the Docker &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--privileged&lt;/code&gt; flag which essentially just removes all the security isolation between a container and the underlying node. It’s sometimes used as a shortcut to avoid having to work out exactly what access a container needs to the underlying node.&lt;/p&gt;
-
-&lt;p&gt;In terms of how these restrictions are put in place, the picture can be a bit complex. In older versions of Kubernetes a feature called Pod Security Policy was available which could be used to restrict workloads. However this was removed &lt;a href=&quot;https://kubernetes.io/blog/2022/08/23/podsecuritypolicy-the-historical-context/&quot;&gt;in the latest version of Kubernetes&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;There is a replacement feature within Kubernetes, which can be used to implement restrictions on Workloads called &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-admission/&quot;&gt;Pod Security Admission&lt;/a&gt;, however this may not be suitably flexible for all companies needs, so many organizations make use of external admission control software to place restrictions on workloads running in the cluster. In the open source world, prominent options for this include &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt;, &lt;a href=&quot;https://github.com/open-policy-agent/gatekeeper&quot;&gt;OPA Gatekeeper&lt;/a&gt;, &lt;a href=&quot;https://www.jspolicy.com/&quot;&gt;jsPolicy&lt;/a&gt; and &lt;a href=&quot;https://www.kubewarden.io/&quot;&gt;Kubewarden&lt;/a&gt;. Also a special note for OpenShift here which has it’s own mechanism &lt;a href=&quot;https://docs.openshift.com/container-platform/4.11/authentication/managing-security-context-constraints.html&quot;&gt;Security Context Constraints&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Having covered how restrictions on workloads would be put in place, we also need to think about what restrictions to put in place. At this point it’s important to note that some system workloads do need access to the underlying cluster nodes to operate, so for example the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-proxy&lt;/code&gt; component needs to modify networking components so will need access to that.&lt;/p&gt;
-
-&lt;p&gt;For general workloads the goal is to avoid giving them rights that would allow for access to the underlying host. The Kubernetes project has created &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/&quot;&gt;Pod Security Standards&lt;/a&gt; to document which settings are needed (as there are quite a few). Enforcing at least the &lt;strong&gt;baseline&lt;/strong&gt; policy and ideally using the &lt;strong&gt;restricted&lt;/strong&gt; policy for all general workloads should prevent the processes running in containers from accessing the underlying host.&lt;/p&gt;
-
-&lt;p&gt;So if you’re reviewing a cluster for PCI there’s a couple of actions&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Ensure that one of the systems that can be used to restrict workloads is in place and operational&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Review the policies applied to the workloads in the cluster to assess how well they meet the requirements of Pod Security Standards.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-32&quot;&gt;Section 3.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - The use of non-specific versions of container images could facilitate a supply chain attack where a malicious version of the image is pushed to a registry by an attacker.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workload definitions/manifests should target specific known versions of any container images. This should be done via a reliable mechanism checking the cryptographic signatures of images. If signatures are not available, message-digests should be used.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Container images are the standard way of packaging the software that will run on your Kubernetes clusters, and they’re typically pulled from container registries, either public ones like Docker Hub or private ones under the organization’s control. Obviously it’s important to ensure (as much as possible) that you know what’s inside the container image before you run it. Within registries versions of images are typically denoted based on “tags” and if you don’t specify a tag you get whatever the latest version of that image is, which is clearly not great in terms of knowing what you’re running.&lt;/p&gt;
-
-&lt;p&gt;Also, depending on the registry, it may be possible to change what image a tag points to, so again it’s not ideal to rely solely on image tags, although if an internal registry is used it might be possible to establish trust based on how that registry and its tags are managed. Without additional software, one option is to use images based on a specific SHA-256 hash, a mechanism which is generally supported by container software, although it’s important to note that this is quite a cumbersome thing to do as it means you need to change the hash &lt;em&gt;every&lt;/em&gt; time the image is patched or changed in any way.&lt;/p&gt;
-
-&lt;p&gt;It’s also possible to use digital signing to improve the trust in the workloads you run, but this does require additional software. Specifically it need a signing tool to sign the images and also software to validate the signatures when the container images are deployed to the Kubernetes cluster. For the first part the most common tool is &lt;a href=&quot;https://github.com/sigstore/cosign&quot;&gt;cosign&lt;/a&gt;, and it’s possible to validate cosign signed images using the admission control software we mentioned in the previous section.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Ensure that all images running in the cluster use either a tag (supported by processes to ensure tag integrity), SHA-256 hash or digital signatures to validate their integrity.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Review how these mechanisms are enforced, reviewing admission controller policies that are in use on the cluster.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;section-33&quot;&gt;Section 3.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Containers retrieved from untrusted sources may contain malware or exploitable vulnerabilities&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All container images running in the cluster should come from trusted sources.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This requirement goes alongside the previous one, in making the point that container image assurance is a key concern for Kubernetes. It’s important to note that in the vast majority of cases, Container registries do not curate their images so there is a risk of supply chain attacks at that level.&lt;/p&gt;
-
-&lt;p&gt;The safest option is to ensure that all images running in the cluster are sourced from a container registry that is under the control of the organization, and that security checks are carried out whenever new images are added to this registry. This does add overhead to managing the cluster as 3rd party software (e.g. helm charts) will generally assume that it can pull images from whichever registry the software vendor uses.&lt;/p&gt;
-
-&lt;p&gt;Where images need to be sourced from external registries mechanisms like using specific SHA-256 hashes or signed images can help to provide assurances that the images can be trusted (assuming of course you trust the project/vendor that created those images).&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;All images should come from either an internally controlled registry or where coming from external sources be validated before deployment.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Workload security is a fundamental part of any container security architecture. PCI’s requirements are (as with previous parts) fairly general good practices, however implementing them in a Kubernetes environment could require considerable effort. Planning out how to comply with these requirements is best done during a planning phase, to reduce the potential for impact to running workloads. Next time we’ll be looking at the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/&quot;&gt;Network Security Recommendations&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Sat, 15 Oct 2022 09:00:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/</guid>
 			</item>
 		
 	</channel>

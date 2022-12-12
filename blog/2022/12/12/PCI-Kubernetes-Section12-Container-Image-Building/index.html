@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>The revenge of system:masters, return of the AKS</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>The revenge of system:masters, return of the AKS </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building </h1>
 </div>
 	
 <article>
@@ -157,43 +157,61 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   November 
-	   29th,
+	   December 
+	   12th,
 	   
-	   2020
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>When looking at an AKS cluster recently, I came across some unusual default behaviour, which I thought deserved some more investigation over the weekend. Seems like AKS is making some … interesting… choices with regards to user authentication, in some setups.</p>
+	  <p>This is the twelfth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Image Building. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
-<p>Usually when you authenticate to an Azure AD (AAD) enabled AKS cluster it uses OAuth with a short renewal window for credentials, which is great as it leverages the Azure AD authentication process and has a nice short expiry to reduce the risk of a misplaced kubeconfig file.</p>
+<p>This section overlaps somewhat with <a href="https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/">section 3 on workload security</a>, but expands it with some specific concerns that need to be addressed about how companies build container images.</p>
 
-<p>However there’s an option on the <code class="language-plaintext highlighter-rouge">az aks get-credentials</code> command which acts a bit differently. If you pass <code class="language-plaintext highlighter-rouge">--admin</code> to that command, instead of using OAuth, it adds a client certificate file to your <code class="language-plaintext highlighter-rouge">kubeconfig</code>.</p>
+<p>Image building is a fundamental part of the container lifecycle, so it’s important to understand how to do it securely, and there’s a couple of aspects to this.</p>
 
-<p>Client certificate authentication in Kubernetes is a bit problematic for a number of reasons, the main one being that there is <strong>no way</strong> to revoke a credential once it’s issued (short of rolling the keys for the whole certificate authority), that means it’s generally unsuitable for any production cluster and definitely production clusters used by large organizations.</p>
+<p>The first one is the user that the containers run as. By default, Docker and similar tools run containers as the <code class="language-plaintext highlighter-rouge">root</code> user. Whilst there are some restrictions placed on the container even when it’s root, ideally images should be built to run as non-root users and then this restriction should be enforced by Kubernetes admission control. One reason for this is that running as root tends to give a process more access to the Linux kernel meaning that there are more opportunities to exploit Linux kernel vulnerabilities that may exist in the shared kernel of the host.</p>
 
-<p>However digging into the client cert issued by AKS, things get worse. If you decode it (the one below is from a sample AKS cluster I set-up using the standard <a href="https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough">AKS QuickStart</a>), you’ll see something like this</p>
+<p>The second aspect is the base image that is used to build the container image. The base image is the starting point for the image, and it’s important to make sure that it’s up to date and that it’s not been tampered with. This is especially important if the base image is being pulled from a public registry, as there’s a risk that it’s been compromised. It’s also important to make sure that the base image is as minimal as possible, as this reduces the attack surface of the image, and improves maintainability.</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code> Validity
-   Not Before: Nov 28 20:11:59 2020 GMT
-   Not After : Nov 28 20:21:59 2022 GMT
-   Subject: O <span class="o">=</span> system:masters, CN <span class="o">=</span> masterclient
-</code></pre></div></div>
+<p>In general, for images an organization are building internally, it’s also a good idea to try and standardize on a small set of base images. This eases the burden of keeping the images up to date, and also makes it easier to audit the images to make sure that they’re not using any vulnerable packages.</p>
 
-<p>The way that Kubernetes client certificate authentication works, the <code class="language-plaintext highlighter-rouge">CN</code> field is considered the username and the <code class="language-plaintext highlighter-rouge">O</code> field is the group the user belongs to, so this is logging in with a username of <code class="language-plaintext highlighter-rouge">masterclient</code> and a group of <code class="language-plaintext highlighter-rouge">system:masters</code>.</p>
+<p>In terms of the PCI requirements there’s four in this section.</p>
 
-<p>First problem is the username. That’s not the name of the user I used to login, this is a generic username. That means that any actions taken by this credential will show up with a generic username not matter who uses it, bit of a problem for auditing.</p>
+<h2 id="section-121">Section 12.1</h2>
 
-<p>The second problem is the group name. <code class="language-plaintext highlighter-rouge">system:masters</code> is a special group in Kubernetes, its access as a cluster-admin is hardcoded into the Kubernetes source code and there’s no way to remove those rights, so this credential will always have cluster-admin rights.</p>
+<p><strong>Threat</strong> - Container base images downloaded from untrusted sources, or which contain unnecessary packages, increase the risk of supply chain attacks</p>
 
-<p>The third problem is the expiry, which is 2 years from cluster setup. So anyone with this credential has a generic cluster-admin level login which can’t be revoked (short of rolling the entire certifiicate authority used for the cluster) and can’t be audited, which lasts for up to two years.</p>
+<p><strong>Best Practice</strong> - Application container images should be built from trusted, up-to-date minimal base images.</p>
 
-<p>Another surprising thing I noticed was that, in non-AAD enabled clusters, users with the <code class="language-plaintext highlighter-rouge">Azure Kubernetes Service Cluster User Role</code> get this same certificate given to them when they use <code class="language-plaintext highlighter-rouge">az aks get-credentials</code> even without the <code class="language-plaintext highlighter-rouge">--admin</code> switch! This is a <a href="https://github.com/Azure/AKS/issues/1343">known issue</a> with AKS…</p>
+<p><strong>Details</strong> -  Reviewing a cluster for this requirement is a little tricky, as it’s not something that can be easily checked by looking at the cluster. The best way to check for this is to look at the Dockerfiles that are used to build the images, and speak to the developers to understand the process being used to maintain the base images.</p>
 
-<h2 id="conclusion">Conclusion</h2>
+<h2 id="section-122">Section 12.2</h2>
 
-<p>A couple of takeaways if your organization is planning to use Azure AKS. First up if your clusters are AAD enabled, be <strong>very</strong> careful with who has rights to used the <code class="language-plaintext highlighter-rouge">--admin</code> switch on the <code class="language-plaintext highlighter-rouge">get-credentials</code> command. Secondly, I’d recommend not exposing your clusters directly on the Internet to reduce the likely impact of this.</p>
+<p><strong>Threat</strong> - Base images downloaded from external container image registries can introduce malware, backdoors, and vulnerabilities.</p>
 
-<p>If you’re using non-AAD enabled clusters, it’s worth noting that all your users may be using generic cluster-admin credentials, so you should check the generated kubeconfig files and plan for that.</p>
+<p><strong>Best Practice</strong> - A set of common base container images should be maintained in a container registry that is under the entity’s control.</p>
+
+<p><strong>Details</strong> -  For this requirement looking at the container images in use in the cluster can be helpful. There will be a mix of internally maintained and externally maintained images, and it’s important to understand the process for managing the externally maintained images.</p>
+
+<h2 id="section-123">Section 12.3</h2>
+
+<p><strong>Threat</strong> - The default position of Linux containers, which is to run as root, could increase the risk of a container breakout.</p>
+
+<p><strong>Best Practice</strong> - Container images should be built to run as a standard (non-root) user.</p>
+
+<p><strong>Details</strong> -  Generally when enforcing this requirement, an external admission control system (e.g. Kyverno or OPA Gatekeeper) will be in use, so reviewing policies should confirm that this is being enforced. Alternatively reviewing Dockerfiles for the <code class="language-plaintext highlighter-rouge">USER</code> directive and/or Kubernetes manifests to confirm that the <code class="language-plaintext highlighter-rouge">runAsNonRoot</code> flag is being set can be helpful.</p>
+
+<h2 id="section-124">Section 12.4</h2>
+
+<p><strong>Threat</strong> - Application secrets (i.e., cloud API credentials) embedded in container images can facilitate unauthorized access.</p>
+
+<p><strong>Best Practice</strong> - Secrets should never be included in application images. Where secrets are required during the building of an image (for example to provide credentials for accessing source code) this process should leverage container builder techniques to ensure that the secret will not be present in the final image.</p>
+
+<p><strong>Details</strong> -  Reviewing running containers with secrets scanning software like <a href="https://aquasecurity.github.io/trivy/v0.27.1/docs/secret/scanning/">Trivy</a> can be helpful here, however it’s worth noting that this kind of software can be false-positive heavy. Dockerfiles can also be helpful to note any secrets being added to the image. Another good approach would be to understand the organization’s approach to secrets management.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Container image building is a fundamental part of the container lifecycle, and it’s important to understand how to do it securely. This post has looked at some of the PCI requirements that are relevant to this process, and how to review for them.</p>
 
 	  </div>
 
@@ -219,7 +237,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=The revenge of system:masters, return of the AKS&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -247,10 +265,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2020/11/22/When_Is_A_Vulnerability_Not_A_Vulnerability/" title="When is a Vulnerability (possibly) not a vulnerability">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/" title="PCI Compliance for Kubernetes in detail - Part 11 - Resource Management">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2020/12/12/Escalating_Away/" title="Escalating Away">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
