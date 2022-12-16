@@ -7,6 +7,36 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 14 - Version Management</title>
+				<description>&lt;p&gt;This is the fourteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Version Management section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This one is a slightly interesting one as it’s not really a security issue, but more of a best practice, but there are some considerations which are specific to containerization. The main one is the move to “Infrastructure As Code”, where the setup of Kubernetes clusters and their applications are stored in formats like &lt;a href=&quot;https://yaml.org/&quot;&gt;YAML&lt;/a&gt; and &lt;a href=&quot;https://github.com/hashicorp/hcl&quot;&gt;HCL&lt;/a&gt;, and processed by tools like &lt;a href=&quot;https://helm.sh/&quot;&gt;Helm&lt;/a&gt; and &lt;a href=&quot;https://www.terraform.io/&quot;&gt;Terraform&lt;/a&gt;. Having all of this information stored in files lends itself to improved version management practices as, in theory anyway, everything which is neeeded to re-create the environment is stored in the files.&lt;/p&gt;
+
+&lt;p&gt;Of course, in addition to the tools, we need an approach to managing their versioning and storage if we want to achieve our goals. One approach which lends itself to this is &lt;a href=&quot;https://www.weave.works/technologies/gitops/&quot;&gt;gitops&lt;/a&gt; which uses git as the source of truth for the environment.&lt;/p&gt;
+
+&lt;p&gt;These tools and approaches are not specific to Kubernetes, but they are a natural fit for it, and so it’s worth considering them when looking at the PCI requirements.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s one in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-141&quot;&gt;Section 14.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Without proper control and versioning of container orchestration configuration files, it may be possible for an attacker to make an unauthorized modification to an environment’s setup&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - a. Version control should be used to manage all non-secret configuration files. b. Related objects should be grouped into a
+single file. c. Labels should be used to semantically identify objects.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Reviewing a cluster for this recommendation would likely start with speaking to the operators to understand how they control the configuration files, and then checking the management of key elements such as the helm charts and terraform files (or alternative tools if they are being used).&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;This is a relatively short post as the PCI recommendations are relatively straightforward and Kubernetes doesn’t introduce any very specific concerns, however it’s another one to add to the list of things to consider.&lt;/p&gt;
+</description>
+				<pubDate>Fri, 16 Dec 2022 14:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 13 - Registry</title>
 				<description>&lt;p&gt;This is the thirteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the “Registry” section which talks about Container Registry controls. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -424,47 +454,6 @@ dedicated secrets management systems.&lt;/p&gt;
 				<pubDate>Sun, 30 Oct 2022 08:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 5 - PKI</title>
-				<description>&lt;p&gt;This is the fifth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at PKI. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This section gets into an area that’s fairly well trodden for financial services companies which is PKI management. Organizations that are used to more traditional approaches to PKIs might be somewhat surprised by how Kubernetes makes use of Public Key Infrastructure.&lt;/p&gt;
-
-&lt;p&gt;In a “vanilla” Kubernetes cluster, there will generally by three entirely separate Certificate authorities each with their own keys (details &lt;a href=&quot;https://kubernetes.io/docs/setup/best-practices/certificates/&quot;&gt;here&lt;/a&gt;). The first one is the main CA for the cluster, this is used for cases where components or users want to authenticate to the Kubernetes API server. certificates signed by this CA are trusted by the API server and can be used by other components as well.&lt;/p&gt;
-
-&lt;p&gt;The second CA is used for authentication between the API server and etcd. This is needed as the way that etcd runs in Kubernetes clusters, it provides full access to any client certificate issued by a specified CA, so if it used the main CA any user with access to a client certificate would be able to extract all the contents of the etcd database (leading to a privilege escalation issue).&lt;/p&gt;
-
-&lt;p&gt;The third one is used where there are “extension API servers” in the cluster, but typically the keys are created even if that feature is not used.&lt;/p&gt;
-
-&lt;p&gt;From a security perspective the first thing to note is that the certificate authority private keys will be held in the clear on control plane node disks, so controlling access to those directories (and auditing access to them) is important. When looking at managed Kubernetes where typically the cluster operator doesn’t have access to the control plane nodes, this isn’t as much of an issue, although it is still possible to issue new client certificate from the “main” CA using the CertificateSigningRequest API.&lt;/p&gt;
-
-&lt;p&gt;Another security consideration, as we’ve mentioned &lt;a href=&quot;https://raesene.github.io/blog/2022/10/01/PCI-Kubernetes-Section1-Authentication/&quot;&gt;before&lt;/a&gt; when covering authentication, Kubernetes &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/18982&quot;&gt;doesn’t support certificate revocation&lt;/a&gt;, so it can be difficult to manage risks around compromised private keys.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-51&quot;&gt;Section 5.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Inability of some container orchestration tool products to support revocation of certificates may lead to misuse of a stolen or lost certificate by attackers&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - a. Where revocation of certificates is not supported, certificate-based authentication should not be used. b. Rotate certificates as required by PCI or customer policies or if any containers are compromised.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This point essentially duplicates section 1.3 in the authentication section of the guidance. To re-state what was said there essentially organizations should avoid using Kubernetes client certificate authentication wherever possible. Where the cluster uses client certificate authentication for the initial user provided with the cluster, that credential should be stored safely offline and not used for general cluster administration duties.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-52&quot;&gt;Section 5.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - PKI and Certificate Authority services integrated within container orchestration tools may not provide sufficient security outside of the container orchestration tool environment, which could lead to exploitation of other services that attempt to use this chain of trust.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - The certificates issued by orchestration tools should not be trusted outside of the container orchestrator environment, as the container orchestrator’s Certificate Authority private key can have weaker protection than other enterprise PKI trust chains.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This ties to the points mentioned at the top of this blog around how Kubernetes does PKI key management. Having on-line private keys without passphrase protection means that any attacker who is able to get even temporary read access to the CA key will be able to persistently be able to create certificates for that CA. Where an organisation using Kubernetes needs to use a PKI they should use an externally managed one, for example making use of cloud service provider key management services.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;PKIs are essentially intertwined with Kubernetes architecture, but in general for production PCI clusters it’s likely the companies should only use Kubernetes PKI options where absolutely required and instead use externally managed PKI services for any other requirements they may have. Next time we’ll be looking at the &lt;a href=&quot;https://raesene.github.io/blog/2022/11/06/PCI-Kubernetes-Section6-Secrets-Management/&quot;&gt;Secrets Management Recommendations&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Sat, 29 Oct 2022 11:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/10/29/PCI-Kubernetes-Section5-PKI/</guid>
 			</item>
 		
 	</channel>

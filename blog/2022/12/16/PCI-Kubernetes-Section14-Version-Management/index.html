@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kind of Insecure Test Clusters</title>
+	<title>PCI Compliance for Kubernetes in detail - Part 14 - Version Management</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kind of Insecure Test Clusters </h1>
+  <h1>PCI Compliance for Kubernetes in detail - Part 14 - Version Management </h1>
 </div>
 	
 <article>
@@ -157,60 +157,34 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   4th,
+	   December 
+	   16th,
 	   
-	   2019
+	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+	  <p>This is the fourteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Version Management section. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
-<p>For a while I’ve been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I’ve got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.</p>
+<p>This one is a slightly interesting one as it’s not really a security issue, but more of a best practice, but there are some considerations which are specific to containerization. The main one is the move to “Infrastructure As Code”, where the setup of Kubernetes clusters and their applications are stored in formats like <a href="https://yaml.org/">YAML</a> and <a href="https://github.com/hashicorp/hcl">HCL</a>, and processed by tools like <a href="https://helm.sh/">Helm</a> and <a href="https://www.terraform.io/">Terraform</a>. Having all of this information stored in files lends itself to improved version management practices as, in theory anyway, everything which is neeeded to re-create the environment is stored in the files.</p>
 
-<p>So when I heard about <a href="https://kind.sigs.k8s.io/">kind</a> on an episode of Heptio’s <a href="https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ">TGIK</a> I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.</p>
+<p>Of course, in addition to the tools, we need an approach to managing their versioning and storage if we want to achieve our goals. One approach which lends itself to this is <a href="https://www.weave.works/technologies/gitops/">gitops</a> which uses git as the source of truth for the environment.</p>
 
-<p>Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it’ll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.</p>
+<p>These tools and approaches are not specific to Kubernetes, but they are a natural fit for it, and so it’s worth considering them when looking at the PCI requirements.</p>
 
-<p>What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.</p>
+<p>In terms of the PCI requirements there’s one in this section.</p>
 
-<p>Kind supports a <code class="language-plaintext highlighter-rouge">--config</code> option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to <a href="https://twitter.com/BenTheElder">@BenTheElder</a> and <a href="https://twitter.com/mauilion">@mauillon</a> for all the help pointing me in the right direction), but once you’ve got the basics it’s not too hard.</p>
+<h2 id="section-141">Section 14.1</h2>
 
-<p>The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.</p>
+<p><strong>Threat</strong> - Without proper control and versioning of container orchestration configuration files, it may be possible for an attacker to make an unauthorized modification to an environment’s setup</p>
 
-<p>To provide a concrete example, the config below will create a cluster with the insecure port running on the API server</p>
+<p><strong>Best Practice</strong> - a. Version control should be used to manage all non-secret configuration files. b. Related objects should be grouped into a
+single file. c. Labels should be used to semantically identify objects.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Config
-apiVersion: kind.sigs.k8s.io/v1alpha2
-nodes:
-# the control plane node config
-- role: control-plane
-  # patch the generated kubeadm config with some extra settings
-  kubeadmConfigPatches:
-  - |
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    metadata:
-      name: config
-    apiServer:
-      extraArgs:
-        # Here the values must be in quotes, unlike the Kubeadm API examples
-        insecure-bind-address: "0.0.0.0"
-        insecure-port: "8080"
-</code></pre></div></div>
+<p><strong>Details</strong> - Reviewing a cluster for this recommendation would likely start with speaking to the operators to understand how they control the configuration files, and then checking the management of key elements such as the helm charts and terraform files (or alternative tools if they are being used).</p>
 
-<p>Once you’ve got kind installed and this is present as a YAML file you can just run</p>
+<h1 id="conclusion">Conclusion</h1>
 
-<p><code class="language-plaintext highlighter-rouge">kind --config insecure-port.yaml --name insecure create cluster</code></p>
-
-<p>and kind will create your cluster node for you.  Once it’s up it’s worth noting that the insecure port won’t be visible on the main interface of your VM but will be listening on the <code class="language-plaintext highlighter-rouge">docker0</code> interface.</p>
-
-<p>So you can get the IP address of that interface from <code class="language-plaintext highlighter-rouge">docker inspect insecure-control-plane</code></p>
-
-<p>and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it’s using is <code class="language-plaintext highlighter-rouge">172.17.0.3</code>)</p>
-
-<p><code class="language-plaintext highlighter-rouge">curl http://172.17.0.3:8080/</code></p>
-
-<p>I’ve started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github <a href="https://github.com/raesene/kind-of-insecure">here</a></p>
+<p>This is a relatively short post as the PCI recommendations are relatively straightforward and Kubernetes doesn’t introduce any very specific concerns, however it’s another one to add to the list of things to consider.</p>
 
 	  </div>
 
@@ -236,7 +210,7 @@ nodes:
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kind of Insecure Test Clusters&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 14 - Version Management&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -264,10 +238,10 @@ nodes:
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/11/11/Docker-18-09-SSH/" title="Docker 18.09 - Making WSL that much easier">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/14/PCI-Kubernetes-Section13-Registry/" title="PCI Compliance for Kubernetes in detail - Part 13 - Registry">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/03/25/traefiking-in-presentations/" title="Traefiking in Presentations">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
