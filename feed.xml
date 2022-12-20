@@ -7,6 +7,95 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation</title>
+				<description>&lt;p&gt;This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The topic of segmentation in Kubernetes is an interesting one. First let’s talk a bit about what PCI means by Segmentation. From &lt;a href=&quot;https://listings.pcisecuritystandards.org/documents/Guidance-PCI-DSS-Scoping-and-Segmentation_v1.pdf&quot;&gt;this document&lt;/a&gt; we can see this definition&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Segmentation involves the implementation of additional controls to separate systems with different security needs. For example, in order to reduce the number of systems in scope for PCI DSS, segmentation may be used to keep in-scope systems separated from out-of-scope systems. 
+Segmentation can consist of logical controls, physical controls, or a combination of both. Examples of commonly used segmentation methods for purposes of reducing PCI DSS scope include firewalls and router configurations to prevent traffic passing between out-of-scope networks and the CDE, network configurations that prevent communications between different systems and/or subnets, and physical access controls.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;So in order to implement segmentation in a containerized environment we need to put controls in place so that there is effective security segregation between in-scope workloads and out-of-scope workloads.&lt;/p&gt;
+
+&lt;p&gt;With Kubernetes there’s a couple of ways you can implement this kind of control. The easiest (from a security point of view) is to use separate clusters for in-scope and out-of-scope workloads, however some organizations might not like this approach as it reduces the cost benefits of Kubernetes as it requires multiple sets of control plane nodes and reduces the ability to share resources between workloads.&lt;/p&gt;
+
+&lt;p&gt;The other approach is to try and use a single cluster for both in-scope and out-of-scope workloads, we need to harden the cluster such that we’re providing appropriate security segmentation, a.k.a hard multi-tenancy.&lt;/p&gt;
+
+&lt;h2 id=&quot;hard-multi-tenancy-in-kubernetes&quot;&gt;Hard Multi-Tenancy in Kubernetes&lt;/h2&gt;
+
+&lt;p&gt;To provide hard multi-tenancy in a Kubernetes cluster there are a number of considerations that need to be taken into account, and challenges to be overcome. Typically this kind of solution would be based on the use of Kubernetes namespaces as a unit of security segmentation, but it’s important to recognize that this (and Kubernetes in general) wasn’t designed for a hard multi-tenancy use case.&lt;/p&gt;
+
+&lt;p&gt;The sections below aren’t intended to be an exhaustive treatment of the challenges of hard multi-tenancy in Kubernetes (that would require it’s own blog post series!) but to indicate some of the complexity and why it’s not a trivial problem to solve.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubernetes-api-segregation&quot;&gt;Kubernetes API Segregation&lt;/h3&gt;
+
+&lt;p&gt;The first challenge is that the Kubernetes API itself. There are a number of resources in a cluster wide and not namespaced, so we need to ensure that users in the “low security” namespace(s) can’t access these resources, which restricts the facilities that they can use. This particular issue can be mitigated via the use of “virtual cluster” style solutions such as &lt;a href=&quot;https://www.vcluster.com/&quot;&gt;vcluster&lt;/a&gt;, which create virtual Kubernetes clusters on top of a single host cluster. You can then provide full access to the Kubernetes API to the virtual cluster, but restrict access to the host cluster.&lt;/p&gt;
+
+&lt;p&gt;If you’re not using a virtual cluster solution, part of this also involves strict RBAC controls which prevent “low security” users from escalating their rights to access “high security” workloads. There’s a page on the &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks&quot;&gt;Kubernetes site&lt;/a&gt; which discusses some of the areas to consider here.&lt;/p&gt;
+
+&lt;h3 id=&quot;workload-segregation&quot;&gt;Workload Segregation&lt;/h3&gt;
+
+&lt;p&gt;Virtual clusters alone, however, don’t provide the full solution. Where workloads are being deployed to a shared set of clusters nodes there is a risk that any workload can break out to an underlying node from the “low security” namespace and then access parts of the “high security” environment. Mitigating this will require adoption of admission control solutions such as &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt; with a highly restrictive set of policies to reduce the risk of privilege escalation. Typically you’d expect these policies to be in-line with the &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted&quot;&gt;restricted PSS&lt;/a&gt; policy.&lt;/p&gt;
+
+&lt;p&gt;This doesn’t provide a complete picture, however as you still have the risk of container breakout via Linux kernel/runc/Containerd/Docker CVEs. You can reduce this risk by using a solutions like &lt;a href=&quot;https://gvisor.dev/&quot;&gt;gVisor&lt;/a&gt; or &lt;a href=&quot;https://katacontainers.io/&quot;&gt;Kata Containers&lt;/a&gt; to provide a smaller attack surface, hardening the container runtime environment.&lt;/p&gt;
+
+&lt;p&gt;Another approach which might help here is to implement separate node pools for each environment. This reduces the workload resource sharing benefit of Kubernetes, but does reduce the risk of a breakout from one environment to another.&lt;/p&gt;
+
+&lt;p&gt;There is also a complication with this approach, which is that any workloads which have privileged access to the Kubernetes API server (e.g. operators, or admission control services) should not be placed in the “low security” node pool, as this would allow them to escalate privileges to the “high security” environment, via service account tokens. This approach also relies on the use of “node authorization” in Kubernetes otherwise the Kubelet credentials can be used to escalate privileges to the “high security” environment. Whilst this plugin is enabled in most Kubernetes distributions, it’s not guaranteed, (for example at the time of writing it’s not enabled in AKS and cluster operators cannot enable it by themselves).&lt;/p&gt;
+
+&lt;h3 id=&quot;network-segregation&quot;&gt;Network Segregation&lt;/h3&gt;
+
+&lt;p&gt;As we discussed back in the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/&quot;&gt;network section&lt;/a&gt; Kubernetes defaults to an open flat network for all workloads in the cluster. This is obviously not suitable for a hard multi-tenancy solution, so it would be necessary to implement strict network policies restricting traffic between the two environments.&lt;/p&gt;
+
+&lt;p&gt;However there’s another aspect of network segregation in Kubernetes which can be tricky to mitigate, which is DNS. DNS is used for service discovery in clusters, and this is a cluster-wide service. To provide effective segregation it would be necessary to split the DNS service into two separate services, one for each environment. Without this it’s generally trivial for an attacker to enumerate every service in the cluster, using commands like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dig +short srv any.any.svc.cluster.local&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;In terms of the PCI requirements there’s four in this section.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-161&quot;&gt;Section 16.1&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Unless an orchestration system is specifically designed for secure multi-tenancy, a shared mixed-security environment may allow attackers to move from a low-security to a high-security environment.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Where practical, higher security components should be placed on dedicated clusters. Where this is not possible, care should be taken to ensure complete segregation between workloads of different security levels&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Reviewing an environment for this requirement, would generally involve looking at deployed workloads for the in-scope clusters and confirming that they are only running in-scope workloads.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-162&quot;&gt;Section 16.2&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Placing critical systems on the same nodes as general application containers may allow attackers to disrupt the security of the cluster through the use of shared resources on the container cluster node.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Critical systems should run on dedicated nodes in any container orchestration cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - As discussed using dedicated node pools is an option to try and ensure workload segregation, but it’s a tricky one to implement well. Reviewing a cluster for this would generally involve looking at the worklods deployed to each environment and confirming that there are no privilege escalation paths, via things like service account tokens, or Kubelet credentials.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-163&quot;&gt;Section 16.3&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Placing workloads with different security requirements on the same cluster nodes may allow attackers to gain unauthorized access to high security environments via breakout to the underlying node.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Split cluster node pools should be enforced such that a cluster user of the low-security applications cannot schedule workloads to the high-security nodes.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - For workload scheduling segregation, admission control solutions are required, so reviewing an environment for this would involve reviewing the policies in place and also reviewing the security of the admission control solution itself.&lt;/p&gt;
+
+&lt;h2 id=&quot;section-164&quot;&gt;Section 16.4&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Modification of shared cluster resources by users with access to individual applications could result in unauthorized access to sensitive shared resources.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workloads and users who manage individual applications running under the orchestration system should not have the rights to modify shared cluster resources, or any resources used by another application.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - How this is reviewed would depend on the approach taken. Where a virtual cluster solution is used, it might be possible to review to ensure that virtual cluster admins have no access to the underlying master cluster. Where Kubernetes RBAC is used for this, it would require a review of RBAC policies to ensure that users can’t escalate privileges to access in-scope workloads from the “low security” environment.&lt;/p&gt;
+
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
+
+&lt;p&gt;Segmentation is an important part of PCI security and applying it to Kubernetes can be tricky, as it’s not designed for hard multi-tenancy.&lt;/p&gt;
+
+</description>
+				<pubDate>Tue, 20 Dec 2022 08:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management</title>
 				<description>&lt;p&gt;This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -34,7 +123,7 @@
 
 &lt;p&gt;In terms of the PCI requirements there’s one in this section.&lt;/p&gt;
 
-&lt;h2 id=&quot;section-141&quot;&gt;Section 14.1&lt;/h2&gt;
+&lt;h2 id=&quot;section-151&quot;&gt;Section 15.1&lt;/h2&gt;
 
 &lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Container orchestration tools may be misconfigured and introduce security vulnerabilities.&lt;/p&gt;
 
@@ -416,48 +505,6 @@ should be securely stored on a centralized system.&lt;/p&gt;
 				<pubDate>Sat, 12 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
-				<description>&lt;p&gt;This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.&lt;/p&gt;
-
-&lt;p&gt;Also containers are ephemeral so manually adding secrets to them at runtime won’t be effective, as the container may be rescheduled to another server at any time, where it would be re-created from the image. So we need some automated way of injecting any credentials required by the container when it starts on a given Kubernetes cluster node.&lt;/p&gt;
-
-&lt;p&gt;The general answer to that is some form of secrets management system, which can handle providing the right secrets to the right containers, when they start-up. Kubernetes has an in-built &lt;a href=&quot;https://kubernetes.io/docs/concepts/configuration/secret/&quot;&gt;secrets&lt;/a&gt; facility, which is one option. These are just items stored in the Kubernetes datastore and provided as configured to containers. Some people using Kubernetes have been known to use ConfigMaps for storing secrets, but this isn’t a great idea (for reasons I detailed &lt;a href=&quot;https://blog.aquasec.com/kubernetes-configmap-secrets&quot;&gt;here&lt;/a&gt;).&lt;/p&gt;
-
-&lt;p&gt;A point that regularly gets raised about Kubernetes secrets is that, by default, they’re not encrypted on disk. Kubernetes provides an option to ensure that this happens, but it needs to be configured. For managed Kubernetes services (e.g. EKS, GKE, AKS) the etcd database is stored by the cloud provider so it’s arguable about how much difference it makes encrypting on disk, but generally the option is still available.&lt;/p&gt;
-
-&lt;p&gt;In addition to Kubernetes in-built features, there are a wide range of external dedicated secrets management services which will work with Kubernetes. Either cloud provider based options or software like &lt;a href=&quot;https://www.vaultproject.io/&quot;&gt;Hashicorp Vault&lt;/a&gt; can be used.&lt;/p&gt;
-
-&lt;p&gt;So with a general background on this topic, what does PCI specifically recommend.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-61&quot;&gt;Section 6.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Inappropriately stored secrets, including credentials, provided through the container orchestration tool, could be leaked to  unauthorized users or attackers with some level of access to the environment.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All secrets needed for the operation of applications hosted on the orchestration platform should be held in encrypted
-dedicated secrets management systems.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - The intent of this best practice is really around the points discussed above, which is that storing secrets in images, or using general configuration management systems is not appropriate and should be avoided. Also the requirement for encryption means that , if using Kubernetes secrets, you need to enable the option that makes them encrypted on-disk.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-62&quot;&gt;Section 6.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Secrets stored without version control could lead to an outage if a compromise occurs and there is a requirement to rotate them quickly.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Apply version control for secrets, so it is easy to refresh or revoke it in case of a compromise.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - This is really an availability concern, rather than one around the confidentiality of the secrets. Applying it with base Kubernetes secrets would likely require manual work to define versions of secrets.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Secrets management is an inevitable part of container based deployments, and something which needs to be carefully considered when moving to a system like Kubernetes. The PCI recommendations are as with most of them, fairly general good practice, but there are a couple of specifics which apply in Kubernetes to be considered.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 06 Nov 2022 10:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/11/06/PCI-Kubernetes-Section6-Secrets-Management/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/06/PCI-Kubernetes-Section6-Secrets-Management/</guid>
 			</item>
 		
 	</channel>

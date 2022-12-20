@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   December 
+	   20th,
+	   
+	   2022
+	 </span>
+	  <div class="article_body">
+	  <p>This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
+
+<p>The topic of segmentation in Kubernetes is an interesting one. First let’s talk a bit about what PCI means by Segmentation. From <a href="https://listings.pcisecuritystandards.org/documents/Guidance-PCI-DSS-Scoping-and-Segmentation_v1.pdf">this document</a> we can see this definition</p>
+
+<blockquote>
+  <p>Segmentation involves the implementation of additional controls to separate systems with different security needs. For example, in order to reduce the number of systems in scope for PCI DSS, segmentation may be used to keep in-scope systems separated from out-of-scope systems. 
+Segmentation can consist of logical controls, physical controls, or a combination of both. Examples of commonly used segmentation methods for purposes of reducing PCI DSS scope include firewalls and router configurations to prevent traffic passing between out-of-scope networks and the CDE, network configurations that prevent communications between different systems and/or subnets, and physical access controls.</p>
+</blockquote>
+
+<p>So in order to implement segmentation in a containerized environment we need to put controls in place so that there is effective security segregation between in-scope workloads and out-of-scope workloads.</p>
+
+<p>With Kubernetes there’s a couple of ways you can implement this kind of control. The easiest (from a security point of view) is to use separate clusters for in-scope and out-of-scope workloads, however some organizations might not like this approach as it reduces the cost benefits of Kubernetes as it requires multiple sets of control plane nodes and reduces the ability to share resources between workloads.</p>
+
+<p>The other approach is to try and use a single cluster for both in-scope and out-of-scope workloads, we need to harden the cluster such that we’re providing appropriate security segmentation, a.k.a hard multi-tenancy.</p>
+
+<h2 id="hard-multi-tenancy-in-kubernetes">Hard Multi-Tenancy in Kubernetes</h2>
+
+<p>To provide hard multi-tenancy in a Kubernetes cluster there are a number of considerations that need to be taken into account, and challenges to be overcome. Typically this kind of solution would be based on the use of Kubernetes namespaces as a unit of security segmentation, but it’s important to recognize that this (and Kubernetes in general) wasn’t designed for a hard multi-tenancy use case.</p>
+
+<p>The sections below aren’t intended to be an exhaustive treatment of the challenges of hard multi-tenancy in Kubernetes (that would require it’s own blog post series!) but to indicate some of the complexity and why it’s not a trivial problem to solve.</p>
+
+<h3 id="kubernetes-api-segregation">Kubernetes API Segregation</h3>
+
+<p>The first challenge is that the Kubernetes API itself. There are a number of resources in a cluster wide and not namespaced, so we need to ensure that users in the “low security” namespace(s) can’t access these resources, which restricts the facilities that they can use. This particular issue can be mitigated via the use of “virtual cluster” style solutions such as <a href="https://www.vcluster.com/">vcluster</a>, which create virtual Kubernetes clusters on top of a single host cluster. You can then provide full access to the Kubernetes API to the virtual cluster, but restrict access to the host cluster.</p>
+
+<p>If you’re not using a virtual cluster solution, part of this also involves strict RBAC controls which prevent “low security” users from escalating their rights to access “high security” workloads. There’s a page on the <a href="https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks">Kubernetes site</a> which discusses some of the areas to consider here.</p>
+
+<h3 id="workload-segregation">Workload Segregation</h3>
+
+<p>Virtual clusters alone, however, don’t provide the full solution. Where workloads are being deployed to a shared set of clusters nodes there is a risk that any workload can break out to an underlying node from the “low security” namespace and then access parts of the “high security” environment. Mitigating this will require adoption of admission control solutions such as <a href="https://kyverno.io/">Kyverno</a> with a highly restrictive set of policies to reduce the risk of privilege escalation. Typically you’d expect these policies to be in-line with the <a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted">restricted PSS</a> policy.</p>
+
+<p>This doesn’t provide a complete picture, however as you still have the risk of container breakout via Linux kernel/runc/Containerd/Docker CVEs. You can reduce this risk by using a solutions like <a href="https://gvisor.dev/">gVisor</a> or <a href="https://katacontainers.io/">Kata Containers</a> to provide a smaller attack surface, hardening the container runtime environment.</p>
+
+<p>Another approach which might help here is to implement separate node pools for each environment. This reduces the workload resource sharing benefit of Kubernetes, but does reduce the risk of a breakout from one environment to another.</p>
+
+<p>There is also a complication with this approach, which is that any workloads which have privileged access to the Kubernetes API server (e.g. operators, or admission control services) should not be placed in the “low security” node pool, as this would allow them to escalate privileges to the “high security” environment, via service account tokens. This approach also relies on the use of “node authorization” in Kubernetes otherwise the Kubelet credentials can be used to escalate privileges to the “high security” environment. Whilst this plugin is enabled in most Kubernetes distributions, it’s not guaranteed, (for example at the time of writing it’s not enabled in AKS and cluster operators cannot enable it by themselves).</p>
+
+<h3 id="network-segregation">Network Segregation</h3>
+
+<p>As we discussed back in the <a href="https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/">network section</a> Kubernetes defaults to an open flat network for all workloads in the cluster. This is obviously not suitable for a hard multi-tenancy solution, so it would be necessary to implement strict network policies restricting traffic between the two environments.</p>
+
+<p>However there’s another aspect of network segregation in Kubernetes which can be tricky to mitigate, which is DNS. DNS is used for service discovery in clusters, and this is a cluster-wide service. To provide effective segregation it would be necessary to split the DNS service into two separate services, one for each environment. Without this it’s generally trivial for an attacker to enumerate every service in the cluster, using commands like <code class="language-plaintext highlighter-rouge">dig +short srv any.any.svc.cluster.local</code>.</p>
+
+<p>In terms of the PCI requirements there’s four in this section.</p>
+
+<h2 id="section-161">Section 16.1</h2>
+
+<p><strong>Threat</strong> -  Unless an orchestration system is specifically designed for secure multi-tenancy, a shared mixed-security environment may allow attackers to move from a low-security to a high-security environment.</p>
+
+<p><strong>Best Practice</strong> - Where practical, higher security components should be placed on dedicated clusters. Where this is not possible, care should be taken to ensure complete segregation between workloads of different security levels</p>
+
+<p><strong>Details</strong> - Reviewing an environment for this requirement, would generally involve looking at deployed workloads for the in-scope clusters and confirming that they are only running in-scope workloads.</p>
+
+<h2 id="section-162">Section 16.2</h2>
+
+<p><strong>Threat</strong> -  Placing critical systems on the same nodes as general application containers may allow attackers to disrupt the security of the cluster through the use of shared resources on the container cluster node.</p>
+
+<p><strong>Best Practice</strong> - Critical systems should run on dedicated nodes in any container orchestration cluster.</p>
+
+<p><strong>Details</strong> - As discussed using dedicated node pools is an option to try and ensure workload segregation, but it’s a tricky one to implement well. Reviewing a cluster for this would generally involve looking at the worklods deployed to each environment and confirming that there are no privilege escalation paths, via things like service account tokens, or Kubelet credentials.</p>
+
+<h2 id="section-163">Section 16.3</h2>
+
+<p><strong>Threat</strong> -  Placing workloads with different security requirements on the same cluster nodes may allow attackers to gain unauthorized access to high security environments via breakout to the underlying node.</p>
+
+<p><strong>Best Practice</strong> - Split cluster node pools should be enforced such that a cluster user of the low-security applications cannot schedule workloads to the high-security nodes.</p>
+
+<p><strong>Details</strong> - For workload scheduling segregation, admission control solutions are required, so reviewing an environment for this would involve reviewing the policies in place and also reviewing the security of the admission control solution itself.</p>
+
+<h2 id="section-164">Section 16.4</h2>
+
+<p><strong>Threat</strong> - Modification of shared cluster resources by users with access to individual applications could result in unauthorized access to sensitive shared resources.</p>
+
+<p><strong>Best Practice</strong> - Workloads and users who manage individual applications running under the orchestration system should not have the rights to modify shared cluster resources, or any resources used by another application.</p>
+
+<p><strong>Details</strong> - How this is reviewed would depend on the approach taken. Where a virtual cluster solution is used, it might be possible to review to ensure that virtual cluster admins have no access to the underlying master cluster. Where Kubernetes RBAC is used for this, it would require a review of RBAC policies to ensure that users can’t escalate privileges to access in-scope workloads from the “low security” environment.</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>Segmentation is an important part of PCI security and applying it to Kubernetes can be tricky, as it’s not designed for hard multi-tenancy.</p>
+
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(45)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 16 - Segmentation&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/18/PCI-Kubernetes-Section15-Configuration-Management/" title="PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
