@@ -7,6 +7,542 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Attack of the clones - Stealthy Kubernetes persistence with eathar, tòcan and teisteanas</title>
+				<description>&lt;p&gt;Follwing on from the &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;PCI Series&lt;/a&gt; I thought it’d be nice to do a bit more of an attack focused piece for a change!&lt;/p&gt;
+
+&lt;p&gt;I noticed that Microsoft have released a new version of the their &lt;a href=&quot;https://www.microsoft.com/en-us/security/blog/2022/12/07/mitigate-threats-with-the-new-threat-matrix-for-kubernetes/&quot;&gt;threat matrix for Kubernetes&lt;/a&gt;, looking at the Persistence section, while they covered some of the usual suspects like static pods, there were some options that attackers can likely use to keep access to clusters that they didn’t cover, around the use of Kubernetes APIs to use or create long-lived credentials which clone system accounts.&lt;/p&gt;
+
+&lt;p&gt;This kind of persistence technique would apply where the attacker has temporary access to relatively privileged credentials and wants to ensure that they retain access for the long term. this could be the case where an attacker has gained access to an administator laptop, or where a disgruntled insider wants to retain access perhaps after they have left the organisation.&lt;/p&gt;
+
+&lt;p&gt;This kind of attack is made easier by the fact that the major managed Kubernetes distributions (GKE, EKS, AKS) all place the API server on the Internet by default. Whilst their hardening guides might mention removing it from the Internet, looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=org&quot;&gt;current statistics&lt;/a&gt; from Shodan we can see plenty of Kubernetes hosts exposed to the Internet from the major cloud providers, and plenty of other hosts from smaller providers.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/k8sproductshodan.png&quot; alt=&quot;Kubernetes on Shodan by Organization&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;options-for-persistent-credentials&quot;&gt;Options for Persistent credentials.&lt;/h2&gt;
+
+&lt;p&gt;There are effectively four ways, we can achieve the goal of having a long lasting set of privileged credentials for attacker persistence.&lt;/p&gt;
+
+&lt;p&gt;The first option is to grab the cluster CA certificate and key which then lets us mint new credentials for any user in the cluster. This one notably only works with unmanaged clusters (so no running it on GKE, EKS or AKS). I’ve covered this one &lt;a href=&quot;https://raesene.github.io/blog/2019/04/16/kubernetes-certificate-auth-golden-key/&quot;&gt;before&lt;/a&gt;, but it’s worth mentioning again as it’s a pretty easy way to get long lived credentials in the right kind of environment.&lt;/p&gt;
+
+&lt;p&gt;The second one is to use the Kubernetes CSR API to create new long-lived client certificates. Here we’ll want to find a high privileged user in the cluster and effectively create a clone set of credentials for them. Kubernetes does not have a user database, so this is perfectly possible and the auditing tools won’t be able to tell the difference between the original and the clone.&lt;/p&gt;
+
+&lt;p&gt;The third option is to use the TokenRequest API to create new long-lived service account token. As with the CSR option, we need to find a high privileged service account in the cluster and then create a clone set of credentials for it.&lt;/p&gt;
+
+&lt;p&gt;The fourth one is the simplest and is mentioned in the threat matrix, which is that in older Kubernetes clusters (v1.23 and below) we can just access the service account token secrets associated with system accounts, grab the token and then we can use that to authenticate to the API server. Notably these secrets &lt;em&gt;do not expire&lt;/em&gt; and the only way to revoke their access is to delete the associated service account. Where we’re stealing the token of a core controller, that could be a bit of a tricky thing for the defender to fix.&lt;/p&gt;
+
+&lt;h2 id=&quot;find-a-target-userservice-account-to-clone&quot;&gt;Find a target user/service account to clone&lt;/h2&gt;
+
+&lt;p&gt;Effectively all these techniques start from the same point which is finding an existing high privileged account which is part of the operational workflow of the cluster, so that we can retrieve an existing credential or create a set of clone credentials that we can use.&lt;/p&gt;
+
+&lt;p&gt;To do this we’ll use &lt;a href=&quot;https://github.com/raesene/eathar&quot;&gt;eathar&lt;/a&gt; which is a Kubernetes security scanner and has some checks for privileged RBAC access.&lt;/p&gt;
+
+&lt;p&gt;We’ll be using clusters setup with standard defaults with whatever the vendor currently offers.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Kubeadm 1.25 (KinD)&lt;/li&gt;
+  &lt;li&gt;AKS 1.24.6&lt;/li&gt;
+  &lt;li&gt;EKS v1.23.13-eks-fb459a0&lt;/li&gt;
+  &lt;li&gt;GKE v1.24.7-gke.900&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;kubeadm-125-cluster&quot;&gt;Kubeadm 1.25 Cluster&lt;/h3&gt;
+
+&lt;p&gt;Starting with a vanilla Kubeadm 1.25 cluster, we can start by looking for wildcard users. These are users that have access to all resources in the cluster, and are effectively the same as having cluster admin access.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac wildcardusers
+Findings for the Users with wildcard access to all resources check
+ClusterRoleBinding cluster-admin
+Subjects:
+  Kind: Group, Name: system:masters
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This isn’t actually really useful as the only subject is a Group, and we can’t use that to create a clone set of credentials, we really need a user or service account.&lt;/p&gt;
+
+&lt;p&gt;The next thing we can try is looking for users who have “get secrets” at the cluster level. These users can retrieve any secret from the cluster, which is pretty useful with older clusters as we can use it for retrieving any service account tokens (as well as anything else held as secrets)&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac getsecretsusers
+Findings for the Users with access to secrets check
+ClusterRoleBinding system:controller:expand-controller
+Subjects:
+  Kind: ServiceAccount, Name: expand-controller, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:expand-controller, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:persistent-volume-binder
+Subjects:
+  Kind: ServiceAccount, Name: persistent-volume-binder, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:persistent-volume-binder, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:kube-controller-manager
+Subjects:
+  Kind: User, Name: system:kube-controller-manager
+RoleRef:
+  Kind: ClusterRole, Name: system:kube-controller-manager, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:node
+Subjects:
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This one shows some better options, notably the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:kube-controller-manager&lt;/code&gt; user, and the two service accounts. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:node&lt;/code&gt; binding isn’t useful as (unusually) there are no subjects!&lt;/p&gt;
+
+&lt;p&gt;Looking at the rights for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:kube-controller-manager&lt;/code&gt; we can see that not only does it have get secrets at the cluster level but also create on serviceaccounts/token which is useful for creating more credentials.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl auth can-i --list --as system:kube-controller-manager
+Resources                                       Non-Resource URLs   Resource Names              Verbs
+secrets                                         []                  []                          [create delete get update]
+serviceaccounts                                 []                  []                          [create get update]
+events                                          []                  []                          [create patch update]
+events.events.k8s.io                            []                  []                          [create patch update]
+endpoints                                       []                  []                          [create]
+serviceaccounts/token                           []                  []                          [create]
+tokenreviews.authentication.k8s.io              []                  []                          [create]
+selfsubjectaccessreviews.authorization.k8s.io   []                  []                          [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                  []                          [create]
+subjectaccessreviews.authorization.k8s.io       []                  []                          [create]
+leases.coordination.k8s.io                      []                  []                          [create]
+endpoints                                       []                  [kube-controller-manager]   [get update]
+leases.coordination.k8s.io                      []                  [kube-controller-manager]   [get update]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;then looking at the rights for the two service accounts the persistent-volume-binder controller has some pretty useful rights including create pod and get secrets&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl auth can-i --list --as system:serviceaccount:kube-system:persistent-volume-binder
+Resources                                       Non-Resource URLs                     Resource Names   Verbs
+persistentvolumes                               []                                    []               [create delete get list update watch]
+pods                                            []                                    []               [create delete get list watch]
+endpoints                                       []                                    []               [create delete get update]
+services                                        []                                    []               [create delete get]
+events.events.k8s.io                            []                                    []               [create patch update]
+selfsubjectaccessreviews.authorization.k8s.io   []                                    []               [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                                    []               [create]
+persistentvolumeclaims                          []                                    []               [get list update watch]
+storageclasses.storage.k8s.io                   []                                    []               [get list watch]
+nodes                                           []                                    []               [get list]
+secrets                                         []                                    []               [get]
+persistentvolumeclaims/status                   []                                    []               [update]
+persistentvolumes/status                        []                                    []               [update]
+events                                          []                                    []               [watch create patch update]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;aks-1246&quot;&gt;AKS 1.24.6&lt;/h3&gt;
+
+&lt;p&gt;Let’s take a look at how this would work in an AKS cluster. Let’s start by looking for wildcard users.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac wildcardusers
+Findings for the Users with wildcard access to all resources check
+ClusterRoleBinding aks-cluster-admin-binding
+Subjects:
+  Kind: User, Name: clusterAdmin
+  Kind: User, Name: clusterUser
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding cluster-admin
+Subjects:
+  Kind: Group, Name: system:masters
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Well, that was easy :) There are two user accounts &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterAdmin&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterUser&lt;/code&gt; which have full cluster admin access, so if we create a certificate for either of those we’ll have full cluster admin access. If we want a service account to clone we can look for principals who get get secrets at the cluster level&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac getsecretsusers
+Findings for the Users with access to secrets check
+ClusterRoleBinding aks-service-rolebinding
+Subjects:
+  Kind: User, Name: aks-support
+RoleRef:
+  Kind: ClusterRole, Name: aks-service, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding csi-azurefile-node-secret-binding
+Subjects:
+  Kind: ServiceAccount, Name: csi-azurefile-node-sa, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: csi-azurefile-node-secret-role, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:aks-client-nodes
+Subjects:
+  Kind: Group, Name: system:nodes
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:azure-cloud-provider-secret-getter
+Subjects:
+  Kind: ServiceAccount, Name: azure-cloud-provider, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:azure-cloud-provider-secret-getter, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:expand-controller
+Subjects:
+  Kind: ServiceAccount, Name: expand-controller, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:expand-controller, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:persistent-volume-binder
+Subjects:
+  Kind: ServiceAccount, Name: persistent-volume-binder, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:persistent-volume-binder, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:kube-controller-manager
+Subjects:
+  Kind: User, Name: system:kube-controller-manager
+RoleRef:
+  Kind: ClusterRole, Name: system:kube-controller-manager, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:node
+Subjects:
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:persistent-volume-binding
+Subjects:
+  Kind: ServiceAccount, Name: persistent-volume-binder, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:persistent-volume-secret-operator, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can see plenty of options to clone there, including the two we saw in Kubeadm.&lt;/p&gt;
+
+&lt;h3 id=&quot;eks-v12313-eks-fb459a0&quot;&gt;EKS v1.23.13-eks-fb459a0&lt;/h3&gt;
+
+&lt;p&gt;First up looking for wildcard users.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt; eathar rbac wildcardusers
+Findings for the Users with wildcard access to all resources check
+ClusterRoleBinding cluster-admin
+Subjects:
+  Kind: Group, Name: system:masters
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding eks:addon-cluster-admin
+Subjects:
+  Kind: User, Name: eks:addon-manager
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We see that there’s a user account &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eks:addon-manager&lt;/code&gt; which has full cluster admin access. Looking at for principals with the rights to get secrets we get the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac getsecretsusers
+Findings for the Users with access to secrets check
+ClusterRoleBinding eks:addon-manager
+Subjects:
+  Kind: User, Name: eks:addon-manager
+RoleRef:
+  Kind: ClusterRole, Name: eks:addon-manager, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:expand-controller
+Subjects:
+  Kind: ServiceAccount, Name: expand-controller, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:expand-controller, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:persistent-volume-binder
+Subjects:
+  Kind: ServiceAccount, Name: persistent-volume-binder, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:persistent-volume-binder, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:kube-controller-manager
+Subjects:
+  Kind: User, Name: system:kube-controller-manager
+RoleRef:
+  Kind: ClusterRole, Name: system:kube-controller-manager, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:node
+Subjects:
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For service accounts we’ve got the same ones as we had with Kubeadm and AKS.&lt;/p&gt;
+
+&lt;h3 id=&quot;gke-v1247-gke900&quot;&gt;GKE v1.24.7-gke.900&lt;/h3&gt;
+
+&lt;p&gt;Looking at GKE for wildcard users, we can see the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac wildcardusers
+Findings for the Users with wildcard access to all resources check
+ClusterRoleBinding cluster-admin
+Subjects:
+  Kind: Group, Name: system:masters
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding storage-version-migration-migrator-v2
+Subjects:
+  Kind: User, Name: system:storageversionmigrator
+RoleRef:
+  Kind: ClusterRole, Name: cluster-admin, APIGroup: rbac.authorization.k8s.io
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we’ve got a nice user with cluster-admin access to use for client certificates. Looking for users with get secrets access we get the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;ClusterRoleBinding kubelet-cluster-admin
+Subjects:
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:expand-controller
+Subjects:
+  Kind: ServiceAccount, Name: expand-controller, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:expand-controller, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:controller:persistent-volume-binder
+Subjects:
+  Kind: ServiceAccount, Name: persistent-volume-binder, Namespace: kube-system
+RoleRef:
+  Kind: ClusterRole, Name: system:controller:persistent-volume-binder, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:glbc-status
+Subjects:
+  Kind: User, Name: system:controller:glbc
+  Kind: User, Name: system:l7-lb-controller
+RoleRef:
+  Kind: ClusterRole, Name: system:glbc-status, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:kube-controller-manager
+Subjects:
+  Kind: User, Name: system:kube-controller-manager
+RoleRef:
+  Kind: ClusterRole, Name: system:kube-controller-manager, APIGroup: rbac.authorization.k8s.io
+------------------------
+ClusterRoleBinding system:node
+Subjects:
+RoleRef:
+  Kind: ClusterRole, Name: system:node, APIGroup: rbac.authorization.k8s.io
+------------------------
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So we’ve got our ususl &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;persistent-volume-binder&lt;/code&gt; service account and some other options as well.&lt;/p&gt;
+
+&lt;h2 id=&quot;creating-a-cloned-user-account-using-teisteanas&quot;&gt;Creating a cloned user account using Teisteanas&lt;/h2&gt;
+
+&lt;p&gt;Now we’ve got our list of users and service accounts we can clone, we can use &lt;a href=&quot;https://github.com/raesene/teisteanas&quot;&gt;Teisteanas&lt;/a&gt; to create Kubeconfigs which use client certificate authentication for users. You can do these steps manually, but Teisteanas makes it easy to do this quickly.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubeadm-125&quot;&gt;Kubeadm 1.25&lt;/h3&gt;
+
+&lt;p&gt;Here we’ll create a clone for our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:kube-controller-manager&lt;/code&gt; user account.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;teisteanas -username system:kube-controller-manager
+Certificate Successfully issued to username system:kube-controller-manager in group none , signed by kubernetes, valid until 2023-12-22 10:27:09 +0000 UTC
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From this we can see it succeeded in creating the kubeconfig and the expiry is 12 months, which is the default. We can now use this kubeconfig to authenticate to the cluster.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl --kubeconfig system\:kube-controller-manager.config auth can-i --list
+Resources                                       Non-Resource URLs   Resource Names              Verbs
+secrets                                         []                  []                          [create delete get update]
+serviceaccounts                                 []                  []                          [create get update]
+events                                          []                  []                          [create patch update]
+events.events.k8s.io                            []                  []                          [create patch update]
+endpoints                                       []                  []                          [create]
+serviceaccounts/token                           []                  []                          [create]
+tokenreviews.authentication.k8s.io              []                  []                          [create]
+selfsubjectaccessreviews.authorization.k8s.io   []                  []                          [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                  []                          [create]
+subjectaccessreviews.authorization.k8s.io       []                  []                          [create]
+leases.coordination.k8s.io                      []                  []                          [create]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can see we’ve got plenty of rights. We can also use this kubeconfig to authenticate to the cluster and use it to create a new service accounts if we wanted to.&lt;/p&gt;
+
+&lt;h3 id=&quot;aks-1246-1&quot;&gt;AKS 1.24.6&lt;/h3&gt;
+
+&lt;p&gt;With AKS, the obvious target is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterAdmin&lt;/code&gt; user account.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;teisteanas -username clusterAdmin
+Certificate Successfully issued to username clusterAdmin in group none , signed by ca, valid until 2023-12-22 10:29:41 +0000 UTC
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Again we get a one year lifetime on our credential.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl --kubeconfig clusterAdmin.config auth can-i --list
+Resources                                       Non-Resource URLs   Resource Names   Verbs
+*.*                                             []                  []               [*]
+                                                [*]                 []               [*]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Checking the rights, we get that delightful &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*.*&lt;/code&gt; which means we have full cluster admin access.&lt;/p&gt;
+
+&lt;h3 id=&quot;eks-v12313-eks-fb459a0-1&quot;&gt;EKS v1.23.13-eks-fb459a0&lt;/h3&gt;
+
+&lt;p&gt;Trying our client certificate generation technique on EKS, we get the following:&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;teisteanas -username eks:addon-manager
+2022/12/22 16:15:42 Error issuing cert, are you trying this with EKS?
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This is because EKS has effectively disabled the CSR API for certificates that can authenticate to the Kubernetes API server. This isn’t officially in their documentation (that I can find) but there’s a &lt;a href=&quot;https://github.com/aws/containers-roadmap/issues/1604&quot;&gt;Github issue&lt;/a&gt; which confirms this.&lt;/p&gt;
+
+&lt;h3 id=&quot;gke-v1247-gke900-1&quot;&gt;GKE v1.24.7-gke.900&lt;/h3&gt;
+
+&lt;p&gt;For GKE we’re going to use our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:storageversionmigrator&lt;/code&gt; user account.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;teisteanas -username system:storageversionmigrator
+Certificate Successfully issued to username system:storageversionmigrator in group none , signed by e3d7d8ea-bc41-4e34-a0d4-e7b7fdbbc66b, valid until 2027-12-21 18:02:26 +0000 UTC
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;There’s an interesting difference here, which is that the certificate is valid for &lt;strong&gt;5 years&lt;/strong&gt; by default, which is a nice level of persistence!&lt;/p&gt;
+
+&lt;p&gt;Checking the access we can confirm we have cluster-admin&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;ubectl --kubeconfig system\:storageversionmigrator.config auth can-i --list
+Warning: the list may be incomplete: webhook authorizer does not support user rule resolution
+Resources                                        Non-Resource URLs   Resource Names   Verbs
+*.*                                              []                  []               [*]
+                                                 [*]                 []               [*]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;So that works pretty well, as it did with AKS and Kubeadm.&lt;/p&gt;
+
+&lt;h2 id=&quot;cloning-service-account-credentials-with-tòcan&quot;&gt;Cloning service account credentials with tòcan&lt;/h2&gt;
+
+&lt;p&gt;If we want to create an credential based on a service account, we can do that using the TokenRequest API. &lt;a href=&quot;https://github.com/raesene/tocan&quot;&gt;Tòcan&lt;/a&gt; is a tool which just wraps the API and automates creating the Kubeconfig file.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubeadm-125-1&quot;&gt;Kubeadm 1.25&lt;/h3&gt;
+
+&lt;p&gt;For Kubeadm we’ll create a token for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;persistent-volume-binder&lt;/code&gt; service account in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-system&lt;/code&gt; namespace, and look to create the token for 1 year.&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;tocan -service-account persistent-volume-binder -namespace kube-system -expiration-seconds 31536000
+Kubeconfig file persistent-volume-binder.kubeconfig created for service account persistent-volume-binder in namespace kube-system
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can then check the rights with kubectl to confirm it worked ok&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl --kubeconfig persistent-volume-binder.kubeconfig auth can-i --list
+Resources                                       Non-Resource URLs                     Resource Names   Verbs
+persistentvolumes                               []                                    []               [create delete get list update watch]
+pods                                            []                                    []               [create delete get list watch]
+endpoints                                       []                                    []               [create delete get update]
+services                                        []                                    []               [create delete get]
+events.events.k8s.io                            []                                    []               [create patch update]
+selfsubjectaccessreviews.authorization.k8s.io   []                                    []               [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                                    []               [create]
+persistentvolumeclaims                          []                                    []               [get list update watch]
+storageclasses.storage.k8s.io                   []                                    []               [get list watch]
+nodes                                           []                                    []               [get list]
+secrets                                         []                                    []               [get]
+persistentvolumeclaims/status                   []                                    []               [update]
+persistentvolumes/status                        []                                    []               [update]
+events                                          []                                    []               [watch create patch update]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can also check the expiration of the token. Probably the easiest way to do this is just paste the token into &lt;a href=&quot;https://jwt.io/&quot;&gt;jwt.io&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/pvbjwt.png&quot; alt=&quot;jwt token issued for the persistent volume binder service account&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;From this the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exp&lt;/code&gt; value of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;1703242042&lt;/code&gt; can be decoded to show that the token expires on Friday, 22 December 2023 10:47:22.&lt;/p&gt;
+
+&lt;h3 id=&quot;aks-1246-2&quot;&gt;AKS 1.24.6&lt;/h3&gt;
+
+&lt;p&gt;For AKS we can use the same service account as it was one of the ones returned in our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eathar&lt;/code&gt; checks for access to secrets at the cluster level, and this works the same way, including the 1 year expiration, which works fine.&lt;/p&gt;
+
+&lt;h3 id=&quot;eks-v12313-eks-fb459a0-2&quot;&gt;EKS v1.23.13-eks-fb459a0&lt;/h3&gt;
+
+&lt;p&gt;For EKS we can again create a token for the same service account and it will issue ok. However looking at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exp&lt;/code&gt; field of the token we can see it’s only valid for 24 hours, a far cry from the 1 year we were expecting. It appears that AWS have decided to limit the maximum duration of issued tokens. So whilst this technique works, it’d be quite a bit more noisy as it would require daily refreshes.&lt;/p&gt;
+
+&lt;h3 id=&quot;gke-v1247-gke900-2&quot;&gt;GKE v1.24.7-gke.900&lt;/h3&gt;
+
+&lt;p&gt;for GKE we can use the same service account again as it was one of the ones returned with our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;eathar&lt;/code&gt; checks.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tocan -service-account persistent-volume-binder -namespace kube-system -expiration-seconds 31536000
+W1222 18:04:58.428287   96628 warnings.go:70] requested expiration of 31536000 seconds shortened to 172800 seconds
+Kubeconfig file persistent-volume-binder.kubeconfig created for service account persistent-volume-binder in namespace kube-system
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Interestingly we get a warning and GKE has done something similar to EKS in that it’s limited the maximum duration of issued tokens, this time to two days. So again, whilst this technique works, it’d be quite a bit more noisy as it would require refreshes every other day.&lt;/p&gt;
+
+&lt;h2 id=&quot;stealing-secrets-from-existing-service-accounts&quot;&gt;Stealing secrets from existing service accounts&lt;/h2&gt;
+
+&lt;p&gt;As mentioned this one only works in older clusters as the Kubernetes project have been working to reduce the use of non-expiring service account secrets. Where we do find a cluster, we don’t need any new tooling to create our Kubeconfig file as there’s a &lt;a href=&quot;https://krew.sigs.k8s.io/&quot;&gt;krew&lt;/a&gt; plugin called &lt;a href=&quot;https://github.com/superbrothers/kubectl-view-serviceaccount-kubeconfig-plugin&quot;&gt;view-serviceaccount-kubeconfig&lt;/a&gt; which we can use.&lt;/p&gt;
+
+&lt;h3 id=&quot;kubeadm-125-2&quot;&gt;Kubeadm 1.25&lt;/h3&gt;
+
+&lt;p&gt;Checking for secrets in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-system&lt;/code&gt; we can see that they’re not there (as expected)&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl get secrets -n kube-system
+NAME                     TYPE                            DATA   AGE
+bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      6h33m
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;so if we try to create a kubeconfig file we get an error&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;kubectl view-serviceaccount-kubeconfig persistent-volume-binder -n kube-system
+Error: serviceaccount persistent-volume-binder has no secrets
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;aks-1246-3&quot;&gt;AKS 1.24.6&lt;/h3&gt;
+
+&lt;p&gt;This technique doesn’t work in AKS as there are no secrets for service accounts in 1.24&lt;/p&gt;
+
+&lt;h3 id=&quot;eks-v12313-eks-fb459a0-3&quot;&gt;EKS v1.23.13-eks-fb459a0&lt;/h3&gt;
+
+&lt;p&gt;The default EKS cluster that we got created is running 1.23, so this technique still works&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;gp&quot;&gt;kubectl view-serviceaccount-kubeconfig persistent-volume-binder -n kube-system &amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;persistent-volume-binder-secret.kubeconfig
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We can then test the kubeconfig file to make sure it works&lt;/p&gt;
+
+&lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt; kubectl --kubeconfig persistent-volume-binder-secret.kubeconfig auth can-i --list
+Resources                                       Non-Resource URLs                     Resource Names     Verbs
+persistentvolumes                               []                                    []                 [create delete get list update watch]
+pods                                            []                                    []                 [create delete get list watch]
+endpoints                                       []                                    []                 [create delete get update]
+services                                        []                                    []                 [create delete get]
+events.events.k8s.io                            []                                    []                 [create patch update]
+selfsubjectaccessreviews.authorization.k8s.io   []                                    []                 [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                                    []                 [create]
+persistentvolumeclaims                          []                                    []                 [get list update watch]
+storageclasses.storage.k8s.io                   []                                    []                 [get list watch]
+nodes                                           []                                    []                 [get list]
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Decoding the token we see something interesting about the old secrets based tokens, which is… no &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exp&lt;/code&gt; parameter, as they don’t expire!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/pvbsecrettoken.png&quot; alt=&quot;jwt token issued for the persistent volume binder service account&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gke-v1247-gke900-3&quot;&gt;GKE v1.24.7-gke.900&lt;/h3&gt;
+
+&lt;p&gt;This technique doesn’t work in GKE as there are no secrets for service accounts in 1.24&lt;/p&gt;
+
+&lt;h2 id=&quot;preventing-and-detecting-these-attacks&quot;&gt;Preventing and detecting these attacks&lt;/h2&gt;
+
+&lt;p&gt;If you’re on the cluster operator side of things, how would you prevent or detect these attacks? Both service account tokens and client certificates are part of core Kubernetes and can’t be disabled. Client certificate can’t be revoked and revoking service account tokens requires deleting the attached service account, which is tricky if what’s been cloned is a core service account.&lt;/p&gt;
+
+&lt;p&gt;I could give the standard security answer of “just make sure people don’t have access to those APIs” but that’s probably not very practical in reality for a lot of clusters.&lt;/p&gt;
+
+&lt;p&gt;Keeping the API server off the Internet would definitely help as it makes it harder for the attacker to use their cloned credentials.&lt;/p&gt;
+
+&lt;p&gt;In terms of detecting this, the obvious suggestion is Kubernetes audit logging. First, make sure you have it enabled! Then look at any access to the CSR API and the TokenRequest API. Finding the attacker using their cloned accounts is tricky as the audit service doesn’t denote anything about the credential used, so you can’t tell the difference between a legitimate service account use and an attacker’s cloned service account token, for example.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;There’s a couple of interesting points in this (for me). First up is the difference in how well the techniques work in different cluster types. EKS appears to have the most restrictive setup and has reduced the efficacy of these attacks quite a bit, although it’s current version still allows for the older secret based attack. AKS and GKE both allow the attacks to work, although GKE does mitigate the new service account token attacks by limiting the maximum duration of issued tokens.&lt;/p&gt;
+
+&lt;p&gt;Here’s a matrix of our attacks and how they work in the different clusters we tested.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/attackmatrix.png&quot; alt=&quot;Attack matrix&quot; /&gt;&lt;/p&gt;
+
+</description>
+				<pubDate>Wed, 21 Dec 2022 18:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2022/12/21/Kubernetes-persistence-with-Tocan-and-Teisteanas/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/21/Kubernetes-persistence-with-Tocan-and-Teisteanas/</guid>
+			</item>
+		
+			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation</title>
 				<description>&lt;p&gt;This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -465,46 +1001,6 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 				<pubDate>Sat, 19 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing</title>
-				<description>&lt;p&gt;This is the seventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at what the document calls Container Orchestration Tool Auditing, which for this blog will focus on the &lt;a href=&quot;https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/&quot;&gt;Kubernetes auditing&lt;/a&gt; feature. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;When looking at Kubernetes auditing the first thing to check is, whether it’s enabled or not. The default is not to enable auditing in base Kubernetes, so it requires cluster operators to either configure it directly on the API server (for unmanaged distributions), or to check whether it’s enabled via their Cloud Service Provider interface (for managed distributions).&lt;/p&gt;
-
-&lt;p&gt;The next thing to investigate is, what exactly is going to be audited. In unmanaged clusters, the operator has flexibility to defined exactly what it is they’re going to audit. Kubernetes auditing feature is pretty flexible, allowing for different operations to be captured at different levels or indeed to explicitly avoid capturing specific activity that might be noisy and not interesting from a security perspective. What most policies do have specific activities either captured or blocked and then have a catch-all at the end to handle any cases that are not specifically handled.&lt;/p&gt;
-
-&lt;p&gt;In managed clusters, typically there is one audit policy, which is the one defined by the CSP and which can’t be changed. It can be a bit tricky to find out exactly what the setting is, as it’s often not well documented. My current best guess for the three major providers is below (any pointers on better sources appreciated :))&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/Azure/aks-engine/blob/master/parts/k8s/addons/audit-policy.yaml&quot;&gt;AKS&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://aws.github.io/aws-eks-best-practices/security/docs/detective/&quot;&gt;EKS&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/kubernetes/kubernetes/blob/release-1.10/cluster/gce/gci/configure-helper.sh#L706&quot;&gt;GKE&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;When reviewing an audit policy, it’s worth understanding what’s captured at the different levels of auditing. Generally metadata will capture a lot of the information that you might want to review, like the user making the request and the URL of the API endpoint that’ll tell you what they did. In some cases you might want to capture the full request, which has more details of exactly what was done.&lt;/p&gt;
-
-&lt;p&gt;Another point to note when looking at Kubernetes auditing is that there is a limitation if you’re trying to track down whether a specific user carried out a specific action (not an uncommon scenario). The Audit log doesn’t capture the source of the credential used to authenticate to the cluster, so if there are multiple credentials for a given user (quite likely if an attacker has access to the CertificateSigningRequest or TokenRequest APIs) there’s no easy way to tell if it was really that user, or a cloned credential.&lt;/p&gt;
-
-&lt;p&gt;In terms of specific recommendations from the PCI guidance document, there’s just the one.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-71&quot;&gt;Section 7.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Existing inventory management and logging solutions may not suffice due to the ephemeral nature of containers and container orchestration tools integration.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Access to the orchestration system API(s) should be audited and monitored for indications of unauthorized access. Audit logs
-should be securely stored on a centralized system.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - The goal of this recommendation is really to say that you need specific auditing that understands containers and container orchestration, which for Kubernetes is going to be the auditing feature. The second part of this recommendation is a pretty standard piece of good practice which is that you shouldn’t only store the audit logs on the cluster servers, but instead ensure that their securely stored on a centralized system so that, if an attacker compromises a cluster control plane node, you don’t risk them corrupting the audit logs themselves.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Auditing is a foundational detective control and fortunately Kubernetes has a well developed auditing feature, which can capture important security activities if correctly configured. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/&quot;&gt;Monitoring&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>Sat, 12 Nov 2022 10:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/</guid>
 			</item>
 		
 	</channel>

@@ -158,6 +158,49 @@
 
   <span class="post-date">
     
+    June
+    23rd,
+    
+    2008
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2008/06/23/avoiding_contro/">Avoiding controls which are "designed to fail"</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the great problems and frustrations of working in security is when those darned users don't follow the nice policies that people have spent so much time working on.<br />
+But here's the thing, <b>security professionals actually indoctrinate users not to follow policies!</b><br />
+How do they do this? Well people like following patterns, and so when the pattern "It's okay not to actually follow this" is established in relation to security , people will apply that pattern the next time they run into a security policy that's potentially difficult or hard to follow.<br />
+I'm sure there's a lot of security people saying "No idea what he's talking about, all my policies were made to be followed!"....<br />
+O'Rly..<br />
+Here's an example that I'll bet is familiar to a lot of people.  Password policy. Does anyone actually follow their companies password policy? I'll bet it looks something like</p>
+<ul>
+<li>Passwords must be 8 or more characters with upper, lower, numeric and special characters</li>
+<li>Passwords must not be based on dictionary words</li>
+<li>Passwords must be rotated every 30 days</li>
+<li>You must have a different password for every system (including not using the same passwords for personal websites</li>
+<li>Oh yeah and once you've got this list of 40 or so random strings that are really tricky to remember and you might not use very often, don't you dare write them down</li>
+</ul>
+<p>We're setting ourselves up for failure, and study after study shows that users will write down their passwords, or use sequences or many other tricks to make them more memorable.<br />
+This example (which may be a users main interaction with "security") sets the expectation that security policies can be ignored, because they're unrealistic.<br />
+So what's the answer..<br />
+Well when designing controls, I think that it's not enough to just look at the technical security properties in abstract.  We've got to consider the psychological/sociological elements of the people we're expecting to execute the controls, and maybe take a path that isn't the best abstract solution but may well be the one that will work best in real life...<br />
+After all once users are set on the path of ignoring security it becomes pretty difficult to get them back on the one true way!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     May
     15th,
     
@@ -440,34 +483,6 @@ We had Steve Moyle doing a presentation on Database security (slides can be foun
 I picked up some interesting ideas from his presentation.  Firstly the idea that relational databases have a fundamental flaw when it comes to security, which is that the channel used to control them and the channel used to access the information they contain, are the same.  This allows for someone who should only have access to information in the system to easily attack it as well.<br />
 The other thought which occurred to me when I was listening to the presentation was that any IDS/IPS style device which wants to block "malicious" traffic going to a system needs to parse the information it's seeing <i> in the same way as the protected system </i> otherwise there's a risk that quirks of rendering will introduce false positives or negatives.<br />
 It's something I was talking to a WAF vendor about recently, as I was asking them whether their product rendered JavaScript when looking for malicious traffic, as there's a specific problem with the idea of self-modifying JavaScript, looking innocuous in transit but then being malicious when executed</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    21st,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2008/02/21/upcoming_securi/">Upcoming Security Events in Scotland</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There's a couple of good security events coming up in Scotland which should be a great chance to meet some of the security community up here and also hear some good speakers!<br />
-On the 28th of February, there's an OWASP Scotland meeting with Dr Steven Moyle of <a href="http://www.secerno.com/">Secerno</a> doing a talk on Database Security.  There's more information and the address to RSVP to on the <a href="https://lists.owasp.org/pipermail/owasp-scotland/2008-February/000010.html">OWASP Scotland Mailing list</a><br />
-Next up on the 27th of March is the latest <a href="http://www.securetest.com/">Securetest Edinburgh RANT</a> with Graeme Marsh from <a href="http://www.deloitte.com/dtt/home/0,1044,stc%253DHOME%2526lid%253D7,00.html?WT.mc_id=UKGoogle_NatAd">Deloittes</a> doing a talk on "Plugging the Gap - Information Leakage in Organisations".  For more information and to RSVP for this one go to <a href="http://www.securetest.com/events/view-event.aspx?id=209"> this page</a> on SecureTests site.</p>
 
     
     
