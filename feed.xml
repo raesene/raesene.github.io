@@ -12,7 +12,7 @@
 
 &lt;p&gt;I noticed that Microsoft have released a new version of the their &lt;a href=&quot;https://www.microsoft.com/en-us/security/blog/2022/12/07/mitigate-threats-with-the-new-threat-matrix-for-kubernetes/&quot;&gt;threat matrix for Kubernetes&lt;/a&gt;, looking at the Persistence section, while they covered some of the usual suspects like static pods, there were some options that attackers can likely use to keep access to clusters that they didn’t cover, around the use of Kubernetes APIs to use or create long-lived credentials which clone system accounts.&lt;/p&gt;
 
-&lt;p&gt;This kind of persistence technique would apply where the attacker has temporary access to relatively privileged credentials and wants to ensure that they retain access for the long term. this could be the case where an attacker has gained access to an administator laptop, or where a disgruntled insider wants to retain access perhaps after they have left the organisation.&lt;/p&gt;
+&lt;p&gt;This kind of persistence technique would apply where the attacker has temporary access to relatively privileged credentials and wants to ensure that they retain access for the long term. this could be the case where an attacker has gained access to an administrator laptop, or where a disgruntled insider wants to retain access perhaps after they have left the organisation.&lt;/p&gt;
 
 &lt;p&gt;This kind of attack is made easier by the fact that the major managed Kubernetes distributions (GKE, EKS, AKS) all place the API server on the Internet by default. Whilst their hardening guides might mention removing it from the Internet, looking at the &lt;a href=&quot;https://www.shodan.io/search/facet?query=product%3A%22Kubernetes%22&amp;amp;facet=org&quot;&gt;current statistics&lt;/a&gt; from Shodan we can see plenty of Kubernetes hosts exposed to the Internet from the major cloud providers, and plenty of other hosts from smaller providers.&lt;/p&gt;
 
@@ -151,7 +151,7 @@ RoleRef:
 ------------------------
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Well, that was easy :) There are two user accounts &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterAdmin&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterUser&lt;/code&gt; which have full cluster admin access, so if we create a certificate for either of those we’ll have full cluster admin access. If we want a service account to clone we can look for principals who get get secrets at the cluster level&lt;/p&gt;
+&lt;p&gt;Well, that was easy :) There are two user accounts &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterAdmin&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterUser&lt;/code&gt; which have full cluster admin access, so if we create a certificate for either of those we’ll have full cluster admin access. If we want a service account to clone we can look for principals who have get secrets at the cluster level&lt;/p&gt;
 
 &lt;div class=&quot;language-console highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;go&quot;&gt;eathar rbac getsecretsusers
 Findings for the Users with access to secrets check
@@ -327,7 +327,7 @@ RoleRef:
 ------------------------
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;So we’ve got our ususl &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;persistent-volume-binder&lt;/code&gt; service account and some other options as well.&lt;/p&gt;
+&lt;p&gt;So we’ve got our usual &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;persistent-volume-binder&lt;/code&gt; service account and some other options as well.&lt;/p&gt;
 
 &lt;h2 id=&quot;creating-a-cloned-user-account-using-teisteanas&quot;&gt;Creating a cloned user account using Teisteanas&lt;/h2&gt;
 
