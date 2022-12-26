@@ -163,7 +163,7 @@
 	   2022
 	 </span>
 	  <div class="article_body">
-	  <p>This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
+	  <p>This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
 <p>Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.</p>
 

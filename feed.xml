@@ -544,7 +544,7 @@ nodes                                           []                              
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation</title>
-				<description>&lt;p&gt;This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;The topic of segmentation in Kubernetes is an interesting one. First let’s talk a bit about what PCI means by Segmentation. From &lt;a href=&quot;https://listings.pcisecuritystandards.org/documents/Guidance-PCI-DSS-Scoping-and-Segmentation_v1.pdf&quot;&gt;this document&lt;/a&gt; we can see this definition&lt;/p&gt;
 
@@ -633,7 +633,7 @@ Segmentation can consist of logical controls, physical controls, or a combinatio
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management</title>
-				<description>&lt;p&gt;This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Similarly to the previous section on &lt;a href=&quot;https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/&quot;&gt;version management&lt;/a&gt; this section isn’t so much around security configuration as the policies and processes that should be in place in an in-scope environment.&lt;/p&gt;
 
@@ -721,7 +721,7 @@ single file. c. Labels should be used to semantically identify objects.&lt;/p&gt
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 13 - Registry</title>
-				<description>&lt;p&gt;This is the thirteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the “Registry” section which talks about Container Registry controls. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the thirteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the “Registry” section which talks about Container Registry controls. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Container registries are a key part of an Kubernetes environment as they store the images which are used to create the containers that run the applications hosted in the cluster. Also as I mentioned in the post on &lt;a href=&quot;https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/&quot;&gt;patching&lt;/a&gt;, software updates should be carried by re-building images, pushing them to the registry and then rolling out the new version of the application. This means that the registry is a key part of the update process.&lt;/p&gt;
 
@@ -779,7 +779,7 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building</title>
-				<description>&lt;p&gt;This is the twelfth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Image Building. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the twelfth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Image Building. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This section overlaps somewhat with &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;section 3 on workload security&lt;/a&gt;, but expands it with some specific concerns that need to be addressed about how companies build container images.&lt;/p&gt;
 
@@ -836,7 +836,7 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management</title>
-				<description>&lt;p&gt;This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;When looking at resource management in containerized environments, the first thing to consider is that because most containers are just processes running on a shared kernel, there is a risk that a single container could consume all of the resources available on a node. Also, unlike virtual machine based environments, by default there are no resource constraints in place.&lt;/p&gt;
 
@@ -867,7 +867,7 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 10 - Patching</title>
-				<description>&lt;p&gt;This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;..&lt;/p&gt;
 
 &lt;p&gt;Whilst patching is a common part of the security landscape, there are a couple of specific considerations when applying it containerized environments.&lt;/p&gt;
 
@@ -916,7 +916,7 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
-				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node &lt;em&gt;but&lt;/em&gt; there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into &lt;a href=&quot;https://www.container-security.site/attackers/container_breakout_vulnerabilities.html&quot;&gt;container breakout attacks&lt;/a&gt;.&lt;/p&gt;
 
@@ -959,7 +959,7 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 		
 			<item>
 				<title>PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring</title>
-				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;. An index of the posts in this series that I’ve written so far can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Container monitoring is another topic where it’s important to consider the way that Kubernetes clusters operate, as standard approaches to monitoring might not be sufficient. There’s a couple of properties to consider when designing container monitoring.&lt;/p&gt;
 
