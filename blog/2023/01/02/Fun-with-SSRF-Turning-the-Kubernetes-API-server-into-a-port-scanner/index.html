@@ -163,7 +163,7 @@
 	   2023
 	 </span>
 	  <div class="article_body">
-	  <p>I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the work ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.</p>
+	  <p>I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the word ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.</p>
 
 <p>An important point to note here, is that this is all standard Kubernetes functionality, no 0-days or vulnerabilities are involved. To carry out this process you need to be able to create some high-privileged objects in the cluster, so in most cases there’s no privilege escalation involved.</p>
 
@@ -204,6 +204,14 @@
 <p>So I did what any good lazy person would do, and wrote some code to do it for me :)</p>
 
 <p>With the reminder of “don’t run this on production clusters!”, the PoC code is available <a href="https://github.com/raesene/k8s_ssrf_portscanner">here</a>. You can use it to scan host/port combinations from the perspective of a Kubernetes API server. The code will try to interpret the error message that comes back and tell you if the port is unreachable/closed/open.</p>
+
+<h2 id="demo">Demo</h2>
+
+<p>Here’s a quick demonstration of how this works. In the video I’ve got an AKS cluster up and running and I’ll use the SSRF port scanner to hit a URL I control, so we can see the request (caddy.pwndland.uk).</p>
+
+<p>In the logs you can see the source IP of 40.88.207.52 and User-agent of “kube-apiserver-admission” showing that it’s the API server making the request.</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/y9QBDlmk0jA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
 
 <h2 id="conclusion">Conclusion</h2>
 
