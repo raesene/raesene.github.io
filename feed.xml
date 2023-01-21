@@ -7,6 +7,126 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with Caddy - SSRF Testing</title>
+				<description>&lt;p&gt;Recently I’ve been looking at &lt;a href=&quot;https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/&quot;&gt;SSRF in Kubernetes&lt;/a&gt;. When testing for SSRF, I find it very useful to have a webserver/reverse proxy that I control and can configure to do a number of tasks. I’ve been using &lt;a href=&quot;https://caddyserver.com/&quot;&gt;Caddy&lt;/a&gt; for this. In this post I’ll show you how to use Caddy to test for SSRF.&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-caddy&quot;&gt;Setting up Caddy&lt;/h2&gt;
+
+&lt;p&gt;The first benefit I found, from a researcher/pentester standpoint was ease of installation. Caddy is written in Golang and, in common with most Golang utilities, runs as a single binary. Whilst there are more complex installation methods available you can just grab a binary from the &lt;a href=&quot;https://github.com/caddyserver/caddy/releases/tag/v2.6.2&quot;&gt;releases page&lt;/a&gt; extract the archive (checking signatures/checksums ofc!) and then run it.&lt;/p&gt;
+
+&lt;h2 id=&quot;configuring-caddy&quot;&gt;Configuring Caddy&lt;/h2&gt;
+
+&lt;p&gt;There’s two ways to configure Caddy, &lt;a href=&quot;https://caddyserver.com/docs/getting-started#json-vs-caddyfile&quot;&gt;JSON and Caddyfile&lt;/a&gt;. For the kind of simple examples I’m using for SSRF, Caddyfiles are generally a better option as the file is more readable.&lt;/p&gt;
+
+&lt;p&gt;In the general case if you have a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Caddyfile&lt;/code&gt; in a directory, you can start the proxy with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caddy run&lt;/code&gt;. If you want to use a different file, you can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--config&lt;/code&gt; flag. For example, if you have a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;myconfig&lt;/code&gt; in the current directory, you can start the proxy with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;caddy run --config myconfig&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;caddy-logging&quot;&gt;Caddy logging&lt;/h2&gt;
+
+&lt;p&gt;The first setup I wanted was just to have a log of any requests hitting a port. Handy for determining whether a request is causing an SSRF. Having a server listening on all interfaces on port 80, responding with a fixed string and logging the output looks like this. Note that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;log&lt;/code&gt; directive is inside the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:80&lt;/code&gt; block, as we’re logging request to that port.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Simple logger for access to port 80
+:80 {
+  respond &quot;Hello World&quot;
+  log {
+    output file 80access.log
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve got that, just start it with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo caddy run&lt;/code&gt; and you should see a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;80access.log&lt;/code&gt; in the current directory. If you hit the server with a request, you should see something like this in the log file:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;2022/12/27 16:34:42.141 info    http.log.access.log0    handled request {&quot;request&quot;: {&quot;remote_ip&quot;: &quot;217.155.25.114&quot;, &quot;remote_port&quot;: &quot;19000&quot;, &quot;proto&quot;: &quot;HTTP/1.1&quot;, &quot;method&quot;: &quot;GET&quot;, &quot;host&quot;: &quot;my.test.server&quot;, &quot;uri&quot;: &quot;/&quot;, &quot;headers&quot;: {&quot;Accept-Language&quot;: [&quot;en-GB,en;q=0.5&quot;], &quot;Accept-Encoding&quot;: [&quot;gzip, deflate&quot;], &quot;Connection&quot;: [&quot;keep-alive&quot;], &quot;Upgrade-Insecure-Requests&quot;: [&quot;1&quot;], &quot;User-Agent&quot;: [&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0&quot;], &quot;Accept&quot;: [&quot;text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8&quot;]}}, &quot;user_id&quot;: &quot;&quot;, &quot;duration&quot;: 0.000073504, &quot;size&quot;: 11, &quot;status&quot;: 200, &quot;resp_headers&quot;: {&quot;Server&quot;: [&quot;Caddy&quot;], &quot;Content-Type&quot;: [&quot;text/plain; charset=utf-8&quot;]}}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;running-on-multiple-ports-and-tls&quot;&gt;Running on multiple ports and TLS&lt;/h2&gt;
+
+&lt;p&gt;Adding new ports is just a matter of having another port block in the Caddyfile. For example adding a port 443 block looks like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Simple logger for 443 with valid TLS
+my.test.server:443 {
+  tls my@email.address
+  respond &quot;Hello Secure World&quot;
+  log {
+    output file 443access.log
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With this directive I’ve specified a host &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;my.test.server&lt;/code&gt; and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tls&lt;/code&gt; directive which takes your e-mail address as an argument. The combination of these two settings unlocks a fun trick, which is that caddy will automatically request a TLS certificate for the host you specify (assuming of course that you point the DNS A record at the machine running the server and it’s Internet facing).&lt;/p&gt;
+
+&lt;p&gt;This is very useful for services that require a valid TLS certificate.&lt;/p&gt;
+
+&lt;h2 id=&quot;internal-tls-and-on-demand&quot;&gt;Internal TLS and “on-demand”&lt;/h2&gt;
+
+&lt;p&gt;Of course sometimes you’ll be testing on an internal network, so that setup won’t work. If you don’t need valid TLS certs you can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;internal&lt;/code&gt; directive to generate self-signed certs. You can then add the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;on_demand&lt;/code&gt; directive to have Caddy generate a cert for any SNI host that’s requested.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;:443 {
+  tls internal {
+    on_demand
+  }
+  log {
+    output file 443access.log
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It’s worth noting you can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;on_demand&lt;/code&gt; on an internet facing host too and Caddy will request a valid TLS cert for any host name that points at that server, but it’s not advised as it can cause rate limiting issues with Let’s Encrypt.&lt;/p&gt;
+
+&lt;h2 id=&quot;reverse-proxy&quot;&gt;Reverse Proxy&lt;/h2&gt;
+
+&lt;p&gt;So Caddy makes a nice way of handling things like TLS and providing simple responses. Sometimes you might want to use it as a front-end for a webserver running in some other language (e.g. Ruby). Setting Caddy as a reverse proxy is pretty easy just add a line like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reverse_proxy :8080&lt;/code&gt; and replace &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:8080&lt;/code&gt; with the port your webserver is listening on.&lt;/p&gt;
+
+&lt;h2 id=&quot;redirect&quot;&gt;Redirect&lt;/h2&gt;
+
+&lt;p&gt;A handy technique for SSRF can be where you want to convert an initial request which is a POST/PUT to be a GET request. You can do this with Caddy using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;redir&lt;/code&gt; option. For example if you want to redirect a request to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://169.254.169.254&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Redirect to metadata server
+my.test.server:8444 {
+  tls my@email.address
+  redir http://169.254.169.254
+  log {
+    output file 8444access.log
+  }
+}
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;file-server&quot;&gt;File server&lt;/h2&gt;
+
+&lt;p&gt;You can also use Caddy to serve files from a specific directory with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;file_server&lt;/code&gt; directives.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;:80 {
+  root * /my_files
+  file_server
+  log {
+    output file access.log
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;respond-with-json&quot;&gt;Respond with JSON&lt;/h2&gt;
+
+&lt;p&gt;you can use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;respond&lt;/code&gt; directive and one thing I wanted to do was respond with a JSON object. This is pretty easy, just use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;respond&lt;/code&gt; directive and then specify the content type and the JSON object, and the content type is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;application/json&lt;/code&gt;. One trick to note is that I needed to remove all spaces in the response for it to work.&lt;/p&gt;
+
+&lt;h2 id=&quot;debug&quot;&gt;Debug&lt;/h2&gt;
+
+&lt;p&gt;As with any testing things don’t always go to plan, so adding the debug directive at the top of a Caddyfile (not in a port block) will give you a lot more information about what’s going on.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+  debug
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This is just a small section of the things you can do with Caddy, and I’d recommend reading the &lt;a href=&quot;https://caddyserver.com/docs/&quot;&gt;docs&lt;/a&gt; for more ideas, but hopefully it’s useful to people wanting to have simple servers for SSRF testing :)&lt;/p&gt;
+</description>
+				<pubDate>Sat, 21 Jan 2023 08:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/</guid>
+			</item>
+		
+			<item>
 				<title>Fun with SSRF - Turning the Kubernetes API Server into a port scanner</title>
 				<description>&lt;p&gt;I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the word ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.&lt;/p&gt;
 
@@ -973,49 +1093,6 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 				<pubDate>Sat, 03 Dec 2022 14:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security</title>
-				<description>&lt;p&gt;This is the ninth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Runtime Security. This section works in conjunction with the one on &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;workload security&lt;/a&gt;. Where that one looked at restricting the rights that ordinary containers have to underlying nodes, this section is more about when you might want to look at alternatives to standard “docker style” containers. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This comes down to the long-standing question in container security “do containers contain”. In my opinion there’s no binary answer to this question. Linux containers do provide a level of isolation to the underlying node &lt;em&gt;but&lt;/em&gt; there is a very large attack surface, and as we’ve seen this year there have been a number of Linux kernel vulnerabilities which have turned into &lt;a href=&quot;https://www.container-security.site/attackers/container_breakout_vulnerabilities.html&quot;&gt;container breakout attacks&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;There are way to use container style workflows and Kubernetes while improving the level of isolation provided. Typically the trade-off is that improved isolation has a level of performance impact, and sometimes workloads need more access to the host than can be provided.&lt;/p&gt;
-
-&lt;p&gt;Some approaches to addressing this problem include &lt;a href=&quot;https://gvisor.dev/&quot;&gt;gVisor&lt;/a&gt; and &lt;a href=&quot;https://katacontainers.io/&quot;&gt;katacontainers&lt;/a&gt;. Additionally, another approach which could work where you have need higher levels of workload isolation, is to use a “serverless” style approach with something like AWS Fargate, working with an EKS cluster, as here there should be no user accessible underlying node to be accessed, and container isolation is handled by the cloud service provider.&lt;/p&gt;
-
-&lt;p&gt;Windows containers also face a similar split with “process based” containers and Hyper-V containers being available for use, however there is a challenge when using Kubernetes.&lt;/p&gt;
-
-&lt;p&gt;Microsoft specifically state that “&lt;a href=&quot;https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-security#container-security-servicing-criteria&quot;&gt;Only hypervisor-isolated containers provide a security boundary, and process-isolated containers do not&lt;/a&gt;”, so where a security boundary is required, Hyper-V containers must be used.&lt;/p&gt;
-
-&lt;p&gt;In Kubernetes however &lt;a href=&quot;https://kubernetes.io/docs/concepts/windows/intro/#windows-nodes-in-kubernetes&quot;&gt;Hyper-V containers are not supported&lt;/a&gt;, so unless a serverless container option is available, high-risk workloads need to be run on a separate cluster.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s two in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-91&quot;&gt;Section 9.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - The default security posture of Linux process-based containers provides a large attack surface using a shared Linux kernel. Without hardening, it may be susceptible to exploits that allow for container escape.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Where high-risk workloads are identified, consideration should be given to using either container runtimes that provide hypervisor-level isolation for the workload or dedicated security sandboxes.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Once “high-risk” workloads have been identified, it should be possible to check whether the Kubernetes clusters in use are making appropriate use of additional isolation techniques. Typically to implement something like gVisor the workloads would specify the runtime needed using an annotation in the manifest (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runtimeClassName: gvisor&lt;/code&gt;). Alternatively if managed Kubernetes is in use, checking to see if a serverless container style was in use could be carried out.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-92&quot;&gt;Section 9.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Windows process-based containers do not provide a security barrier (per Microsoft’s guidance) allowing for possible container break-out.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Where Windows containers are used to run application containers, Hyper-V isolation should be deployed in-line with Microsoft’s security guidance.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - As mentioned above for Kubernetes if high-risk containers are being run in Windows nodes, either a serverless option or separate clusters would be needed.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;The issue of exactly how much security isolation is provided by Linux containers is a somewhat tricky question. It’s clear that they do provide some level of isolation, but with the attack surface of the Linux kernel and the other parts of the software stack, the isolation may not be sufficient for higher risk workloads. Fortunately there are other options which can be deployed with Kubernetes to provide additional isolation where needed. Next time we’ll be looking at &lt;a href=&quot;https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/&quot;&gt;Patching&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 27 Nov 2022 10:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/</guid>
 			</item>
 		
 	</channel>

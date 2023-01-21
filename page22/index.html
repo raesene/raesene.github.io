@@ -159,6 +159,39 @@
   <span class="post-date">
     
     April
+    14th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/04/14/whitehats_and_h/">White-Hats and Hacks</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Information Security Sell Out: White Hats &amp; Application Security" href="http://infosecsellout.blogspot.com/2007/04/white-hats-application-security.html">Information Security Sell Out: White Hats &amp; Application Security</a><br />
+Interesting post on the Information Security Sell out blog which comments on story from CNet <a href="http://news.com.com/Bug+hunters+face+online-apps+dilemma/2100-7348-6175737.html?part=dht&amp;tag=nl.e703"> here</a> and a post over a StillSecure <a href="http://www.stillsecureafteralltheseyears.com/ashimmy/2007/04/are_we_at_risk_.html"> here</a><br />
+I'm mainly with the sellout guy.  Whilst it's a shame that we lose an aspect of bug finding, there's no way for a company who see malicious traffic to tell what the intent of the person generating it is and the defence of "I was researching their web site security your honour" doesn't and shouldn't work.<br />
+All that said there is a problem and here it is.  with the current climate if I find a security vulnerability in a site through legitimate traffic I probably won't report it because I don't want to deal with the possibility that the site owner will take it the wrong way and accuse me of hacking.<br />
+Here's an example.  I clicked on a link to a site from a forum I hang out on, took me to the site.... LOGGED-IN as the user who'd posted the link, with the ability to view and update his profile on the site!<br />
+The site had made the very stupid mistake of putting the session identifier in the URL (D'oh).  So completely legitimate traffic, security problem identified.  But if I report it, they could easily scream "hacker" and I'd have a world of hassle to deal with which I don't need.  so I quietly told the forum poster, he removed the link and I went on my way..<br />
+So there is a fine line here. Find a problem through legitimate traffic fine... Think "ooh a problem, what happens if I try  ' OR 1=1;-- " not so fine.<br />
+What might be good would be a mechanism for people to report suspected problems to a central point anonymously that could then notify site owners...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
     9th,
     
     2007
@@ -436,36 +469,6 @@ Surely the best way as a network manager to do this is through patch management 
 No matter how many exploits Core have for their product they're never going to find as many holes as a tool that authenticates to the box and enumerates missing patches and security policy non-compliances..<br />
 Apart from anything else actually exploiting vulnerable services always runs a risk of crashing the service or indeed the server, which a patch scanning/security config scanning tool wouldn't.<br />
 The really bizarre part is that core actually use this as a <a href="http://www.coresecurity.com/?module=ContentMod&amp;action=item&amp;id=32"> case study</a> on their site...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    22nd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/02/22/security_produc/">Security products != Secure products</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Here's a thought.  If you look at large software providers code base, Microsoft, Oracle or Cisco (even though they're known as a hardware company all those switches and routers run software), you'll see that they've had vulnerabilities found in them, and for that trio a fair number.<br />
-Well now think about all the new vendors that spring onto the market with each new trend in the security market.  This year it's NAC, in previous years it's been IDS, A-V and Anti-Spyware, Endpoint security... the list goes on.<br />
-Now here's the thing, I've never in reading the websites or promotional literature for security product providers heard them say anything about their development practices or methodologies, which need to be top notch to reduce the chances of vulnerabilities cropping up.<br />
-Obviously security flaws in any software can be bad.. but it your security software isn't securely developed you're in a whole load of trouble.<br />
-So next time you're going to buy some security software, don't just ask about all the whizzy features and how compliant it'll make you.  Ask about their development practices, what code reviews are carried out, do they get external parties to validate their code, that kind of thing...</p>
 
     
     

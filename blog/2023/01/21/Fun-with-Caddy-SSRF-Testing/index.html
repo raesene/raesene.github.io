@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Fun with Caddy - SSRF Testing</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Fun with Caddy - SSRF Testing </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   January 
+	   21st,
+	     
+	   2023
+	 </span>
+	  <div class="article_body">
+	  <p>Recently I’ve been looking at <a href="https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/">SSRF in Kubernetes</a>. When testing for SSRF, I find it very useful to have a webserver/reverse proxy that I control and can configure to do a number of tasks. I’ve been using <a href="https://caddyserver.com/">Caddy</a> for this. In this post I’ll show you how to use Caddy to test for SSRF.</p>
+
+<h2 id="setting-up-caddy">Setting up Caddy</h2>
+
+<p>The first benefit I found, from a researcher/pentester standpoint was ease of installation. Caddy is written in Golang and, in common with most Golang utilities, runs as a single binary. Whilst there are more complex installation methods available you can just grab a binary from the <a href="https://github.com/caddyserver/caddy/releases/tag/v2.6.2">releases page</a> extract the archive (checking signatures/checksums ofc!) and then run it.</p>
+
+<h2 id="configuring-caddy">Configuring Caddy</h2>
+
+<p>There’s two ways to configure Caddy, <a href="https://caddyserver.com/docs/getting-started#json-vs-caddyfile">JSON and Caddyfile</a>. For the kind of simple examples I’m using for SSRF, Caddyfiles are generally a better option as the file is more readable.</p>
+
+<p>In the general case if you have a file called <code class="language-plaintext highlighter-rouge">Caddyfile</code> in a directory, you can start the proxy with <code class="language-plaintext highlighter-rouge">caddy run</code>. If you want to use a different file, you can use the <code class="language-plaintext highlighter-rouge">--config</code> flag. For example, if you have a file called <code class="language-plaintext highlighter-rouge">myconfig</code> in the current directory, you can start the proxy with <code class="language-plaintext highlighter-rouge">caddy run --config myconfig</code>.</p>
+
+<h2 id="caddy-logging">Caddy logging</h2>
+
+<p>The first setup I wanted was just to have a log of any requests hitting a port. Handy for determining whether a request is causing an SSRF. Having a server listening on all interfaces on port 80, responding with a fixed string and logging the output looks like this. Note that the <code class="language-plaintext highlighter-rouge">log</code> directive is inside the <code class="language-plaintext highlighter-rouge">:80</code> block, as we’re logging request to that port.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Simple logger for access to port 80
+:80 {
+  respond "Hello World"
+  log {
+    output file 80access.log
+  }
+}
+</code></pre></div></div>
+
+<p>Once you’ve got that, just start it with <code class="language-plaintext highlighter-rouge">sudo caddy run</code> and you should see a file called <code class="language-plaintext highlighter-rouge">80access.log</code> in the current directory. If you hit the server with a request, you should see something like this in the log file:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>2022/12/27 16:34:42.141 info    http.log.access.log0    handled request {"request": {"remote_ip": "217.155.25.114", "remote_port": "19000", "proto": "HTTP/1.1", "method": "GET", "host": "my.test.server", "uri": "/", "headers": {"Accept-Language": ["en-GB,en;q=0.5"], "Accept-Encoding": ["gzip, deflate"], "Connection": ["keep-alive"], "Upgrade-Insecure-Requests": ["1"], "User-Agent": ["Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0"], "Accept": ["text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"]}}, "user_id": "", "duration": 0.000073504, "size": 11, "status": 200, "resp_headers": {"Server": ["Caddy"], "Content-Type": ["text/plain; charset=utf-8"]}}
+</code></pre></div></div>
+
+<h2 id="running-on-multiple-ports-and-tls">Running on multiple ports and TLS</h2>
+
+<p>Adding new ports is just a matter of having another port block in the Caddyfile. For example adding a port 443 block looks like this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Simple logger for 443 with valid TLS
+my.test.server:443 {
+  tls my@email.address
+  respond "Hello Secure World"
+  log {
+    output file 443access.log
+  }
+}
+</code></pre></div></div>
+
+<p>With this directive I’ve specified a host <code class="language-plaintext highlighter-rouge">my.test.server</code> and the <code class="language-plaintext highlighter-rouge">tls</code> directive which takes your e-mail address as an argument. The combination of these two settings unlocks a fun trick, which is that caddy will automatically request a TLS certificate for the host you specify (assuming of course that you point the DNS A record at the machine running the server and it’s Internet facing).</p>
+
+<p>This is very useful for services that require a valid TLS certificate.</p>
+
+<h2 id="internal-tls-and-on-demand">Internal TLS and “on-demand”</h2>
+
+<p>Of course sometimes you’ll be testing on an internal network, so that setup won’t work. If you don’t need valid TLS certs you can use the <code class="language-plaintext highlighter-rouge">internal</code> directive to generate self-signed certs. You can then add the <code class="language-plaintext highlighter-rouge">on_demand</code> directive to have Caddy generate a cert for any SNI host that’s requested.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>:443 {
+  tls internal {
+    on_demand
+  }
+  log {
+    output file 443access.log
+  }
+}
+</code></pre></div></div>
+
+<p>It’s worth noting you can use <code class="language-plaintext highlighter-rouge">on_demand</code> on an internet facing host too and Caddy will request a valid TLS cert for any host name that points at that server, but it’s not advised as it can cause rate limiting issues with Let’s Encrypt.</p>
+
+<h2 id="reverse-proxy">Reverse Proxy</h2>
+
+<p>So Caddy makes a nice way of handling things like TLS and providing simple responses. Sometimes you might want to use it as a front-end for a webserver running in some other language (e.g. Ruby). Setting Caddy as a reverse proxy is pretty easy just add a line like <code class="language-plaintext highlighter-rouge">reverse_proxy :8080</code> and replace <code class="language-plaintext highlighter-rouge">:8080</code> with the port your webserver is listening on.</p>
+
+<h2 id="redirect">Redirect</h2>
+
+<p>A handy technique for SSRF can be where you want to convert an initial request which is a POST/PUT to be a GET request. You can do this with Caddy using the <code class="language-plaintext highlighter-rouge">redir</code> option. For example if you want to redirect a request to <code class="language-plaintext highlighter-rouge">http://169.254.169.254</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Redirect to metadata server
+my.test.server:8444 {
+  tls my@email.address
+  redir http://169.254.169.254
+  log {
+    output file 8444access.log
+  }
+}
+
+</code></pre></div></div>
+
+<h2 id="file-server">File server</h2>
+
+<p>You can also use Caddy to serve files from a specific directory with the <code class="language-plaintext highlighter-rouge">root</code> and <code class="language-plaintext highlighter-rouge">file_server</code> directives.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>:80 {
+  root * /my_files
+  file_server
+  log {
+    output file access.log
+  }
+}
+</code></pre></div></div>
+
+<h2 id="respond-with-json">Respond with JSON</h2>
+
+<p>you can use the <code class="language-plaintext highlighter-rouge">respond</code> directive and one thing I wanted to do was respond with a JSON object. This is pretty easy, just use the <code class="language-plaintext highlighter-rouge">respond</code> directive and then specify the content type and the JSON object, and the content type is <code class="language-plaintext highlighter-rouge">application/json</code>. One trick to note is that I needed to remove all spaces in the response for it to work.</p>
+
+<h2 id="debug">Debug</h2>
+
+<p>As with any testing things don’t always go to plan, so adding the debug directive at the top of a Caddyfile (not in a port block) will give you a lot more information about what’s going on.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  debug
+}
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This is just a small section of the things you can do with Caddy, and I’d recommend reading the <a href="https://caddyserver.com/docs/">docs</a> for more ideas, but hopefully it’s useful to people wanting to have simple servers for SSRF testing :)</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(48)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with Caddy - SSRF Testing&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/" title="Fun with SSRF - Turning the Kubernetes API Server into a port scanner">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2023 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
