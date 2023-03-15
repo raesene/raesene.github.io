@@ -258,6 +258,8 @@ oci-layout
 
 <p>The best tool I found for doing this without mangling our image, is <a href="https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md">crane</a>. Using <code class="language-plaintext highlighter-rouge">crane push</code> we can upload the directory to our registry without having to create a tarball first.</p>
 
+<p>In terms of which registries this will work with, I’ve tested Docker Hub, GitHub and Quay.io and they all work (it also works with harbor run locally).</p>
+
 <h3 id="running-our-webserver">Running our webserver</h3>
 
 <p>To receive the pings from our images being pulled, we need a webserver to receive them. I used Caddy for this as it works pretty well. You can see some general notes about using Caddy that I made <a href="https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/">here</a>. In this case our Caddyfile can be pretty simple as we just need it to serve files from a directory and log the requests to a file.</p>
