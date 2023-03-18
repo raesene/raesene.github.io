@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Fun with unicode - messing with output</title>
+	<title>Let's talk about anonymous access to Kubernetes</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Fun with unicode - messing with output </h1>
+  <h1>Let's talk about anonymous access to Kubernetes </h1>
 </div>
 	
 <article>
@@ -157,54 +157,64 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   November 
-	   6th,
+	   March 
+	   18th,
 	   
-	   2021
+	   2023
 	 </span>
 	  <div class="article_body">
-	  <p>This week there was some research published from Cambridge university called “<a href="https://www.trojansource.codes/">Trojan Codes</a>”, around the potential risks of RTL unicode characters in source code. Whilst this is very much not a new problem, there have been various pieces of research over the years about the difficulties of handling unicode characters, it seemed like a good cue to look at this kind of issue in the context of Kubernetes. So far I’ve not found any security issues caused by this, but I found a couple of things which could be of interest, so thought I’d write it down, in case it’s useful to anyone.</p>
+	  <p>This week there were some articles about the <a href="https://www.bleepingcomputer.com/news/security/first-known-dero-cryptojacking-operation-seen-targeting-kubernetes/">Dero Cryptojacking operation</a> and one of the details about what the attackers did caught my eye. It was mentioned that they were attacking clusters that allowed anonymous access to the Kubernetes API. Exactly how and why anonymous access is possible to Kubernetes is kind of an interesting topic that touches on a few different areas, so I thought I’d write a bit about it.</p>
 
-<h2 id="putting-unicode-into-kubernetes-manifests">Putting unicode into Kubernetes manifests</h2>
+<h2 id="how-does-anonymous-access-work">How does anonymous access work?</h2>
 
-<p>So, how do you actually put RTL style codes into Kubernetes manifests? Essentially the format is something like this <code class="language-plaintext highlighter-rouge">"\U0000202E"</code> and putting these codes in a manifest can will change how the information is stored and displayed by Kubernetes. So a concrete example would look like this</p>
+<p>Whether anonymous access works on a cluster is controlled by a flag on the <a href="https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/">kube-apiserver</a> component. The flag is <code class="language-plaintext highlighter-rouge">--anonymous-auth</code> and it defaults to <code class="language-plaintext highlighter-rouge">true</code>, so if you don’t see it in the list of parameters passed to the server anonymous access will be enabled.</p>
+
+<p>However on it’s own that won’t actually give attackers a lot of access to the cluster, as it only covers one of the three gates a request passes through before it’s processed. As shown in the Kubernetes docs <a href="https://kubernetes.io/docs/concepts/security/controlling-access/">controlling access</a> section after authentication, the request then has to pass authorization and admission control.</p>
+
+<h2 id="authorization-and-anonymous-access">Authorization and anonymous access</h2>
+
+<p>So the next step is that a request will need to match an authorization policy (typically RBAC, but possibly others as well). Of course in order to do that the request has to be assigned to an identity, and that’s where the <code class="language-plaintext highlighter-rouge">system:anonymous</code> user and <code class="language-plaintext highlighter-rouge">system:unauthenticated</code> group come in. These identities are assigned to any request that doesn’t have a valid authentication token, and are used to match against authorization policies.</p>
+
+<p>You can see this in action by looking at the <code class="language-plaintext highlighter-rouge">system:public-info-viewer</code> <code class="language-plaintext highlighter-rouge">clusterrolebinding</code> on a Kubeadm cluster.</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
 <span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRoleBinding</span>
 <span class="na">metadata</span><span class="pi">:</span>
-  <span class="na">creationTimestamp</span><span class="pi">:</span> <span class="no">null</span>
-  <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">rbac.authorization.kubernetes.io/autoupdate</span><span class="pi">:</span> <span class="s2">"</span><span class="s">true"</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">kubernetes.io/bootstrapping</span><span class="pi">:</span> <span class="s">rbac-defaults</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:public-info-viewer</span>
 <span class="na">roleRef</span><span class="pi">:</span>
   <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
   <span class="na">kind</span><span class="pi">:</span> <span class="s">ClusterRole</span>
-  <span class="na">name</span><span class="pi">:</span> <span class="s">test</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:public-info-viewer</span>
 <span class="na">subjects</span><span class="pi">:</span>
 <span class="pi">-</span> <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
-  <span class="na">kind</span><span class="pi">:</span> <span class="s">User</span>
-  <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="se">\U0000202E</span><span class="s">nimda-retsulc</span><span class="se">\U0000202C</span><span class="s">"</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">Group</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:authenticated</span>
+<span class="pi">-</span> <span class="na">apiGroup</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io</span>
+  <span class="na">kind</span><span class="pi">:</span> <span class="s">Group</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">system:unauthenticated</span>
 </code></pre></div></div>
 
-<p>If you create that manifest and then retrieve it, you can see that the <code class="language-plaintext highlighter-rouge">name</code> in the output shows as cluster-admin with a couple of white spaces in front of it.</p>
+<h2 id="anonymous-access-in-the-wild">Anonymous access in the wild</h2>
 
-<p><img src="https://raesene.github.io/assets/media/rtl-unicode.png" alt="rtl in manifest" /></p>
+<p>Now we know how anonymous access works, the question is going to be “how common is this?”. The answer is that most major distributions will enable anonymous access by default and will generally provide access to some limited number of endpoints via the <code class="language-plaintext highlighter-rouge">system:public-info-viewer</code> <code class="language-plaintext highlighter-rouge">clusterrole</code> which provides access to the <code class="language-plaintext highlighter-rouge">/version</code> endpoint along with a couple of others.</p>
 
-<h2 id="other-possible-unicode--output-corruption-fun">Other possible unicode &amp; output corruption fun</h2>
+<p>To get a sense for how many clusters this applies to we can just use <a href="https://search.censys.io/">censys</a> or <a href="https://www.shodan.io/">shodan</a> to look for clusters that return version information. This <a href="https://search.censys.io/search?resource=hosts&amp;q=services.kubernetes.version_info.git_version%3D%22*%22">censys query</a> for example shows just over one million hosts that return version information, so we can say that it’s a fairly common configuration.</p>
 
-<p>Another area where this kind of thing can cause problems for visual inspection of output is the use of “homoglyph” attacks. It’s possible to insert characters which look like an ASCII one but which are not (for example this may look like аdmin but actually the <code class="language-plaintext highlighter-rouge">a</code> character is a Cryllic character)</p>
+<p>A more serious question, which corresponds more to the points raised in the dero artice is, how many of these clusters would allow for an attacker to create workloads in them. Whilst you can’t get that exact information from Censys, it does have a query showing clusters that allow for anonymous users to enumerate pods in the cluster which shows <a href="https://search.censys.io/search?resource=hosts&amp;q=services.kubernetes.pod_names%3D%22*%22">302 cluster nodes</a> at time of writing. I’d guess some/most of those are honeypots, but also probably a couple of vulnerable clusters in there.</p>
 
-<p>Another way I noticed that you can possibly corrupt output is by changing the content of an X.509 certificate, there’s more details on that <a href="https://github.com/kubernetes/kubectl/issues/888">here</a></p>
+<h2 id="disabling-anonymous-access">Disabling anonymous access</h2>
 
-<h2 id="where-might-this-cause-a-problem">Where might this cause a problem?</h2>
+<p>On an unmanaged cluster (e.g. Rancher, Kubespray, Kubeadm) you can disable anonymous access by passing the <code class="language-plaintext highlighter-rouge">--anonymous-auth=false</code> flag to the <code class="language-plaintext highlighter-rouge">kube-apiserver</code> component. On managed clusters (e.g. EKS, GKE, AKS) you can’t do that, however what you can do is remove any RBAC rules which allow anonymous users to perform actions. For example, on a Kubeadm cluster you can remove the <code class="language-plaintext highlighter-rouge">system:public-info-viewer</code> <code class="language-plaintext highlighter-rouge">clusterrolebinding</code> and the <code class="language-plaintext highlighter-rouge">system:public-info-viewer</code> <code class="language-plaintext highlighter-rouge">clusterrole</code> and that effectively stop anonymous users getting information from the cluster.</p>
 
-<p>So now we’ve looked at this, the question is, where could this cause problems? The obvious answer here is that, if a cluster administrator is relying on the output of kubectl commands to make security decisions, ways of modifying the output could cause security issues. This is similar to <a href="https://github.com/kubernetes/kubectl/issues/888">this issue</a> in how CSR information can be represented.</p>
-
-<p>Another idea might be whether this could be used to bypass external admission controllers. If the admission controller and Kubernetes parse the information in different ways, that might be a possibility.</p>
-
-<p>It’s not a problem for the project specifically, but it is something that cluster operators should be aware of.</p>
+<p>Of course, if you have any applications that rely on those endpoints (for example for health checks) they would break, so it’s important to test any changes you make to the cluster. One option here would be to review your audit logs and see if there are any anonymous requests made to the API server.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>The complexities which go with unicode characters are definitely one to be aware of with regards to their possible security impact. There have been multiple cases in the past where security vulnerabilities have occurred due to misinterpretation of UTF-8 input, and I’m sure there will be more in the future :)</p>
+<p>Allowing some level of anonymous access is a common default in Kubernetes. In and of itself it’s not a great security concern, however it does mean that in many configurations the only thing stopping attackers compromising your cluster is RBAC rules, so a single mistake could cause significant issues, especially if your cluster is exposed to the internet.</p>
 
 	  </div>
 
@@ -230,7 +240,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with unicode - messing with output&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Let's talk about anonymous access to Kubernetes&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -258,10 +268,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2021/11/01/fun-with-CRDs/" title="Fun with CRDs - Overwriting core types">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2023/02/11/Fun-with-Containers-adding-tracking-to-your-images/" title="Fun with Containers - Adding tracking to your images">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/02/12/fun-with-secrets-copy/" title="Fun with secrets - Where did they go?">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

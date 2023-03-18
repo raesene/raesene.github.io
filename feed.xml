@@ -7,6 +7,66 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Let's talk about anonymous access to Kubernetes</title>
+				<description>&lt;p&gt;This week there were some articles about the &lt;a href=&quot;https://www.bleepingcomputer.com/news/security/first-known-dero-cryptojacking-operation-seen-targeting-kubernetes/&quot;&gt;Dero Cryptojacking operation&lt;/a&gt; and one of the details about what the attackers did caught my eye. It was mentioned that they were attacking clusters that allowed anonymous access to the Kubernetes API. Exactly how and why anonymous access is possible to Kubernetes is kind of an interesting topic that touches on a few different areas, so I thought I’d write a bit about it.&lt;/p&gt;
+
+&lt;h2 id=&quot;how-does-anonymous-access-work&quot;&gt;How does anonymous access work?&lt;/h2&gt;
+
+&lt;p&gt;Whether anonymous access works on a cluster is controlled by a flag on the &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/&quot;&gt;kube-apiserver&lt;/a&gt; component. The flag is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth&lt;/code&gt; and it defaults to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;true&lt;/code&gt;, so if you don’t see it in the list of parameters passed to the server anonymous access will be enabled.&lt;/p&gt;
+
+&lt;p&gt;However on it’s own that won’t actually give attackers a lot of access to the cluster, as it only covers one of the three gates a request passes through before it’s processed. As shown in the Kubernetes docs &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/controlling-access/&quot;&gt;controlling access&lt;/a&gt; section after authentication, the request then has to pass authorization and admission control.&lt;/p&gt;
+
+&lt;h2 id=&quot;authorization-and-anonymous-access&quot;&gt;Authorization and anonymous access&lt;/h2&gt;
+
+&lt;p&gt;So the next step is that a request will need to match an authorization policy (typically RBAC, but possibly others as well). Of course in order to do that the request has to be assigned to an identity, and that’s where the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; user and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; group come in. These identities are assigned to any request that doesn’t have a valid authentication token, and are used to match against authorization policies.&lt;/p&gt;
+
+&lt;p&gt;You can see this in action by looking at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; on a Kubeadm cluster.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRoleBinding&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;rbac.authorization.kubernetes.io/autoupdate&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;true&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;kubernetes.io/bootstrapping&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac-defaults&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:public-info-viewer&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;roleRef&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:public-info-viewer&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;subjects&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Group&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:authenticated&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Group&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:unauthenticated&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;anonymous-access-in-the-wild&quot;&gt;Anonymous access in the wild&lt;/h2&gt;
+
+&lt;p&gt;Now we know how anonymous access works, the question is going to be “how common is this?”. The answer is that most major distributions will enable anonymous access by default and will generally provide access to some limited number of endpoints via the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; which provides access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint along with a couple of others.&lt;/p&gt;
+
+&lt;p&gt;To get a sense for how many clusters this applies to we can just use &lt;a href=&quot;https://search.censys.io/&quot;&gt;censys&lt;/a&gt; or &lt;a href=&quot;https://www.shodan.io/&quot;&gt;shodan&lt;/a&gt; to look for clusters that return version information. This &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.kubernetes.version_info.git_version%3D%22*%22&quot;&gt;censys query&lt;/a&gt; for example shows just over one million hosts that return version information, so we can say that it’s a fairly common configuration.&lt;/p&gt;
+
+&lt;p&gt;A more serious question, which corresponds more to the points raised in the dero artice is, how many of these clusters would allow for an attacker to create workloads in them. Whilst you can’t get that exact information from Censys, it does have a query showing clusters that allow for anonymous users to enumerate pods in the cluster which shows &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.kubernetes.pod_names%3D%22*%22&quot;&gt;302 cluster nodes&lt;/a&gt; at time of writing. I’d guess some/most of those are honeypots, but also probably a couple of vulnerable clusters in there.&lt;/p&gt;
+
+&lt;h2 id=&quot;disabling-anonymous-access&quot;&gt;Disabling anonymous access&lt;/h2&gt;
+
+&lt;p&gt;On an unmanaged cluster (e.g. Rancher, Kubespray, Kubeadm) you can disable anonymous access by passing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; flag to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-apiserver&lt;/code&gt; component. On managed clusters (e.g. EKS, GKE, AKS) you can’t do that, however what you can do is remove any RBAC rules which allow anonymous users to perform actions. For example, on a Kubeadm cluster you can remove the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; and that effectively stop anonymous users getting information from the cluster.&lt;/p&gt;
+
+&lt;p&gt;Of course, if you have any applications that rely on those endpoints (for example for health checks) they would break, so it’s important to test any changes you make to the cluster. One option here would be to review your audit logs and see if there are any anonymous requests made to the API server.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Allowing some level of anonymous access is a common default in Kubernetes. In and of itself it’s not a great security concern, however it does mean that in many configurations the only thing stopping attackers compromising your cluster is RBAC rules, so a single mistake could cause significant issues, especially if your cluster is exposed to the internet.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 18 Mar 2023 14:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</guid>
+			</item>
+		
+			<item>
 				<title>Fun with Containers - Adding tracking to your images</title>
 				<description>&lt;p&gt;Last year I was taking a look at the OCI Image specification and I came across something kind of interesting, which is how you can get a container image to ping a URL when it’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pulled&lt;/code&gt; to a host almost like a tracking cookie. Needless to say this isn’t me dropping 0-day, I reported this to the containerd and podman security addresses back in October 2022 and the consensus appears to be that whilst this may have some security implications it’s not dreadfully serious in most cases and it’s part of the spec, so unlikely to change.&lt;/p&gt;
 
@@ -1156,37 +1216,6 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 				<pubDate>Mon, 12 Dec 2022 14:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 11 - Resource Management</title>
-				<description>&lt;p&gt;This is the eleventh part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Resource Management. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;When looking at resource management in containerized environments, the first thing to consider is that because most containers are just processes running on a shared kernel, there is a risk that a single container could consume all of the resources available on a node. Also, unlike virtual machine based environments, by default there are no resource constraints in place.&lt;/p&gt;
-
-&lt;p&gt;As a result, it’s important to define limits on obvious resources like CPU and memory and also things like processes (to stop a fork-bomb in a container from taking down the node). Container tooling will let you define these limits and, under the covers, Linux cgroups will be used to enforce them.&lt;/p&gt;
-
-&lt;p&gt;Within Kubernetes there are a number of ways to define resource limits, workloads should define their own requests for resources in &lt;a href=&quot;https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/&quot;&gt;their spec&lt;/a&gt; and then these are combined with &lt;a href=&quot;https://kubernetes.io/docs/concepts/policy/resource-quotas/&quot;&gt;ResourceQuota&lt;/a&gt; objects defined at a namespace level.&lt;/p&gt;
-
-&lt;p&gt;Having this information in place will help the Kubernetes scheduler to make better decisions about where to place workloads, and also to ensure that the workloads don’t consume more resources than they are allowed to.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s just one in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-111&quot;&gt;Section 11.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - A compromised container could disrupt the operation of applications due to excessive use of shared resources.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - All workloads running via a container orchestration system should have defined resource limits to reduce the risk of “noisy neighbors” causing availability issues with workloads in the same cluster.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  To assess whether this is in place, an assessor would look for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ResourceQuota&lt;/code&gt; objects in the cluster, and also for resource limits defined in the workload specs.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Resource management in containerized environments is something which requires particular attention, when compared to using virtual machines or physical servers as the default position of having no constraints and the shared kernel means that a single container can consume all of the resources available on a node. This is why it’s important to define resource limits for all containers, and to ensure that the limits are enforced.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 10 Dec 2022 07:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/</guid>
 			</item>
 		
 	</channel>
