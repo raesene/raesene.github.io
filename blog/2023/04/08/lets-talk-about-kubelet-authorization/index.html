@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Let's talk about Kubelet authorization</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Let's talk about Kubelet authorization </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   April 
+	   8th,
+	   
+	   2023
+	 </span>
+	  <div class="article_body">
+	  <p>I’ve been meaning to write a post about Kubelet authorization for a while now, and as there have been some posts this week where it got a mention, now seems like a good time!</p>
+
+<p>The Kubelet is the Kubernetes component which runs on each worker (and possible control plane) node and is responsible for managing the container runtime on the host. It communicates with the Kubernetes API server to get information about workloads that should be running on the node and then instantiates them using a container runtime like Containerd. To do this, it obviously needs credentials to access the API server, and needs rights to things like pods and also associated objects like secrets.</p>
+
+<p>From a security perspective these Kubelet credentials are important as, if an attacker breaks out from a container to the underlying node, there will generally be a set of kubelet credentials available to them, so they could be used to escalate rights to the cluster, as a result it’s been necessary for the Kubernetes project to take steps to restrict what the Kubelet can do, to reduce the risk of privilege escalation.</p>
+
+<h2 id="a-brief-aside---kubernetes-authorization-modes">A Brief aside - Kubernetes authorization modes</h2>
+
+<p>An important aspect of Kubernetes to discuss before talking about exactly how Kubelet authorization works, is how Kubernetes generally handles authorization. Whilst most clusters will use RBAC, it’s possible to have multiple authorization modes in any cluster. Rights provided by each authorization mode are cumulative, so it’s important to be careful about inadvertently granting rights to users. Also, if you’re using Kubernetes in-built tooling for checking rights, it’s worth noting that this <em>only</em> works with RBAC, rights granted via other authorization modes will not be analyzed.</p>
+
+<h2 id="kubelet-authorization">Kubelet authorization</h2>
+
+<p>Having talked about the fundamentals, let’s look at how Kubelet authorization works. We’ll start with a <a href="https://kind.sigs.k8s.io/">KinD</a> cluster and look at what’s visible there.</p>
+
+<p>For this we’ll use a cluster with two worker nodes, using a simple kind config</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># three node (two workers) cluster config</span>
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+</code></pre></div></div>
+
+<p>Then we can start the cluster up with <code class="language-plaintext highlighter-rouge">kind create cluster --config kind-config.yaml --name kubeletauthz</code>. Once the cluster is up and running we can shell into one of the worker nodes to look at the Kubelet credentials. You can find out what Kubeconfig file the Kubelet is using by looking at the parameters passed to the Kubelet on the command line. In the case of Kubeadm the default will be <code class="language-plaintext highlighter-rouge">--kubeconfig=/etc/kubernetes/kubelet.conf</code>. Once we know the location we can use that with Kubectl, for example to see a listing of pods in the cluster</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--kubeconfig</span><span class="o">=</span>/etc/kubernetes/kubelet.conf get po <span class="nt">-A</span>
+NAMESPACE            NAME                                                 READY   STATUS    RESTARTS   AGE
+kube-system          coredns-787d4945fb-4rspx                             1/1     Running   0          4m43s
+kube-system          coredns-787d4945fb-p5g6f                             1/1     Running   0          4m43s
+kube-system          etcd-kubeletauthz-control-plane                      1/1     Running   0          4m56s
+kube-system          kindnet-clmjl                                        1/1     Running   0          4m43s
+kube-system          kindnet-jhngj                                        1/1     Running   0          4m26s
+kube-system          kindnet-kjsvt                                        1/1     Running   0          4m27s
+kube-system          kube-apiserver-kubeletauthz-control-plane            1/1     Running   0          4m55s
+kube-system          kube-controller-manager-kubeletauthz-control-plane   1/1     Running   0          4m55s
+kube-system          kube-proxy-9v62x                                     1/1     Running   0          4m43s
+kube-system          kube-proxy-q8t5c                                     1/1     Running   0          4m26s
+kube-system          kube-proxy-vnrt6                                     1/1     Running   0          4m27s
+kube-system          kube-scheduler-kubeletauthz-control-plane            1/1     Running   0          4m56s
+local-path-storage   local-path-provisioner-75f5b54ffd-52xm9              1/1     Running   0          4m43s
+</code></pre></div></div>
+
+<p>Usually to check the rights of a principal in Kubernetes we’d use the command <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code> and if we try that with the Kubelet credentials we get back something like this.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--kubeconfig</span><span class="o">=</span>/etc/kubernetes/kubelet.conf auth can-i <span class="nt">--list</span>
+Warning: the list may be incomplete: node authorizer does not support user rule resolution
+Resources                                                       Non-Resource URLs   Resource Names   Verbs
+selfsubjectaccessreviews.authorization.k8s.io                   <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span>create]
+selfsubjectrulesreviews.authorization.k8s.io                    <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span>create]
+certificatesigningrequests.certificates.k8s.io/selfnodeclient   <span class="o">[]</span>                  <span class="o">[]</span>               <span class="o">[</span>create]
+                                                                <span class="o">[</span>/api/<span class="k">*</span><span class="o">]</span>            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/api]              <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/apis/<span class="k">*</span><span class="o">]</span>           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/apis]             <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/healthz]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/healthz]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/livez]            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/livez]            <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/openapi/<span class="k">*</span><span class="o">]</span>        <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/openapi]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/readyz]           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/readyz]           <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/version/]         <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/version/]         <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/version]          <span class="o">[]</span>               <span class="o">[</span>get]
+                                                                <span class="o">[</span>/version]          <span class="o">[]</span>               <span class="o">[</span>get]
+</code></pre></div></div>
+
+<p>Notably there are no rights to the <code class="language-plaintext highlighter-rouge">pod</code> objects that we just looked at! The clue to what’s going on here is the <code class="language-plaintext highlighter-rouge">Warning</code> line at the top which notes that the <code class="language-plaintext highlighter-rouge">node authorizor</code> doesn’t support user rule resolution.</p>
+
+<p>One quick aside is that you may be confused by the Kubelet not using RBAC as there is a <code class="language-plaintext highlighter-rouge">clusterrole</code> called <code class="language-plaintext highlighter-rouge">system:node</code> which looks like it would provide rights to nodes, however the corresponding <code class="language-plaintext highlighter-rouge">clusterrolebinding</code> doesn’t actually have any subjects (which is weird), so it has no effect!</p>
+
+<h2 id="node-authorizer">Node authorizer</h2>
+
+<p>The key to what’s going on here can be see in the configuration of the Kubernetes API server. If you look at the parameters passed to the <code class="language-plaintext highlighter-rouge">kube-apiserver</code> component you’ll see this stanza <code class="language-plaintext highlighter-rouge">--authorization-mode=Node,RBAC</code> indicating that there are two modes of authorization configured and, as we said earlier, the rights from these are cumulative.</p>
+
+<p>The <a href="https://kubernetes.io/docs/reference/access-authn-authz/node/">Node authorization mode</a> is an authorization mode with one purpose which is to provide rights to Kubelets. From the documentation page we can see that this authorization mode allows access to the kind of resources that the Kubelet needs to use like <code class="language-plaintext highlighter-rouge">pods</code>, <code class="language-plaintext highlighter-rouge">nodes</code>, <code class="language-plaintext highlighter-rouge">configmaps</code> and <code class="language-plaintext highlighter-rouge">secrets</code>. Within that group it also needs to restrict <em>which</em> secrets etc are actually accessible as you don’t want a Kubelet on one node to be able to access secrets intended for pods running on another node.</p>
+
+<p>The exact logic of what is allowed can be seen in <a href="https://github.com/kubernetes/kubernetes/blob/bd190762fb77b78788e1a3ba72d70a8a08e184b8/plugin/pkg/auth/authorizer/node/node_authorizer.go#L41">the code</a></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// NodeAuthorizer authorizes requests from kubelets, with the following logic:
+// 1. If a request is not from a node <span class="o">(</span>NodeIdentity<span class="o">()</span> returns <span class="nv">isNode</span><span class="o">=</span><span class="nb">false</span><span class="o">)</span>, reject
+// 2. If a specific node cannot be identified <span class="o">(</span>NodeIdentity<span class="o">()</span> returns <span class="nv">nodeName</span><span class="o">=</span><span class="s2">""</span><span class="o">)</span>, reject
+// 3. If a request is <span class="k">for </span>a secret, configmap, persistent volume or persistent volume claim, reject unless the verb is get, and the requested object is related to the requesting node:
+//    node &lt;- configmap
+//    node &lt;- pod
+//    node &lt;- pod &lt;- secret
+//    node &lt;- pod &lt;- configmap
+//    node &lt;- pod &lt;- pvc
+//    node &lt;- pod &lt;- pvc &lt;- pv
+//    node &lt;- pod &lt;- pvc &lt;- pv &lt;- secret
+// 4. For other resources, authorize all nodes uniformly using statically defined rules
+</code></pre></div></div>
+
+<p>You can see this in effect if you try to get <code class="language-plaintext highlighter-rouge">secrets</code> from a cluster with Kubelet credentials</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--kubeconfig</span><span class="o">=</span>/etc/kubernetes/kubelet.conf get secrets <span class="nt">-A</span>
+Error from server <span class="o">(</span>Forbidden<span class="o">)</span>: secrets is forbidden: User <span class="s2">"system:node:kubeletauthz-worker"</span> cannot list resource <span class="s2">"secrets"</span> <span class="k">in </span>API group <span class="s2">""</span> at the cluster scope: can only <span class="nb">read </span>namespaced object of this <span class="nb">type</span>
+</code></pre></div></div>
+
+<p>One important point to note on this is where the logic is “reject”, this just passes the request to other configured authorization modes, so if cluster RBAC has been modified to allow the <code class="language-plaintext highlighter-rouge">system:nodes</code> group to do something in excess of what the Node authorization mode allows then that will still be allowed.</p>
+
+<p>You can see this by, for example, editing the <code class="language-plaintext highlighter-rouge">system:node</code> <code class="language-plaintext highlighter-rouge">clusterrolebinding</code> to add the <code class="language-plaintext highlighter-rouge">system:nodes</code> group as a subject, by adding these lines to it.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:nodes
+</code></pre></div></div>
+
+<p>Once you’ve done that, if you use Kubelet credentials to try and get secrets at a cluster level, it works fine :)</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl <span class="nt">--kubeconfig</span><span class="o">=</span>/etc/kubernetes/kubelet.conf get secrets <span class="nt">-A</span>
+NAMESPACE     NAME                     TYPE                            DATA   AGE
+kube-system   bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      34m
+</code></pre></div></div>
+
+<p>There are a couple of places where this mode can’t effectively restrict permissions, which are in node and pod properties, for that we need another component.</p>
+
+<h2 id="noderestriction-admission-controller">NodeRestriction Admission Controller</h2>
+
+<p>This is where a specialized admission controller comes in. The <a href="https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction">NodeRestriction admission controller</a> looks at requests from Kubelets and, where they relate to <code class="language-plaintext highlighter-rouge">pods</code> and <code class="language-plaintext highlighter-rouge">nodes</code> it limits the rights to only those that are appropriate for the Kubelet. For example it restricts what properties of <code class="language-plaintext highlighter-rouge">node</code> objects can be modified, to stop it changing it’s own security classification, for example.</p>
+
+<h2 id="variations-in-kubernetes-distributions">Variations in Kubernetes distributions</h2>
+
+<p>It’s important to note that, as with most Kubernetes configuration topics, what we’ve discussed here relates to vanilla Kubernetes, in this case Kubeadm. Distribution providers are free to change this configuration and indeed some do so. For example Azure AKS currently defaults to allowing Kubelets <code class="language-plaintext highlighter-rouge">GET</code> access to <code class="language-plaintext highlighter-rouge">secrets</code> at the cluster level!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>When looking at Kubernetes authorization it can be tempting to focus purely on RBAC as it’s the most common option deployed in Kubernetes clusters today. However as we’ve seen there are times when RBAC alone won’t provide an adequate level of security and supplemental authorization modes and admission controllers are required. In this post we’ve looked at the Node authorization mode and NodeRestriction admission controller which are used to provide rights to Kubelets to access the resources they need to function.</p>
+
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(50)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Let's talk about Kubelet authorization&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/" title="Let's talk about anonymous access to Kubernetes">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2023 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+

@@ -7,6 +7,147 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Let's talk about Kubelet authorization</title>
+				<description>&lt;p&gt;I’ve been meaning to write a post about Kubelet authorization for a while now, and as there have been some posts this week where it got a mention, now seems like a good time!&lt;/p&gt;
+
+&lt;p&gt;The Kubelet is the Kubernetes component which runs on each worker (and possible control plane) node and is responsible for managing the container runtime on the host. It communicates with the Kubernetes API server to get information about workloads that should be running on the node and then instantiates them using a container runtime like Containerd. To do this, it obviously needs credentials to access the API server, and needs rights to things like pods and also associated objects like secrets.&lt;/p&gt;
+
+&lt;p&gt;From a security perspective these Kubelet credentials are important as, if an attacker breaks out from a container to the underlying node, there will generally be a set of kubelet credentials available to them, so they could be used to escalate rights to the cluster, as a result it’s been necessary for the Kubernetes project to take steps to restrict what the Kubelet can do, to reduce the risk of privilege escalation.&lt;/p&gt;
+
+&lt;h2 id=&quot;a-brief-aside---kubernetes-authorization-modes&quot;&gt;A Brief aside - Kubernetes authorization modes&lt;/h2&gt;
+
+&lt;p&gt;An important aspect of Kubernetes to discuss before talking about exactly how Kubelet authorization works, is how Kubernetes generally handles authorization. Whilst most clusters will use RBAC, it’s possible to have multiple authorization modes in any cluster. Rights provided by each authorization mode are cumulative, so it’s important to be careful about inadvertently granting rights to users. Also, if you’re using Kubernetes in-built tooling for checking rights, it’s worth noting that this &lt;em&gt;only&lt;/em&gt; works with RBAC, rights granted via other authorization modes will not be analyzed.&lt;/p&gt;
+
+&lt;h2 id=&quot;kubelet-authorization&quot;&gt;Kubelet authorization&lt;/h2&gt;
+
+&lt;p&gt;Having talked about the fundamentals, let’s look at how Kubelet authorization works. We’ll start with a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster and look at what’s visible there.&lt;/p&gt;
+
+&lt;p&gt;For this we’ll use a cluster with two worker nodes, using a simple kind config&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# three node (two workers) cluster config&lt;/span&gt;
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we can start the cluster up with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster --config kind-config.yaml --name kubeletauthz&lt;/code&gt;. Once the cluster is up and running we can shell into one of the worker nodes to look at the Kubelet credentials. You can find out what Kubeconfig file the Kubelet is using by looking at the parameters passed to the Kubelet on the command line. In the case of Kubeadm the default will be &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--kubeconfig=/etc/kubernetes/kubelet.conf&lt;/code&gt;. Once we know the location we can use that with Kubectl, for example to see a listing of pods in the cluster&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get po &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
+NAMESPACE            NAME                                                 READY   STATUS    RESTARTS   AGE
+kube-system          coredns-787d4945fb-4rspx                             1/1     Running   0          4m43s
+kube-system          coredns-787d4945fb-p5g6f                             1/1     Running   0          4m43s
+kube-system          etcd-kubeletauthz-control-plane                      1/1     Running   0          4m56s
+kube-system          kindnet-clmjl                                        1/1     Running   0          4m43s
+kube-system          kindnet-jhngj                                        1/1     Running   0          4m26s
+kube-system          kindnet-kjsvt                                        1/1     Running   0          4m27s
+kube-system          kube-apiserver-kubeletauthz-control-plane            1/1     Running   0          4m55s
+kube-system          kube-controller-manager-kubeletauthz-control-plane   1/1     Running   0          4m55s
+kube-system          kube-proxy-9v62x                                     1/1     Running   0          4m43s
+kube-system          kube-proxy-q8t5c                                     1/1     Running   0          4m26s
+kube-system          kube-proxy-vnrt6                                     1/1     Running   0          4m27s
+kube-system          kube-scheduler-kubeletauthz-control-plane            1/1     Running   0          4m56s
+local-path-storage   local-path-provisioner-75f5b54ffd-52xm9              1/1     Running   0          4m43s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Usually to check the rights of a principal in Kubernetes we’d use the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt; and if we try that with the Kubelet credentials we get back something like this.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf auth can-i &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
+Warning: the list may be incomplete: node authorizer does not support user rule resolution
+Resources                                                       Non-Resource URLs   Resource Names   Verbs
+selfsubjectaccessreviews.authorization.k8s.io                   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+selfsubjectrulesreviews.authorization.k8s.io                    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+certificatesigningrequests.certificates.k8s.io/selfnodeclient   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Notably there are no rights to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pod&lt;/code&gt; objects that we just looked at! The clue to what’s going on here is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Warning&lt;/code&gt; line at the top which notes that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node authorizor&lt;/code&gt; doesn’t support user rule resolution.&lt;/p&gt;
+
+&lt;p&gt;One quick aside is that you may be confused by the Kubelet not using RBAC as there is a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:node&lt;/code&gt; which looks like it would provide rights to nodes, however the corresponding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; doesn’t actually have any subjects (which is weird), so it has no effect!&lt;/p&gt;
+
+&lt;h2 id=&quot;node-authorizer&quot;&gt;Node authorizer&lt;/h2&gt;
+
+&lt;p&gt;The key to what’s going on here can be see in the configuration of the Kubernetes API server. If you look at the parameters passed to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-apiserver&lt;/code&gt; component you’ll see this stanza &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--authorization-mode=Node,RBAC&lt;/code&gt; indicating that there are two modes of authorization configured and, as we said earlier, the rights from these are cumulative.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/node/&quot;&gt;Node authorization mode&lt;/a&gt; is an authorization mode with one purpose which is to provide rights to Kubelets. From the documentation page we can see that this authorization mode allows access to the kind of resources that the Kubelet needs to use like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configmaps&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt;. Within that group it also needs to restrict &lt;em&gt;which&lt;/em&gt; secrets etc are actually accessible as you don’t want a Kubelet on one node to be able to access secrets intended for pods running on another node.&lt;/p&gt;
+
+&lt;p&gt;The exact logic of what is allowed can be seen in &lt;a href=&quot;https://github.com/kubernetes/kubernetes/blob/bd190762fb77b78788e1a3ba72d70a8a08e184b8/plugin/pkg/auth/authorizer/node/node_authorizer.go#L41&quot;&gt;the code&lt;/a&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;// NodeAuthorizer authorizes requests from kubelets, with the following logic:
+// 1. If a request is not from a node &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NodeIdentity&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; returns &lt;span class=&quot;nv&quot;&gt;isNode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reject
+// 2. If a specific node cannot be identified &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NodeIdentity&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; returns &lt;span class=&quot;nv&quot;&gt;nodeName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reject
+// 3. If a request is &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;a secret, configmap, persistent volume or persistent volume claim, reject unless the verb is get, and the requested object is related to the requesting node:
+//    node &amp;lt;- configmap
+//    node &amp;lt;- pod
+//    node &amp;lt;- pod &amp;lt;- secret
+//    node &amp;lt;- pod &amp;lt;- configmap
+//    node &amp;lt;- pod &amp;lt;- pvc
+//    node &amp;lt;- pod &amp;lt;- pvc &amp;lt;- pv
+//    node &amp;lt;- pod &amp;lt;- pvc &amp;lt;- pv &amp;lt;- secret
+// 4. For other resources, authorize all nodes uniformly using statically defined rules
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;You can see this in effect if you try to get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt; from a cluster with Kubelet credentials&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get secrets &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
+Error from server &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Forbidden&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: secrets is forbidden: User &lt;span class=&quot;s2&quot;&gt;&quot;system:node:kubeletauthz-worker&quot;&lt;/span&gt; cannot list resource &lt;span class=&quot;s2&quot;&gt;&quot;secrets&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;API group &lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt; at the cluster scope: can only &lt;span class=&quot;nb&quot;&gt;read &lt;/span&gt;namespaced object of this &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One important point to note on this is where the logic is “reject”, this just passes the request to other configured authorization modes, so if cluster RBAC has been modified to allow the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:nodes&lt;/code&gt; group to do something in excess of what the Node authorization mode allows then that will still be allowed.&lt;/p&gt;
+
+&lt;p&gt;You can see this by, for example, editing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:node&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; to add the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:nodes&lt;/code&gt; group as a subject, by adding these lines to it.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:nodes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve done that, if you use Kubelet credentials to try and get secrets at a cluster level, it works fine :)&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get secrets &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
+NAMESPACE     NAME                     TYPE                            DATA   AGE
+kube-system   bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      34m
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;There are a couple of places where this mode can’t effectively restrict permissions, which are in node and pod properties, for that we need another component.&lt;/p&gt;
+
+&lt;h2 id=&quot;noderestriction-admission-controller&quot;&gt;NodeRestriction Admission Controller&lt;/h2&gt;
+
+&lt;p&gt;This is where a specialized admission controller comes in. The &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction&quot;&gt;NodeRestriction admission controller&lt;/a&gt; looks at requests from Kubelets and, where they relate to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt; it limits the rights to only those that are appropriate for the Kubelet. For example it restricts what properties of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node&lt;/code&gt; objects can be modified, to stop it changing it’s own security classification, for example.&lt;/p&gt;
+
+&lt;h2 id=&quot;variations-in-kubernetes-distributions&quot;&gt;Variations in Kubernetes distributions&lt;/h2&gt;
+
+&lt;p&gt;It’s important to note that, as with most Kubernetes configuration topics, what we’ve discussed here relates to vanilla Kubernetes, in this case Kubeadm. Distribution providers are free to change this configuration and indeed some do so. For example Azure AKS currently defaults to allowing Kubelets &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt; access to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt; at the cluster level!&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;When looking at Kubernetes authorization it can be tempting to focus purely on RBAC as it’s the most common option deployed in Kubernetes clusters today. However as we’ve seen there are times when RBAC alone won’t provide an adequate level of security and supplemental authorization modes and admission controllers are required. In this post we’ve looked at the Node authorization mode and NodeRestriction admission controller which are used to provide rights to Kubelets to access the resources they need to function.&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 08 Apr 2023 15:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</guid>
+			</item>
+		
+			<item>
 				<title>Let's talk about anonymous access to Kubernetes</title>
 				<description>&lt;p&gt;This week there were some articles about the &lt;a href=&quot;https://www.bleepingcomputer.com/news/security/first-known-dero-cryptojacking-operation-seen-targeting-kubernetes/&quot;&gt;Dero Cryptojacking operation&lt;/a&gt; and one of the details about what the attackers did caught my eye. It was mentioned that they were attacking clusters that allowed anonymous access to the Kubernetes API. Exactly how and why anonymous access is possible to Kubernetes is kind of an interesting topic that touches on a few different areas, so I thought I’d write a bit about it.&lt;/p&gt;
 
@@ -1159,63 +1300,6 @@ pipelines are available for deployment to container runtime environments.&lt;/p&
 				<pubDate>Wed, 14 Dec 2022 14:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/14/PCI-Kubernetes-Section13-Registry/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/14/PCI-Kubernetes-Section13-Registry/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 12 - Container Image Building</title>
-				<description>&lt;p&gt;This is the twelfth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Container Image Building. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This section overlaps somewhat with &lt;a href=&quot;https://raesene.github.io/blog/2022/10/15/PCI-Kubernetes-Section3-workload-security/&quot;&gt;section 3 on workload security&lt;/a&gt;, but expands it with some specific concerns that need to be addressed about how companies build container images.&lt;/p&gt;
-
-&lt;p&gt;Image building is a fundamental part of the container lifecycle, so it’s important to understand how to do it securely, and there’s a couple of aspects to this.&lt;/p&gt;
-
-&lt;p&gt;The first one is the user that the containers run as. By default, Docker and similar tools run containers as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user. Whilst there are some restrictions placed on the container even when it’s root, ideally images should be built to run as non-root users and then this restriction should be enforced by Kubernetes admission control. One reason for this is that running as root tends to give a process more access to the Linux kernel meaning that there are more opportunities to exploit Linux kernel vulnerabilities that may exist in the shared kernel of the host.&lt;/p&gt;
-
-&lt;p&gt;The second aspect is the base image that is used to build the container image. The base image is the starting point for the image, and it’s important to make sure that it’s up to date and that it’s not been tampered with. This is especially important if the base image is being pulled from a public registry, as there’s a risk that it’s been compromised. It’s also important to make sure that the base image is as minimal as possible, as this reduces the attack surface of the image, and improves maintainability.&lt;/p&gt;
-
-&lt;p&gt;In general, for images an organization are building internally, it’s also a good idea to try and standardize on a small set of base images. This eases the burden of keeping the images up to date, and also makes it easier to audit the images to make sure that they’re not using any vulnerable packages.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s four in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-121&quot;&gt;Section 12.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Container base images downloaded from untrusted sources, or which contain unnecessary packages, increase the risk of supply chain attacks&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Application container images should be built from trusted, up-to-date minimal base images.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Reviewing a cluster for this requirement is a little tricky, as it’s not something that can be easily checked by looking at the cluster. The best way to check for this is to look at the Dockerfiles that are used to build the images, and speak to the developers to understand the process being used to maintain the base images.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-122&quot;&gt;Section 12.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Base images downloaded from external container image registries can introduce malware, backdoors, and vulnerabilities.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - A set of common base container images should be maintained in a container registry that is under the entity’s control.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  For this requirement looking at the container images in use in the cluster can be helpful. There will be a mix of internally maintained and externally maintained images, and it’s important to understand the process for managing the externally maintained images.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-123&quot;&gt;Section 12.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - The default position of Linux containers, which is to run as root, could increase the risk of a container breakout.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Container images should be built to run as a standard (non-root) user.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Generally when enforcing this requirement, an external admission control system (e.g. Kyverno or OPA Gatekeeper) will be in use, so reviewing policies should confirm that this is being enforced. Alternatively reviewing Dockerfiles for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;USER&lt;/code&gt; directive and/or Kubernetes manifests to confirm that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runAsNonRoot&lt;/code&gt; flag is being set can be helpful.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-124&quot;&gt;Section 12.4&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Application secrets (i.e., cloud API credentials) embedded in container images can facilitate unauthorized access.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Secrets should never be included in application images. Where secrets are required during the building of an image (for example to provide credentials for accessing source code) this process should leverage container builder techniques to ensure that the secret will not be present in the final image.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; -  Reviewing running containers with secrets scanning software like &lt;a href=&quot;https://aquasecurity.github.io/trivy/v0.27.1/docs/secret/scanning/&quot;&gt;Trivy&lt;/a&gt; can be helpful here, however it’s worth noting that this kind of software can be false-positive heavy. Dockerfiles can also be helpful to note any secrets being added to the image. Another good approach would be to understand the organization’s approach to secrets management.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Container image building is a fundamental part of the container lifecycle, and it’s important to understand how to do it securely. This post has looked at some of the PCI requirements that are relevant to this process, and how to review for them.&lt;/p&gt;
-</description>
-				<pubDate>Mon, 12 Dec 2022 14:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/12/PCI-Kubernetes-Section12-Container-Image-Building/</guid>
 			</item>
 		
 	</channel>
