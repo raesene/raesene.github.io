@@ -7,6 +7,125 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with container images - Bypassing vulnerability scanners</title>
+				<description>&lt;p&gt;At Last week’s &lt;a href=&quot;https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/&quot;&gt;Kubecon EU&lt;/a&gt; I was fortunate enough to be on stage with &lt;a href=&quot;https://twitter.com/IanColdwater&quot;&gt;Ian Coldwater&lt;/a&gt;, &lt;a href=&quot;https://twitter.com/bradgeesaman&quot;&gt;Brad Geesaman&lt;/a&gt;, and &lt;a href=&quot;https://twitter.com/mauilion&quot;&gt;Duffie Cooley&lt;/a&gt; presenting a talk called “&lt;a href=&quot;https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/program/schedule/&quot;&gt;Malicious Compliance: Reflections on Trusting Container Scanners&lt;/a&gt;”.&lt;/p&gt;
+
+&lt;p&gt;In this talk, one of the things we looked at was how it would be possible for a malicious container image to bypass container vulnerability scanners. We built up a set of techniques to demonstrate how this worked, with the details hosted on &lt;a href=&quot;https://github.com/bgeesaman/malicious-compliance&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;As with any talk we cam up with quite a few ideas that we couldn’t fit in, for time, so I wanted to quickly talk about one I came up with as it’s a quick (and somewhat silly) way to bypass container vulnerability scanners.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-do-container-vulnerability-scanners-look-for&quot;&gt;What do container vulnerability scanners look for?&lt;/h2&gt;
+
+&lt;p&gt;As we talked about during the presentation, there are a number of files and directories that contain information used by vulnerability scanners and SBOM tools to identify what software is installed in a container image, and what vulnerabilities are present in that software.&lt;/p&gt;
+
+&lt;p&gt;So obviously anything which stops the scanner look at those locations could interfere with their operation.  With that idea in mind, I was thinking of some ways to do this, and I came up with a simple one.&lt;/p&gt;
+
+&lt;h2 id=&quot;runtime-image-extraction&quot;&gt;Runtime image extraction&lt;/h2&gt;
+
+&lt;p&gt;If we have a container image which only creates the container filesystem at runtime then scanners (which operate statically on images, rather than executing them) won’t be able to see that filesystem, and will likely just return an empty set of results.&lt;/p&gt;
+
+&lt;p&gt;The way I came up with to do this was a simple golang program which takes a tarball and a command as arguments, then extracts the tarball and executes the command.&lt;/p&gt;
+
+&lt;p&gt;Before I talk about the code, I’ll make it clear this is purely a PoC it’s not something anyone should use in production!&lt;/p&gt;
+
+&lt;p&gt;The basic code looks like this :-&lt;/p&gt;
+
+&lt;div class=&quot;language-golang highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;package&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;fmt&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;os&quot;&lt;/span&gt;
+	&lt;span class=&quot;s&quot;&gt;&quot;os/exec&quot;&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;archiver&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;github.com/mholt/archiver/v3&quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;func&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;// Check if the correct number of arguments are provided&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Usage: go run main.go &amp;lt;tar_file&amp;gt; &amp;lt;file to execute&amp;gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;tarFile&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;//password := os.Args[2]&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;destination&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;.&quot;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;archiver&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Tar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;MkdirAll&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;               &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ContinueOnError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;        &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;OverwriteExisting&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;      &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;ImplicitTopLevelFolder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;c&quot;&gt;// Use archiver library to open and extract the ZIP file&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Unarchive&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tarFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;destination&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Failed to unzip:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Unzip completed successfully!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Command&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Output&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;//err = cmd.Run()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;nil&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Println&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Failed to execute:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;fmt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;output %s&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The code is pretty simple essentially we just take the tarball and extract it to the current directory, then execute the command provided as the second argument, which by that point can run binaries from the extracted tarball.&lt;/p&gt;
+
+&lt;h2 id=&quot;building-the-binary&quot;&gt;Building the binary&lt;/h2&gt;
+
+&lt;p&gt;An important note is that at the point the extractor runs there is nothing else in the container image, so it’ll need to be compiled statically. something like this.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;CGO_ENABLED&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0 go build &lt;span class=&quot;nt&quot;&gt;-ldflags&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;-s -w&quot;&lt;/span&gt; main.go
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve done that you can use a trick from the talk to ensure the binary itself doesn’t have any visible vulnerabilities. Just pack it with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;upx&lt;/code&gt; and that will fix that problem.&lt;/p&gt;
+
+&lt;h2 id=&quot;getting-the-tarball-to-run&quot;&gt;Getting the tarball to run&lt;/h2&gt;
+
+&lt;p&gt;With the binary built you can just create a tarball by using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker export&lt;/code&gt; with any running (or stopped) container. Any Docker image should work fine for this.&lt;/p&gt;
+
+&lt;h2 id=&quot;building-the-docker-image&quot;&gt;Building the Docker image&lt;/h2&gt;
+
+&lt;p&gt;Now you can create a Dockerfile like this :-&lt;/p&gt;
+
+&lt;div class=&quot;language-dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; scratch&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;COPY&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; image.tar /&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;COPY&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; main /&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;ENTRYPOINT&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; [&quot;/main&quot;,&quot;image.tar&quot;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;An important point here is using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ENTRYPOINT&lt;/code&gt; rather than &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CMD&lt;/code&gt; as we want to be able to pass an argument to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run&lt;/code&gt; and have it be passed to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main&lt;/code&gt; as the second argument.&lt;/p&gt;
+
+&lt;p&gt;With that docker file something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build -t obfuscator .&lt;/code&gt; should work fine.&lt;/p&gt;
+
+&lt;h2 id=&quot;running-the-image&quot;&gt;Running the image&lt;/h2&gt;
+
+&lt;p&gt;Now you can run the image like this would run the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ls&lt;/code&gt; in the container :-&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run &lt;span class=&quot;nt&quot;&gt;--rm&lt;/span&gt; obfuscator &lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;does-it-fool-scanners&quot;&gt;Does it fool scanners?&lt;/h2&gt;
+
+&lt;p&gt;Of course none of this is terribly useful if it doesn’t actually fool scanners. Happily a check with Trivy, Grype, Docker Scan and Docker Scout came up clean, when using our super vulnerable &lt;a href=&quot;https://github.com/bgeesaman/malicious-compliance/blob/main/docker/Dockerfile-0-base&quot;&gt;base image&lt;/a&gt; from the talk :)&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This is a pretty silly way to bypass scanners, but it hopefully makes a useful point, which was one of our takeaways from the talk. If you can’t trust the people that built a container image (or any other artifact) then you can’t rely on tools like container vulnerability scanners to tell you any useful information about the contents of that image. You need to consider what’s in the image yourself, and make your own decisions about whether it’s safe to use! In case anyone wants to have a look at this, the code is &lt;a href=&quot;https://github.com/raesene/container_image_obfuscator&quot;&gt;on GitHub&lt;/a&gt;&lt;/p&gt;
+
+</description>
+				<pubDate>Sat, 22 Apr 2023 15:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2023/04/22/Fun-with-container-images-Bypassing-vulnerability-scanners/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/04/22/Fun-with-container-images-Bypassing-vulnerability-scanners/</guid>
+			</item>
+		
+			<item>
 				<title>Let's talk about Kubelet authorization</title>
 				<description>&lt;p&gt;I’ve been meaning to write a post about Kubelet authorization for a while now, and as there have been some posts this week where it got a mention, now seems like a good time!&lt;/p&gt;
 
@@ -1242,64 +1361,6 @@ single file. c. Labels should be used to semantically identify objects.&lt;/p&gt
 				<pubDate>Fri, 16 Dec 2022 14:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 13 - Registry</title>
-				<description>&lt;p&gt;This is the thirteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the “Registry” section which talks about Container Registry controls. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Container registries are a key part of an Kubernetes environment as they store the images which are used to create the containers that run the applications hosted in the cluster. Also as I mentioned in the post on &lt;a href=&quot;https://raesene.github.io/blog/2022/12/03/PCI-Kubernetes-Section10-Patching/&quot;&gt;patching&lt;/a&gt;, software updates should be carried by re-building images, pushing them to the registry and then rolling out the new version of the application. This means that the registry is a key part of the update process.&lt;/p&gt;
-
-&lt;p&gt;From a technology standpoint container registries are relatively simple. They provide an HTTP API which follows the &lt;a href=&quot;https://github.com/opencontainers/distribution-spec&quot;&gt;OCI distribution specification&lt;/a&gt;. The OCI distribution specification is a standard for how to interact with a registry, it doesn’t specify how the registry is implemented. There are a number of different implementations of the specification, including &lt;a href=&quot;https://hub.docker.com/&quot;&gt;Docker Hub&lt;/a&gt;, &lt;a href=&quot;https://azure.microsoft.com/en-us/services/container-registry/&quot;&gt;Azure Container Registry&lt;/a&gt;, &lt;a href=&quot;https://cloud.google.com/container-registry&quot;&gt;Google Container Registry&lt;/a&gt; and &lt;a href=&quot;https://aws.amazon.com/ecr/&quot;&gt;Amazon Elastic Container Registry&lt;/a&gt;. The specification is also implemented by &lt;a href=&quot;https://goharbor.io/&quot;&gt;Harbor&lt;/a&gt;, an open source registry implementation.&lt;/p&gt;
-
-&lt;p&gt;OCI Registries can also be used to store other types of artifacts, such as Helm charts, using projects like &lt;a href=&quot;https://oras.land/&quot;&gt;ORAS&lt;/a&gt; but for the purposes of this post I’m going to focus on the storage of container images.&lt;/p&gt;
-
-&lt;p&gt;An important point about registries is that public images in registries like Docker Hub are not necessarily maintained/curated. There is a set of &lt;a href=&quot;https://docs.docker.com/docker-hub/official_images/&quot;&gt;Docker Official Images&lt;/a&gt; which are generally maintained (although some are &lt;a href=&quot;https://blog.aquasec.com/docker-official-images&quot;&gt;deprecated&lt;/a&gt; so care is still needed) but there are also a lot of images which are not maintained by anyone. This means that you should be careful about using images from public registries, especially if they are not maintained by a trusted source. You should also be careful about using images from private registries that you don’t control. If you’re using a private registry you should be careful about who has access to it and what images are stored in it.&lt;/p&gt;
-
-&lt;p&gt;In terms of managing images for production systems, the safest approach is to combine internally managed images hosted in a private registry with public images where required. The public images should be signed using something like &lt;a href=&quot;https://github.com/sigstore/cosign&quot;&gt;cosign&lt;/a&gt; or pinned to specific SHA256 hashes. This means that you can be sure that the image you’re using is the one you expect and that it hasn’t been modified.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s four in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-131&quot;&gt;Section 13.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Unauthorized modification of an organization’s container images could allow an attacker to place malicious software into the production container environment.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - a. Access to container registries managed by the organization should be controlled. b. Rights to modify or replace images should be limited to authorized individuals.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Exact details of how this is achieved will depend on the registry or registries in use, but access control should be applied to any modification of the images in the registry. Reviewing for this could be done by listing the container images in use in a cluster and then testing to see whether these images are accessible publicly/without authentication and confirming that attempts to modify them without authentication are rejected.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-132&quot;&gt;Section 13.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - A lack of segregation between production and non-production container registries may result in insecure images deployed to the production environment.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Consider using two registries, one for production or business-critical workloads and one for development/test purposes, to assist in preventing image sprawl and the opportunity for an unmaintained or vulnerable image being accidentally pulled into a production cluster.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Reviewing this recommendation would likely largely be done by speaking to the people responsible for the PCI environment and confirming which registries are used. A check coule be carried out again by listing the images in use in the cluster and then checking to see whether they are from a production or non-production registry.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-133&quot;&gt;Section 13.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Vulnerabilities can be present in base images, regardless of the source of the images, via misconfiguration and other methods.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - If available, registries should regularly scan images and prevent vulnerable images from being deployed to container runtime environments.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Vulnerability scanning at the registry level is one of the better approaches to container vulnerability scanning as the registry should be the canonical source of images. Some registries will provide image scanning functionality directly, or third-party scanning tools such as &lt;a href=&quot;https://github.com/aquasecurity/trivy&quot;&gt;Trivy&lt;/a&gt; can be used to scan images.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-134&quot;&gt;Section 13.4&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Known good images can be maliciously or inadvertently substituted or modified and deployed to container runtime environments..&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Registries should be configured to integrate with the image build processes such that only signed images from authorized build
-pipelines are available for deployment to container runtime environments.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Image signing is a good control to help ensure that the images in the registry are the ones that you expect. The main ecosystem currently in use for this is &lt;a href=&quot;https://www.sigstore.dev/&quot;&gt;sigstore&lt;/a&gt; which allows for signatures to be stored on a transparency log. This allows for the signatures to be verified without having to trust the registry.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Container registries are a vital part of any Kubernetes clusters, so it’s not surprising that there are control recommendations relating to them. Used correctly, they can help ensure that Kubernetes clusters are running trusted and up to date images.&lt;/p&gt;
-</description>
-				<pubDate>Wed, 14 Dec 2022 14:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/12/14/PCI-Kubernetes-Section13-Registry/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/14/PCI-Kubernetes-Section13-Registry/</guid>
 			</item>
 		
 	</channel>
