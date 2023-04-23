@@ -8,11 +8,11 @@
 		
 			<item>
 				<title>Fun with container images - Bypassing vulnerability scanners</title>
-				<description>&lt;p&gt;At Last week’s &lt;a href=&quot;https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/&quot;&gt;Kubecon EU&lt;/a&gt; I was fortunate enough to be on stage with &lt;a href=&quot;https://twitter.com/IanColdwater&quot;&gt;Ian Coldwater&lt;/a&gt;, &lt;a href=&quot;https://twitter.com/bradgeesaman&quot;&gt;Brad Geesaman&lt;/a&gt;, and &lt;a href=&quot;https://twitter.com/mauilion&quot;&gt;Duffie Cooley&lt;/a&gt; presenting a talk called “&lt;a href=&quot;https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/program/schedule/&quot;&gt;Malicious Compliance: Reflections on Trusting Container Scanners&lt;/a&gt;”.&lt;/p&gt;
+				<description>&lt;p&gt;At Last week’s &lt;a href=&quot;https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/&quot;&gt;Kubecon EU&lt;/a&gt; I was fortunate enough to be on stage with &lt;a href=&quot;https://twitter.com/IanColdwater&quot;&gt;Ian Coldwater&lt;/a&gt;, &lt;a href=&quot;https://twitter.com/bradgeesaman&quot;&gt;Brad Geesaman&lt;/a&gt;, and &lt;a href=&quot;https://twitter.com/mauilion&quot;&gt;Duffie Cooley&lt;/a&gt; presenting a talk called “&lt;a href=&quot;https://sched.co/1Hybu&quot;&gt;Malicious Compliance: Reflections on Trusting Container Scanners&lt;/a&gt;”.&lt;/p&gt;
 
 &lt;p&gt;In this talk, one of the things we looked at was how it would be possible for a malicious container image to bypass container vulnerability scanners. We built up a set of techniques to demonstrate how this worked, with the details hosted on &lt;a href=&quot;https://github.com/bgeesaman/malicious-compliance&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;As with any talk we cam up with quite a few ideas that we couldn’t fit in, for time, so I wanted to quickly talk about one I came up with as it’s a quick (and somewhat silly) way to bypass container vulnerability scanners.&lt;/p&gt;
+&lt;p&gt;As with any talk we came up with quite a few ideas that we couldn’t fit in, for time, so I wanted to quickly talk about one I came up with as it’s a quick (and somewhat silly) way to bypass container vulnerability scanners.&lt;/p&gt;
 
 &lt;h2 id=&quot;what-do-container-vulnerability-scanners-look-for&quot;&gt;What do container vulnerability scanners look for?&lt;/h2&gt;
 
