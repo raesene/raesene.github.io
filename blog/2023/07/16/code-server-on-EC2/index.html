@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Getting a VS Code Server running on EC2</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Getting a VS Code Server running on EC2 </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   July 
+	   16th,
+	   
+	   2023
+	 </span>
+	  <div class="article_body">
+	  <p>As part of the preparations for the <a href="https://www.steelcon.info/the-event/workshops/">workshop on Container</a> security that myself and <a href="https://twitter.com/smarticu5/">Iain Smart</a> ran at this year’s <a href="https://www.steelcon.info/">Steelcon</a>, we were looking into how to provide a browser based terminal for students running in EC2. There were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order.</p>
+
+<p>After looking at various options, we decided to see if we could get <a href="https://github.com/coder/code-server">code-server</a> working. It’s a really nice projects that provides a hosted version of VS Code, which gives you file exploring/editing, a terminal and port forwarding for local applications, all in a browser.</p>
+
+<p>After the conference, I decided to extract the config into a stand-alone set of Ansible tasks, and put it into my <a href="https://github.com/raesene/container_sec_workstation">Container Security Workstation</a> repo. You can see the overall playbook <a href="https://github.com/raesene/container_sec_workstation/blob/main/ec2_container_workstation.yml">here</a> but we’ll go through the key parts in this post.</p>
+
+<p>There were a couple of interesting technical aspects to getting it all working, which I thought I’d write-up here, in case it’s of use to other people!</p>
+
+<h2 id="setting-up-an-ec2-instance-with-ansible">Setting up an EC2 instance with Ansible</h2>
+
+<p>This is relatively straight-forward, but with one caveat, that Ansible changed the syntax of this, so if you have an older version of ansible this may not work. First up install the AWS ansible galaxy role <code class="language-plaintext highlighter-rouge">ansible-galaxy collection install amazon.aws</code> then have a block like this to setup the EC2 and wait for it to be available</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">start an instance with a public IP address</span>
+  <span class="na">amazon.aws.ec2_instance</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Container</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Workstation"</span>
+    <span class="na">key_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">vpc_subnet_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">region</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">instance_type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">security_group</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">network</span><span class="pi">:</span>
+      <span class="na">assign_public_ip</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">image_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">wait_timeout</span><span class="pi">:</span> <span class="m">60</span>
+    <span class="na">state</span><span class="pi">:</span> <span class="s">running</span>
+  <span class="na">register</span><span class="pi">:</span> <span class="s">ec2</span>
+
+<span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Add all instance public IPs to host group</span>
+  <span class="na">add_host</span><span class="pi">:</span> <span class="s">hostname= groups=ec2host</span>
+  <span class="na">loop</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+  
+<span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Wait for SSH to be available</span>
+  <span class="na">delegate_to</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+  <span class="na">wait_for_connection</span><span class="pi">:</span>
+    <span class="na">delay</span><span class="pi">:</span> <span class="m">20</span>
+    <span class="na">timeout</span><span class="pi">:</span> <span class="m">60</span>
+  <span class="na">with_items</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+</code></pre></div></div>
+
+<p>A couple of key points to note for this. you’ll need a valid API connection to AWS with enough rights to create an EC2 instance. You’ll then need to have the information for the various variables here</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">key_pair</code> - The name of an SSH key pair in your AWS account to use for access to the host</li>
+  <li><code class="language-plaintext highlighter-rouge">subnet_id</code> - The ID of the subnet to place the EC2 in</li>
+  <li><code class="language-plaintext highlighter-rouge">region</code> - The region to use</li>
+  <li><code class="language-plaintext highlighter-rouge">instance_type</code> - The EC2 instance type to use</li>
+  <li><code class="language-plaintext highlighter-rouge">security_group</code> - A security group that exists in your AWS account which allows at least 22/TCP, probably also 443/TCP for Caddy.</li>
+  <li><code class="language-plaintext highlighter-rouge">ami_id</code> - the AMI ID to use for the host. In my case I use an ubuntu:22.04 based AMI.</li>
+</ul>
+
+<h2 id="code-server-install-and-config">Code Server Install and Config</h2>
+
+<p>The basic installation of Code server is pretty straight-forward. They provide a deb package, so we can just download an install that</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Code Server</span>
+    <span class="na">get_url</span><span class="pi">:</span>
+      <span class="na">url</span><span class="pi">:</span> <span class="s">https://github.com/coder/code-server/releases/download/v4.14.0/code-server_4.14.0_amd64.deb</span>
+      <span class="na">dest</span><span class="pi">:</span> <span class="s">/tmp/code-server.deb</span>
+
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Code Server</span>
+    <span class="na">apt</span><span class="pi">:</span>
+      <span class="na">deb</span><span class="pi">:</span> <span class="s">/tmp/code-server.deb</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">present</span>
+  
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">start code server</span>
+    <span class="na">systemd</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">code-server@ubuntu</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">started</span>
+      <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+</code></pre></div></div>
+
+<p>After that there’s a couple of configuration changes to make, first I wanted to move the port from <code class="language-plaintext highlighter-rouge">8080</code> to <code class="language-plaintext highlighter-rouge">18080</code> as I’ll often use <code class="language-plaintext highlighter-rouge">8080</code> for other things. Using Ansible’s <code class="language-plaintext highlighter-rouge">lineinfile</code> was a good way to do that, and pointing it at the default config file location in the user’s home directory. As we’re using an Ubuntu EC2 instance here, that’ll be <code class="language-plaintext highlighter-rouge">/home/ubuntu</code>.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Change port to 18080 in the code-server config file</span>
+    <span class="na">lineinfile</span><span class="pi">:</span>
+      <span class="na">path</span><span class="pi">:</span> <span class="s">/home/ubuntu/.config/code-server/config.yaml</span>
+      <span class="na">regexp</span><span class="pi">:</span> <span class="s1">'</span><span class="s">^bind-addr:'</span>
+      <span class="na">line</span><span class="pi">:</span> <span class="s1">'</span><span class="s">bind-addr:</span><span class="nv"> </span><span class="s">127.0.0.1:18080'</span>
+</code></pre></div></div>
+
+<p>You might notice that we’re still listening on <code class="language-plaintext highlighter-rouge">127.0.0.1</code> here, but we’ll get to making this accessible remotely in a bit!</p>
+
+<p>Next up we want to change the password of course. Code Server has different <a href="https://coder.com/docs/code-server/latest/guide#external-authentication">authentication options</a> available, but for this purpose, a static password (assuming it’s suitably strong ofc) was fine for my purposes.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Change password to the value of code_password in the code-server config file</span>
+    <span class="na">lineinfile</span><span class="pi">:</span>
+      <span class="na">path</span><span class="pi">:</span> <span class="s">/home/ubuntu/.config/code-server/config.yaml</span>
+      <span class="na">regexp</span><span class="pi">:</span> <span class="s1">'</span><span class="s">^password:'</span>
+      <span class="na">line</span><span class="pi">:</span> <span class="s1">'</span><span class="s">password:</span><span class="nv"> </span><span class="s">'</span>
+</code></pre></div></div>
+
+<p>This section just sets the password to whatever is held for the ansible var <code class="language-plaintext highlighter-rouge">code_password</code>.</p>
+
+<p>Lastly for this section, we want to re-start the server, so our configuration changes take effect.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">restart code server</span>
+    <span class="na">systemd</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">code-server@ubuntu</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">restarted</span>
+      <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+</code></pre></div></div>
+
+<h2 id="making-it-available-remotely---caddy">Making it available remotely - Caddy!</h2>
+
+<p>I’ve mentioned before about <a href="https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/">how cool Caddy is</a> for a variety of reasons, and we can make use of it here to expose the Code server over TLS. As a pre-requisite, this section uses an Ansible galaxy role, which can be installed with <code class="language-plaintext highlighter-rouge">ansible-galaxy collection install maxhoesel.caddy</code>. If you’re happy enough with SSH port-forwarding, that would be another option here.</p>
+
+<p>We want to change the configuration of Caddy so that it’ll provide a reverse proxy from <code class="language-plaintext highlighter-rouge">127.0.0.1:18080</code> to <code class="language-plaintext highlighter-rouge">0.0.0.0:443</code> and set-up TLS</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Setup the Caddy server</span>
+    <span class="s">include_role</span><span class="err">:</span> 
+      <span class="na">name</span><span class="pi">:</span> <span class="s">maxhoesel.caddy.caddy_server</span>
+    <span class="na">vars</span><span class="pi">:</span>
+      <span class="na">caddy_config_mode</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Caddyfile"</span>
+      <span class="na">caddy_caddyfile</span><span class="pi">:</span> <span class="pi">|</span>
+        <span class="s">:443 {</span>
+          <span class="s">tls internal {</span>
+            <span class="s">on_demand</span>
+          <span class="s">}</span>
+          <span class="s">reverse_proxy :18080</span>
+        <span class="s">}</span>
+        
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Restart Caddy</span>
+    <span class="na">systemd</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">caddy</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">restarted</span>
+      <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+</code></pre></div></div>
+
+<h2 id="extra-credit---valid-tls-cert">Extra Credit - Valid TLS cert</h2>
+
+<p>At this point you’ve got a configuration that’ll work, but the certificate won’t be trusted by the browser, which isn’t ideal (if only that you’ll need to click through a warning when you get to it). We can get TLS certificates issued on demand using <a href="https://letsencrypt.org/">Lets encrypt</a> and Caddy which has a very neat trick of provisioning these on the fly, we just need a valid DNS record for the host.</p>
+
+<p>Of course you could do this manually after set-up, but it’d be neat to have it provisioned automatically. Here we just need a DNS provider that’s got an API and, ideally, Ansible integration. Fortunately the DNS provider I use <a href="https://dnsimple.com">DNSimple</a> has both of these things!</p>
+
+<p>First up we need to register our DNS record. This process will vary depending on your provider but the general concepts will likely remain. You’ll need an API key for the provider and a domain to host at. The task below sets up a host called <code class="language-plaintext highlighter-rouge">csw</code> and a domain specified as the var <code class="language-plaintext highlighter-rouge">dns_domain</code> and sets the <code class="language-plaintext highlighter-rouge">A</code> record to point to <code class="language-plaintext highlighter-rouge">inventory_hostname</code> which should be the external IP address of the EC2 we’ve started.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Authenticate to DNSimple &amp; Create Record</span>
+    <span class="na">community.general.dnsimple</span><span class="pi">:</span>
+      <span class="na">account_email</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">account_api_token</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">domain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">type</span><span class="pi">:</span> <span class="s">A</span>
+      <span class="c1"># Change as needed</span>
+      <span class="na">record</span><span class="pi">:</span> <span class="s">csw</span>
+      <span class="na">solo</span><span class="pi">:</span> <span class="s">yes</span>
+      <span class="na">ttl</span><span class="pi">:</span> <span class="m">360</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">present</span>
+    <span class="na">delegate_to</span><span class="pi">:</span> <span class="s">localhost</span>
+    <span class="na">register</span><span class="pi">:</span> <span class="s">dns_record</span>
+</code></pre></div></div>
+
+<p>Now we’ve got a valid DNS record, we just need to re-write the Caddyfile that we’re using so that Caddy will provision a cert for us on access. These tasks remove the old Caddyfile, add a new one specifying our host and domain and setting up TLS and then re-start Caddy.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">remove old Caddy Config</span>
+    <span class="na">file</span><span class="pi">:</span>
+      <span class="na">path</span><span class="pi">:</span> <span class="s">/etc/caddy/Caddyfile</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">absent</span>
+
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Add caddyfile contents</span>
+    <span class="na">copy</span><span class="pi">:</span>
+      <span class="na">dest</span><span class="pi">:</span> <span class="s">/etc/caddy/Caddyfile</span>
+      <span class="na">content</span><span class="pi">:</span> <span class="pi">|</span>
+        <span class="s">csw.:443 {</span>
+          <span class="s">tls </span>
+          <span class="s">reverse_proxy :18080</span>
+        <span class="s">}</span>
+
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Restart Caddy</span>
+    <span class="na">systemd</span><span class="pi">:</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">caddy</span>
+      <span class="na">state</span><span class="pi">:</span> <span class="s">restarted</span>
+      <span class="na">enabled</span><span class="pi">:</span> <span class="s">yes</span>
+</code></pre></div></div>
+
+<p>If all works, once you’ve run your playbook, it should look something like this :-</p>
+
+<p><img src="https://raesene.github.io/assets/media/csw-vscode.png" alt="VS Code in browser" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>At the end of all this you should have a nice Web hosted development/testing environment with a terminal and port-forwarding, which could be handy for a number of reasons.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Cloud-ref">
+					Cloud <span>(1)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Getting a VS Code Server running on EC2&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2023/04/22/Fun-with-container-images-Bypassing-vulnerability-scanners/" title="Fun with container images - Bypassing vulnerability scanners">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2023 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
