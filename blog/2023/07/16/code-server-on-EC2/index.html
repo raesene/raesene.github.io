@@ -163,9 +163,9 @@
 	   2023
 	 </span>
 	  <div class="article_body">
-	  <p>As part of the preparations for the <a href="https://www.steelcon.info/the-event/workshops/">workshop on Container</a> security that myself and <a href="https://twitter.com/smarticu5/">Iain Smart</a> ran at this year’s <a href="https://www.steelcon.info/">Steelcon</a>, we were looking into how to provide a browser based terminal for students running in EC2. There were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order.</p>
+	  <p>As part of the preparations for the <a href="https://www.steelcon.info/the-event/workshops/">workshop on container security</a>  that myself and <a href="https://twitter.com/smarticu5/">Iain Smart</a> ran at this year’s <a href="https://www.steelcon.info/">Steelcon</a>, there were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order. As a result, we were looking into how to provide a browser based terminal for students running on a host in AWS EC2.</p>
 
-<p>After looking at various options, we decided to see if we could get <a href="https://github.com/coder/code-server">code-server</a> working. It’s a really nice projects that provides a hosted version of VS Code, which gives you file exploring/editing, a terminal and port forwarding for local applications, all in a browser.</p>
+<p>After looking at various options, we decided to see if we could get <a href="https://github.com/coder/code-server">code-server</a> working. It’s a really nice project that provides a hosted version of VS Code, which gives you file exploring/editing, a terminal and port forwarding for local applications, all in a browser.</p>
 
 <p>After the conference, I decided to extract the config into a stand-alone set of Ansible tasks, and put it into my <a href="https://github.com/raesene/container_sec_workstation">Container Security Workstation</a> repo. You can see the overall playbook <a href="https://github.com/raesene/container_sec_workstation/blob/main/ec2_container_workstation.yml">here</a> but we’ll go through the key parts in this post.</p>
 
@@ -178,28 +178,28 @@
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">start an instance with a public IP address</span>
   <span class="na">amazon.aws.ec2_instance</span><span class="pi">:</span>
     <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Container</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Workstation"</span>
-    <span class="na">key_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-    <span class="na">vpc_subnet_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-    <span class="na">region</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-    <span class="na">instance_type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-    <span class="na">security_group</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">key_name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">key_pair</span><span class="nv"> </span><span class="s">}}"</span>
+    <span class="na">vpc_subnet_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">subnet_id</span><span class="nv"> </span><span class="s">}}"</span>
+    <span class="na">region</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">region</span><span class="nv"> </span><span class="s">}}"</span>
+    <span class="na">instance_type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">instance_type</span><span class="nv"> </span><span class="s">}}"</span>
+    <span class="na">security_group</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">security_group</span><span class="nv"> </span><span class="s">}}"</span>
     <span class="na">network</span><span class="pi">:</span>
       <span class="na">assign_public_ip</span><span class="pi">:</span> <span class="no">true</span>
-    <span class="na">image_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+    <span class="na">image_id</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ami_id</span><span class="nv"> </span><span class="s">}}"</span>
     <span class="na">wait_timeout</span><span class="pi">:</span> <span class="m">60</span>
     <span class="na">state</span><span class="pi">:</span> <span class="s">running</span>
   <span class="na">register</span><span class="pi">:</span> <span class="s">ec2</span>
 
 <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Add all instance public IPs to host group</span>
-  <span class="na">add_host</span><span class="pi">:</span> <span class="s">hostname= groups=ec2host</span>
-  <span class="na">loop</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+  <span class="na">add_host</span><span class="pi">:</span> <span class="s">hostname={{ item.public_ip_address }} groups=ec2host</span>
+  <span class="na">loop</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ec2.instances</span><span class="nv"> </span><span class="s">}}"</span>
   
 <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Wait for SSH to be available</span>
-  <span class="na">delegate_to</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+  <span class="na">delegate_to</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">item.public_ip_address</span><span class="nv"> </span><span class="s">}}"</span>
   <span class="na">wait_for_connection</span><span class="pi">:</span>
     <span class="na">delay</span><span class="pi">:</span> <span class="m">20</span>
     <span class="na">timeout</span><span class="pi">:</span> <span class="m">60</span>
-  <span class="na">with_items</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+  <span class="na">with_items</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">ec2.instances</span><span class="nv"> </span><span class="s">}}"</span>
 </code></pre></div></div>
 
 <p>A couple of key points to note for this. you’ll need a valid API connection to AWS with enough rights to create an EC2 instance. You’ll then need to have the information for the various variables here</p>
@@ -215,7 +215,7 @@
 
 <h2 id="code-server-install-and-config">Code Server Install and Config</h2>
 
-<p>The basic installation of Code server is pretty straight-forward. They provide a deb package, so we can just download an install that</p>
+<p>The basic installation of Code server is pretty straight-forward. They provide a deb package, so we can just download and install that :-</p>
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Install Code Server</span>
     <span class="na">get_url</span><span class="pi">:</span>
@@ -245,14 +245,13 @@
 
 <p>You might notice that we’re still listening on <code class="language-plaintext highlighter-rouge">127.0.0.1</code> here, but we’ll get to making this accessible remotely in a bit!</p>
 
-<p>Next up we want to change the password of course. Code Server has different <a href="https://coder.com/docs/code-server/latest/guide#external-authentication">authentication options</a> available, but for this purpose, a static password (assuming it’s suitably strong ofc) was fine for my purposes.</p>
+<p>Next up we want to change the password from the default value, of course. Code Server has different <a href="https://coder.com/docs/code-server/latest/guide#external-authentication">authentication options</a> available, but for this purpose, a static password (assuming it’s suitably strong) should be fine.</p>
 
-<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Change password to the value of code_password in the code-server config file</span>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Change password to the value of code_password in the code-server config file</span>
     <span class="na">lineinfile</span><span class="pi">:</span>
       <span class="na">path</span><span class="pi">:</span> <span class="s">/home/ubuntu/.config/code-server/config.yaml</span>
       <span class="na">regexp</span><span class="pi">:</span> <span class="s1">'</span><span class="s">^password:'</span>
-      <span class="na">line</span><span class="pi">:</span> <span class="s1">'</span><span class="s">password:</span><span class="nv"> </span><span class="s">'</span>
+      <span class="na">line</span><span class="pi">:</span> <span class="s1">'</span><span class="s">password:</span><span class="nv"> </span><span class="s">{{code_password}}'</span>
 </code></pre></div></div>
 
 <p>This section just sets the password to whatever is held for the ansible var <code class="language-plaintext highlighter-rouge">code_password</code>.</p>
@@ -302,15 +301,15 @@
 
 <div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">Authenticate to DNSimple &amp; Create Record</span>
     <span class="na">community.general.dnsimple</span><span class="pi">:</span>
-      <span class="na">account_email</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-      <span class="na">account_api_token</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
-      <span class="na">domain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">account_email</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">dnsimple_account_email</span><span class="nv"> </span><span class="s">}}"</span>
+      <span class="na">account_api_token</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">dnsimple_api_key</span><span class="nv"> </span><span class="s">}}"</span>
+      <span class="na">domain</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{</span><span class="nv"> </span><span class="s">dns_domain</span><span class="nv"> </span><span class="s">}}"</span>
       <span class="na">type</span><span class="pi">:</span> <span class="s">A</span>
       <span class="c1"># Change as needed</span>
       <span class="na">record</span><span class="pi">:</span> <span class="s">csw</span>
       <span class="na">solo</span><span class="pi">:</span> <span class="s">yes</span>
       <span class="na">ttl</span><span class="pi">:</span> <span class="m">360</span>
-      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">"</span>
+      <span class="na">value</span><span class="pi">:</span> <span class="s2">"</span><span class="s">{{inventory_hostname}}"</span>
       <span class="na">state</span><span class="pi">:</span> <span class="s">present</span>
     <span class="na">delegate_to</span><span class="pi">:</span> <span class="s">localhost</span>
     <span class="na">register</span><span class="pi">:</span> <span class="s">dns_record</span>
@@ -327,8 +326,8 @@
     <span class="na">copy</span><span class="pi">:</span>
       <span class="na">dest</span><span class="pi">:</span> <span class="s">/etc/caddy/Caddyfile</span>
       <span class="na">content</span><span class="pi">:</span> <span class="pi">|</span>
-        <span class="s">csw.:443 {</span>
-          <span class="s">tls </span>
+        <span class="s">csw.{{dns_domain}}:443 {</span>
+          <span class="s">tls {{dnsimple_account_email}}</span>
           <span class="s">reverse_proxy :18080</span>
         <span class="s">}</span>
 
