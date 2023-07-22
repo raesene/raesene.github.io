@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>linux palmtop goodness</title>
+	<title>Hardware review - Topton AMD Ryzen 7 5700U</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>linux palmtop goodness </h1>
+  <h1>Hardware review - Topton AMD Ryzen 7 5700U </h1>
 </div>
 	
 <article>
@@ -157,14 +157,64 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   3rd,
+	   July 
+	   22nd,
 	     
-	   2004
+	   2023
 	 </span>
 	  <div class="article_body">
-	  <p>well I think ive finally found the right handheld computer for me... A sharp Zaurus c860.  Its linux based, has lots of good security software available, can take SD and CF cards, has an excellent 640x480 display and isnt too bulky or heavy.<br />
-also the keyboard is fairly good... as Im writing this entry using it.....</p>
+	  <p>I’ve been thinking about a project where I could travel to conferences with hardware to run a workshop that doesn’t rely on cloud resources (to avoid those concerns about network access or cloud uptime) and of course, the first part of any project like that is the fun part, buying the hardware! As I’d promised a review to a couple of people on-line, here it is.</p>
+
+<p>The goals for the hardware were to have something small and light with enough resources that it could support 10-20 students running on it, without breaking the bank. So, I decided to try getting a mini PC from AliExpress, as they have some pretty good deals on there.</p>
+
+<p>After a bit of looking around and asking friends who had bought systems like this from AliExpress before, I settled on a <a href="https://www.aliexpress.com/item/1005005762253642.html">Topton AMD Ryzen 7 5700U</a>. The model I got cost £352.53.</p>
+
+<p>The purchase and shipping process was relatively smooth. After clarifying my address with the seller it took 8 days for the system to arrive. It was well packaged and arrived in good condition.</p>
+
+<h2 id="specs">Specs</h2>
+
+<ul>
+  <li>CPU - AMD Ryzen 7 5700U with Radeon Graphics</li>
+  <li>RAM - 64GB DDR4 3200MHz, fitted as 2x32GB SODIMM</li>
+  <li>Storage - Fanxiang S500PRO 1TB</li>
+  <li>Network - <code class="language-plaintext highlighter-rouge">RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller</code></li>
+  <li>Wi-Fi - Wifi6</li>
+</ul>
+
+<h2 id="physical-overview">Physical overview</h2>
+
+<p>The system is pretty small, measuring 11.5cm x 10.5cm x 4cm, it comes with a power supply and an HDMI cable. The power supply output is a rated as 19V and 3.42A, so 65W. Physically it’s fairly small, 10.5cm x 4.5cm x 3cm. The case is metal and feels fairly solid</p>
+
+<p><img src="https://raesene.github.io/assets/media/shoppy.png" alt="Topton machine from the top" /></p>
+
+<p>The port selection is pretty good for such a small machine. On the back there’s power, 2xHDMI, Ethernet, 2xUSB-A, 1xUSB-C and a headphone jack, and on the front another 2xUSB-A.</p>
+
+<p><img src="https://raesene.github.io/assets/media/shoppy-ports.png" alt="Topton machine back ports" /></p>
+
+<h2 id="noise">Noise</h2>
+
+<p>Anecdotally I found the system to be relatively quiet. I’ve not got a good decibel meter, but took some measurements just using an iPhone app. when the host is idling at 5cm distance from the side, the reading was 30dB, which is around the standard background noise where I am. Periodically with nothing much running there’s a bit of fan noise, taking it up to ~41dB.</p>
+
+<p>Running a stress test with <code class="language-plaintext highlighter-rouge">stress-ng</code> on 2 cores, to cause the fans to spin up, takes the volume at 5cm to ~51dB. So it’s not silent, but it’s not too loud either.</p>
+
+<h2 id="software">Software</h2>
+
+<p>The system came with an install of Windows 11 on it (not sure of the licensing situation for that install…), but for my purposes I wanted Linux, so I installed Debian 12 (Bookworm) on it. The installation process was fine, and the only thing I can see which isn’t supported (yet) is the Wi-Fi which is a Realtek device. A bit of searching suggests that’ll get a drive in the 6.2 kernel.</p>
+
+<h2 id="performance">Performance</h2>
+
+<p>Next question of course is, what’s the performance like? For this I used the <a href="https://www.phoronix-test-suite.com/">phoronix-test-suite</a> to run a few benchmarks using their docker image <code class="language-plaintext highlighter-rouge">docker run -it phoronix/pts</code>, with results uploaded to <a href="https://openbenchmarking.org/">OpenBenchmarking.org</a>.</p>
+
+<ul>
+  <li><a href="https://openbenchmarking.org/result/2307223-NE-APACHERES42">Apache</a></li>
+  <li><a href="https://openbenchmarking.org/result/2307228-NE-SHOPPYIOZ32">iozone</a></li>
+</ul>
+
+<p>Overall the numbers seem pretty reasonable for a system of this class.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Overall this seems like a pretty good system for the price. Next step will be looking at how to build it as a workshop host for container security workshops.</p>
 
 	  </div>
 
@@ -190,7 +240,7 @@ also the keyboard is fairly good... as Im writing this entry using it.....</p>
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=linux palmtop goodness&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Hardware review - Topton AMD Ryzen 7 5700U&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -218,10 +268,10 @@ also the keyboard is fairly good... as Im writing this entry using it.....</p>
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2004/04/02/hard_drive_info/" title="Hard Drive Information Leakage">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2023/07/16/code-server-on-EC2/" title="Getting a VS Code Server running on EC2">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2004/04/04/icmp_chat/" title="ICMP chat">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

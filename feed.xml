@@ -7,6 +7,66 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Hardware review - Topton AMD Ryzen 7 5700U</title>
+				<description>&lt;p&gt;I’ve been thinking about a project where I could travel to conferences with hardware to run a workshop that doesn’t rely on cloud resources (to avoid those concerns about network access or cloud uptime) and of course, the first part of any project like that is the fun part, buying the hardware! As I’d promised a review to a couple of people on-line, here it is.&lt;/p&gt;
+
+&lt;p&gt;The goals for the hardware were to have something small and light with enough resources that it could support 10-20 students running on it, without breaking the bank. So, I decided to try getting a mini PC from AliExpress, as they have some pretty good deals on there.&lt;/p&gt;
+
+&lt;p&gt;After a bit of looking around and asking friends who had bought systems like this from AliExpress before, I settled on a &lt;a href=&quot;https://www.aliexpress.com/item/1005005762253642.html&quot;&gt;Topton AMD Ryzen 7 5700U&lt;/a&gt;. The model I got cost £352.53.&lt;/p&gt;
+
+&lt;p&gt;The purchase and shipping process was relatively smooth. After clarifying my address with the seller it took 8 days for the system to arrive. It was well packaged and arrived in good condition.&lt;/p&gt;
+
+&lt;h2 id=&quot;specs&quot;&gt;Specs&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;CPU - AMD Ryzen 7 5700U with Radeon Graphics&lt;/li&gt;
+  &lt;li&gt;RAM - 64GB DDR4 3200MHz, fitted as 2x32GB SODIMM&lt;/li&gt;
+  &lt;li&gt;Storage - Fanxiang S500PRO 1TB&lt;/li&gt;
+  &lt;li&gt;Network - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Wi-Fi - Wifi6&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;physical-overview&quot;&gt;Physical overview&lt;/h2&gt;
+
+&lt;p&gt;The system is pretty small, measuring 11.5cm x 10.5cm x 4cm, it comes with a power supply and an HDMI cable. The power supply output is a rated as 19V and 3.42A, so 65W. Physically it’s fairly small, 10.5cm x 4.5cm x 3cm. The case is metal and feels fairly solid&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shoppy.png&quot; alt=&quot;Topton machine from the top&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The port selection is pretty good for such a small machine. On the back there’s power, 2xHDMI, Ethernet, 2xUSB-A, 1xUSB-C and a headphone jack, and on the front another 2xUSB-A.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shoppy-ports.png&quot; alt=&quot;Topton machine back ports&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;noise&quot;&gt;Noise&lt;/h2&gt;
+
+&lt;p&gt;Anecdotally I found the system to be relatively quiet. I’ve not got a good decibel meter, but took some measurements just using an iPhone app. when the host is idling at 5cm distance from the side, the reading was 30dB, which is around the standard background noise where I am. Periodically with nothing much running there’s a bit of fan noise, taking it up to ~41dB.&lt;/p&gt;
+
+&lt;p&gt;Running a stress test with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stress-ng&lt;/code&gt; on 2 cores, to cause the fans to spin up, takes the volume at 5cm to ~51dB. So it’s not silent, but it’s not too loud either.&lt;/p&gt;
+
+&lt;h2 id=&quot;software&quot;&gt;Software&lt;/h2&gt;
+
+&lt;p&gt;The system came with an install of Windows 11 on it (not sure of the licensing situation for that install…), but for my purposes I wanted Linux, so I installed Debian 12 (Bookworm) on it. The installation process was fine, and the only thing I can see which isn’t supported (yet) is the Wi-Fi which is a Realtek device. A bit of searching suggests that’ll get a drive in the 6.2 kernel.&lt;/p&gt;
+
+&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
+
+&lt;p&gt;Next question of course is, what’s the performance like? For this I used the &lt;a href=&quot;https://www.phoronix-test-suite.com/&quot;&gt;phoronix-test-suite&lt;/a&gt; to run a few benchmarks using their docker image &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run -it phoronix/pts&lt;/code&gt;, with results uploaded to &lt;a href=&quot;https://openbenchmarking.org/&quot;&gt;OpenBenchmarking.org&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://openbenchmarking.org/result/2307223-NE-APACHERES42&quot;&gt;Apache&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://openbenchmarking.org/result/2307228-NE-SHOPPYIOZ32&quot;&gt;iozone&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Overall the numbers seem pretty reasonable for a system of this class.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Overall this seems like a pretty good system for the price. Next step will be looking at how to build it as a workshop host for container security workshops.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 22 Jul 2023 10:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2023/07/22/topton-ryzen-5700U-review/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/07/22/topton-ryzen-5700U-review/</guid>
+			</item>
+		
+			<item>
 				<title>Getting a VS Code Server running on EC2</title>
 				<description>&lt;p&gt;As part of the preparations for the &lt;a href=&quot;https://www.steelcon.info/the-event/workshops/&quot;&gt;workshop on container security&lt;/a&gt;  that myself and &lt;a href=&quot;https://twitter.com/smarticu5/&quot;&gt;Iain Smart&lt;/a&gt; ran at this year’s &lt;a href=&quot;https://www.steelcon.info/&quot;&gt;Steelcon&lt;/a&gt;, there were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order. As a result, we were looking into how to provide a browser based terminal for students running on a host in AWS EC2.&lt;/p&gt;
 
@@ -1463,64 +1523,6 @@ Segmentation can consist of logical controls, physical controls, or a combinatio
 				<pubDate>Tue, 20 Dec 2022 08:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management</title>
-				<description>&lt;p&gt;This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Similarly to the previous section on &lt;a href=&quot;https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/&quot;&gt;version management&lt;/a&gt; this section isn’t so much around security configuration as the policies and processes that should be in place in an in-scope environment.&lt;/p&gt;
-
-&lt;p&gt;As the guidance here relates to the secure configuration of container orchestration environments, and having companies develop standards for secure configuration of their container environments, it’s worth noting what options there are for Kubernetes. Whilst companies should customize these to their own environments, there are some options that can be used as a starting point.&lt;/p&gt;
-
-&lt;p&gt;It’s also worth noting that as described in the post about &lt;a href=&quot;https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/&quot;&gt;the challenges of assessing Kubernetes clusters for PCI Compliance&lt;/a&gt; one of the things to think about when looking at compliance standards is which distributions and versions are covered.&lt;/p&gt;
-
-&lt;h2 id=&quot;cis-benchmarks&quot;&gt;CIS Benchmarks&lt;/h2&gt;
-
-&lt;p&gt;There are a couple of CIS benchmarks which can be relevant to secure configuration of Kubernetes clusters. Firstly there’s the &lt;a href=&quot;https://www.cisecurity.org/benchmark/docker&quot;&gt;CIS Benchmark for Docker&lt;/a&gt;. It’s important to note here that this benchmark was designed for standalone Docker installations and not for a use case where Docker is a Container Runtime in a Kubernetes cluster. A number of the requirements will not apply to Kubernetes environments that use Docker. It’s also worth noting that there are no current benchmarks for Containerd or CRI-O.&lt;/p&gt;
-
-&lt;p&gt;At the Kubernetes level there is a set of related CIS Benchmarks. The top-level CIS &lt;a href=&quot;https://www.cisecurity.org/benchmark/kubernetes&quot;&gt;Benchmark for Kubernetes&lt;/a&gt; is designed to address &lt;a href=&quot;https://kubernetes.io/docs/reference/setup-tools/kubeadm/&quot;&gt;kubeadm&lt;/a&gt; clusters. Using it for any other Kubernetes distribution could require the details of checks to be modified to take account of differences in the implementation of Kubernetes. There are versions of the benchmark for various versions of Kubernetes going back to 1.16, however not every version of k8s has a corresponding CIS benchmark.&lt;/p&gt;
-
-&lt;p&gt;There are also a set of CIS Benchmarks for various managed Kubernetes distributions, which provide more specific detail for those environments. C Currently there is coverage for &lt;a href=&quot;https://cloud.google.com/kubernetes-engine&quot;&gt;GKE&lt;/a&gt;, &lt;a href=&quot;https://aws.amazon.com/eks/&quot;&gt;EKS&lt;/a&gt;, &lt;a href=&quot;https://azure.microsoft.com/en-gb/products/kubernetes-service/&quot;&gt;AKS&lt;/a&gt;, &lt;a href=&quot;https://www.alibabacloud.com/product/kubernetes&quot;&gt;ACK&lt;/a&gt;, &lt;a href=&quot;https://www.oracle.com/uk/cloud/cloud-native/container-engine-kubernetes/&quot;&gt;OKE&lt;/a&gt; and &lt;a href=&quot;https://www.redhat.com/en/technologies/cloud-computing/openshift&quot;&gt;OpenShift&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;nsa-kubernetes-hardening-guide&quot;&gt;NSA Kubernetes Hardening Guide&lt;/h2&gt;
-
-&lt;p&gt;Whilst it often gets used similarly to the CIS benchmarks the &lt;a href=&quot;https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF&quot;&gt;NSA Kubernetes Hardening Guide&lt;/a&gt; is wider in scope and not designed to be a configuration standard. Whilst it does provide some guidance on specific settings in some areas, it doesn’t set out to be detailed across all areas, in the way the CIS benchmarks do.&lt;/p&gt;
-
-&lt;h2 id=&quot;disa-stig&quot;&gt;DISA STIG&lt;/h2&gt;
-
-&lt;p&gt;The DISA &lt;a href=&quot;https://www.stigviewer.com/stig/kubernetes/2021-04-14/&quot;&gt;Kubernetes Security Technical Implementation Guide&lt;/a&gt; is another option which does have detailed requirements. However it’s important to note that, as of December 2022, it’s not been updated recently, so checks may be outdated and whilst it doesn’t specify a specific Kubernetes distribution it addresses, from the paths in the document it appears to be Kubeadm.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s one in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-151&quot;&gt;Section 15.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Container orchestration tools may be misconfigured and introduce security vulnerabilities.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt;&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;a. All configurations and container images should be tested in a production-like environment prior to deployment.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;b. Configuration standards that address all known security vulnerabilities and are consistent with industry-accepted hardening standards and  vendor security guidance should be developed for all system components, including container orchestration tools.&lt;/p&gt;
-    &lt;ul&gt;
-      &lt;li&gt;i. Address all known security vulnerabilities.&lt;/li&gt;
-      &lt;li&gt;ii. Be consistent with industry-accepted system hardening standards or vendor hardening recommendations.&lt;/li&gt;
-      &lt;li&gt;iii. Be updated as new vulnerability issues are identified.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Assessing the first part of this recommendation would involve understanding the companies CI/CD environment and how changes to cluster configuration are tested. Typically some form of automated testing should be done on any Kubernetes manifest before deployment. For the second part understanding which standard(s) are in use and how compliance is achieved (e.g. CSPM tooling)&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Creating a security configuration standard is a sensible part of larger Kubernetes deployments as it will help to maintain consistent configuration and security levels across the environment, however it does require some effort to tailor this to specific Kubernetes distributions and versions.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 18 Dec 2022 14:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/12/18/PCI-Kubernetes-Section15-Configuration-Management/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/18/PCI-Kubernetes-Section15-Configuration-Management/</guid>
 			</item>
 		
 	</channel>
