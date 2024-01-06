@@ -163,7 +163,7 @@
 	   2024
 	 </span>
 	  <div class="article_body">
-	  <p>I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thougt it was worth a quick post. <a href="https://twitter.com/smarticu5">Smarticu5</a> had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using the default <code class="language-plaintext highlighter-rouge">admin.conf</code> credential created by Kubeadm.</p>
+	  <p>I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. <a href="https://twitter.com/smarticu5">Smarticu5</a> had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using the default <code class="language-plaintext highlighter-rouge">admin.conf</code> credential created by Kubeadm.</p>
 
 <p>This specific error <em>shouldn’t</em> be possible, as traditionally <code class="language-plaintext highlighter-rouge">admin.conf</code> is a member of the <code class="language-plaintext highlighter-rouge">system:masters</code> group which bypasses RBAC checks and always gets full cluster-admin level access to everything, so if a valid credential is presented, it should always work.</p>
 

@@ -8,7 +8,7 @@
 		
 			<item>
 				<title>When is admin not admin?, when it's super-admin!</title>
-				<description>&lt;p&gt;I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thougt it was worth a quick post. &lt;a href=&quot;https://twitter.com/smarticu5&quot;&gt;Smarticu5&lt;/a&gt; had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using the default &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; credential created by Kubeadm.&lt;/p&gt;
+				<description>&lt;p&gt;I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. &lt;a href=&quot;https://twitter.com/smarticu5&quot;&gt;Smarticu5&lt;/a&gt; had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using the default &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; credential created by Kubeadm.&lt;/p&gt;
 
 &lt;p&gt;This specific error &lt;em&gt;shouldn’t&lt;/em&gt; be possible, as traditionally &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; is a member of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group which bypasses RBAC checks and always gets full cluster-admin level access to everything, so if a valid credential is presented, it should always work.&lt;/p&gt;
 
