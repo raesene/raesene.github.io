@@ -7,6 +7,45 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>When is admin not admin?, when it's super-admin!</title>
+				<description>&lt;p&gt;I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thougt it was worth a quick post. &lt;a href=&quot;https://twitter.com/smarticu5&quot;&gt;Smarticu5&lt;/a&gt; had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using the default &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; credential created by Kubeadm.&lt;/p&gt;
+
+&lt;p&gt;This specific error &lt;em&gt;shouldn’t&lt;/em&gt; be possible, as traditionally &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; is a member of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group which bypasses RBAC checks and always gets full cluster-admin level access to everything, so if a valid credential is presented, it should always work.&lt;/p&gt;
+
+&lt;p&gt;Interest piqued, we took a bit of a closer look at what was happening. First up was to decode the client certificate on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; file to see what usernames and groups it was associated with (If you’re ever looking to do this and can’t remember the exact commands, I’d recommend using &lt;a href=&quot;https://gchq.github.io/CyberChef/&quot;&gt;Cyber Chef&lt;/a&gt; which can base64 decode, and decode X.509 certs).&lt;/p&gt;
+
+&lt;p&gt;The output we got back was this:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubernetes
+Subject
+  O  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubeadm:cluster-admins
+  CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubernetes-admin
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sooo this credential was no longer a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/121305&quot;&gt;PR&lt;/a&gt; which explained how Kubeadm now has two files with initial credentials, the original &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; and a new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; has been changeed to use an RBAC group for access, which should give it &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights, but in a way that they could be revoked by removing the rights of that group, and then have the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file still be a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; whose rights can’t be revoked by modifying RBAC.&lt;/p&gt;
+
+&lt;p&gt;Digging back from this PR, to the referenced issue to get some back-story, I got a slight surprise to find it was &lt;a href=&quot;https://github.com/kubernetes/kubeadm/issues/2414&quot;&gt;one I’d opened&lt;/a&gt; back in 2021 about not using system:masters!&lt;/p&gt;
+
+&lt;h2 id=&quot;what-does-this-mean&quot;&gt;What does this mean?&lt;/h2&gt;
+
+&lt;p&gt;There’s a couple of practical consequences to consider with this change.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;If you’re tracking permissions on sensitive files, and access to them, where you’re using a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeadm&lt;/code&gt; based Kubernetes distribution, you will need to update your tracking to include the new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file.&lt;/li&gt;
+  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file should &lt;em&gt;not&lt;/em&gt; be used for any administrative tasks, instead place it somewhere safe and only use it if RBAC gets completely messed up. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; isn’t ideal either as it’s a generic account, but at least its permissions can be revoked now!&lt;/li&gt;
+  &lt;li&gt;It is now possible to see a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; if RBAC isn’t fully configured, or if the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeadm:cluster-admins&lt;/code&gt; group has been changed.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Another example of why it’s important to keep up to date with changes in Kubernetes, and to understand how your cluster is configured. This change is a good one, as it makes it easier to revoke the rights of the initial credential, but it’s important to understand how it works, and how it might impact your cluster.&lt;/p&gt;
+</description>
+				<pubDate>Sat, 06 Jan 2024 09:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</guid>
+			</item>
+		
+			<item>
 				<title>Exploiting CVE-2023-5044</title>
 				<description>&lt;p&gt;Recently several new CVEs in the ingress nginx controller for Kubernetes were announced. I thought I’d take a closer look at one of them, CVE-2023-5044. Whilst there’s some details in the &lt;a href=&quot;https://github.com/kubernetes/ingress-nginx/issues/10572&quot;&gt;CVE announcement&lt;/a&gt; and some hints in a post from the CVE reporter &lt;a href=&quot;https://www.linkedin.com/posts/jkroepke_kubernetes-cve-2023-5044-code-injection-activity-7123677225765228545-93MI?trk=public_profile_share_view&quot;&gt;here&lt;/a&gt; there’s not any actual PoC that I could find, so I decided to see if I could write one!&lt;/p&gt;
 
@@ -986,67 +1025,6 @@ my.test.server:8444 {
 				<pubDate>Sat, 21 Jan 2023 08:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with SSRF - Turning the Kubernetes API Server into a port scanner</title>
-				<description>&lt;p&gt;I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the word ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.&lt;/p&gt;
-
-&lt;p&gt;An important point to note here, is that this is all standard Kubernetes functionality, no 0-days or vulnerabilities are involved. To carry out this process you need to be able to create some high-privileged objects in the cluster, so in most cases there’s no privilege escalation involved.&lt;/p&gt;
-
-&lt;p&gt;One slight exception to this, is that if you’re using Managed Kubernetes (AKS, EKS, GKE etc) you can use this to port scan some parts of the CSPs network, but this is just information disclosure and I’m sure their security architectures are robust enough that simple port scanning presents no real threat.&lt;/p&gt;
-
-&lt;h2 id=&quot;using-validating-admission-webhooks&quot;&gt;Using Validating Admission Webhooks&lt;/h2&gt;
-
-&lt;p&gt;The first object I thought of using for this is Validating Admission Webhooks, as they take either a service or URL as part of their specification, then when they receive a request for an in-scope object the Kubernetes API server passes the request to that URL, so it fits our profile.&lt;/p&gt;
-
-&lt;p&gt;If we want to implement this technique, the next step is to work out how to trigger it and also do so in a relatively safe way, to avoid disrupting the overall operation of the cluster, while we’re port scanning. To do this we can create a validating admission webhook configuration that only looks at requests in a single namespace. If we create a dedicated namespace for the scanning, then we can ensure that the webhook only looks at requests in that namespace, and we can also delete the namespace when we’re done to clean up.&lt;/p&gt;
-
-&lt;p&gt;Once we have our namespace and webhook, we just try to create a pod in that namespace, expecting it to fail, and then record the error message returned.&lt;/p&gt;
-
-&lt;p&gt;So, a simplified version of our flow should look a little like this :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kubernetes_vaw_ssrf.png&quot; alt=&quot;Sequence diagram for SSRF&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Trying this out manually, one thing that I noticed which is very handy for our purposes is that the Kubernetes API provides a verbose error message depending on what sort of error it encountered. This lets us differentiate between “no response”, “port closed” and “port open”, with some added details like “this port was open but didn’t speak HTTP”.&lt;/p&gt;
-
-&lt;h2 id=&quot;automating-the-process&quot;&gt;Automating the process&lt;/h2&gt;
-
-&lt;p&gt;Whilst it’s perfectly possible to do this manually, it’s pretty time-consuming as you need do have a set of steps like this&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Edit the template webhook manifest with the target host and port.&lt;/li&gt;
-  &lt;li&gt;Check if the namespace exists, if not create it.&lt;/li&gt;
-  &lt;li&gt;Check if the webhook exists, if it does delete it.&lt;/li&gt;
-  &lt;li&gt;Create the new webhook.&lt;/li&gt;
-  &lt;li&gt;Create a pod in the namespace.&lt;/li&gt;
-  &lt;li&gt;Check the error message returned by the API server when it tries and fails to call the target admission webhook.
-    &lt;ul&gt;
-      &lt;li&gt;Return this to the user after interpreting the error for what it indicates.&lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/li&gt;
-  &lt;li&gt;Delete the webhook and the namespace.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;So I did what any good lazy person would do, and wrote some code to do it for me :)&lt;/p&gt;
-
-&lt;p&gt;With the reminder of “don’t run this on production clusters!”, the PoC code is available &lt;a href=&quot;https://github.com/raesene/k8s_ssrf_portscanner&quot;&gt;here&lt;/a&gt;. You can use it to scan host/port combinations from the perspective of a Kubernetes API server. The code will try to interpret the error message that comes back and tell you if the port is unreachable/closed/open.&lt;/p&gt;
-
-&lt;h2 id=&quot;demo&quot;&gt;Demo&lt;/h2&gt;
-
-&lt;p&gt;Here’s a quick demonstration of how this works. In the video I’ve got an AKS cluster up and running and I’ll use the SSRF port scanner to hit a URL I control, so we can see the request (caddy.pwndland.uk).&lt;/p&gt;
-
-&lt;p&gt;In the logs you can see the source IP of 40.88.207.52 and User-agent of “kube-apiserver-admission” showing that it’s the API server making the request.&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/y9QBDlmk0jA&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This post just shows how it’s possible to leverage existing functionality on Kubernetes to perform scans from the perspective of the API server using validating admission webhooks, an interesting side-effect of how the API server is designed. There are other objects you could use for this I’m sure :)&lt;/p&gt;
-</description>
-				<pubDate>Mon, 02 Jan 2023 08:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/</guid>
 			</item>
 		
 	</channel>
