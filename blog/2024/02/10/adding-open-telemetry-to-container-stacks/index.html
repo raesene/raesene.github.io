@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Adding Open Telemetry to Container Stacks</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Adding Open Telemetry to Container Stacks </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   February 
+	   10th,
+	   
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>This year, I’ve started looking at how <a href="https://www.linkedin.com/pulse/security-observability-match-made-heaven-rory-mccune-mej4e%3FtrackingId=MrZn6Pw%252FpmXQjCGKT1hxKA%253D%253D/?trackingId=MrZn6Pw%2FpmXQjCGKT1hxKA%3D%3D">observability can work well for security</a> and as part of that I’ve been investigating Open Telemetry, to understand more about how it works.</p>
+
+<p>So when I noticed in recent Kubernetes release notes that Open Telemetry support was being added, I decided to take a look at how it’s being integrated in k8s and other parts of container stacks.</p>
+
+<p>This blog is just some notes about how to get it set up, and some of the things I’ve noticed along the way.</p>
+
+<h2 id="basic-architecture">Basic Architecture</h2>
+
+<p>There’s essentially 3 elements to the architecture of a basic observability stack. We’ve got sources of Telemetry (e.g. logs, metrics, traces) which in this case will be services like Kubernetes and Docker, a collector to gather and process that telemetry, and then one or more backends to send the information to.</p>
+
+<p><img src="https://raesene.github.io/assets/media/container-otel-architecture.png" alt="Basic OTel Architectuer" /></p>
+
+<p>For the sources of telemetry in this case we’re going to rely on their OTel integrations, which are built into the software. The <a href="https://opentelemetry.io/docs/collector/">Open Telemetry Collector</a> is our collector which will receive the data, process it and then forward to our backends. Then for backends to demonstrate having multiple ones setup, I used <a href="https://www.jaegertracing.io/">Jaeger</a> and <a href="https://www.datadoghq.com/">Datadog</a> (full disclosure, I work for Datadog :) ).</p>
+
+<h2 id="setting-up-the-otel-support-in-kubernetes">Setting up the OTel support in Kubernetes</h2>
+
+<p>To test this out in Kubernetes I’m going to make use of <a href="https://kind.sigs.k8s.io/">KinD</a> to create a local cluster. A relatively recent version of Kubernetes is needed as the OTel support has only been added in the last few releases (alpha in 1.22, beta in 1.27). It’s not currently at release level so we need to give the API server a feature flag to enable it. If you want some more background on how tracing is being added to Kubernetes, it’s worth reading the <a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-instrumentation/647-apiserver-tracing">KEP</a>.</p>
+
+<p>This is the KinD configuration I used to create the cluster. In addition to the feature flag, we need a mount to provide the configuration file to the API server.</p>
+
+<pre><code class="language-YAML">kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+featureGates:
+  "APIServerTracing": true
+nodes:
+- role: control-plane
+  extraMounts:
+  - hostPath: /home/rorym/otel
+    containerPath: /otel
+    propagation: None
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        tracing-config-file: "/otel/config.yaml"
+      extraVolumes:
+        - name: "otel"
+          hostPath: "/otel"
+          mountPath: "/otel"
+          readOnly: false
+          pathType: "Directory"
+</code></pre>
+
+<p>The <code class="language-plaintext highlighter-rouge">tracing-config-file</code> is the key part here, it’s telling the API server where to find the configuration file for the OTel support. The sample file I created looks like this.</p>
+
+<pre><code class="language-YAML">apiVersion: apiserver.config.k8s.io/v1beta1
+kind: TracingConfiguration
+endpoint: 192.168.41.107:4317
+samplingRatePerMillion: 1000000
+</code></pre>
+
+<p>There’s a couple of important settings here. The first one is the <code class="language-plaintext highlighter-rouge">endpoint</code> which is the address of the OTel collector. The second is the <code class="language-plaintext highlighter-rouge">samplingRatePerMillion</code> which is the rate at which to sample traces. In this case I’m sampling 100% of traces, but in a real-world scenario you’d want to sample a smaller percentage to avoid overwhelming your backend.</p>
+
+<h2 id="setting-up-the-otel-collector">Setting up the OTel Collector</h2>
+
+<p>Next step is to setup the OTel collector to receive the traces from the cluster. We need a configuration file for the collector, which looks like this.</p>
+
+<pre><code class="language-YAML">receivers:
+  otlp: # the OTLP receiver the app is sending traces to
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  batch:
+
+exporters:
+  otlp/jaeger: # Jaeger supports OTLP directly
+    endpoint: 192.168.41.107:44317
+    tls:
+      insecure: true
+  datadog:
+    api:
+      key: "API_KEY_HERE"
+
+service:
+  pipelines:
+    traces/dev:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger, datadog]
+</code></pre>
+
+<p>The <code class="language-plaintext highlighter-rouge">receivers</code> sections has the ports to listen on , with <code class="language-plaintext highlighter-rouge">4317</code> and <code class="language-plaintext highlighter-rouge">4318</code> being defaults. In this case we’re deploying the collector on a different host to the cluster, so we’ll listen on all interfaces.</p>
+
+<p>Next up we define the exporters for the traces. In this case we’re going to forward traces to <code class="language-plaintext highlighter-rouge">jaeger</code> on a non-standard port (44317) and to <code class="language-plaintext highlighter-rouge">datadog</code>. The <code class="language-plaintext highlighter-rouge">datadog</code> exporter needs an API key to be able to send the traces to the backend.</p>
+
+<p>Finally we define a pipeline to process the traces. In this case we’re going to process all traces and send them to both <code class="language-plaintext highlighter-rouge">jaeger</code> and <code class="language-plaintext highlighter-rouge">datadog</code>.</p>
+
+<p>To run the collector we can then just use this docker command</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--rm</span> <span class="nt">--name</span> collector <span class="nt">-d</span> <span class="nt">-v</span> <span class="si">$(</span><span class="nb">pwd</span><span class="si">)</span>/config.yaml:/etc/otelcol-contrib/config.yaml <span class="nt">-p</span> 4317:4317 <span class="nt">-p</span> 4318:4318 <span class="nt">-p</span> 55679:55679 otel/opentelemetry-collector-contrib:0.93.0
+</code></pre></div></div>
+
+<h2 id="setting-up-jaeger">Setting up Jaeger</h2>
+
+<p>For demo purpose we can just run Jaeger using Docker. The command to run it is</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--rm</span> <span class="nt">-d</span> <span class="nt">-e</span> <span class="nv">COLLECTOR_ZIPKIN_HOST_PORT</span><span class="o">=</span>:9411 <span class="nt">-p</span> 16686:16686 <span class="nt">-p</span> 44317:4317 <span class="nt">-p</span> 44318:4318 <span class="nt">-p</span> 49411:9411 jaegertracing/all-in-one:latest
+</code></pre></div></div>
+
+<p>As I’m running both containers on the same host, I’m using non-standard ports to avoid conflicts.</p>
+
+<h2 id="viewing-traces">Viewing Traces</h2>
+
+<p>Now we’ve got the cluster up and running and our OTel collector and Jaeger setup, we can start to see traces.</p>
+
+<p><img src="https://raesene.github.io/assets/media/datadog-k8s-trace-list.png" alt="Datadog trace list" /></p>
+
+<p>There’s quite a bit of information in these traces, showing the internal operations of the cluster. We can see the schedulers and controller manager making requests to the API server as well as <code class="language-plaintext highlighter-rouge">kube-probe</code> checking the health of the API server.</p>
+
+<p>From a security standpoint, whilst this is no replacement for audit logging, there is some interesting data there, although in production it’s worth remembering that traces would likely be sampled and not 100% of them would be sent to the backend.</p>
+
+<h2 id="setting-up-docker-with-otel">Setting up Docker with OTel</h2>
+
+<p>There’s also support for tracing in Docker, which is enabled by adding environment variables to the service. If you’ve got Docker running under systemd, you can edit the service file to add the environment variables.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>systemctl edit docker.service
+</code></pre></div></div>
+
+<p>And then add the environment variables to the service file (replace 192.168.41.107 with the IP of your collector)</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code></code></pre></div></div>
+<p>[Service]
+Environment=”OTEL_EXPORTER_OTLP_ENDPOINT=http://192.168.41.107:4318”
+```</p>
+
+<p>After that you can do a daemon-reload and then restart the service and you’ll get traces showing up in your backend(s).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>As Open Telemetry uptake increases, it’s likely that many services that we use will get support for it, enabling a standardized approach to observability instrumentation to be established. From a security standpoint, this has quite a bit of promise for improving our access to security information generated by applications, so it’ll be interesting to see how it develops.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#OpenTelemetry-ref">
+					OpenTelemetry <span>(1)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Adding Open Telemetry to Container Stacks&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/" title="When is admin not admin?, when it's super-admin!">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
