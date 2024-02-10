@@ -115,7 +115,7 @@ service:
 
 &lt;h2 id=&quot;viewing-traces&quot;&gt;Viewing Traces&lt;/h2&gt;
 
-&lt;p&gt;Now we’ve got the cluster up and running and our OTel collector and Jaeger setup, we can start to see traces.&lt;/p&gt;
+&lt;p&gt;Now we’ve got the cluster up and running and our OTel collector and backends setup, we can start to see traces. This is a screenshot of how the traces look in Datadog.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/datadog-k8s-trace-list.png&quot; alt=&quot;Datadog trace list&quot; /&gt;&lt;/p&gt;
 
