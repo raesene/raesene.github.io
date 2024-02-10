@@ -287,10 +287,9 @@ service:
 
 <p>And then add the environment variables to the service file (replace 192.168.41.107 with the IP of your collector)</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code></code></pre></div></div>
-<p>[Service]
-Environment=”OTEL_EXPORTER_OTLP_ENDPOINT=http://192.168.41.107:4318”
-```</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>Service]
+<span class="nv">Environment</span><span class="o">=</span><span class="s2">"OTEL_EXPORTER_OTLP_ENDPOINT=http://192.168.41.107:4318"</span>
+</code></pre></div></div>
 
 <p>After that you can do a daemon-reload and then restart the service and you’ll get traces showing up in your backend(s).</p>
 
