@@ -18,7 +18,7 @@
 
 &lt;h2 id=&quot;kubernetes-numbers&quot;&gt;Kubernetes numbers&lt;/h2&gt;
 
-&lt;p&gt;So what’s the final outcome? Well the last scan shows 1,626,249 cluster hosts with visible version numbers on the Internet (and it’s worth noting the final number will be higher as some distributions like AKS don’t expose version number without authentication). Compared to 475,031 hosts in August 2022 when this dataset started, that’s a pretty significant increase (I’ve got data from earlier than that in the posts above but Censys changed their scanning methodology in August 2022, so it’s not directly comparable).&lt;/p&gt;
+&lt;p&gt;So what’s the final outcome? Well the last scan shows 1,626,249 cluster hosts with visible version numbers on the Internet (and it’s worth noting the final number will be higher as some distributions like AKS don’t expose version number without authentication). Compared to 842,350 hosts in August 2022 when this dataset started, that’s a pretty significant increase (I’ve got data from earlier than that in the posts above but Censys changed their scanning methodology in August 2022, so it’s not directly comparable).&lt;/p&gt;
 
 &lt;p&gt;In terms of visible versions, the most common major version is v1.26, which is reasonably up to date, but still quite a way back from the latest released version (v1.29). There is a “long tail” quite visibly present, so it’s obvious that some cluster operators are finding the update cycyle challenging.&lt;/p&gt;
 
