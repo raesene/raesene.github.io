@@ -7,6 +7,37 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>A final Kubernetes census</title>
+				<description>&lt;p&gt;Well, all good things must come to an end. Over the last couple of years I’ve been using the &lt;a href=&quot;https://censys.io&quot;&gt;Censys&lt;/a&gt; API to track the number of Kubernetes clusters exposed to the internet which disclose their version number, and I’ve written about it a couple of times &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;After a couple of failures of the daily script to run, I logged into my Censys account to see a banner saying that free access to their API had been removed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/censys-no-free-api.png&quot; alt=&quot;No free Censys&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Looking at the plans available they were a bit pricey for this hobby project, so I’ve decided to stop the daily script and this will be the last post on the topic.&lt;/p&gt;
+
+&lt;h2 id=&quot;kubernetes-numbers&quot;&gt;Kubernetes numbers&lt;/h2&gt;
+
+&lt;p&gt;So what’s the final outcome? Well the last scan shows 1,626,249 cluster hosts with visible version numbers on the Internet (and it’s worth noting the final number will be higher as some distributions like AKS don’t expose version number without authentication). Compared to 475,031 hosts in August 2022 when this dataset started, that’s a pretty significant increase (I’ve got data from earlier than that in the posts above but Censys changed their scanning methodology in August 2022, so it’s not directly comparable).&lt;/p&gt;
+
+&lt;p&gt;In terms of visible versions, the most common major version is v1.26, which is reasonably up to date, but still quite a way back from the latest released version (v1.29). There is a “long tail” quite visibly present, so it’s obvious that some cluster operators are finding the update cycyle challenging.&lt;/p&gt;
+
+&lt;p&gt;Looking at a graph of all the versions we can see the different versions and how they’ve changed over time.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kubernetes-versions-2024.png&quot; alt=&quot;K8s versions&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This has been a pretty interesting project for providing some insights into how Kubernetes adoption runs over time and what versions of Kubernetes are actually in use. It’s amusing that it was enabled by a quirk of Kubernetes default configuration (exposing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; without authentication) and defaults from the major managed Kubernetes distributions (which put the API server on the Internet by default).&lt;/p&gt;
+
+&lt;p&gt;The data is available at &lt;a href=&quot;https://github.com/raesene/public-k8s-censys&quot;&gt;this repo&lt;/a&gt; along with some details of how it was analysed, so that might well be useful for someone else :)&lt;/p&gt;
+</description>
+				<pubDate>Sat, 17 Feb 2024 14:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/02/17/a-final-kubernetes-censys/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/02/17/a-final-kubernetes-censys/</guid>
+			</item>
+		
+			<item>
 				<title>Adding Open Telemetry to Container Stacks</title>
 				<description>&lt;p&gt;This year, I’ve started looking at how &lt;a href=&quot;https://www.linkedin.com/pulse/security-observability-match-made-heaven-rory-mccune-mej4e%3FtrackingId=MrZn6Pw%252FpmXQjCGKT1hxKA%253D%253D/?trackingId=MrZn6Pw%2FpmXQjCGKT1hxKA%3D%3D&quot;&gt;observability can work well for security&lt;/a&gt; and as part of that I’ve been investigating Open Telemetry, to understand more about how it works.&lt;/p&gt;
 
@@ -903,149 +934,6 @@ kube-system   bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      34
 				<pubDate>Sat, 18 Mar 2023 14:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with Containers - Adding tracking to your images</title>
-				<description>&lt;p&gt;Last year I was taking a look at the OCI Image specification and I came across something kind of interesting, which is how you can get a container image to ping a URL when it’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pulled&lt;/code&gt; to a host almost like a tracking cookie. Needless to say this isn’t me dropping 0-day, I reported this to the containerd and podman security addresses back in October 2022 and the consensus appears to be that whilst this may have some security implications it’s not dreadfully serious in most cases and it’s part of the spec, so unlikely to change.&lt;/p&gt;
-
-&lt;p&gt;With that said, it’s an interesting way to investigate a bit about how the OCI spec works and some of the tooling that goes with it, so lets dive in.&lt;/p&gt;
-
-&lt;h2 id=&quot;oci-image-specification&quot;&gt;OCI Image Specification&lt;/h2&gt;
-
-&lt;p&gt;Reading through the &lt;a href=&quot;https://github.com/opencontainers/image-spec/blob/main/spec.md&quot;&gt;OCI Image Specification&lt;/a&gt; like any specification can be a bit hard to reason about as there’s a lot of text there, which you’d expect in a document which has to be precise about what it’s defining. So to help me parse out what was happening I tried to create a mermaid.js diagram of the different elements, which ended up looking like this :-&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/oci-image-spec.png&quot; alt=&quot;OCI Image Mermaid diagram&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Looking at the graph, I noticed that several of the sections, including config, manifest, and layers are of type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;descriptor&lt;/code&gt;. Looking at the &lt;a href=&quot;https://github.com/opencontainers/image-spec/blob/main/descriptor.md&quot;&gt;type definition&lt;/a&gt; I saw that there was a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;urls&lt;/code&gt; field which is listed as OPTIONAL. Seeing this made me wonder, what happens if you specify that in a container image?&lt;/p&gt;
-
-&lt;p&gt;At this point I had an experiment to try out, so the next step was to create an image that specifies a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;url&lt;/code&gt; parameter…&lt;/p&gt;
-
-&lt;h2 id=&quot;setting-up-the-base-image&quot;&gt;Setting up the base image&lt;/h2&gt;
-
-&lt;p&gt;The first thing to note here is a bit of container image history. Usually if you use &lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt; to create images you don’t actually get an OCI specification image, you get a docker format image. Whilst these are generally interoperable, there are som differences which matter for the purpose of this experiment, so we can’t just do what we might usually and use a docker image as a starting point.&lt;/p&gt;
-
-&lt;p&gt;To demonstrate this I created a very simple Dockerfile&lt;/p&gt;
-
-&lt;div class=&quot;language-dockerfile highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; busybox&lt;/span&gt;
-
-
-&lt;span class=&quot;k&quot;&gt;CMD&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; [&quot;/bin/sh&quot;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then built it first with standard &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker build&lt;/code&gt; and then with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker buildx build -o type=oci&lt;/code&gt; to get an OCI image. Extracting the tarballs for both these shows how the two formats differ&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Docker image&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;383fca235ae5442f82b630fed2d6ed8306cc4f6f490e41f56c7fddbdf5f795be.json
-5e558067e843bda80c685292e5fcc6d3a1c01cea5f13896cc891d70bc4067e07/
-5e558067e843bda80c685292e5fcc6d3a1c01cea5f13896cc891d70bc4067e07/VERSION
-5e558067e843bda80c685292e5fcc6d3a1c01cea5f13896cc891d70bc4067e07/json
-5e558067e843bda80c685292e5fcc6d3a1c01cea5f13896cc891d70bc4067e07/layer.tar
-manifest.json
-repositories
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;OCI Image&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;blobs/
-blobs/sha256/
-blobs/sha256/245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9
-blobs/sha256/c5b5e79770f0f14d204f1bfdda52533a39b140eec9d39c15d165b41af3972feb
-blobs/sha256/f5b7ce95afea5d39690afc4c206ee1bf3e3e956dcc8d1ccd05c6613a39c4e4f8
-index.json
-manifest.json
-oci-layout
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now we know how to create an OCI image to use we need to modify one of the sections to include our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;url&lt;/code&gt; parameter.&lt;/p&gt;
-
-&lt;h2 id=&quot;modifying-the-image&quot;&gt;Modifying the image&lt;/h2&gt;
-
-&lt;p&gt;One of the feature of OCI images is that they use SHA-256 hashes to identify the different elements, so if we modify the contents of a file, we then need to re-compute the hash of the file and update the references to it. What I found was that the easiest section to modify, which has the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;url&lt;/code&gt; parameter set, is the manifest layer. So if we get the manifest from our OCI image above we can add a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;url&lt;/code&gt; parameter to it like this&lt;/p&gt;
-
-&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;mediaType&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;application/vnd.oci.image.manifest.v1+json&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;schemaVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;config&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;mediaType&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;application/vnd.oci.image.config.v1+json&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;digest&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;sha256:245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;size&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;625&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;urls&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-         &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;http://logs.pwndland.uk/245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-       &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;layers&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-         &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;mediaType&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-         &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;digest&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;sha256:f5b7ce95afea5d39690afc4c206ee1bf3e3e956dcc8d1ccd05c6613a39c4e4f8&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-         &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;size&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;772998&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-      &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;I’ve added the URL &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://logs.pwndland.uk/245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9&lt;/code&gt; to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;config&lt;/code&gt; section of the manfiest. This URL includes the SHA-256 hash of the config file, which is important as it’s checked by the OCI runtime when it’s pulled (you can use different urls but you’ll get more errors and less successful pulls that way).&lt;/p&gt;
-
-&lt;p&gt;When we add this change to the manifest we’ve modified the hash of the manifest file, so we need to update this anywhere it appears in the image to make things work. There’s a couple of steps here :-&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sha256sum&lt;/code&gt; on the modified manifest file to get the new hash&lt;/li&gt;
-  &lt;li&gt;run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mv [old hash] [new hash]&lt;/code&gt; to rename the file&lt;/li&gt;
-  &lt;li&gt;run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stat -c%s [new_manifest_hash_value]&lt;/code&gt; to get the size of the file&lt;/li&gt;
-  &lt;li&gt;In &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;index.json&lt;/code&gt; update the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;manifests&lt;/code&gt; section to use the new hash and size&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;At this point you should have a valid image, so now we just need to upload to a registry to test it.&lt;/p&gt;
-
-&lt;h2 id=&quot;uploading-to-a-registry&quot;&gt;Uploading to a registry&lt;/h2&gt;
-
-&lt;p&gt;The obvious way to do this might be to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tar&lt;/code&gt; up the image and then use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker load&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker push&lt;/code&gt; to upload to a registry, however that doesn’t work as the process will modify the image and remove the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;url&lt;/code&gt; parameter. So we need to use a different method.&lt;/p&gt;
-
-&lt;p&gt;The best tool I found for doing this without mangling our image, is &lt;a href=&quot;https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md&quot;&gt;crane&lt;/a&gt;. Using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;crane push&lt;/code&gt; we can upload the directory to our registry without having to create a tarball first.&lt;/p&gt;
-
-&lt;p&gt;In terms of which registries this will work with, I’ve tested Docker Hub, GitHub and Quay.io and they all work (it also works with harbor run locally).&lt;/p&gt;
-
-&lt;h3 id=&quot;running-our-webserver&quot;&gt;Running our webserver&lt;/h3&gt;
-
-&lt;p&gt;To receive the pings from our images being pulled, we need a webserver to receive them. I used Caddy for this as it works pretty well. You can see some general notes about using Caddy that I made &lt;a href=&quot;https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/&quot;&gt;here&lt;/a&gt;. In this case our Caddyfile can be pretty simple as we just need it to serve files from a directory and log the requests to a file.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-caddyfile&quot;&gt;logs.pwndland.uk:80 {
-  root * /home/ubuntu/bad_images/hashes
-  file_server
-  log {
-    output file bad_image_access_log.log
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&quot;testing-it-out&quot;&gt;Testing it out&lt;/h3&gt;
-
-&lt;p&gt;So now we have our modified image hosted in a registry, the question is…. does it work? The answer to this turned out to be a little bit varied depending on the tool used to pull the image.&lt;/p&gt;
-
-&lt;p&gt;If we use Docker to pull the image, the pull works and we get no ping back to our webserver.&lt;/p&gt;
-
-&lt;p&gt;If we use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nercdctl&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;containerd&lt;/code&gt; we get something like this. You can see the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;User-agent&lt;/code&gt; header gives us some information about the tool used, you also get the source IP address that pulled it (I’ve redacted in this case as the test’s run from my home network :) )&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;level&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;info&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;ts&quot;&lt;/span&gt;:1676109995.5399737,&lt;span class=&quot;s2&quot;&gt;&quot;logger&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;http.log.access.log6&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;msg&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;handled request&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;request&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;remote_ip&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;[REDACTED]&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;remote_port&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;50758&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;proto&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;HTTP/1.1&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;method&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;GET&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;host&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;logs.pwndland.uk&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;uri&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;/245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;headers&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;User-Agent&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;containerd/1.6.0+unknown&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Accept&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;application/vnd.oci.image.config.v1+json, */*&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Accept-Encoding&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;gzip&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}}&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;user_id&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;duration&quot;&lt;/span&gt;:0.000304641,&lt;span class=&quot;s2&quot;&gt;&quot;size&quot;&lt;/span&gt;:625,&lt;span class=&quot;s2&quot;&gt;&quot;status&quot;&lt;/span&gt;:200,&lt;span class=&quot;s2&quot;&gt;&quot;resp_headers&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Etag&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ro9zwzhd&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Content-Type&quot;&lt;/span&gt;:[],&lt;span class=&quot;s2&quot;&gt;&quot;Last-Modified&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;Tue, 10 Jan 2023 15:19:47 GMT&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Accept-Ranges&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;bytes&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Content-Length&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;625&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Server&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;Caddy&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Pulling the image with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;podman&lt;/code&gt; will ping as well with a different user agent string showing a different library used for the interaction with registries.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;level&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;info&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;ts&quot;&lt;/span&gt;:1676109882.1299412,&lt;span class=&quot;s2&quot;&gt;&quot;logger&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;http.log.access.log6&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;msg&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;handled request&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;request&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;remote_ip&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;[REDACTED]&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;remote_port&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;38378&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;proto&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;HTTP/1.1&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;method&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;GET&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;host&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;logs.pwndland.uk&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;uri&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;/245c6832cd7a449df9ce7b95d94569329c13fb05ccb38f58f537191b75d258b9&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;headers&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;User-Agent&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;containers/5.16.0 (github.com/containers/image)&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Docker-Distribution-Api-Version&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;registry/2.0&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Accept-Encoding&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;gzip&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Connection&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;close&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}}&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;user_id&quot;&lt;/span&gt;:&lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;duration&quot;&lt;/span&gt;:0.000237844,&lt;span class=&quot;s2&quot;&gt;&quot;size&quot;&lt;/span&gt;:625,&lt;span class=&quot;s2&quot;&gt;&quot;status&quot;&lt;/span&gt;:200,&lt;span class=&quot;s2&quot;&gt;&quot;resp_headers&quot;&lt;/span&gt;:&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Content-Length&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;625&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Server&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;Caddy&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Etag&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;ro9zwzhd&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&quot;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Content-Type&quot;&lt;/span&gt;:[],&lt;span class=&quot;s2&quot;&gt;&quot;Last-Modified&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;Tue, 10 Jan 2023 15:19:47 GMT&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;,&lt;span class=&quot;s2&quot;&gt;&quot;Accept-Ranges&quot;&lt;/span&gt;:[&lt;span class=&quot;s2&quot;&gt;&quot;bytes&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]}}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Other tools which work with OCI images, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;skopeo&lt;/code&gt; will also trigger the ping, each with their own User-Agent.&lt;/p&gt;
-
-&lt;h2 id=&quot;avoiding-this&quot;&gt;Avoiding this&lt;/h2&gt;
-
-&lt;p&gt;If someone tracking your image pulls is a concern, then avoiding this is generally a matter of ensuring that you pull trusted images from trusted registries. If you’re using a public registry (e.g. Docker hub or ghcr) then you’re already disclosing your IP address and user agent to a third party…&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;As with the general tenor of my “fun with” series there’s no earth shattering payoff here, but I found this an interesting way to run through a specification and find possibly unintended behaviour. Also doing this helped me learn quite a bit about the OCI image specification and how it’s used.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 11 Feb 2023 08:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2023/02/11/Fun-with-Containers-adding-tracking-to-your-images/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/02/11/Fun-with-Containers-adding-tracking-to-your-images/</guid>
 			</item>
 		
 	</channel>

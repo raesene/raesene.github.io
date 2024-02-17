@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Fun with SSRF - Turning the Kubernetes API Server into a port scanner</title>
+	<title>A final Kubernetes census</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Fun with SSRF - Turning the Kubernetes API Server into a port scanner </h1>
+  <h1>A final Kubernetes census </h1>
 </div>
 	
 <article>
@@ -157,65 +157,35 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   January 
-	   2nd,
-	     
-	   2023
+	   February 
+	   17th,
+	   
+	   2024
 	 </span>
 	  <div class="article_body">
-	  <p>I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the word ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.</p>
+	  <p>Well, all good things must come to an end. Over the last couple of years I’ve been using the <a href="https://censys.io">Censys</a> API to track the number of Kubernetes clusters exposed to the internet which disclose their version number, and I’ve written about it a couple of times <a href="https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/">here</a> and <a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/">here</a></p>
 
-<p>An important point to note here, is that this is all standard Kubernetes functionality, no 0-days or vulnerabilities are involved. To carry out this process you need to be able to create some high-privileged objects in the cluster, so in most cases there’s no privilege escalation involved.</p>
+<p>After a couple of failures of the daily script to run, I logged into my Censys account to see a banner saying that free access to their API had been removed.</p>
 
-<p>One slight exception to this, is that if you’re using Managed Kubernetes (AKS, EKS, GKE etc) you can use this to port scan some parts of the CSPs network, but this is just information disclosure and I’m sure their security architectures are robust enough that simple port scanning presents no real threat.</p>
+<p><img src="https://raesene.github.io/assets/media/censys-no-free-api.png" alt="No free Censys" /></p>
 
-<h2 id="using-validating-admission-webhooks">Using Validating Admission Webhooks</h2>
+<p>Looking at the plans available they were a bit pricey for this hobby project, so I’ve decided to stop the daily script and this will be the last post on the topic.</p>
 
-<p>The first object I thought of using for this is Validating Admission Webhooks, as they take either a service or URL as part of their specification, then when they receive a request for an in-scope object the Kubernetes API server passes the request to that URL, so it fits our profile.</p>
+<h2 id="kubernetes-numbers">Kubernetes numbers</h2>
 
-<p>If we want to implement this technique, the next step is to work out how to trigger it and also do so in a relatively safe way, to avoid disrupting the overall operation of the cluster, while we’re port scanning. To do this we can create a validating admission webhook configuration that only looks at requests in a single namespace. If we create a dedicated namespace for the scanning, then we can ensure that the webhook only looks at requests in that namespace, and we can also delete the namespace when we’re done to clean up.</p>
+<p>So what’s the final outcome? Well the last scan shows 1,626,249 cluster hosts with visible version numbers on the Internet (and it’s worth noting the final number will be higher as some distributions like AKS don’t expose version number without authentication). Compared to 475,031 hosts in August 2022 when this dataset started, that’s a pretty significant increase (I’ve got data from earlier than that in the posts above but Censys changed their scanning methodology in August 2022, so it’s not directly comparable).</p>
 
-<p>Once we have our namespace and webhook, we just try to create a pod in that namespace, expecting it to fail, and then record the error message returned.</p>
+<p>In terms of visible versions, the most common major version is v1.26, which is reasonably up to date, but still quite a way back from the latest released version (v1.29). There is a “long tail” quite visibly present, so it’s obvious that some cluster operators are finding the update cycyle challenging.</p>
 
-<p>So, a simplified version of our flow should look a little like this :</p>
+<p>Looking at a graph of all the versions we can see the different versions and how they’ve changed over time.</p>
 
-<p><img src="https://raesene.github.io/assets/media/kubernetes_vaw_ssrf.png" alt="Sequence diagram for SSRF" /></p>
-
-<p>Trying this out manually, one thing that I noticed which is very handy for our purposes is that the Kubernetes API provides a verbose error message depending on what sort of error it encountered. This lets us differentiate between “no response”, “port closed” and “port open”, with some added details like “this port was open but didn’t speak HTTP”.</p>
-
-<h2 id="automating-the-process">Automating the process</h2>
-
-<p>Whilst it’s perfectly possible to do this manually, it’s pretty time-consuming as you need do have a set of steps like this</p>
-
-<ul>
-  <li>Edit the template webhook manifest with the target host and port.</li>
-  <li>Check if the namespace exists, if not create it.</li>
-  <li>Check if the webhook exists, if it does delete it.</li>
-  <li>Create the new webhook.</li>
-  <li>Create a pod in the namespace.</li>
-  <li>Check the error message returned by the API server when it tries and fails to call the target admission webhook.
-    <ul>
-      <li>Return this to the user after interpreting the error for what it indicates.</li>
-    </ul>
-  </li>
-  <li>Delete the webhook and the namespace.</li>
-</ul>
-
-<p>So I did what any good lazy person would do, and wrote some code to do it for me :)</p>
-
-<p>With the reminder of “don’t run this on production clusters!”, the PoC code is available <a href="https://github.com/raesene/k8s_ssrf_portscanner">here</a>. You can use it to scan host/port combinations from the perspective of a Kubernetes API server. The code will try to interpret the error message that comes back and tell you if the port is unreachable/closed/open.</p>
-
-<h2 id="demo">Demo</h2>
-
-<p>Here’s a quick demonstration of how this works. In the video I’ve got an AKS cluster up and running and I’ll use the SSRF port scanner to hit a URL I control, so we can see the request (caddy.pwndland.uk).</p>
-
-<p>In the logs you can see the source IP of 40.88.207.52 and User-agent of “kube-apiserver-admission” showing that it’s the API server making the request.</p>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/y9QBDlmk0jA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+<p><img src="https://raesene.github.io/assets/media/kubernetes-versions-2024.png" alt="K8s versions" /></p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This post just shows how it’s possible to leverage existing functionality on Kubernetes to perform scans from the perspective of the API server using validating admission webhooks, an interesting side-effect of how the API server is designed. There are other objects you could use for this I’m sure :)</p>
+<p>This has been a pretty interesting project for providing some insights into how Kubernetes adoption runs over time and what versions of Kubernetes are actually in use. It’s amusing that it was enabled by a quirk of Kubernetes default configuration (exposing <code class="language-plaintext highlighter-rouge">/version</code> without authentication) and defaults from the major managed Kubernetes distributions (which put the API server on the Internet by default).</p>
+
+<p>The data is available at <a href="https://github.com/raesene/public-k8s-censys">this repo</a> along with some details of how it was analysed, so that might well be useful for someone else :)</p>
 
 	  </div>
 
@@ -241,7 +211,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun with SSRF - Turning the Kubernetes API Server into a port scanner&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=A final Kubernetes census&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -269,10 +239,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/21/Kubernetes-persistence-with-Tocan-and-Teisteanas/" title="Attack of the clones - Stealthy Kubernetes persistence with eathar, tòcan and teisteanas">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/02/10/adding-open-telemetry-to-container-stacks/" title="Adding Open Telemetry to Container Stacks">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2023/01/21/Fun-with-Caddy-SSRF-Testing/" title="Fun with Caddy - SSRF Testing">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
