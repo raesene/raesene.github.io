@@ -86,7 +86,7 @@
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/systemd_net_mon:latest sys_net_mon
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Then from inside the container, we just need two commands to start Tailscale up and connect it to our tailnet. Here we can make use of the fact that Tailscale is provided as a pair of Golang binaries, by just renaming them the server to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_server&lt;/code&gt; and the client to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_client&lt;/code&gt;. That way if someone runs a process list on the host, that’s all they’ll see, a bit less obvious than tailscale itself.&lt;/p&gt;
+&lt;p&gt;Then from inside the container, we just need two commands to start Tailscale up and connect it to our tailnet. Here we can make use of the fact that Tailscale is provided as a pair of Golang binaries, by just renaming the server to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_server&lt;/code&gt; and the client to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_client&lt;/code&gt;. That way if someone runs a process list on the host, that’s all they’ll see, a bit less obvious than Tailscale itself.&lt;/p&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;amp;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -94,7 +94,7 @@
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_client up --ssh --hostname cafebot --auth-key=[AUTH_KEY_HERE]
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;With that, our bot will be up and connected to the Tailnet. We can then connect to it via Tailscale’s embedded SSH daemon, with all the traffic going over the Tailscale tunnel.&lt;/p&gt;
+&lt;p&gt;With that, our bot will be up and connected to the tailnet. We can then connect to it via Tailscale’s embedded SSH daemon, with all the traffic going over the Tailscale tunnel.&lt;/p&gt;
 
 &lt;h3 id=&quot;running-with-static-manifests&quot;&gt;Running with static manifests&lt;/h3&gt;
 
