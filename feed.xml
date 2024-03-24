@@ -12,7 +12,7 @@
 
 &lt;p&gt;The idea here is to see how someone could use Tailscale as part of getting persistence on a compromised system (for example a Kubernetes cluster) to keep access in a relatively stealthy fashion. We’re running Tailscale inside a container running on a Kubernetes node and we want to communicate back to a host outside the cluster over the network.&lt;/p&gt;
 
-&lt;p&gt;Whilst Tailscale generally uses UDP for its communications, it can also communicate over 443/TCP using &lt;a href=&quot;https://tailscale.com/blog/how-tailscale-works#encrypted-tcp-relays-derp&quot;&gt;DERP&lt;/a&gt; meaning it should work as long as the compromise host can initiate outbound connections on 443/TCP (a reasonably common configuration!)&lt;/p&gt;
+&lt;p&gt;Whilst Tailscale generally uses UDP for its communications, it can also communicate over 443/TCP using &lt;a href=&quot;https://tailscale.com/blog/how-tailscale-works#encrypted-tcp-relays-derp&quot;&gt;DERP&lt;/a&gt; meaning it should work as long as the compromised host can initiate outbound connections on 443/TCP (a reasonably common configuration!)&lt;/p&gt;
 
 &lt;h2 id=&quot;setting-up-our-tailnet&quot;&gt;Setting up our tailnet&lt;/h2&gt;
 
