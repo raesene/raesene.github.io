@@ -159,6 +159,37 @@
   <span class="post-date">
     
     August
+    22nd,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/08/22/some_great_insi/">Some great insight on thinking about security</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="TaoSecurity: Marcus Ranum Highlights from USENIX Class" href="http://taosecurity.blogspot.com/2007/08/marcus-ranum-highlights-from-usenix.html">TaoSecurity: Marcus Ranum Highlights from USENIX Class</a><br />
+There's some very good points here in TaoSecuritys summary of a Marcus Ranum session at Usenix.<br />
+I've not seen the original talk but the summary makes me wish I'd been there.<br />
+The point on the perimeter being a complexity management tool is very well made in reference to de-perimeterization.  It's all very well saying that each individual device needs to be able to stand alone from a security perspective but it's still a lot easier to manage the security of the wider environment when you've got some control over what can get in at all, and the perimeter can and does provide that.<br />
+The points about quantification problems seem to have provoked a response from Alex .  I actually think having seen these arguments come up repeatedly on blogs and on the CISSP forum and also having started reading "Security Metrics" by Andrew Jaquaith, that there's less distance between the people who are strong proponents of quantitative analysis and those who are proponents of qualitative analysis.   One thing that has struck me in these debates is when you look at the examples on both sides they tend to be in different areas of security.<br />
+My feeling is that there needs to be a mix of the two styles depending on where they're most appropriate, but I'll reserve expanding on that till I've sorted my thoughts on the matter out better as it's a bit of a minefield...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    August
     16th,
     
     2007
@@ -405,36 +436,6 @@ Pretty good deal as you get a perfectly good linux server based on a 130 pound p
     <p><a title="Rational Security: Bye Bye, SPI (Dynamics...)" href="http://rationalsecurity.typepad.com/blog/2007/06/bye_bye_spi_dyn.html">Rational Security: Bye Bye, SPI (Dynamics...)</a><br />
 Well that's SPI getting acquired now by HP to follow on from <a href="http://www.itwire.com.au/content/view/12776/53/">IBM buying Watchfire</a><br />
 There may be loads of companies left in the security community waiting to get bought up, but there's only really Cenzic left of the original top 4 web application scanning tools left, and some other up-and-coming scanners like Acunetix WVS maybe as well.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    June
-    3rd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/06/03/data_tagging_re/">Data Tagging requisites..</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Rational Security: Profiling Data At the Network-Layer and Controlling It's Movement Is a Bad Thing?" href="http://rationalsecurity.typepad.com/blog/2007/06/profiling_data_.html">Rational Security: Profiling Data At the Network-Layer and Controlling It's Movement Is a Bad Thing?</a><br />
-Well I'm gong to try and answer Hoffs question on standards I think need to exist before ADAPT or any other data classification and security programme will work... But first thing a question of my own..  Where does he get all those cool graphics!<br />
-Anyway so we're tagging all our data. For that to happen I'm thinking that the tags need to be attached to each "document" that flows over the network.  Now we've got a wide variety of documents in place we've got all our MS office docs. we've got XML files we've got binary blobs from proprietary programs, we've got encrypted files.  Many of these have no native facility to insert any sort of metadata tag.  So without that how do we attach a meaningful tag to the data?  If we modify the document in infrastructure after it's been constructed our device which does this will need to understand every data/file format that we want to tag, and I think that's a very tricky thing to do.<br />
-So I think that in order to do this effectively you need a standard which all programs which construct documents will use to tag their data, so that all the infrastructure devices can read those tags and act on them...<br />
-Now the question I've got for Hoff is ... transparent to users.. how will that happen and the tags will still be meaningful to the business?  To do that it seems to me that the device/network will need to make assumptions about the appropriate tags for all of a users data?  From my experience users will create and process documents at a variety of sensitivities and classifications in a given day, and the only person who understands the significance of their documents is the user themselves.</p>
 
     
     

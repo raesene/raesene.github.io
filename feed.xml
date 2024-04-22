@@ -7,6 +7,88 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun with Kubernetes Authorization Auditing - multiple authz plugins</title>
+				<description>&lt;p&gt;One of the features of Kubernetes security, is its flexible model. This allows cluster operators to have multiple Authentication or Authorization modes running covering a number of use cases. This does introduce some complexity though both in terms of operation and also in terms of reviewing or auditing rights.&lt;/p&gt;
+
+&lt;p&gt;The most common case here is cloud managed Kubernetes where, in addition to the in-built RBAC authorization, you’ll often find that there’s a webhook authorization mode enabled as well to allow for integration with the cloud provider’s IAM system.&lt;/p&gt;
+
+&lt;p&gt;In principle the way that Kubernetes authorization works is that every configured authorizer is queried to see if a given action is allowed and, if any one of them says &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;yes&lt;/code&gt; the action is allowed, so permissions are cumulative (with the caveat that the request can still be blocked later by admission control).&lt;/p&gt;
+
+&lt;p&gt;There’s a couple of fun nuances of doing this, so I thought it was worth some discussion :)&lt;/p&gt;
+
+&lt;h2 id=&quot;auditing-permissions-in-kubernetes&quot;&gt;Auditing permissions in Kubernetes&lt;/h2&gt;
+
+&lt;p&gt;I’ve covered some details of this &lt;a href=&quot;https://raesene.github.io/blog/2022/08/14/auditing-rbac-redux/&quot;&gt;before&lt;/a&gt;, so we’ll just look at the specific aspects of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i&lt;/code&gt; as a mechanism for reviewing permissions. This command has two ways of being used the first allows for specific questions to be asked like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i get pods&lt;/code&gt; and the second which lists all the permissions of the user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt; . So knowing this lets see what happens if we use this in a cluster with multiple authorization mechanisms setup.&lt;/p&gt;
+
+&lt;h2 id=&quot;setting-up-a-webhook-authorizer&quot;&gt;Setting up a webhook authorizer&lt;/h2&gt;
+
+&lt;p&gt;For the purposes of this article I just wanted the most simplistic implementation of a webhook authorizer, so I put one together (with some help from an LLM). The code is &lt;a href=&quot;https://github.com/raesene/k8ssimpleauthzwebhook&quot;&gt;here&lt;/a&gt;, it’s basic but should help explain things.&lt;/p&gt;
+
+&lt;h2 id=&quot;auditing-permissions-with-two-authorizers&quot;&gt;Auditing permissions with two authorizers&lt;/h2&gt;
+
+&lt;p&gt;Once we have a cluster setup using this code, we can test things out. first I created a user called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt; , using &lt;a href=&quot;https://github.com/raesene/teisteanas&quot;&gt;teisteanas&lt;/a&gt;. With the user setup, I can use kubectl to get a list of all Jane’s permissions&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl --kubeconfig=jane.kubeconfig auth can-i --list
+Warning: the list may be incomplete: webhook authorizer does not support user rule resolution
+Resources                                       Non-Resource URLs   Resource Names   Verbs
+selfsubjectreviews.authentication.k8s.io        []                  []               [create]
+selfsubjectaccessreviews.authorization.k8s.io   []                  []               [create]
+selfsubjectrulesreviews.authorization.k8s.io    []                  []               [create]
+                                                [/api/*]            []               [get]
+                                                [/api]              []               [get]
+                                                [/apis/*]           []               [get]
+                                                [/apis]             []               [get]
+                                                [/healthz]          []               [get]
+                                                [/healthz]          []               [get]
+                                                [/livez]            []               [get]
+                                                [/livez]            []               [get]
+                                                [/openapi/*]        []               [get]
+                                                [/openapi]          []               [get]
+                                                [/readyz]           []               [get]
+                                                [/readyz]           []               [get]
+                                                [/version/]         []               [get]
+                                                [/version/]         []               [get]
+                                                [/version]          []               [get]
+                                                [/version]          []               [get]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;These permissions are the base ones assigned to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:authenticated&lt;/code&gt; group, as I’ve not made any specific rights assignments to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt;. Note there’s a &lt;em&gt;Warning&lt;/em&gt; at the top which lets us know that webhook authorization is not covered here. This is kind of important, because it means that if we’re auditing permissions on a cluster, we can’t rely on the output of this command to include all of a users rights.&lt;/p&gt;
+
+&lt;p&gt;Next up, let’s try something different, we’ll ask &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt; can get pods.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; kubectl --kubeconfig=jane.kubeconfig auth can-i get pods
+yes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and if we look in the webhook’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rights.txt&lt;/code&gt; file we can see that’s one of the rights assigned via the webhook.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;jane:get:pods:default
+jane:list:pods:default
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;So that’s interesting, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;auth can-i&lt;/code&gt; was able to reference permissions granted via the webhook where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;auth can-i --list&lt;/code&gt; was not. Why is that? Well (after getting some more information from &lt;a href=&quot;https://kubernetes.slack.com/archives/C0EN96KUY/p1713697390343119&quot;&gt;SIG-Auth&lt;/a&gt;) I think it works like this.&lt;/p&gt;
+
+&lt;p&gt;Basically this difference comes down to whether the Authorization provider implements methods to support listing permissions. RBAC, ABAC and the AlwaysAllow modes of authorization do support it, but there’s no guarantee that any external authorizer will.&lt;/p&gt;
+
+&lt;p&gt;Also, as mentioned in the introduction, admission control can also cause requests to be rejected, so even if all authorizers were able to tell you the available permissions that’s not a full picture.&lt;/p&gt;
+
+&lt;h2 id=&quot;so-how-do-i-audit-kubernetes-permissions&quot;&gt;So how do I audit Kubernetes permissions?&lt;/h2&gt;
+
+&lt;p&gt;All this leads to the question of how you audit permissions in Kubernetes clusters with multiple authorizers. The answer here is that the only way to effectively do it is to review each authorization system that’s in place in the cluster, and look at the permissions granted in each one.&lt;/p&gt;
+
+&lt;p&gt;This does mean you should be very careful when using automated tooling which audits Kubernetes permissions. In most cases it’s quite likely it will only support RBAC, and won’t provide any information about rights granted in other authorization systems.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;It’s fair to say that the flexibility provided in Kubernetes security model does lead to some complexity, which you need to be aware of when operating or reviewing clusters. In this case it’s important to be aware of the limitations of in-built tooling and realise when it’s necessary to carry out additional manual reviews.&lt;/p&gt;
+
+</description>
+				<pubDate>Mon, 22 Apr 2024 11:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</guid>
+			</item>
+		
+			<item>
 				<title>Using Tailscale for persistence</title>
 				<description>&lt;p&gt;I’ve written &lt;a href=&quot;https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/&quot;&gt;before&lt;/a&gt; about how there’s lots of innovative uses for &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and I was playing with another scenario for my &lt;a href=&quot;https://cfp.cloud-native.rejekts.io/cloud-native-rejekts-eu-paris-2024/talk/ZJEVSY/&quot;&gt;Cloud Native Rejekts talk&lt;/a&gt; (&lt;a href=&quot;https://www.youtube.com/watch?v=-9GN057zm_U&amp;amp;t=19240s&quot;&gt;Video Recording here&lt;/a&gt; ), so I thought it’d be worth writing up as I learned some things along the way!&lt;/p&gt;
 
@@ -836,147 +918,6 @@ clean:
 				<pubDate>Sat, 22 Apr 2023 15:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2023/04/22/Fun-with-container-images-Bypassing-vulnerability-scanners/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/04/22/Fun-with-container-images-Bypassing-vulnerability-scanners/</guid>
-			</item>
-		
-			<item>
-				<title>Let's talk about Kubelet authorization</title>
-				<description>&lt;p&gt;I’ve been meaning to write a post about Kubelet authorization for a while now, and as there have been some posts this week where it got a mention, now seems like a good time!&lt;/p&gt;
-
-&lt;p&gt;The Kubelet is the Kubernetes component which runs on each worker (and possible control plane) node and is responsible for managing the container runtime on the host. It communicates with the Kubernetes API server to get information about workloads that should be running on the node and then instantiates them using a container runtime like Containerd. To do this, it obviously needs credentials to access the API server, and needs rights to things like pods and also associated objects like secrets.&lt;/p&gt;
-
-&lt;p&gt;From a security perspective these Kubelet credentials are important as, if an attacker breaks out from a container to the underlying node, there will generally be a set of kubelet credentials available to them, so they could be used to escalate rights to the cluster, as a result it’s been necessary for the Kubernetes project to take steps to restrict what the Kubelet can do, to reduce the risk of privilege escalation.&lt;/p&gt;
-
-&lt;h2 id=&quot;a-brief-aside---kubernetes-authorization-modes&quot;&gt;A Brief aside - Kubernetes authorization modes&lt;/h2&gt;
-
-&lt;p&gt;An important aspect of Kubernetes to discuss before talking about exactly how Kubelet authorization works, is how Kubernetes generally handles authorization. Whilst most clusters will use RBAC, it’s possible to have multiple authorization modes in any cluster. Rights provided by each authorization mode are cumulative, so it’s important to be careful about inadvertently granting rights to users. Also, if you’re using Kubernetes in-built tooling for listing all of a users permissions (via the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt; command showne below), it’s worth noting that this &lt;em&gt;only&lt;/em&gt; works with RBAC, rights granted via other authorization modes will not be analyzed, although you can check for individual rights granted via any authorization mode using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i&lt;/code&gt; command.&lt;/p&gt;
-
-&lt;h2 id=&quot;kubelet-authorization&quot;&gt;Kubelet authorization&lt;/h2&gt;
-
-&lt;p&gt;Having talked about the fundamentals, let’s look at how Kubelet authorization works. We’ll start with a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster and look at what’s visible there.&lt;/p&gt;
-
-&lt;p&gt;For this we’ll use a cluster with two worker nodes, using a simple kind config&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# three node (two workers) cluster config&lt;/span&gt;
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-- role: worker
-- role: worker
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then we can start the cluster up with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster --config kind-config.yaml --name kubeletauthz&lt;/code&gt;. Once the cluster is up and running we can shell into one of the worker nodes to look at the Kubelet credentials. You can find out what Kubeconfig file the Kubelet is using by looking at the parameters passed to the Kubelet on the command line. In the case of Kubeadm the default will be &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--kubeconfig=/etc/kubernetes/kubelet.conf&lt;/code&gt;. Once we know the location we can use that with Kubectl, for example to see a listing of pods in the cluster&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get po &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
-NAMESPACE            NAME                                                 READY   STATUS    RESTARTS   AGE
-kube-system          coredns-787d4945fb-4rspx                             1/1     Running   0          4m43s
-kube-system          coredns-787d4945fb-p5g6f                             1/1     Running   0          4m43s
-kube-system          etcd-kubeletauthz-control-plane                      1/1     Running   0          4m56s
-kube-system          kindnet-clmjl                                        1/1     Running   0          4m43s
-kube-system          kindnet-jhngj                                        1/1     Running   0          4m26s
-kube-system          kindnet-kjsvt                                        1/1     Running   0          4m27s
-kube-system          kube-apiserver-kubeletauthz-control-plane            1/1     Running   0          4m55s
-kube-system          kube-controller-manager-kubeletauthz-control-plane   1/1     Running   0          4m55s
-kube-system          kube-proxy-9v62x                                     1/1     Running   0          4m43s
-kube-system          kube-proxy-q8t5c                                     1/1     Running   0          4m26s
-kube-system          kube-proxy-vnrt6                                     1/1     Running   0          4m27s
-kube-system          kube-scheduler-kubeletauthz-control-plane            1/1     Running   0          4m56s
-local-path-storage   local-path-provisioner-75f5b54ffd-52xm9              1/1     Running   0          4m43s
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Usually to check the rights of a principal in Kubernetes we’d use the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt; and if we try that with the Kubelet credentials we get back something like this.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf auth can-i &lt;span class=&quot;nt&quot;&gt;--list&lt;/span&gt;
-Warning: the list may be incomplete: node authorizer does not support user rule resolution
-Resources                                                       Non-Resource URLs   Resource Names   Verbs
-selfsubjectaccessreviews.authorization.k8s.io                   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-selfsubjectrulesreviews.authorization.k8s.io                    &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-certificatesigningrequests.certificates.k8s.io/selfnodeclient   &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;                  &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;create]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/api]              &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/apis]             &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/healthz]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/livez]            &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;        &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/openapi]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/readyz]           &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version/]         &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-                                                                &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/version]          &lt;span class=&quot;o&quot;&gt;[]&lt;/span&gt;               &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;get]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Notably there are no rights to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pod&lt;/code&gt; objects that we just looked at! The clue to what’s going on here is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Warning&lt;/code&gt; line at the top which notes that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node authorizor&lt;/code&gt; doesn’t support user rule resolution.&lt;/p&gt;
-
-&lt;p&gt;One quick aside is that you may be confused by the Kubelet not using RBAC as there is a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrole&lt;/code&gt; called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:node&lt;/code&gt; which looks like it would provide rights to nodes, however the corresponding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; doesn’t actually have any subjects (which is weird), so it has no effect!&lt;/p&gt;
-
-&lt;h2 id=&quot;node-authorizer&quot;&gt;Node authorizer&lt;/h2&gt;
-
-&lt;p&gt;The key to what’s going on here can be see in the configuration of the Kubernetes API server. If you look at the parameters passed to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-apiserver&lt;/code&gt; component you’ll see this stanza &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--authorization-mode=Node,RBAC&lt;/code&gt; indicating that there are two modes of authorization configured and, as we said earlier, the rights from these are cumulative.&lt;/p&gt;
-
-&lt;p&gt;The &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/node/&quot;&gt;Node authorization mode&lt;/a&gt; is an authorization mode with one purpose which is to provide rights to Kubelets. From the documentation page we can see that this authorization mode allows access to the kind of resources that the Kubelet needs to use like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configmaps&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt;. Within that group it also needs to restrict &lt;em&gt;which&lt;/em&gt; secrets etc are actually accessible as you don’t want a Kubelet on one node to be able to access secrets intended for pods running on another node.&lt;/p&gt;
-
-&lt;p&gt;The exact logic of what is allowed can be seen in &lt;a href=&quot;https://github.com/kubernetes/kubernetes/blob/bd190762fb77b78788e1a3ba72d70a8a08e184b8/plugin/pkg/auth/authorizer/node/node_authorizer.go#L41&quot;&gt;the code&lt;/a&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;// NodeAuthorizer authorizes requests from kubelets, with the following logic:
-// 1. If a request is not from a node &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NodeIdentity&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; returns &lt;span class=&quot;nv&quot;&gt;isNode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reject
-// 2. If a specific node cannot be identified &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NodeIdentity&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; returns &lt;span class=&quot;nv&quot;&gt;nodeName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, reject
-// 3. If a request is &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;a secret, configmap, persistent volume or persistent volume claim, reject unless the verb is get, and the requested object is related to the requesting node:
-//    node &amp;lt;- configmap
-//    node &amp;lt;- pod
-//    node &amp;lt;- pod &amp;lt;- secret
-//    node &amp;lt;- pod &amp;lt;- configmap
-//    node &amp;lt;- pod &amp;lt;- pvc
-//    node &amp;lt;- pod &amp;lt;- pvc &amp;lt;- pv
-//    node &amp;lt;- pod &amp;lt;- pvc &amp;lt;- pv &amp;lt;- secret
-// 4. For other resources, authorize all nodes uniformly using statically defined rules
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;You can see this in effect if you try to get &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt; from a cluster with Kubelet credentials&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get secrets &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
-Error from server &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Forbidden&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: secrets is forbidden: User &lt;span class=&quot;s2&quot;&gt;&quot;system:node:kubeletauthz-worker&quot;&lt;/span&gt; cannot list resource &lt;span class=&quot;s2&quot;&gt;&quot;secrets&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;API group &lt;span class=&quot;s2&quot;&gt;&quot;&quot;&lt;/span&gt; at the cluster scope: can only &lt;span class=&quot;nb&quot;&gt;read &lt;/span&gt;namespaced object of this &lt;span class=&quot;nb&quot;&gt;type&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;One important point to note on this is where the logic is “reject”, this just passes the request to other configured authorization modes, so if cluster RBAC has been modified to allow the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:nodes&lt;/code&gt; group to do something in excess of what the Node authorization mode allows then that will still be allowed.&lt;/p&gt;
-
-&lt;p&gt;You can see this by, for example, editing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:node&lt;/code&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; to add the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:nodes&lt;/code&gt; group as a subject, by adding these lines to it.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: system:nodes
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve done that, if you use Kubelet credentials to try and get secrets at a cluster level, it works fine :)&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl &lt;span class=&quot;nt&quot;&gt;--kubeconfig&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/etc/kubernetes/kubelet.conf get secrets &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt;
-NAMESPACE     NAME                     TYPE                            DATA   AGE
-kube-system   bootstrap-token-abcdef   bootstrap.kubernetes.io/token   6      34m
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;There are a couple of places where this mode can’t effectively restrict permissions, which are in node and pod properties, for that we need another component.&lt;/p&gt;
-
-&lt;h2 id=&quot;noderestriction-admission-controller&quot;&gt;NodeRestriction Admission Controller&lt;/h2&gt;
-
-&lt;p&gt;This is where a specialized admission controller comes in. The &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#noderestriction&quot;&gt;NodeRestriction admission controller&lt;/a&gt; looks at requests from Kubelets and, where they relate to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt; it limits the rights to only those that are appropriate for the Kubelet. For example it restricts what properties of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node&lt;/code&gt; objects can be modified, to stop it changing it’s own security classification, for example.&lt;/p&gt;
-
-&lt;h2 id=&quot;variations-in-kubernetes-distributions&quot;&gt;Variations in Kubernetes distributions&lt;/h2&gt;
-
-&lt;p&gt;It’s important to note that, as with most Kubernetes configuration topics, what we’ve discussed here relates to vanilla Kubernetes, in this case Kubeadm. Distribution providers are free to change this configuration and indeed some do so. For example Azure AKS currently defaults to allowing Kubelets &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt; access to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;secrets&lt;/code&gt; at the cluster level!&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;When looking at Kubernetes authorization it can be tempting to focus purely on RBAC as it’s the most common option deployed in Kubernetes clusters today. However as we’ve seen there are times when RBAC alone won’t provide an adequate level of security and supplemental authorization modes and admission controllers are required. In this post we’ve looked at the Node authorization mode and NodeRestriction admission controller which are used to provide rights to Kubelets to access the resources they need to function.&lt;/p&gt;
-
-</description>
-				<pubDate>Sat, 08 Apr 2023 15:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/04/08/lets-talk-about-kubelet-authorization/</guid>
 			</item>
 		
 	</channel>
