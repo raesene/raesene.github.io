@@ -225,7 +225,7 @@ jane:list:pods:default
 
 <p>Basically this difference comes down to whether the Authorization provider implements methods to support listing permissions. RBAC, ABAC and the AlwaysAllow modes of authorization do support it, but there’s no guarantee that any external authorizer will.</p>
 
-<p>Also, as mentioned in the introduction, admission control can also cause requests to be rejected, so even if all authorizers were able to tell you the available permissions that’s not a full picture.</p>
+<p>Also, as mentioned in the introduction, admission control can also cause requests to be rejected if they are part of the groups of requests sent to admission control (so any requests which create, update, or delete resources), so even if all authorizers were able to tell you the available permissions that’s not a full picture.</p>
 
 <h2 id="so-how-do-i-audit-kubernetes-permissions">So how do I audit Kubernetes permissions?</h2>
 
