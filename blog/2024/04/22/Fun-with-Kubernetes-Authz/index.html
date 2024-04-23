@@ -167,7 +167,11 @@
 
 <p>The most common case here is cloud managed Kubernetes where, in addition to the in-built RBAC authorization, you’ll often find that there’s a webhook authorization mode enabled as well to allow for integration with the cloud provider’s IAM system.</p>
 
-<p>In principle the way that Kubernetes authorization works is that every configured authorizer is queried to see if a given action is allowed and, if any one of them says <code class="language-plaintext highlighter-rouge">yes</code> the action is allowed, so permissions are cumulative (with the caveat that the request can still be blocked later by admission control).</p>
+<h2 id="multiple-authorizer-process">Multiple authorizer process</h2>
+
+<p>(Updated with information from <a href="https://x.com/therealpires/status/1782729861951332712">@pires</a>)</p>
+
+<p>In principle the way that Kubernetes authorization works is that every configured authorizer is queried in series (with the order based on the order of the parameters provided to the <code class="language-plaintext highlighter-rouge">authorization-mode</code> flag on the API server) to see if a given action is explicitly allowed or explicitly denied. If an authorizer doesn’t match with either an explicit allow or an explicit deny, the next configured authorizer is queried. So the effective rights will be based on the responses from one or more configured authorizers.</p>
 
 <p>There’s a couple of fun nuances of doing this, so I thought it was worth some discussion :)</p>
 
