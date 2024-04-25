@@ -227,7 +227,7 @@ jane:list:pods:default
 
 <p>So that’s interesting, <code class="language-plaintext highlighter-rouge">auth can-i</code> was able to reference permissions granted via the webhook where <code class="language-plaintext highlighter-rouge">auth can-i --list</code> was not. Why is that? Well (after getting some more information from <a href="https://kubernetes.slack.com/archives/C0EN96KUY/p1713697390343119">SIG-Auth</a>) I think it works like this.</p>
 
-<p>Basically this difference comes down to whether the Authorization provider implements methods to support listing permissions. RBAC, ABAC and the AlwaysAllow modes of authorization do support it, but there’s no guarantee that any external authorizer will.</p>
+<p>Basically this difference comes down to whether the Authorization provider implements methods to support listing permissions. RBAC, ABAC and the AlwaysAllow modes of authorization are the only ones to support it, the WebhookAuthorizer does not, so rights granted via that mechanism won’t show up in the results of <code class="language-plaintext highlighter-rouge">kubectl auth can-i --list</code>.</p>
 
 <p>Also, as mentioned in the introduction, admission control can also cause requests to be rejected if they are part of the groups of requests sent to admission control (so any requests which create, update, or delete resources), so even if all authorizers were able to tell you the available permissions that’s not a full picture.</p>
 
