@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Taking a look at the Kube-Proxy API</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Taking a look at the Kube-Proxy API </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   June 
+	   16th,
+	   
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>Kubernetes has got a number of different components, each with it’s own API. Whilst most of the time you’ll interact with the main kube-apiserver API, and sometimes the Kubelet API, the other ones can have some interesting properties. The kube-proxy API is interesting, in that it has some differences from all the others.</p>
+
+<p>The API is split into two separate components, the <code class="language-plaintext highlighter-rouge">healthz</code> API and the <code class="language-plaintext highlighter-rouge">metrics</code> API. The healthz API, which listens on <code class="language-plaintext highlighter-rouge">0.0.0.0:10256</code> by default is extremely simple, having one endpoint <code class="language-plaintext highlighter-rouge">/healthz</code>. It doesn’t have any option for authentication, so you just request that endpoint and you get a response (N.B. Like a lot of Kubernetes APIs if you request the root path you’ll get a 404).</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:10256/healthz
+<span class="o">{</span><span class="s2">"lastUpdated"</span>: <span class="s2">"2024-06-16 13:10:38.185046097 +0000 UTC m=+18599.921395918"</span>,<span class="s2">"currentTime"</span>: <span class="s2">"2024-06-16 13:10:38.185046097 +0000 UTC m=+18599.921395918"</span>, <span class="s2">"nodeEligible"</span>: <span class="nb">true</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>The response is kind of interesting as it provides some time and other metadata, unlike the other components which just return a flat <code class="language-plaintext highlighter-rouge">ok</code> to requests to <code class="language-plaintext highlighter-rouge">healthz</code></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">metrics</code> API has a default bind address of <code class="language-plaintext highlighter-rouge">127.0.0.1:10249</code> and has some more interesting endpoints available. Unlike other APIs in Kubernetes, there’s no authentication option for this service so anyone who can reach it, can access any endpoint. Also note that the bind address being localhost is a distribution choice. For example Amazon EKS binds this service to all interfaces (after reporting this to them I was told this is by design and pointed at <a href="https://github.com/aws/containers-roadmap/issues/657">this GitHub issue</a>).</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">/metrics</code> endpoint returns a large list of information about the host and cluster’s metrics, in Prometheus format. One thing that caught my eye when looking through the output is that it provides information on what Alpha and beta features are enabled by the cluster. I’m not sure why this information is included in a Node component API, but if you’re surveying a cluster (particularly a managed k8s cluster where you don’t have access to the control plane) it could be of interest.</p>
+
+<p>An excerpt of the output about features looks like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubernetes_feature_enabled{name="APIListChunking",stage=""} 1
+kubernetes_feature_enabled{name="APIPriorityAndFairness",stage=""} 1
+kubernetes_feature_enabled{name="APIResponseCompression",stage="BETA"} 1
+kubernetes_feature_enabled{name="APIServerIdentity",stage="BETA"} 1
+kubernetes_feature_enabled{name="APIServerTracing",stage="BETA"} 1
+kubernetes_feature_enabled{name="APIServingWithRoutine",stage="BETA"} 1
+kubernetes_feature_enabled{name="AdmissionWebhookMatchConditions",stage=""} 1
+kubernetes_feature_enabled{name="AggregatedDiscoveryEndpoint",stage=""} 1
+kubernetes_feature_enabled{name="AllAlpha",stage="ALPHA"} 0
+kubernetes_feature_enabled{name="AllBeta",stage="BETA"} 0
+kubernetes_feature_enabled{name="AllowServiceLBStatusOnNonLB",stage="DEPRECATED"} 0
+kubernetes_feature_enabled{name="AnyVolumeDataSource",stage="BETA"} 1
+kubernetes_feature_enabled{name="AppArmor",stage="BETA"} 1
+kubernetes_feature_enabled{name="AppArmorFields",stage="BETA"} 1
+kubernetes_feature_enabled{name="CPUManager",stage=""} 1
+kubernetes_feature_enabled{name="CPUManagerPolicyAlphaOptions",stage="ALPHA"} 0
+</code></pre></div></div>
+
+<p>Another interesting endpoint is <code class="language-plaintext highlighter-rouge">/configz</code> this one returns the configuration of the component without any authentication. The example below comes from a Kubeadm cluster and as you can see there’s some information disclosure including physical paths.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"kubeproxy.config.k8s.io"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"FeatureGates"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+    </span><span class="nl">"ClientConnection"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"Kubeconfig"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/lib/kube-proxy/kubeconfig.conf"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"AcceptContentTypes"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ContentType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"application/vnd.kubernetes.protobuf"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"QPS"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"Burst"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"Logging"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"flushFrequency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"verbosity"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"options"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"text"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"infoBufferSize"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"json"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"infoBufferSize"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"HostnameOverride"</span><span class="p">:</span><span class="w"> </span><span class="s2">"kind-control-plane"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"BindAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.0.0.0"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"HealthzBindAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.0.0.0:10256"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"MetricsBindAddress"</span><span class="p">:</span><span class="w"> </span><span class="s2">"127.0.0.1:10249"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"BindAddressHardFail"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"EnableProfiling"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"ShowHiddenMetricsForVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iptables"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"IPTables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"MasqueradeBit"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"MasqueradeAll"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"LocalhostNodePorts"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"SyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"30s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"MinSyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1s"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"IPVS"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"SyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"30s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"MinSyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"Scheduler"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ExcludeCIDRs"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"StrictARP"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"TCPTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"TCPFinTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"UDPTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"Winkernel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"NetworkName"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"SourceVip"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"EnableDSR"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"RootHnsEndpointName"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"ForwardHealthCheckVip"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"NFTables"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"MasqueradeBit"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"MasqueradeAll"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"SyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"30s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"MinSyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1s"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"DetectLocalMode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ClusterCIDR"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"DetectLocal"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"BridgeInterface"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"InterfaceNamePrefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"ClusterCIDR"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.244.0.0/16"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"NodePortAddresses"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"OOMScoreAdj"</span><span class="p">:</span><span class="w"> </span><span class="mi">-999</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"Conntrack"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"MaxPerCore"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"Min"</span><span class="p">:</span><span class="w"> </span><span class="mi">131072</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"TCPEstablishedTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"24h0m0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"TCPCloseWaitTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1h0m0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"TCPBeLiberal"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"UDPTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"UDPStreamTimeout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0s"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"ConfigSyncPeriod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"15m0s"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"PortRange"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This was just a quick note with a look at the kube-proxy API. Of the APIs that Kubernetes presents, it’s probably not the most interesting from a security perspective, but still has some interesting information disclosure and the choice to not provide authentication does make it an interesting target for reconnaissance.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(56)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Taking a look at the Kube-Proxy API&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/" title="Fun with Kubernetes Authorization Auditing - multiple authz plugins">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
