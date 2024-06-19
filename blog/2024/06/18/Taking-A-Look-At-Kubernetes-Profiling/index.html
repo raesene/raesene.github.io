@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Accessing Cluster IPs from the Outside</title>
+	<title>Taking a look at Kubernetes Profiling</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Accessing Cluster IPs from the Outside </h1>
+  <h1>Taking a look at Kubernetes Profiling </h1>
 </div>
 	
 <article>
@@ -157,62 +157,62 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   October 
-	   3rd,
-	     
-	   2019
+	   June 
+	   18th,
+	   
+	   2024
 	 </span>
 	  <div class="article_body">
-	  <p>This is a neat trick which could be useful when troubleshooting Kubernetes services or testing Kubernetes clusters.  This got used in a <a href="https://tgik.io">TGIK</a> episode a while back and I’ve been meaning to test it and write it up for a while, as I’ve not seen many docs on it.</p>
+	  <p>Debugging facilities can always be interesting for attackers, and in general for security, so I decided to take a look at Kubernetes support for Profiling, and where it could be a risk to cluster security. We’ll start with a little bit of background info.</p>
 
-<p>When you run Kubernetes services, generally they are of type “ClusterIP” which means they get assigned a fixed IP address inside the cluster, but this IP address isn’t visible externally (it’s not designed for external users to contact the service, that’s what Ingress resources or NodePort services are for).</p>
+<h2 id="golang-profiling">Golang profiling</h2>
 
-<p>However, given the way Kubernetes works, it’s possible to access these service IP addresses by the simple expedient of …. Adding a route to them :)  Essentially Kubernetes nodes are Linux routers and kube-proxy will direct traffic for us and doesn’t generally care what generated that traffic.</p>
+<p>Google provides a library called <a href="https://github.com/google/pprof">pprof</a> that can be embedded in Golang applications to expose profiling information for debugging applications. This allows programs to expose the profiling information via a web server and also provides tools that can visualise and analyse that information.</p>
 
-<p>Let’s provide a concrete example.  I’ve got a single node Kubeadm cluster with a single Ethernet interface <code class="language-plaintext highlighter-rouge">ens33</code> with an IP address of <code class="language-plaintext highlighter-rouge">172.16.198.131</code>.</p>
+<p>If you have a program which exposes the pprof information you can then connect to it and start a program to analyse the exposed information. For example if we want to connect to a profiling service at  <code class="language-plaintext highlighter-rouge">http://localhost:8001/debug/pprof/profile</code>, we’d run</p>
 
-<p>The servce IP address range defined on the cluster is the standard <code class="language-plaintext highlighter-rouge">10.96.0.0/12</code> . If I try to scan a service listening in that range on <code class="language-plaintext highlighter-rouge">10.105.140.70:3000</code> for example from a host outside the cluster, I’ll get told that port is filtered. One point to note here (as suggested by <a href="https://twitter.com/TinkerFairy_Net">@TinkerFairy_Net</a>) is that filtered from an nmap TCP scan means it didn’t receive any response to the request, not that there’s some security measure preventing access.</p>
-
-<p>One other point about the command below is that you need the <code class="language-plaintext highlighter-rouge">-Pn</code> switch to disable nmap’s Ping scanning which it usually does to determine if a host is live.  Service IPs aren’t real machines, so they won’t respond on any port other than the service one.</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo nmap -Pn -sT -n -p3000 10.105.140.70
-
-Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:51 BST
-Nmap scan report for 10.105.140.70
-Host is up.
-
-PORT     STATE    SERVICE
-3000/tcp filtered ppp
-
-Nmap done: 1 IP address (1 host up) scanned in 2.04 seconds
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go tool pprof <span class="nt">-http</span><span class="o">=</span>:8080 http://localhost:8001/debug/pprof/profile
 </code></pre></div></div>
 
-<p>So we can’t get to that port on that IP address. Now lets try adding a route to the service IP address network via the cluster node’s main IP address.</p>
+<p>and it would give us something like this :-</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo ip route add 10.96.0.0/12 via 172.16.198.131
+<p><img src="https://raesene.github.io/assets/media/pprof-web.png" alt="pprof web" /></p>
+
+<p>From there we can get performance flame graphs and other useful debugging information.</p>
+
+<h2 id="kubernetes-and-profiling">Kubernetes and profiling</h2>
+
+<p>Where this becomes interesting for Kubernetes is that, by default, Kubernetes enables profiling in the API server, scheduler, controller-manager, and Kubelet. Kube-proxy is the odd one out here, I’m not entirely sure why but one guess would be that as the kube-proxy API doesn’t support authentication (more on that <a href="https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/">here</a>) it wasn’t considered safe to add this functionality to it.</p>
+
+<p>So for each of the APIs that Kubernetes presents you can access the <code class="language-plaintext highlighter-rouge">/debug/pprof/profile</code> endpoint to get access to this profiling information (and some other functionality discussed in the next section).</p>
+
+<p>Access to this information is not available without credentials and you’ll need access to this path via whatever authorization system(s) you’ve got configured in your clusters. For Kubernetes RBAC, access for kube-apiserver, kube-controller-manager, and kube-scheduler is managed via non-resource endpoints, so typically you’d need to explicitly grant access to that (or be a <code class="language-plaintext highlighter-rouge">cluster-admin</code> of course).</p>
+
+<p>For the Kubelet, somewhat confusingly, it’s gated under the catch-all access of <code class="language-plaintext highlighter-rouge">node/proxy</code>, so any users with rights to that resource in your cluster will be able to get access to the profiling information.</p>
+
+<h2 id="dynamic-log-level-changing">Dynamic log level changing</h2>
+
+<p>There’s also another piece of functionality which is associated with Kubernetes use of profiling, which is the ability to dynamically change the log level of the service remotely. Anyone with access to the profiling endpoints can issue a <code class="language-plaintext highlighter-rouge">PUT</code> request to change the servers log level. So for example if you’ve got a <code class="language-plaintext highlighter-rouge">kubectl proxy</code> running to your cluster on port <code class="language-plaintext highlighter-rouge">8001</code>, this command would change the API server’s log level to <code class="language-plaintext highlighter-rouge">10</code> which is the DEBUG level.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-X</span> PUT http://127.0.0.1:8001/debug/flags/v <span class="nt">-d</span> <span class="s2">"10"</span>
 </code></pre></div></div>
+<h2 id="is-this-really-a-risk">Is this really a risk?</h2>
 
-<p>This change essentially tells our client machine that there’s another router on the network and that for traffic in the range <code class="language-plaintext highlighter-rouge">10.96.0.0/12</code> it should send the packets to our Kubernetes cluster node for onwards transmission.</p>
+<p>So of course the question is, is any of this actually a risk from a security standpoint and, like most things in security, the answer is “it depends”. As the profiling information is gated behind authentication and authorization not just anyone can get access, however there are some scenarios where this is a specific risk.</p>
 
-<p>Now if we retry the same command</p>
+<p><strong>Managed Kubernetes</strong>. For managed clusters, users who have admin level access to cluster resources are still meant to be restricted from directly accessing the control plane which is managed by the provider. So any managed Kubernetes providers who haven’t disabled this on their cluster are at risk of attackers accessing the information. One of the more interesting scenarios where this is relevant, is if the cluster operators can see the Kubernetes API server logs, as it could allow them to exploit <a href="https://github.com/kubernetes/kubernetes/issues/104720">CVE-2020-8561</a>, and start using malicious webhooks to probe the providers network more effectively.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo nmap -Pn -sT -n -p3000 10.105.140.70
+<p>Additionally there’s a denial of service risk here for managed providers in that you can do things like start application traces which use control plane node resources. Also it’s <em>possible</em> that sensitive information could be included in traces, although I’ve not seen any direct evidence of that in the looking around I’ve done so far.</p>
 
-Starting Nmap 7.60 ( https://nmap.org ) at 2019-10-03 19:53 BST
-Nmap scan report for 10.105.140.70
-Host is up (0.00074s latency).
+<p>For other clusters, there’s possibly some risk in that users with <code class="language-plaintext highlighter-rouge">node/proxy</code> rights can increase the Kubelet’s log level and access that information, but that’s probably a bit more situational.</p>
 
-PORT     STATE SERVICE
-3000/tcp open  ppp
+<h2 id="how-do-i-disable-profiling-in-kubernetes">How do I disable profiling in Kubernetes?</h2>
 
-Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
-</code></pre></div></div>
+<p>If you want to disable profiling in your clusters, and really in production clusters it shouldn’t be enabled, you can do it via command line flags or config files. The kube-apiserver, kube-controller-manager, and kube-scheduler all use a parameter called <code class="language-plaintext highlighter-rouge">profiling</code>, but the Kubelet manages it with <code class="language-plaintext highlighter-rouge">enableDebuggingHandlers</code>.</p>
 
-<p>Our port is open :)</p>
+<h2 id="conclusion">Conclusion</h2>
 
-<p>So we can interrogate any service in that network from outside the cluster (and without any rights to the cluster!) without restriction.</p>
-
-<p>From a security point, the important thing to take away here is, don’t assume that services are protected because they’re not hooked into an ingress, if an attacker can route traffic to the cluster, they can just do this to see those IP addresses.</p>
+<p>Kubernetes profiling is another interesting part of the API which can be relevant for security. For production clusters, it’s an unusual choice to have it enabled by default, and probably something that should just be disabled, unless you explicitly need it.</p>
 
 	  </div>
 
@@ -238,7 +238,7 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Accessing Cluster IPs from the Outside&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Taking a look at Kubernetes Profiling&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -266,10 +266,10 @@ Nmap done: 1 IP address (1 host up) scanned in 0.03 seconds
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2019/09/25/typosquatting-in-a-multi-registry-world/" title="Container Image Squatting in a Multi-Registry World">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/" title="Taking a look at the Kube-Proxy API">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2019/10/15/From-stackoverflow-to-CVE/" title="From Stackoverflow to CVE, with some laughs along the way">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

@@ -158,6 +158,39 @@
 
   <span class="post-date">
     
+    September
+    10th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/09/10/appropriate_tru/">Appropriate trust on the Internet</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There's an interesting story at <a href="http://www.theregister.co.uk/2007/09/10/misuse_of_tor_led_to_embassy_password_breach/">The Register</a> about the recent leaking of embassy credentials amongst others, by an individual in Sweden.<br />
+The story is that someone set up some <a href="http://tor.eff.org/">Tor</a> exit nodes and then sniffed the traffic that came out over them.<br />
+There's several interesting points that come out from this, I think.</p>
+<ul>
+<li><b>Understand the type of security provided by a system.</b>  Tor is not end-to-end encryption and you are trusting the exit node as you would trust an ISP router.</li>
+<li><b>What was done here can be done by any ISP employee.</b>  A Tor exit node is essentially like an ISP router.  Anything that can be gained by sniffing a TOR exit node could also be gained by any employee of an ISP for the traffic that that ISP handles.</li>
+<li><b>Embassy users are logging on to their services in the clear!?</b>  The main problem here seems to be that embassy staff are logging on to e-mail systems in the clear over an untrusted network (the Internet).  It seems odd that they'd go to the trouble of using Tor to anonymise their traffic but not go to the trouble of using SSL or an equivalent to protect their logon credentials end-to-end...</li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     August
     22nd,
     
@@ -410,34 +443,6 @@ All In all I think OWASP are doing some great work, a lot of which may be less a
     <p>I've had to switch comments and trackbacks off on the blog at the moment.  Turns out that my little converted NAS box that I've moved over to is great at static content but not so good a CGIs, so when comment/trackback spammers hit it a lot it overheats!<br />
 Going to look into maybe moving the blog to a hosted solution, so hopefully get all back to normal when that happens...<br />
 <b>Edit:</b> I've tried something which *may* sort the problem so comments back on for now...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    June
-    23rd,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/06/23/moved_again/">Moved Again..</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've had the blog running in a virtual machine for a while since the power supply on my server blew, but that's it back onto dedicated hardware now..<br />
-In fact it's a nice little debian server using a Buffalo Linkstation Pro reflashed with <a href="http://linkstationwiki.net/index.php/Main_Page">FreeLink</a>.<br />
-Pretty good deal as you get a perfectly good linux server based on a 130 pound piece of hardware.  I've got two of them running now, one as a web server and one as a file/print server.  There a lot smaller an quieter than running full-tower cases in the office!</p>
 
     
     
