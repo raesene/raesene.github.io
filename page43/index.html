@@ -159,6 +159,41 @@
   <span class="post-date">
     
     March
+    27th,
+    
+    2005
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2005/03/27/windows_v_redha/">Windows V Redhat (Linux) Security.... again</a>
+  </h2>
+
+  <div>
+    
+    
+    <p><a title="Robert Hensing's Secure Windows Initiative Blog : Windows Server 2003 spanks Red Hat's monkey?" href="http://blogs.technet.com/robert_hensing/archive/2005/02/17/375481.aspx">Robert Hensing's Secure Windows Initiative Blog : Windows Server 2003 spanks Red Hat's monkey?</a><br />
+Some interesting comment about the study comparing Redhat and Windows Server 2003 over at Robert Hensings blog.<br />
+As people'll know if they've been following slashdot, it turns out that this study was sponsored by Microsoft .  More information and a link to the report source <a href="http://seattlepi.nwsource.com/business/217538_msftstudy25.html"> here </a><br />
+At first glance I like the principles behind the methodology used, ie use a specific server role, rather than a generic install.  I'll hopefully get a chance to read it in more detail, but a couple of things do niggle at me from my first read through.<br />
+When they go through the nmap results for the "minimal" linux install, it appears to have ports open that weren't there on the full install! (631/tcp for cups) I find that a bit hard to believe, and even if there is a flaw in the install process, any competant admin will shut down and remove cups as soon as they realise it's running.<br />
+Also any competant admin will shut down other services like the rpc ports mentioned (111/tcp and 32768/tcp) and remove the software using them.<br />
+Not being too up on my MS stuff at the moment I can't comment whether simple hardening steps would improve it's performance (As far as I can  recall shutting down ports like 445 is nigh-on impossible outside of firewalling the host)<br />
+All-in-all it's an interesting study and definately shows that the more modern Microsoft products have a much better stance in relation to security.<br />
+[rant] If only their marketing people would allow them to abandon their "you must install irrelevant components and then we'll make it really hard to remove them" stance, they'd be onto a real winner!<br />
+why do Microsoft insist that you need an Internet browser on a server! for that point why do you have to install a GUI on a server! it's irrelevant in many cases.  The server will be put in a rack in a datacentre and no-one will physically log onto it again![/ rant]</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     21st,
     
     2005
@@ -395,33 +430,6 @@ I hope this story is only telling one piece of the story for these companies 'ca
     
     <p><a title="An Illustrated Guide to Cryptographic Hashes" href="http://unixwiz.net/techtips/iguide-crypto-hashes.html">An Illustrated Guide to Cryptographic Hashes</a><br />
 Handy guide to hashing</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    14th,
-    
-    2005
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2005/03/14/sox_increases_f/">SOx increases fraud Risk?!!</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Hidden fraud risk in Sarbanes-Oxley? | CNET News.com" href="http://news.com.com/2100-1002_3-5602776.html">Hidden fraud risk in Sarbanes-Oxley? | CNET News.com</a><br />
-Interesting perspective on SOx in this article, that the huge amounts of data being assembled for SOx compliance purposes will cause frauds to go unnoticed...  I did notice that the quote came from a company whose business involves selling data analysis tools!</p>
 
     
     

