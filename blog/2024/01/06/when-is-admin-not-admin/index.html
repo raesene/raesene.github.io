@@ -177,7 +177,7 @@ Subject
   CN <span class="o">=</span> kubernetes-admin
 </code></pre></div></div>
 
-<p>Sooo this credential was no longer a member of <code class="language-plaintext highlighter-rouge">system:masters</code>, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a <a href="https://github.com/kubernetes/kubernetes/pull/121305">PR</a> which explained how Kubeadm now has two files with initial credentials, the original <code class="language-plaintext highlighter-rouge">admin.conf</code> and a new <code class="language-plaintext highlighter-rouge">super-admin.conf</code>. The <code class="language-plaintext highlighter-rouge">admin.conf</code> has been changeed to use an RBAC group for access, which should give it <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights, but in a way that they could be revoked by removing the rights of that group, and then have the <code class="language-plaintext highlighter-rouge">super-admin.conf</code> file still be a member of <code class="language-plaintext highlighter-rouge">system:masters</code> whose rights can’t be revoked by modifying RBAC.</p>
+<p>Sooo this credential was no longer a member of <code class="language-plaintext highlighter-rouge">system:masters</code>, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a <a href="https://github.com/kubernetes/kubernetes/pull/121305">PR</a> which explained how Kubeadm now has two files with initial credentials, the original <code class="language-plaintext highlighter-rouge">admin.conf</code> and a new <code class="language-plaintext highlighter-rouge">super-admin.conf</code>. The <code class="language-plaintext highlighter-rouge">admin.conf</code> has been changed to use an RBAC group for access, which should give it <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights, but in a way that they could be revoked by removing the rights of that group, and then have the <code class="language-plaintext highlighter-rouge">super-admin.conf</code> file still be a member of <code class="language-plaintext highlighter-rouge">system:masters</code> whose rights can’t be revoked by modifying RBAC.</p>
 
 <p>Digging back from this PR, to the referenced issue to get some back-story, I got a slight surprise to find it was <a href="https://github.com/kubernetes/kubeadm/issues/2414">one I’d opened</a> back in 2021 about not using system:masters!</p>
 
@@ -204,7 +204,7 @@ Subject
 		  
 			 
 				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(58)</span>
+					Kubernetes <span>(59)</span>
 					
 				</a></li>
 			

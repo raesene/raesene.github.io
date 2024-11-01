@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>The Many IP Addresses of Kubernetes</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>The Many IP Addresses of Kubernetes </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   November 
+	   1st,
+	     
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>When getting to grips with Kubernetes one of the more complex concepts to understand is … all the IP addresses! Even looking at a simple cluster setup, you’ll get addresses in multiple different ranges. So this is a quick post to walk through where they’re coming from and what they’re used for.</p>
+
+<p>Typically you can see at least three distinct ranges of IP addresses in a Kubernetes cluster, although this can vary depending on the distribution and container networking solution in place. Firstly there is the node network where the container, virtual machines or physical servers running the Kubernetes components are, then there is an overlay network where pods are assigned IP addresses and lastly another network range where Kubernetes services are located.</p>
+
+<p>We’ll start with a standard <a href="https://kind.sigs.k8s.io/">kind</a> cluster before talking about some other sources of IP address complexity. We’ll start by running <code class="language-plaintext highlighter-rouge">kind create cluster</code> to get it up and running.</p>
+
+<p>Once we’ve got the cluster started we can see what IP address the node has by running <code class="language-plaintext highlighter-rouge">docker exec -it kind-control-plane ip addr show dev eth0</code> . The output of that command should look something like this</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>13: eth0@if14: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default 
+    <span class="nb">link</span>/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fc00:f853:ccd:e793::2/64 scope global nodad 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe12:2/64 scope <span class="nb">link 
+       </span>valid_lft forever preferred_lft forever
+</code></pre></div></div>
+
+<p>We can see that the address assigned is <code class="language-plaintext highlighter-rouge">172.18.0.2/16</code>, which is a network controlled by Docker (as we’re running our cluster on top of Docker). If you have a Virtual machine or physical server the IP addresses will be in whatever range is assigned to the network(s) the host has.</p>
+
+<p>So far, so simple. Now lets add a workload to our cluster and see what addresses are assigned there. Let’s start a webserver workload with <code class="language-plaintext highlighter-rouge">kubectl run webserver --image=nginx</code>. Once that pod starts we can run <code class="language-plaintext highlighter-rouge">kubectl get pods webserver -o wide</code> to see what IP address has been assigned to the pod.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
+webserver   1/1     Running   0          42s   10.244.0.5   kind-control-plane   &lt;none&gt;           &lt;none&gt;
+</code></pre></div></div>
+
+<p>Our pod has an IP address of <code class="language-plaintext highlighter-rouge">10.244.0.5</code> which is in an entirely different subnet! This IP address is part of the overlay network that most (but not all) Kubernetes distributions use for their workloads. This subnet is generally automatically assigned by the Kubernetes <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/">network plugin</a> used in the cluster, so it’ll change based on the plugin in use and any specific configuration for that plugin. What’s happening here is that our Kubernetes node has created an <code class="language-plaintext highlighter-rouge">veth</code> interface for our pod and assigned that address to it. We can see the pod IP addresses from the hosts perspective by running <code class="language-plaintext highlighter-rouge">docker exec kind-control-plane ip route</code> and we can see the IP addresses assigned to the different pods in the cluster, including the IP address we saw from our <code class="language-plaintext highlighter-rouge">get pods</code> command above.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default via 172.18.0.1 dev eth0 
+10.244.0.2 dev veth9ee91973 scope host 
+10.244.0.3 dev veth1b82cd96 scope host 
+10.244.0.4 dev veth38302a10 scope host 
+10.244.0.5 dev vethf915cecb scope host 
+172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.2 
+</code></pre></div></div>
+
+<p>Now we’ve got the node network and the pod network, let’s see what happens if we add a Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/">service</a> to the mix. We can do this by running <code class="language-plaintext highlighter-rouge">kubectl expose pod webserver --port 8080</code> which will create a service object for our webserver pod. There are several types of service object, but by default a ClusterIP service will be created, which provides an IP address which is visible inside the cluster, but not outside it. Once our service is created we can look at the IP address by running <code class="language-plaintext highlighter-rouge">kubectl get services webserver</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+webserver   ClusterIP   10.96.198.83   &lt;none&gt;        8080/TCP   97s
+</code></pre></div></div>
+
+<p>We can see from the output that the IP address is <code class="language-plaintext highlighter-rouge">10.96.198.83</code> another IP address range! This range is set by a command line flag on the Kubernetes API server. In the case of our kind cluster, it looks like this <code class="language-plaintext highlighter-rouge">--service-cluster-ip-range=10.96.0.0/16</code>.</p>
+
+<p>But from a host perspective, where does this IP address fit in. Well the reality of Kubernetes service objects is that, by default, they’re iptables rules created by the <code class="language-plaintext highlighter-rouge">kube-proxy</code> service on the node. We can see our webserver service by running this command <code class="language-plaintext highlighter-rouge">docker exec kind-control-plane iptables -t nat -L KUBE-SERVICES -v -n --line-numbers</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Chain KUBE-SERVICES (2 references)
+num   pkts bytes target     prot opt in     out     source               destination         
+1        1    60 KUBE-SVC-NPX46M4PTMTKRN6Y  6    --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+2        0     0 KUBE-SVC-UMJOY2TYQGVV2BKY  6    --  *      *       0.0.0.0/0            10.96.198.83         /* default/webserver cluster IP */ tcp dpt:8080
+3        0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  17   --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+4        0     0 KUBE-SVC-ERIFXISQEP7F7OF4  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+5        0     0 KUBE-SVC-JD5MR3NA4I4DYORP  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:metrics cluster IP */ tcp dpt:9153
+6     7757  465K KUBE-NODEPORTS  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL
+</code></pre></div></div>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.</p>
+
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(59)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=The Many IP Addresses of Kubernetes&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/" title="Fun With GitRepo Volumes">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
