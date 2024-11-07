@@ -7,6 +7,93 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Exploring A Basic Kubernetes Network Plugin</title>
+				<description>&lt;p&gt;In my &lt;a href=&quot;https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/&quot;&gt;last blog&lt;/a&gt; I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.&lt;/p&gt;
+
+&lt;p&gt;The Kubernetes project took the decision to delegate this part of container networking to external software, in order to make it a more flexible system that can be adapted to different use cases. The way this is done is that the project leverages the &lt;a href=&quot;https://www.cncf.io/projects/container-network-interface-cni/&quot;&gt;CNI&lt;/a&gt; specification and plugins which comply with that spec. can be used to provide container networking in Kubernetes clusters.&lt;/p&gt;
+
+&lt;p&gt;This means that, like many areas of Kubernetes, there’s quite a lot of possible complexity and options to consider, and over 20 different network plugins each with their own approach, so let’s start with the basics!&lt;/p&gt;
+
+&lt;h2 id=&quot;exploring-a-basic-cluster-set-up&quot;&gt;Exploring a basic cluster set-up&lt;/h2&gt;
+
+&lt;p&gt;We’ll make use of &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; to provide an initial demonstration cluster, which will give us their default network plugin &lt;a href=&quot;https://github.com/kubernetes-sigs/kind/tree/main/images/kindnetd&quot;&gt;kindnetd&lt;/a&gt;. Kindnetd provide a simple CNI implementation which works well for standard kind clusters. In order to demonstrate how networking works, we’ll setup a couple of worker nodes using this config file&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Cluster&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kind.x-k8s.io/v1alpha4&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;control-plane&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;worker&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;worker&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then, with that file saved as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kindnet-multi-node.yaml&lt;/code&gt; we can start our test cluster with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster --name=kindnet-multi-node --config=kindnet-multi-node.yaml&lt;/code&gt;. Once the cluster’s up and running we can take a look at the networking.&lt;/p&gt;
+
+&lt;p&gt;One of the first questions we might have is “how are Kubernetes network plugins configured?”. The answer is that any CNI plugins in use have a configuration file in a nominated directory, which is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/cni/net.d&lt;/code&gt; by default. If we look at that directory on our kind nodes we’ll see a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10-kindnet.conflist&lt;/code&gt; which contains the configuration for the network plugin. Looking at the files in this directory is actually the most reliable way to determine which network plugin(s) are in use as there’s no direct record of it at a Kubernetes level.&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;cniVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0.3.1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kindnet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;plugins&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ptp&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ipMasq&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ipam&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;host-local&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;dataDir&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/run/cni-ipam-state&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;routes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;dst&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0.0.0.0/0&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ranges&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;subnet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;10.244.2.0/24&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;mtu&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1500&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;portmap&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;capabilities&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;portMappings&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From this configuration file we can see a bit of how the network plugin works. Firstly we see the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ptp&lt;/code&gt; plugin is used. This plugin is actually one of the default ones that the CNI project maintains. What it does is create a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;veth&lt;/code&gt; network interface for each container, which can then be given an IP address. We can also see an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ipam&lt;/code&gt; section which deals with how containers are allocated IP addresses. In this case we can see that a range of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.2.0/24&lt;/code&gt; is assigned to this node, and if we look at the other worker node in the cluster we see it has the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.1.0/24&lt;/code&gt; range,and the control plane node has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.0/24&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So the next question might be “how does the traffic from a pod on one node get to a pod on another node?”. This will vary depending on the network plugin you’re using but in the case of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kindnet&lt;/code&gt; it’s pretty simple. Essentially each node has the entries for the other nodes in its routing table. We can see that by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ip route&lt;/code&gt; on one of our nodes.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
+10.244.0.0/24 via 172.18.0.3 dev eth0 
+10.244.2.0/24 via 172.18.0.2 dev eth0 
+172.18.0.0/16 dev eth0 proto kernel scope &lt;span class=&quot;nb&quot;&gt;link &lt;/span&gt;src 172.18.0.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this file we can see that the other nodes in the cluster have IP addresses of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.3&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2&lt;/code&gt; respectively, and the container subnets are routed to those nodes.&lt;/p&gt;
+
+&lt;p&gt;We can also see how traffic gets to individual pods on that node. First let’s create a deployment with 4 replicas &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl create deployment webserver --image=nginx --replicas=4&lt;/code&gt;. Once we’ve got that setup, we can run the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ip route&lt;/code&gt; command again to see what effect that has had.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
+10.244.0.0/24 via 172.18.0.2 dev eth0 
+10.244.1.2 dev vethc2e31815 scope host 
+10.244.1.3 dev veth2621a4f6 scope host 
+10.244.2.0/24 via 172.18.0.3 dev eth0 
+172.18.0.0/16 dev eth0 proto kernel scope &lt;span class=&quot;nb&quot;&gt;link &lt;/span&gt;src 172.18.0.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can see two new entries in our routing table for the two containers that got started on this worker node, showing how traffic would be sent to the container once it reaches the node.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend &lt;a href=&quot;https://www.tkng.io/&quot;&gt;The Kubernetes Networking Guide&lt;/a&gt; which has a lot of information on this topic and others.&lt;/p&gt;
+</description>
+				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
+			</item>
+		
+			<item>
 				<title>The Many IP Addresses of Kubernetes</title>
 				<description>&lt;p&gt;When getting to grips with Kubernetes one of the more complex concepts to understand is … all the IP addresses! Even looking at a simple cluster setup, you’ll get addresses in multiple different ranges. So this is a quick post to walk through where they’re coming from and what they’re used for.&lt;/p&gt;
 
@@ -734,42 +821,6 @@ Subject
 				<pubDate>Sat, 06 Jan 2024 09:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</guid>
-			</item>
-		
-			<item>
-				<title>Exploiting CVE-2023-5044</title>
-				<description>&lt;p&gt;Recently several new CVEs in the ingress nginx controller for Kubernetes were announced. I thought I’d take a closer look at one of them, CVE-2023-5044. Whilst there’s some details in the &lt;a href=&quot;https://github.com/kubernetes/ingress-nginx/issues/10572&quot;&gt;CVE announcement&lt;/a&gt; and some hints in a post from the CVE reporter &lt;a href=&quot;https://www.linkedin.com/posts/jkroepke_kubernetes-cve-2023-5044-code-injection-activity-7123677225765228545-93MI?trk=public_profile_share_view&quot;&gt;here&lt;/a&gt; there’s not any actual PoC that I could find, so I decided to see if I could write one!&lt;/p&gt;
-
-&lt;h2 id=&quot;test-environment-setup&quot;&gt;Test environment setup&lt;/h2&gt;
-
-&lt;p&gt;As is often the case, the easiest way to set up a test environment was to use &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt;. They have a page with instructions for ingress setups &lt;a href=&quot;https://kind.sigs.k8s.io/docs/user/ingress/&quot;&gt;here&lt;/a&gt; which works well.&lt;/p&gt;
-
-&lt;p&gt;Once we have ingress setup with the sample applications provided curl’ing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost/foo&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost/bar&lt;/code&gt; will hit paths managed by the ingress controller.&lt;/p&gt;
-
-&lt;h2 id=&quot;experimenting-with-the-vulnerability&quot;&gt;Experimenting with the vulnerability&lt;/h2&gt;
-
-&lt;p&gt;So we know from the advisory that the problem lies in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx.ingress.kubernetes.io/permanent-redirect&lt;/code&gt; annotation, so one of the first things I thought to try was classic command injection where you end the statement that’s being provided and start a new directive. In the case of nginx this uses the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;;&lt;/code&gt; character, so I tried that and it seemed to work!&lt;/p&gt;
-
-&lt;p&gt;Exec’ing into the ingress controller pod, I could see that what happens with this annotation is that anything you provide is basically injected directly into the nginx config file used by the controller.&lt;/p&gt;
-
-&lt;p&gt;One option I experimented with, as it seems like a good way to get access to sensitive files (like the service account token for the controller which has high privileges to the cluster) would be to use the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;alias&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; directives to serve up the file. However these directives have &lt;a href=&quot;https://github.com/kubernetes/ingress-nginx/pull/8624&quot;&gt;been disabled&lt;/a&gt; so that wasn’t going to work.&lt;/p&gt;
-
-&lt;p&gt;Fortunately I remembered that lua scripting is sometimes supported in nginx, so we might be able to use that. With a bit of help from ChatGPT on the exact syntax of what to use, I was able to get a working PoC.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;nginx.ingress.kubernetes.io/permanent-redirect&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;https://www.mccune.org.uk;}location ~* &quot;^/flibble(/|$)(.*)&quot; {content_by_lua &apos;ngx.say(io.popen(&quot;cat /var/run/secrets/kubernetes.io/serviceaccount/token&quot;):read(&quot;*a&quot;))&apos;;}location ~* &quot;^/flibblea(/|$)(.*)&quot; { content_by_lua &apos;os.execute(&quot;touch /you&quot;)&apos;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This could definitely be neater, but what it does is close off the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;location&lt;/code&gt; directive with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;;}&lt;/code&gt; after the URL that we’re redirecting to. Then open a new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;location&lt;/code&gt; on the path &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/flibble&lt;/code&gt;. When someone calls that path we run a lua script that uses &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;io.popen&lt;/code&gt; to run an OS command and then returns that to the caller using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nginx.say&lt;/code&gt;. After that I just put another location directive to absorb any unwanted directives that were already in the file (it’s important that you balance up the braces in the file, otherwise your change will get rejected).&lt;/p&gt;
-
-&lt;p&gt;With that in place you can curl &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;localhost/flibble&lt;/code&gt; and get back the service account token for the ingress which has high privileges to the cluster, notably GET secrets at the cluster level.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This is an interesting vulnerability and one that (despite being a bit fiddly) wasn’t too difficult to exploit. In terms of risk however, it’s quite situational as it requires rights to edit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ingress&lt;/code&gt; objects in a namespace, so it’s not something an attacker outside the cluster is likely to be able to execute.&lt;/p&gt;
-</description>
-				<pubDate>Sun, 29 Oct 2023 09:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/</guid>
 			</item>
 		
 	</channel>

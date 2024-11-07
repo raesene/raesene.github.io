@@ -159,6 +159,32 @@
   <span class="post-date">
     
     November
+    7th,
+    
+    2024
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/">Exploring A Basic Kubernetes Network Plugin</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>In my <a href="https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/">last blog</a> I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    November
     1st,
     
     2024
@@ -380,32 +406,6 @@
     
     
     <p>I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. <a href="https://twitter.com/smarticu5">Smarticu5</a> had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using the default <code class="language-plaintext highlighter-rouge">admin.conf</code> credential created by Kubeadm.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    29th,
-    
-    2023
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/">Exploiting CVE-2023-5044</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Recently several new CVEs in the ingress nginx controller for Kubernetes were announced. I thought I’d take a closer look at one of them, CVE-2023-5044. Whilst there’s some details in the <a href="https://github.com/kubernetes/ingress-nginx/issues/10572">CVE announcement</a> and some hints in a post from the CVE reporter <a href="https://www.linkedin.com/posts/jkroepke_kubernetes-cve-2023-5044-code-injection-activity-7123677225765228545-93MI?trk=public_profile_share_view">here</a> there’s not any actual PoC that I could find, so I decided to see if I could write one!</p>
 
     
     

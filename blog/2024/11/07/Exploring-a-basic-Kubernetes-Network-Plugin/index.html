@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Exploring A Basic Kubernetes Network Plugin</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter"></i>
+			</a>
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://twitter.com/raesene">
+				<i class="fa fa-twitter fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Exploring A Basic Kubernetes Network Plugin </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   November 
+	   7th,
+	   
+	   2024
+	 </span>
+	  <div class="article_body">
+	  <p>In my <a href="https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/">last blog</a> I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.</p>
+
+<p>The Kubernetes project took the decision to delegate this part of container networking to external software, in order to make it a more flexible system that can be adapted to different use cases. The way this is done is that the project leverages the <a href="https://www.cncf.io/projects/container-network-interface-cni/">CNI</a> specification and plugins which comply with that spec. can be used to provide container networking in Kubernetes clusters.</p>
+
+<p>This means that, like many areas of Kubernetes, there’s quite a lot of possible complexity and options to consider, and over 20 different network plugins each with their own approach, so let’s start with the basics!</p>
+
+<h2 id="exploring-a-basic-cluster-set-up">Exploring a basic cluster set-up</h2>
+
+<p>We’ll make use of <a href="https://kind.sigs.k8s.io/">kind</a> to provide an initial demonstration cluster, which will give us their default network plugin <a href="https://github.com/kubernetes-sigs/kind/tree/main/images/kindnetd">kindnetd</a>. Kindnetd provide a simple CNI implementation which works well for standard kind clusters. In order to demonstrate how networking works, we’ll setup a couple of worker nodes using this config file</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">Cluster</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">kind.x-k8s.io/v1alpha4</span>
+<span class="na">nodes</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">role</span><span class="pi">:</span> <span class="s">control-plane</span>
+<span class="pi">-</span> <span class="na">role</span><span class="pi">:</span> <span class="s">worker</span>
+<span class="pi">-</span> <span class="na">role</span><span class="pi">:</span> <span class="s">worker</span>
+</code></pre></div></div>
+
+<p>Then, with that file saved as <code class="language-plaintext highlighter-rouge">kindnet-multi-node.yaml</code> we can start our test cluster with <code class="language-plaintext highlighter-rouge">kind create cluster --name=kindnet-multi-node --config=kindnet-multi-node.yaml</code>. Once the cluster’s up and running we can take a look at the networking.</p>
+
+<p>One of the first questions we might have is “how are Kubernetes network plugins configured?”. The answer is that any CNI plugins in use have a configuration file in a nominated directory, which is <code class="language-plaintext highlighter-rouge">/etc/cni/net.d</code> by default. If we look at that directory on our kind nodes we’ll see a file called <code class="language-plaintext highlighter-rouge">10-kindnet.conflist</code> which contains the configuration for the network plugin. Looking at the files in this directory is actually the most reliable way to determine which network plugin(s) are in use as there’s no direct record of it at a Kubernetes level.</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+        </span><span class="nl">"cniVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.3.1"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"kindnet"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"plugins"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ptp"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"ipMasq"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"ipam"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"host-local"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"dataDir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/run/cni-ipam-state"</span><span class="p">,</span><span class="w">
+                        </span><span class="nl">"routes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                                </span><span class="p">{</span><span class="w"> </span><span class="nl">"dst"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.0.0.0/0"</span><span class="w"> </span><span class="p">}</span><span class="w">
+                        </span><span class="p">],</span><span class="w">
+                        </span><span class="nl">"ranges"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                                </span><span class="p">[</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"subnet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"10.244.2.0/24"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">]</span><span class="w">
+                        </span><span class="p">]</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+                </span><span class="p">,</span><span class="w">
+                </span><span class="nl">"mtu"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"portmap"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"capabilities"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                        </span><span class="nl">"portMappings"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>From this configuration file we can see a bit of how the network plugin works. Firstly we see the <code class="language-plaintext highlighter-rouge">ptp</code> plugin is used. This plugin is actually one of the default ones that the CNI project maintains. What it does is create a <code class="language-plaintext highlighter-rouge">veth</code> network interface for each container, which can then be given an IP address. We can also see an <code class="language-plaintext highlighter-rouge">ipam</code> section which deals with how containers are allocated IP addresses. In this case we can see that a range of <code class="language-plaintext highlighter-rouge">10.244.2.0/24</code> is assigned to this node, and if we look at the other worker node in the cluster we see it has the <code class="language-plaintext highlighter-rouge">10.244.1.0/24</code> range,and the control plane node has <code class="language-plaintext highlighter-rouge">10.244.0.0/24</code>.</p>
+
+<p>So the next question might be “how does the traffic from a pod on one node get to a pod on another node?”. This will vary depending on the network plugin you’re using but in the case of <code class="language-plaintext highlighter-rouge">kindnet</code> it’s pretty simple. Essentially each node has the entries for the other nodes in its routing table. We can see that by running <code class="language-plaintext highlighter-rouge">ip route</code> on one of our nodes.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default via 172.18.0.1 dev eth0 
+10.244.0.0/24 via 172.18.0.3 dev eth0 
+10.244.2.0/24 via 172.18.0.2 dev eth0 
+172.18.0.0/16 dev eth0 proto kernel scope <span class="nb">link </span>src 172.18.0.4
+</code></pre></div></div>
+
+<p>In this file we can see that the other nodes in the cluster have IP addresses of <code class="language-plaintext highlighter-rouge">172.18.0.3</code> and <code class="language-plaintext highlighter-rouge">172.18.0.2</code> respectively, and the container subnets are routed to those nodes.</p>
+
+<p>We can also see how traffic gets to individual pods on that node. First let’s create a deployment with 4 replicas <code class="language-plaintext highlighter-rouge">kubectl create deployment webserver --image=nginx --replicas=4</code>. Once we’ve got that setup, we can run the <code class="language-plaintext highlighter-rouge">ip route</code> command again to see what effect that has had.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>default via 172.18.0.1 dev eth0 
+10.244.0.0/24 via 172.18.0.2 dev eth0 
+10.244.1.2 dev vethc2e31815 scope host 
+10.244.1.3 dev veth2621a4f6 scope host 
+10.244.2.0/24 via 172.18.0.3 dev eth0 
+172.18.0.0/16 dev eth0 proto kernel scope <span class="nb">link </span>src 172.18.0.4
+</code></pre></div></div>
+
+<p>We can see two new entries in our routing table for the two containers that got started on this worker node, showing how traffic would be sent to the container once it reaches the node.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend <a href="https://www.tkng.io/">The Kubernetes Networking Guide</a> which has a lot of information on this topic and others.</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(60)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring A Basic Kubernetes Network Plugin&via=raesene"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/" title="The Many IP Addresses of Kubernetes">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2024 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
