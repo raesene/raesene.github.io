@@ -158,6 +158,45 @@
 
   <span class="post-date">
     
+    October
+    6th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/10/06/risk_assessed_p_2/">Risk Assessed Password Policies - Account Lockout</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>The last piece of the puzzle when it comes to password policies is the account lockout .  Also this is another area where a tighter policy doesn't necessarily lead to improved security.  A lot of companies go for 3 incorrect attempts, and this does lead to a lot of lockouts on Monday mornings and consequently a lot of false positives in the security departments monitoring for attacks on authentication systems.<br />
+Again with this section of policy it's important to understand what threat is being mitigated.  Account lockout is designed to mitigate online password guessing attacks.<br />
+Now given that if you have a password length of say 8 characters with a requirement for upper and lower case characters you've got a theoretical maximum of 52^8 combinations (reality will be obviously be somewhat less than that).<br />
+So realistically the risk of an online password guessing attack succeeding is pretty low, if the attacker doesn't have an insight into likely passwords that a user will choose.<br />
+So what's a good number for password lockout.  Well Microsoft <a href="http://technet2.microsoft.com/windowsserver/en/library/353f7ad9-b53d-41d0-9867-199f6595a01b1033.mspx?mfr=true"> recommends 50</a>, but I've got to say that I think around 10 is good for most circumstances.  My reasoning here is that if someone can't remember their password after 10 goes, they've almost definitely forgotten it.<br />
+Of course the next part of this is what to do when you've locked the account out.  Well if you've gone for a reasonably high setting on the incorrect password attempts, then I'd say in most cases lock the account permanently until the user has gone through the password reset procedure (establishing a good password reset procedure is a topic for another day!).<br />
+One problem with account lockout that's raised is the potential for Denial-Of-Service.  If the username is predictable to an attacker they can iterate over the namespace and lockout all the accounts.<br />
+The mitigation for this depends on the architecture of the systems.  If the system is inside a corporation then monitoring should track the attack and incident response should <i>hopefully</i> be able to track down the attacker.<br />
+However for Internet facing systems that's obviously not possible, so some other mitigation may be needed.<br />
+Two potential options for this are</p>
+<ul>
+<li><b>IP based lockout.</b> Instead of locking the account for all users, only lock it for the source IP of the attack.  This isn't perfect protection but may well work for many attackers</li>
+<li><b>Use multiple secrets.</b> For example have a password and a secondary secret.  Then only increment the incorrect login count if the attacker is getting the username and one of the secrets correct.  </li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     September
     27th,
     
@@ -447,34 +486,6 @@ Of course that kind of research can be done manually, but this is an awful lot s
 
 </article>
 
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    28th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/07/28/back_and_rorasc/">Back and RoraScanner</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Well I'm back from (sometimes) sunny shetland.  Thanks to some rain and a laptop I'd taken I got some work done on a tool I've started developing for my SANS GSOC gold paper.<br />
-<a href="http://rorascanner.rubyforge.org">RoraScanner</a> is a Oracle 10G security scanner written in ruby.  I'm enjoying writing it at the moment as it's let me develop my ruby skills and my oracle skills at the same time.<br />
-Hopefully it'll also become a reasonably useful security scanner!</p>
-
-    
-    
-  </div>
-
-</article>
-
 <hr/>
 
 <ul class="pager"> 
@@ -488,7 +499,7 @@ Hopefully it'll also become a reasonably useful security scanner!</p>
   
   
   <li>
-    <span class="page_number">Page: 21 of 57</span>
+    <span class="page_number">Page: 21 of 58</span>
   </li>
 
   

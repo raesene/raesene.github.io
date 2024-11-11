@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management</title>
+	<title>When is read-only not read-only?</title>
 	
 	<meta name="author" content="raesene">
 
@@ -149,7 +149,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management </h1>
+  <h1>When is read-only not read-only? </h1>
 </div>
 	
 <article>
@@ -157,62 +157,52 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   December 
-	   18th,
+	   November 
+	   11th,
 	   
-	   2022
+	   2024
 	 </span>
 	  <div class="article_body">
-	  <p>This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
+	  <p>Bit of a digression from the network series today, to discuss something I just saw in passing which is an interesting example of a possible sharp corner/foot gun in Kubernetes RBAC.</p>
 
-<p>Similarly to the previous section on <a href="https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/">version management</a> this section isn’t so much around security configuration as the policies and processes that should be in place in an in-scope environment.</p>
+<p>Generally speaking for REST style APIs <code class="language-plaintext highlighter-rouge">GET</code> requests are read-only, so shouldn’t change the state of resources or execute commands. As such you might think that giving a user the following rights in Kubernetes would essentially just be giving them read-only access to pod information in the default namespace.</p>
 
-<p>As the guidance here relates to the secure configuration of container orchestration environments, and having companies develop standards for secure configuration of their container environments, it’s worth noting what options there are for Kubernetes. Whilst companies should customize these to their own environments, there are some options that can be used as a starting point.</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">rbac.authorization.k8s.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Role</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">pod-reader</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">rules</span><span class="pi">:</span>
+<span class="pi">-</span> <span class="na">apiGroups</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">"</span><span class="pi">]</span>
+  <span class="na">resources</span><span class="pi">:</span> 
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods/log"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods/status"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods/exec"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods/attach"</span>
+    <span class="pi">-</span> <span class="s2">"</span><span class="s">pods/portforward"</span>
+  <span class="na">verbs</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">get"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">list"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">watch"</span><span class="pi">]</span>
+</code></pre></div></div>
 
-<p>It’s also worth noting that as described in the post about <a href="https://raesene.github.io/blog/2022/09/20/Assessing-Kubernetes-Clusters-for-PCI-Compliance/">the challenges of assessing Kubernetes clusters for PCI Compliance</a> one of the things to think about when looking at compliance standards is which distributions and versions are covered.</p>
+<p>However due to the details of how Websockets works with Kubernetes, this access <em>can</em> allow for users to run <code class="language-plaintext highlighter-rouge">kubectl exec</code> commands in pods and get command execution rights in that namespace! There’s information on the origins of this in <a href="https://github.com/kubernetes/kubernetes/issues/78741">this Github issue</a> but it’s essentially down to how websockets works.</p>
 
-<h2 id="cis-benchmarks">CIS Benchmarks</h2>
+<p>What’s possibly more interesting is that, while this behaviour has been in place for a while you might not have noticed it, as the default in Kubernetes was to use <a href="https://en.wikipedia.org/wiki/SPDY">SPDY</a> for <code class="language-plaintext highlighter-rouge">exec</code> commands instead of websockets, until Kubernetes version 1.31. So if a user with <code class="language-plaintext highlighter-rouge">GET</code> rights on <code class="language-plaintext highlighter-rouge">pods/exec</code> tried to use <code class="language-plaintext highlighter-rouge">kubectl exec</code> in 1.29 you’d get an error like this</p>
 
-<p>There are a couple of CIS benchmarks which can be relevant to secure configuration of Kubernetes clusters. Firstly there’s the <a href="https://www.cisecurity.org/benchmark/docker">CIS Benchmark for Docker</a>. It’s important to note here that this benchmark was designed for standalone Docker installations and not for a use case where Docker is a Container Runtime in a Kubernetes cluster. A number of the requirements will not apply to Kubernetes environments that use Docker. It’s also worth noting that there are no current benchmarks for Containerd or CRI-O.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Error from server (Forbidden): pods "test" is forbidden: User "bob" cannot create resource "pods/exec" in API group "" in the namespace "default"
+</code></pre></div></div>
 
-<p>At the Kubernetes level there is a set of related CIS Benchmarks. The top-level CIS <a href="https://www.cisecurity.org/benchmark/kubernetes">Benchmark for Kubernetes</a> is designed to address <a href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/">kubeadm</a> clusters. Using it for any other Kubernetes distribution could require the details of checks to be modified to take account of differences in the implementation of Kubernetes. There are versions of the benchmark for various versions of Kubernetes going back to 1.16, however not every version of k8s has a corresponding CIS benchmark.</p>
+<p>but if a user with the exact same rights, tried the same command in Kubernetes 1.31 it works!</p>
 
-<p>There are also a set of CIS Benchmarks for various managed Kubernetes distributions, which provide more specific detail for those environments. C Currently there is coverage for <a href="https://cloud.google.com/kubernetes-engine">GKE</a>, <a href="https://aws.amazon.com/eks/">EKS</a>, <a href="https://azure.microsoft.com/en-gb/products/kubernetes-service/">AKS</a>, <a href="https://www.alibabacloud.com/product/kubernetes">ACK</a>, <a href="https://www.oracle.com/uk/cloud/cloud-native/container-engine-kubernetes/">OKE</a> and <a href="https://www.redhat.com/en/technologies/cloud-computing/openshift">OpenShift</a></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl --kubeconfig bob.config exec -it test -- /bin/bash
+bash-5.1# exit
+exit
+</code></pre></div></div>
 
-<h2 id="nsa-kubernetes-hardening-guide">NSA Kubernetes Hardening Guide</h2>
+<p>It’s worth noting that, whilst it’s easier to do now, using websockets with these rights has been possible for a long time using tools like <a href="https://github.com/jpts/kubectl-execws">kubectl-execws</a> from <a href="https://hachyderm.io/@jpts">jpts</a>.</p>
 
-<p>Whilst it often gets used similarly to the CIS benchmarks the <a href="https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF">NSA Kubernetes Hardening Guide</a> is wider in scope and not designed to be a configuration standard. Whilst it does provide some guidance on specific settings in some areas, it doesn’t set out to be detailed across all areas, in the way the CIS benchmarks do.</p>
+<h2 id="conclusion">Conclusion</h2>
 
-<h2 id="disa-stig">DISA STIG</h2>
-
-<p>The DISA <a href="https://www.stigviewer.com/stig/kubernetes/2021-04-14/">Kubernetes Security Technical Implementation Guide</a> is another option which does have detailed requirements. However it’s important to note that, as of December 2022, it’s not been updated recently, so checks may be outdated and whilst it doesn’t specify a specific Kubernetes distribution it addresses, from the paths in the document it appears to be Kubeadm.</p>
-
-<p>In terms of the PCI requirements there’s one in this section.</p>
-
-<h2 id="section-151">Section 15.1</h2>
-
-<p><strong>Threat</strong> -  Container orchestration tools may be misconfigured and introduce security vulnerabilities.</p>
-
-<p><strong>Best Practice</strong></p>
-<ul>
-  <li>
-    <p>a. All configurations and container images should be tested in a production-like environment prior to deployment.</p>
-  </li>
-  <li>
-    <p>b. Configuration standards that address all known security vulnerabilities and are consistent with industry-accepted hardening standards and  vendor security guidance should be developed for all system components, including container orchestration tools.</p>
-    <ul>
-      <li>i. Address all known security vulnerabilities.</li>
-      <li>ii. Be consistent with industry-accepted system hardening standards or vendor hardening recommendations.</li>
-      <li>iii. Be updated as new vulnerability issues are identified.</li>
-    </ul>
-  </li>
-</ul>
-
-<p><strong>Details</strong> - Assessing the first part of this recommendation would involve understanding the companies CI/CD environment and how changes to cluster configuration are tested. Typically some form of automated testing should be done on any Kubernetes manifest before deployment. For the second part understanding which standard(s) are in use and how compliance is achieved (e.g. CSPM tooling)</p>
-
-<h1 id="conclusion">Conclusion</h1>
-
-<p>Creating a security configuration standard is a sensible part of larger Kubernetes deployments as it will help to maintain consistent configuration and security levels across the environment, however it does require some effort to tailor this to specific Kubernetes distributions and versions.</p>
+<p>Kubernetes RBAC has some tricky areas where the behaviour you get might not be exactly what you expect, and sometimes as in this case, those unexpected behaviours are not very apparent!</p>
 
 	  </div>
 
@@ -238,7 +228,7 @@
 		<div>
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 15 - Configuration Management&via=raesene"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=When is read-only not read-only?&via=raesene"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -266,10 +256,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/" title="PCI Compliance for Kubernetes in detail - Part 14 - Version Management">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/" title="Exploring A Basic Kubernetes Network Plugin">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/12/20/PCI-Kubernetes-Section16-Segmentation/" title="PCI Compliance for Kubernetes in detail - Part 16 - Segmentation">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

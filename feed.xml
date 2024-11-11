@@ -7,6 +7,54 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>When is read-only not read-only?</title>
+				<description>&lt;p&gt;Bit of a digression from the network series today, to discuss something I just saw in passing which is an interesting example of a possible sharp corner/foot gun in Kubernetes RBAC.&lt;/p&gt;
+
+&lt;p&gt;Generally speaking for REST style APIs &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt; requests are read-only, so shouldn’t change the state of resources or execute commands. As such you might think that giving a user the following rights in Kubernetes would essentially just be giving them read-only access to pod information in the default namespace.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rbac.authorization.k8s.io/v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Role&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;pod-reader&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;namespace&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;default&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;apiGroups&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; 
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods/log&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods/status&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods/exec&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods/attach&quot;&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;pods/portforward&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;verbs&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;get&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;list&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;watch&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;However due to the details of how Websockets works with Kubernetes, this access &lt;em&gt;can&lt;/em&gt; allow for users to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl exec&lt;/code&gt; commands in pods and get command execution rights in that namespace! There’s information on the origins of this in &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/78741&quot;&gt;this Github issue&lt;/a&gt; but it’s essentially down to how websockets works.&lt;/p&gt;
+
+&lt;p&gt;What’s possibly more interesting is that, while this behaviour has been in place for a while you might not have noticed it, as the default in Kubernetes was to use &lt;a href=&quot;https://en.wikipedia.org/wiki/SPDY&quot;&gt;SPDY&lt;/a&gt; for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;exec&lt;/code&gt; commands instead of websockets, until Kubernetes version 1.31. So if a user with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GET&lt;/code&gt; rights on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods/exec&lt;/code&gt; tried to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl exec&lt;/code&gt; in 1.29 you’d get an error like this&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Error from server (Forbidden): pods &quot;test&quot; is forbidden: User &quot;bob&quot; cannot create resource &quot;pods/exec&quot; in API group &quot;&quot; in the namespace &quot;default&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;but if a user with the exact same rights, tried the same command in Kubernetes 1.31 it works!&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl --kubeconfig bob.config exec -it test -- /bin/bash
+bash-5.1# exit
+exit
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;It’s worth noting that, whilst it’s easier to do now, using websockets with these rights has been possible for a long time using tools like &lt;a href=&quot;https://github.com/jpts/kubectl-execws&quot;&gt;kubectl-execws&lt;/a&gt; from &lt;a href=&quot;https://hachyderm.io/@jpts&quot;&gt;jpts&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Kubernetes RBAC has some tricky areas where the behaviour you get might not be exactly what you expect, and sometimes as in this case, those unexpected behaviours are not very apparent!&lt;/p&gt;
+</description>
+				<pubDate>Mon, 11 Nov 2024 12:00:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</guid>
+			</item>
+		
+			<item>
 				<title>Exploring A Basic Kubernetes Network Plugin</title>
 				<description>&lt;p&gt;In my &lt;a href=&quot;https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/&quot;&gt;last blog&lt;/a&gt; I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.&lt;/p&gt;
 
@@ -782,45 +830,6 @@ service:
 				<pubDate>Sat, 10 Feb 2024 09:27:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/02/10/adding-open-telemetry-to-container-stacks/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/02/10/adding-open-telemetry-to-container-stacks/</guid>
-			</item>
-		
-			<item>
-				<title>When is admin not admin?, when it's super-admin!</title>
-				<description>&lt;p&gt;I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. &lt;a href=&quot;https://twitter.com/smarticu5&quot;&gt;Smarticu5&lt;/a&gt; had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using the default &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; credential created by Kubeadm.&lt;/p&gt;
-
-&lt;p&gt;This specific error &lt;em&gt;shouldn’t&lt;/em&gt; be possible, as traditionally &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; is a member of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; group which bypasses RBAC checks and always gets full cluster-admin level access to everything, so if a valid credential is presented, it should always work.&lt;/p&gt;
-
-&lt;p&gt;Interest piqued, we took a bit of a closer look at what was happening. First up was to decode the client certificate on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; file to see what usernames and groups it was associated with (If you’re ever looking to do this and can’t remember the exact commands, I’d recommend using &lt;a href=&quot;https://gchq.github.io/CyberChef/&quot;&gt;Cyber Chef&lt;/a&gt; which can base64 decode, and decode X.509 certs).&lt;/p&gt;
-
-&lt;p&gt;The output we got back was this:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubernetes
-Subject
-  O  &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubeadm:cluster-admins
-  CN &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; kubernetes-admin
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Sooo this credential was no longer a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt;, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/121305&quot;&gt;PR&lt;/a&gt; which explained how Kubeadm now has two files with initial credentials, the original &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; and a new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; has been changed to use an RBAC group for access, which should give it &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights, but in a way that they could be revoked by removing the rights of that group, and then have the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file still be a member of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:masters&lt;/code&gt; whose rights can’t be revoked by modifying RBAC.&lt;/p&gt;
-
-&lt;p&gt;Digging back from this PR, to the referenced issue to get some back-story, I got a slight surprise to find it was &lt;a href=&quot;https://github.com/kubernetes/kubeadm/issues/2414&quot;&gt;one I’d opened&lt;/a&gt; back in 2021 about not using system:masters!&lt;/p&gt;
-
-&lt;h2 id=&quot;what-does-this-mean&quot;&gt;What does this mean?&lt;/h2&gt;
-
-&lt;p&gt;There’s a couple of practical consequences to consider with this change.&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;If you’re tracking permissions on sensitive files, and access to them, where you’re using a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeadm&lt;/code&gt; based Kubernetes distribution, you will need to update your tracking to include the new &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file.&lt;/li&gt;
-  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;super-admin.conf&lt;/code&gt; file should &lt;em&gt;not&lt;/em&gt; be used for any administrative tasks, instead place it somewhere safe and only use it if RBAC gets completely messed up. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; isn’t ideal either as it’s a generic account, but at least its permissions can be revoked now!&lt;/li&gt;
-  &lt;li&gt;It is now possible to see a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;forbidden&lt;/code&gt; error when using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;admin.conf&lt;/code&gt; if RBAC isn’t fully configured, or if the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;clusterrolebinding&lt;/code&gt; for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubeadm:cluster-admins&lt;/code&gt; group has been changed.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Another example of why it’s important to keep up to date with changes in Kubernetes, and to understand how your cluster is configured. This change is a good one, as it makes it easier to revoke the rights of the initial credential, but it’s important to understand how it works, and how it might impact your cluster.&lt;/p&gt;
-</description>
-				<pubDate>Sat, 06 Jan 2024 09:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/01/06/when-is-admin-not-admin/</guid>
 			</item>
 		
 	</channel>
