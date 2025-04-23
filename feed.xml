@@ -29,7 +29,7 @@
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysadminpod.yaml&lt;/code&gt; - This pod adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dontallowprivesccapsysadminpod.yaml&lt;/code&gt; - This has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; set and adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dontallowprivescsysadminpod.yaml&lt;/code&gt; - This has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; set and adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invalidcap.yaml&lt;/code&gt; - This pod has an invalid capability (lorem) set.&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invalidcap.yaml&lt;/code&gt; - This pod has an invalid capability (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LOREM&lt;/code&gt;) set.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;Trying these manifests out in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster (using containerd as CRI) showed a couple of things&lt;/p&gt;
@@ -48,7 +48,7 @@
 
 &lt;p&gt;From that one thing that caught my eye was that apparently CRI-O handles this differently than containerd, which I thought was interesting&lt;/p&gt;
 
-&lt;h2 id=&quot;comparing-cri---with-iximiuz-labs&quot;&gt;Comparing CRI - with iximiuz labs&lt;/h2&gt;
+&lt;h2 id=&quot;comparing-cri-o---with-iximiuz-labs&quot;&gt;Comparing CRI-O - with iximiuz labs&lt;/h2&gt;
 
 &lt;p&gt;I wanted to test out this difference in behaviour, but unfortunately I don’t have a CRI-O backed cluster available on my test lab. Fortunately, iximiuz labs has an awesome &lt;a href=&quot;https://labs.iximiuz.com/playgrounds/k8s-omni&quot;&gt;Kubernetes playground&lt;/a&gt; where you can specify various combinations of CRI and CNI to test out different scenarios, which is nice!&lt;/p&gt;
 
@@ -59,7 +59,7 @@
   &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; worked and the capability was added.&lt;/li&gt;
   &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; was blocked&lt;/li&gt;
   &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; was allowed and the capability was added.&lt;/li&gt;
-  &lt;li&gt;setting an invalid capability resulted in an error on container creation.&lt;/li&gt;
+  &lt;li&gt;setting an invalid capability resulted in an error on container creation (CRI-O prepended the capability set with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_&lt;/code&gt; and then threw an error stopping pod creation as it was invalid).&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;So we can see that CRI-O handles things a bit differently, allowing both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to work and erroring out on invalid capabilities!&lt;/p&gt;
