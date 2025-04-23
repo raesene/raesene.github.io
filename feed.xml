@@ -32,7 +32,7 @@
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invalidcap.yaml&lt;/code&gt; - This pod has an invalid capability (lorem) set.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;Trying these manifests out in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster showed a couple of things&lt;/p&gt;
+&lt;p&gt;Trying these manifests out in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster (using containerd as CRI) showed a couple of things&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; worked but there was no capability added.&lt;/li&gt;
@@ -46,7 +46,7 @@
 
 &lt;p&gt;Doing some more searching on Github turned up some more history on this. Back in 2021, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/105237&quot;&gt;PR to try and fix this&lt;/a&gt; which didn’t get merged, and there’s another &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/119568&quot;&gt;issue from 2023&lt;/a&gt; on it as well.&lt;/p&gt;
 
-&lt;p&gt;From that one thing that caught my eye was that apparently CRI-O handles this differently that containerd, which I thought was interesting&lt;/p&gt;
+&lt;p&gt;From that one thing that caught my eye was that apparently CRI-O handles this differently than containerd, which I thought was interesting&lt;/p&gt;
 
 &lt;h2 id=&quot;comparing-cri---with-iximiuz-labs&quot;&gt;Comparing CRI - with iximiuz labs&lt;/h2&gt;
 

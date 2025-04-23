@@ -188,7 +188,7 @@
   <li><code class="language-plaintext highlighter-rouge">invalidcap.yaml</code> - This pod has an invalid capability (lorem) set.</li>
 </ul>
 
-<p>Trying these manifests out in a <a href="https://kind.sigs.k8s.io/">kind</a> cluster showed a couple of things</p>
+<p>Trying these manifests out in a <a href="https://kind.sigs.k8s.io/">kind</a> cluster (using containerd as CRI) showed a couple of things</p>
 
 <ul>
   <li>Adding <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> worked but there was no capability added.</li>
@@ -202,7 +202,7 @@
 
 <p>Doing some more searching on Github turned up some more history on this. Back in 2021, there was a <a href="https://github.com/kubernetes/kubernetes/pull/105237">PR to try and fix this</a> which didn’t get merged, and there’s another <a href="https://github.com/kubernetes/kubernetes/issues/119568">issue from 2023</a> on it as well.</p>
 
-<p>From that one thing that caught my eye was that apparently CRI-O handles this differently that containerd, which I thought was interesting</p>
+<p>From that one thing that caught my eye was that apparently CRI-O handles this differently than containerd, which I thought was interesting</p>
 
 <h2 id="comparing-cri---with-iximiuz-labs">Comparing CRI - with iximiuz labs</h2>
 
