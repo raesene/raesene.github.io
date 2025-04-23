@@ -160,6 +160,38 @@
   <span class="post-date">
     
     March
+    30th,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/03/30/information_app/">Information Appliance Tap.</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>First off I'm thinking of a ethernet style tap not a water one ;op<br />
+I was thinking today, more and more people are connected to broadband these days, if I was selling information appliances, by which I'm thinking about dedicated pieces of hardware which process information (like the <a href="http://www.amstrad.co.uk/default.shtml">Amstrad emailer</a>), I'd want to be able to tap into the broadband connection, but I wouldn't want to try and guide non-technical users through the hassle of setting up some form of internet connection sharing (NAT) be it software or hardware.<br />
+So, what if I just tapped into the connection.... If you attached a network bridge to the ethernet side of a ADSL modem (between the PC and the ADSL modem) you'd be able to see all the traffic as it goes by...<br />
+Then use UDP to send traffic upstream to your server, that way it doesn't matter if you don't have an IP address for your device, UDP data is stateless so no problem...<br />
+Then there's the reverse, i.e. can the server send to the device?  That part would require the device to work out what the IP address of the PC it's installed next to is, but given that it can see traffic as it goes by, it can just pull the address from the packet stream.  So once it's got the address it gives that to its server and then if the server sends UDP traffic to that IP address (obviously on a port that the PC isn't listening on) the tap will pick it up and be able to use it....<br />
+The advantage to all this is that you can send traffic on a users broadband connection without disturbing their existing environment at all..<br />
+there are some downsides though.  You'd need to put all the intelligence in things like authentication into the application level of the device (otherwise you'd be a great target for forged traffic from unscrupulous types)</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     27th,
     
     2004
@@ -394,36 +426,6 @@ Of course that assumes you're not using totally random strings for passwords, bu
     
     <p>one thing that occurred to me recently when reading a security mailing list is the extent to which analogies to the physical world tend to be drawn as soon as the subject of computer crime starts being discussed.  For example whenever a discussion of the legality of port scanning starts you can generally expect to see people starting to compare it to "rattling the doors on a house".<br />
 It seems to me that this is a good indication of the lack of laws regarding Internet/computer crime, as people can't definitively say whether something is or is not illegal so they are forced to draw analogies, which are unlikely to ever be 100% accurate.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    21st,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2004/03/21/ssl_phishing_ar/">SSL phishing Article</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I read an interesting article on phishing last week over at <a href="http://news.netcraft.com/archives/2004/03/08/ssls_credibility_as_phishing_defense_is_tested.html">netcraft</a> which seems to show that it is possible for a phisher to create a SSL session and display the familiar padlock item, without having a valid certificate..... However I've since seen some disagreement about whether the "plain text" SSL method would work in that way, one of them is <a href="http://www.rtfm.com/movabletype/archives/2004_03.html#000792"> at rtfm.com </a>.<br />
-So it remains to be seen if this is actually a problem. If it is it will be a blow to a lot of the advice handed out by banks on this subject, as it's usually accepted that the best way of telling whether you are at the correct site is to examine the certificate<br />
-However, whilst it may be the best way in a browser situation I am not sure it is a good way.  It relies on users to understand to a limited extent domain names, so as to realise that a certificate issues to www.mybank.com is NOT the same as one issued to www.my-bank.com which is a pretty hard point to get across to non-technical users.<br />
-There are ways however that banks and other institutions can make this kind of attack more difficult to execute.  One option is to use a two-stage login procedure and provide feedback after the first page which if the user doesn't see they would know that something was not right.<br />
-So for example the bank asks for login name/password.  Once the user enters that he gets a screen saying something like "welcome back Mr Jones, the first line of your address is 1 Acacia Avenue" and asks for a second authenticator. ..</p>
 
     
     

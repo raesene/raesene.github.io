@@ -160,6 +160,33 @@
   <span class="post-date">
     
     April
+    3rd,
+    
+    2004
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2004/04/03/linux_palmtop_g/">linux palmtop goodness</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>well I think ive finally found the right handheld computer for me... A sharp Zaurus c860.  Its linux based, has lots of good security software available, can take SD and CF cards, has an excellent 640x480 display and isnt too bulky or heavy.<br />
+also the keyboard is fairly good... as Im writing this entry using it.....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    April
     2nd,
     
     2004
@@ -394,38 +421,6 @@ Also I've got to say that I'm really suprised to see this stance from a vendor o
     
     
     <p><a title="Talisker Security Products and Service Website" href="http://www.networkintrusion.co.uk/index.htm">Talisker Security Products and Service Website</a> provides a good categorised set of links on various security/firwalls/forensic topics</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    30th,
-    
-    2004
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2004/03/30/information_app/">Information Appliance Tap.</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>First off I'm thinking of a ethernet style tap not a water one ;op<br />
-I was thinking today, more and more people are connected to broadband these days, if I was selling information appliances, by which I'm thinking about dedicated pieces of hardware which process information (like the <a href="http://www.amstrad.co.uk/default.shtml">Amstrad emailer</a>), I'd want to be able to tap into the broadband connection, but I wouldn't want to try and guide non-technical users through the hassle of setting up some form of internet connection sharing (NAT) be it software or hardware.<br />
-So, what if I just tapped into the connection.... If you attached a network bridge to the ethernet side of a ADSL modem (between the PC and the ADSL modem) you'd be able to see all the traffic as it goes by...<br />
-Then use UDP to send traffic upstream to your server, that way it doesn't matter if you don't have an IP address for your device, UDP data is stateless so no problem...<br />
-Then there's the reverse, i.e. can the server send to the device?  That part would require the device to work out what the IP address of the PC it's installed next to is, but given that it can see traffic as it goes by, it can just pull the address from the packet stream.  So once it's got the address it gives that to its server and then if the server sends UDP traffic to that IP address (obviously on a port that the PC isn't listening on) the tap will pick it up and be able to use it....<br />
-The advantage to all this is that you can send traffic on a users broadband connection without disturbing their existing environment at all..<br />
-there are some downsides though.  You'd need to put all the intelligence in things like authentication into the application level of the device (otherwise you'd be a great target for forged traffic from unscrupulous types)</p>
 
     
     

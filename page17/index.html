@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    November
+    19th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/11/19/owasp_scotland_1/">OWASP Scotland - November Meeting</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>OWASP Scotland November meeting is next Thursday, the 26th.  We've got something a bit different lined up with the main presentation being one on physical security and lock picking (hey if you can break into the server room and take the box, who needs SQL injection ;oP )<br />
+More information <a href="http://www.owasp.org/index.php/Scotland#Local_News">here</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     October
     28th,
     
@@ -491,34 +518,6 @@ run</pre>
 <p>which tells us the creds we need to make a valid connection and move on to the next stage.<br />
 So now we've got a valid account on the database, but it's not got that magic DBA level of privilege<br />
 Next time I'll follow-up on using metasploit to get down the OS</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    7th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/05/07/tonights_metasp/">Tonights Metasploit links</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Been taking a look at another one of the newer Metasploit features tonight.  WMAP is looking to integrate web application scanning functionality into Metasploit.  There's a couple of good overviews <a href="http://trac.metasploit.com/browser/framework3/trunk/documentation/wmap.txt">Here</a>, <a href="http://www.vulnerabilityassessment.co.uk/wmap_meta.htm">Here</a>  and <a href="http://darkoperator.blogspot.com/2008/10/metasploit-wmap-web-attack-and.html">Here</a><br />
-Getting it up and running is a little bit finicky at the moment, as you need to used a patched copy of <a href="http://code.google.com/p/ratproxy/">ratproxy</a> to collect the base URLs for the scanner (quick note is that my fairly new Ubuntu Intrepid install was missing libssl-dev which is a pre-requisite for compiling ratproxy so worth checking for if you get make errors when setting it up).<br />
-Once you've gathered URLs and fed them in to the database getting the scanner to start running is straightforward (examples in the links at the top so I won't go into it).  From an initial look, some of the plugins seem to do some directory/file brute-forcing which can take ages to run, but if it's going on too long you can use CTRL-C to interrupt just that plug-in and Metasploit will catch the interrupt gracefully and move on to the next directory or plugin...</p>
 
     
     

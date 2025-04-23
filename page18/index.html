@@ -160,6 +160,34 @@
   <span class="post-date">
     
     May
+    7th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/05/07/tonights_metasp/">Tonights Metasploit links</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Been taking a look at another one of the newer Metasploit features tonight.  WMAP is looking to integrate web application scanning functionality into Metasploit.  There's a couple of good overviews <a href="http://trac.metasploit.com/browser/framework3/trunk/documentation/wmap.txt">Here</a>, <a href="http://www.vulnerabilityassessment.co.uk/wmap_meta.htm">Here</a>  and <a href="http://darkoperator.blogspot.com/2008/10/metasploit-wmap-web-attack-and.html">Here</a><br />
+Getting it up and running is a little bit finicky at the moment, as you need to used a patched copy of <a href="http://code.google.com/p/ratproxy/">ratproxy</a> to collect the base URLs for the scanner (quick note is that my fairly new Ubuntu Intrepid install was missing libssl-dev which is a pre-requisite for compiling ratproxy so worth checking for if you get make errors when setting it up).<br />
+Once you've gathered URLs and fed them in to the database getting the scanner to start running is straightforward (examples in the links at the top so I won't go into it).  From an initial look, some of the plugins seem to do some directory/file brute-forcing which can take ages to run, but if it's going on too long you can use CTRL-C to interrupt just that plug-in and Metasploit will catch the interrupt gracefully and move on to the next directory or plugin...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     5th,
     
     2009
@@ -491,36 +519,6 @@ For most companies there are other reasons why penetration testing is going to r
 <li><b>Externally hosted applications.</b>  In situations when a company doesn't have great visibility of an application that they're entrusting valuable data to (eg, most outsourced application hosting setups) they need some way to get comfort that a reasonable level of security is being applied to that application.  Usually that will involve a penetration test, especially if the application is exposed to a hostile envrioment (like the Internet!)</li>
 <p>So whilst I'd definitely like to see smarter use of penetration tests, I don't think that testing as it's used currently is going to go out of fashion any time soon.
 </ul>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    10th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2008/12/10/catching_out_do/">Catching out dodgy security policies</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Here's a question to ask your security policy people, to see whether their recommendations are actually risk based or just "best guesses"...<br />
-"Have you updated the minimum password length/complexity requirements due to recent advances in password cracking speeds?"<br />
-I was reading a couple of posts on the Red Database Security blog (<a href="http://blog.red-database-security.com/2008/12/08/md5-bruteforcer-barswf/">here</a> and <a href="http://blog.red-database-security.com/2008/12/07/gsauditor-fastest-oracle-11g-password-cracker-afaik/">here</a>, and it occurred to me that despite the increases that have been made in password cracking speeds over the last couple of years, I've not seen a lot of movement in minimum password length/strength requirements to go along with it...<br />
-Obviously password policies should be tailored to mitigate the threats to the systems they protect and the primary risk that long passwords mitigate is an offline attack where the attacker has access to the encrypted password.  (the more common online brute-force is better mitigated by account lockout and security monitoring in most cases)<br />
-So if crackers are getting faster, passwords should obviously get longer...</p>
 
     
     

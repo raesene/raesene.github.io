@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>When is admin not admin?, when it's super-admin!</title>
+	<title>Cap or no cap</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>When is admin not admin?, when it's super-admin! </h1>
+  <h1>Cap or no cap </h1>
 </div>
 	
 <article>
@@ -158,43 +158,71 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   January 
-	   6th,
-	   
-	   2024
+	   April 
+	   23rd,
+	     
+	   2025
 	 </span>
 	  <div class="article_body">
-	  <p>I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. <a href="https://twitter.com/smarticu5">Smarticu5</a> had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using the default <code class="language-plaintext highlighter-rouge">admin.conf</code> credential created by Kubeadm.</p>
+	  <p>I was looking at a <a href="https://github.com/kubernetes/kubernetes/issues/131336">Kubernetes issue</a> the other day and it led me down a kind of interesting rabbit hole, so I thought it’d be worth sharing as I learned a couple of things.</p>
 
-<p>This specific error <em>shouldn’t</em> be possible, as traditionally <code class="language-plaintext highlighter-rouge">admin.conf</code> is a member of the <code class="language-plaintext highlighter-rouge">system:masters</code> group which bypasses RBAC checks and always gets full cluster-admin level access to everything, so if a valid credential is presented, it should always work.</p>
+<h2 id="background">Background</h2>
 
-<p>Interest piqued, we took a bit of a closer look at what was happening. First up was to decode the client certificate on the <code class="language-plaintext highlighter-rouge">admin.conf</code> file to see what usernames and groups it was associated with (If you’re ever looking to do this and can’t remember the exact commands, I’d recommend using <a href="https://gchq.github.io/CyberChef/">Cyber Chef</a> which can base64 decode, and decode X.509 certs).</p>
+<p>The issue is to do with the interaction of <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation</code> and added capabilities in a Kubernetes workload specification. In the issue the reporter noted that if you add <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> to a manifest while setting <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> it blocks the deploy but other capabilities when added do not block.</p>
 
-<p>The output we got back was this:</p>
+<p><code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation</code> is kind of an interesting flag as it doesn’t really do what the name says. In reality, what it does is set a specific Linux Kernel setting designed to stop a process from getting more privileges than when it started, however the name implies it’s intended to do a more wide ranging set of blocks. My colleague Christophe has a <a href="https://blog.christophetd.fr/stop-worrying-about-allowprivilegeescalation/">detailed post looking at this misunderstanding</a>.</p>
 
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  CN <span class="o">=</span> kubernetes
-Subject
-  O  <span class="o">=</span> kubeadm:cluster-admins
-  CN <span class="o">=</span> kubernetes-admin
-</code></pre></div></div>
+<p>However what was specifically interesting to me was, when I tried out a quick manifest to re-create the problem, I wasn’t able to and the pod I created was admitted ok.</p>
 
-<p>Sooo this credential was no longer a member of <code class="language-plaintext highlighter-rouge">system:masters</code>, interesting! Next step, as is often the case when spelunking around in Kubernetes was to go look at Github to see if any recent changes had been made to how things work. Sure enough, there was a <a href="https://github.com/kubernetes/kubernetes/pull/121305">PR</a> which explained how Kubeadm now has two files with initial credentials, the original <code class="language-plaintext highlighter-rouge">admin.conf</code> and a new <code class="language-plaintext highlighter-rouge">super-admin.conf</code>. The <code class="language-plaintext highlighter-rouge">admin.conf</code> has been changed to use an RBAC group for access, which should give it <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights, but in a way that they could be revoked by removing the rights of that group, and then have the <code class="language-plaintext highlighter-rouge">super-admin.conf</code> file still be a member of <code class="language-plaintext highlighter-rouge">system:masters</code> whose rights can’t be revoked by modifying RBAC.</p>
+<p>After a bit of looking I realised that when adding the capability, I’d used the name <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> instead of <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code>, and it had worked fine, weird!</p>
 
-<p>Digging back from this PR, to the referenced issue to get some back-story, I got a slight surprise to find it was <a href="https://github.com/kubernetes/kubeadm/issues/2414">one I’d opened</a> back in 2021 about not using system:masters!</p>
+<h2 id="exploring-whats-going-on">Exploring what’s going on</h2>
 
-<h2 id="what-does-this-mean">What does this mean?</h2>
-
-<p>There’s a couple of practical consequences to consider with this change.</p>
+<p>I decided to put together a couple of quick test cases to understand what’s happening (manifests are <a href="https://github.com/raesene/k8sapecsa">here</a>).</p>
 
 <ul>
-  <li>If you’re tracking permissions on sensitive files, and access to them, where you’re using a <code class="language-plaintext highlighter-rouge">kubeadm</code> based Kubernetes distribution, you will need to update your tracking to include the new <code class="language-plaintext highlighter-rouge">super-admin.conf</code> file.</li>
-  <li>The <code class="language-plaintext highlighter-rouge">super-admin.conf</code> file should <em>not</em> be used for any administrative tasks, instead place it somewhere safe and only use it if RBAC gets completely messed up. <code class="language-plaintext highlighter-rouge">admin.conf</code> isn’t ideal either as it’s a generic account, but at least its permissions can be revoked now!</li>
-  <li>It is now possible to see a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using <code class="language-plaintext highlighter-rouge">admin.conf</code> if RBAC isn’t fully configured, or if the <code class="language-plaintext highlighter-rouge">clusterrolebinding</code> for the <code class="language-plaintext highlighter-rouge">kubeadm:cluster-admins</code> group has been changed.</li>
+  <li><code class="language-plaintext highlighter-rouge">capsysadminpod.yaml</code> - This pod adds <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> to the capabilities list</li>
+  <li><code class="language-plaintext highlighter-rouge">sysadminpod.yaml</code> - This pod adds <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> to the capabilities list</li>
+  <li><code class="language-plaintext highlighter-rouge">dontallowprivesccapsysadminpod.yaml</code> - This has <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> set and adds <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> to the capabilities list</li>
+  <li><code class="language-plaintext highlighter-rouge">dontallowprivescsysadminpod.yaml</code> - This has <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> set and adds <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> to the capabilities list</li>
+  <li><code class="language-plaintext highlighter-rouge">invalidcap.yaml</code> - This pod has an invalid capability (lorem) set.</li>
 </ul>
+
+<p>Trying these manifests out in a <a href="https://kind.sigs.k8s.io/">kind</a> cluster showed a couple of things</p>
+
+<ul>
+  <li>Adding <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> worked but there was no capability added.</li>
+  <li>Adding <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> worked and the capability was added.</li>
+  <li>setting <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> and adding <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> was blocked</li>
+  <li>setting <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> and adding <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> was allowed and the capability was added.</li>
+  <li>setting an invalid capability worked ok but no capability was added.</li>
+</ul>
+
+<p>So a couple of lessons from that. Kubernetes does not check what capabilities you add, and no error is generated if you add an invalid one, it just doesn’t do anything. Also there’s a redundant block in Kubernetes at the moment where something that doesn’t do anything is blocked, but something which does do something is allowed ok…</p>
+
+<p>Doing some more searching on Github turned up some more history on this. Back in 2021, there was a <a href="https://github.com/kubernetes/kubernetes/pull/105237">PR to try and fix this</a> which didn’t get merged, and there’s another <a href="https://github.com/kubernetes/kubernetes/issues/119568">issue from 2023</a> on it as well.</p>
+
+<p>From that one thing that caught my eye was that apparently CRI-O handles this differently that containerd, which I thought was interesting</p>
+
+<h2 id="comparing-cri---with-iximiuz-labs">Comparing CRI - with iximiuz labs</h2>
+
+<p>I wanted to test out this difference in behaviour, but unfortunately I don’t have a CRI-O backed cluster available on my test lab. Fortunately, iximiuz labs has an awesome <a href="https://labs.iximiuz.com/playgrounds/k8s-omni">Kubernetes playground</a> where you can specify various combinations of CRI and CNI to test out different scenarios, which is nice!</p>
+
+<p>Testing out a cluster there with CRI-O confirmed that things are handled rather differently.</p>
+
+<ul>
+  <li>Adding <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> worked and the capability was added.</li>
+  <li>Adding <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> worked and the capability was added.</li>
+  <li>setting <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> and adding <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> was blocked</li>
+  <li>setting <code class="language-plaintext highlighter-rouge">allowPrivilegeEscalation: false</code> and adding <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> was allowed and the capability was added.</li>
+  <li>setting an invalid capability resulted in an error on container creation.</li>
+</ul>
+
+<p>So we can see that CRI-O handles things a bit differently, allowing both <code class="language-plaintext highlighter-rouge">SYS_ADMIN</code> and <code class="language-plaintext highlighter-rouge">CAP_SYS_ADMIN</code> to work and erroring out on invalid capabilities!</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>Another example of why it’s important to keep up to date with changes in Kubernetes, and to understand how your cluster is configured. This change is a good one, as it makes it easier to revoke the rights of the initial credential, but it’s important to understand how it works, and how it might impact your cluster.</p>
+<p>Sometimes we can assume that Kubernetes clusters will work the same way, so we can freely move workloads from one to another, regardless of distribution. This case provides an illustration of one way that that assumption might not hold up, and we can see some surprising results!</p>
 
 	  </div>
 
@@ -221,7 +249,7 @@ Subject
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=When is admin not admin?, when it's super-admin!"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Cap or no cap"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -250,10 +278,10 @@ Subject
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2023/10/29/exploiting-CVE-2023-5044/" title="Exploiting CVE-2023-5044">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/" title="CVE-2025-1767 - Another gitrepo issue">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2024/02/10/adding-open-telemetry-to-container-stacks/" title="Adding Open Telemetry to Container Stacks">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
