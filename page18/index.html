@@ -160,6 +160,82 @@
   <span class="post-date">
     
     May
+    10th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/05/10/some_metasploit/">Some Metasploit and Oracle Notes - Part 1</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Todays fun with Metasploit is exploiting Oracle...  There's lots of good information on this on the <a href="http://carnal0wnage.blogspot.com">Carnal 0wnage</a> blog and the metasploit page for <a href="http://metasploit.com/users/mc/">mc</a>.<br />
+First things first, we'll need the relevant ruby modules (dbi and oci8) installed and working for some of this.<br />
+dbi can be installed using the usual 'sudo gem install dbi' but oci8 has some more prerequisites and steps to get working.  The best thing to do is follow the instructions <a href="http://ruby-oci8.rubyforge.org/en/InstallForInstantClient.html">here </a>.  As a note you'll probably want to add the LD_LIBRARY_PATH to your bash profile to avoid setting it manually every time you want to use it (in Ubuntu this can be done system wide in /etc/bash.bashrc)<br />
+Once you've done that it should be possible to make basic connections to oracle from ruby ok...<br />
+So on to what Metasploit can do for you in a test with Oracle systems..  This walkthrough is heavily based on this video <a href="http://carnal0wnage.blogspot.com/2009/02/attacking-oracle-with-metasploit.html">here</a> from shmoocon this year.<br />
+One set of rough steps for converting "hmm there's an oracle system here" to "w00t I've got admin access to the server" might be</p>
+<ol>
+<li>Discover the version of Oracle Running</li>
+<li>Find out what the SID of the database is</li>
+<li>Get valid credentials to the database</li>
+<li>Escalate those credentials to DBA level access</li>
+<li>Leverage Oracles functionality to get access to the underlying operating system</li>
+<li>...</li>
+<li>Profit!!</li>
+</ol>
+<p>Luckily Metasploit can help us with pretty much all of this....</p>
+<p><b>1. Discover the version of Oracle running on the server</b><br />
+This is very useful as it allows for targeting of exploits (no point in trying use an exploit for something that's been patched on the target).  </p>
+<p>From msfconsole</p>
+<pre>use auxiliary/scanner/oracle/tnslsnr_version </pre>
+<pre>set RHOSTS [your_target_ip_here]
+run </pre>
+<p>from this you should see something like</p>
+<pre>[*] Host 192.168.1.203 is running: Linux: Version 10.2.0.1.0 - Production
+[*] Auxiliary module execution completed
+</pre>
+<p>which tells us we've got 10gR2 on Linux running.</p>
+<p><b>2. Find out what the SID of the database is</b><br />
+In order to connect to the database we're going to need to know what the SID is.  Pre 10GR2 we could just use the metasploit sid_enum module (in auxiliary/scanner/oracle) to find this but after that we'll need to brute-force it.  Not to worry there's a module for that too :)</p>
+<p>As of 3.3-dev 6537 the sid_brute module doesn't appear to be included, but it can be downloaded from <a href="http://metasploit.com/users/mc/oracle/sid_brute.rb">mc's page</a>.  For this module you'll also need a list of common SIDs for Oracle.  One of those can be found on the<a href="http://www.red-database-security.com/scripts/sid.txt"> Red Database Security</a> site.<br />
+so once you've put the sid_brute module in the right place (I used modules/auxiliary/scanner/oracle) and your sid.txt file somewhere (I used the default from the module of data/exploits) you can do the following...</p>
+<pre> use auxiliary/scanner/oracle/sid_brute</pre>
+<pre> set RHOST [your_target_ip_here]</pre>
+<p>and hopefully you'll get some output like</p>
+<pre>[*] Found SID 'ORCL' for host 192.168.1.203.</pre>
+<p>So we've now got the SID of the database, on to usernames and passwords.</p>
+<p><b>3. Get valid credentials to the database</b><br />
+Now Oracle databases are pretty notorious for having a wide range of default usernames and passwords installed on them.  This isn't so true for modern releases but if your're running against older releases, it's well worth checking. </p>
+<p>So to do this we'll need the brute_login metasploit module and a list of usernames and passwords.  The module again can be found on <a href="http://metasploit.com/users/mc/oracle/brute_login.rb">mc's page</a> and the canonical list of Oracle usernames and passwords is on <a href="http://www.petefinnigan.com/default/oracle_default_passwords.csv">Pete Finnigans</a> site.</p>
+<p>Also we'll need to get the oracle mixin at this point from <a href="http://metasploit.com/users/mc/oracle/oracle.rb">here</a> and copy that to lib/msf/core/exploit/ .  Now at this point I was getting a module loading error but reading <a href="http://carnal0wnage.blogspot.com/2008/11/oracle-pwnage-with-metasploit-oracle.html">this</a> and <a href="http://carnal0wnage.blogspot.com/2008/08/metasploit-and-file-format-bugs.html">this</a> led me to the idea of modifying the brute_login.rb file adding</p>
+<pre>require 'msf/core/exploit/oracle'</pre>
+<p>to the top of the file (just under the other requires) to get it all loaded up ok (also found out that a lot of this ground's been covered before but hey :) ! )</p>
+<p>So with those saved in appropriate places (same as last time) we can see what's there</p>
+<pre>use auxiliary/scanner/oracle/brute_login </pre>
+<pre> set RHOST [your_target_ip_here]
+run</pre>
+<p>Now wtih any luck you'll get a file called oracle_success.log popping up in the data/exploits directory which will contain some entries like this</p>
+<pre>Found user/pass of: SCOTT/TIGER on 192.168.1.203...</pre>
+<p>which tells us the creds we need to make a valid connection and move on to the next stage.<br />
+So now we've got a valid account on the database, but it's not got that magic DBA level of privilege<br />
+Next time I'll follow-up on using metasploit to get down the OS</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    May
     7th,
     
     2009
@@ -485,40 +561,6 @@ Well, different security assessment types have different characteristics and pro
 For example, vulnerability assessment is typically primarily tool based (eg, Nessus), focuses on networking/Operating System/maybe database level problems and doesn't usually exploit the vulnerabilities found.  Pretty low risk to the systems under test (usually) but won't provide definite confirmation of problems and typically doesn't look at web applications, so it won't cover all the attack surface of a typical web application exposed over the Internet.<br />
 So if someone calls a vulnerability assessment a penetration test (and this is pretty common, in my experience) there's a good chance that someone's going to be disappointed in the results...<br />
 From the definition I used there's a couple of areas that can be very important to define correctly when conducting a test, so next time, I'm planning to go over some of the common problems and misconceptions in scoping penetration tests.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    10th,
-    
-    2008
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2008/12/10/death_of_pen_te/">Death of Pen Testing?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>http://riskmanagementinsight.com/riskanalysis/?p=532</p>
-<p>Very interesting post over at Riskanalysis.is on penetration testing and what it may turn in to.<br />
-There's some good reasons to do penetration testing in there and I'd agree that targeted testing to prove or disprove theories about the security environment is a smart way to use penetration testing.  My feeling though is that, at the moment, only more mature security organisations will be in a good place to use it in that way.<br />
-For most companies there are other reasons why penetration testing is going to remain on the menu in its current form</p>
-<ul>
-<li> <b>Compliance.</b>  Penetration testing seems to be getting commonly adopted as one of the "bullet points" that need to be completed to comply with industry or government regulations, probably most noticable by PCI</li>
-<li><b>Externally hosted applications.</b>  In situations when a company doesn't have great visibility of an application that they're entrusting valuable data to (eg, most outsourced application hosting setups) they need some way to get comfort that a reasonable level of security is being applied to that application.  Usually that will involve a penetration test, especially if the application is exposed to a hostile envrioment (like the Internet!)</li>
-<p>So whilst I'd definitely like to see smarter use of penetration tests, I don't think that testing as it's used currently is going to go out of fashion any time soon.
-</ul>
 
     
     

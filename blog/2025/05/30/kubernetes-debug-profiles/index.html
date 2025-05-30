@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PCI Compliance for Kubernetes in detail - Part 10 - Patching</title>
+	<title>Kubernetes Debug Profiles</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>PCI Compliance for Kubernetes in detail - Part 10 - Patching </h1>
+  <h1>Kubernetes Debug Profiles </h1>
 </div>
 	
 <article>
@@ -158,53 +158,42 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   December 
-	   3rd,
-	     
-	   2022
+	   May 
+	   30th,
+	   
+	   2025
 	 </span>
 	  <div class="article_body">
-	  <p>This is the tenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at Patching. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>..</p>
+	  <p>I got a lesson today in the idea that it’s always worth re-visiting things you’ve used in the past to see how they’ve changed, as sometimes there will be cool new features!</p>
 
-<p>Whilst patching is a common part of the security landscape, there are a couple of specific considerations when applying it containerized environments.</p>
+<p>In my <a href="https://youtu.be/4L8Dg_QSx30?si=hwH6LcwvXGCOVkhg">Kubernetes Post-Exploitation talk</a> I make use of <code class="language-plaintext highlighter-rouge">kubectl debug</code> as a means to get a root shell on a cluster node. It’s a very handy command but <em>I thought</em> it wasn’t possible to use <code class="language-plaintext highlighter-rouge">ctr</code> commands from inside the shell you get with <code class="language-plaintext highlighter-rouge">kubectl debug</code> and that turns out to be outdated information!</p>
 
-<p>The first one is around patching applications running in containers. As the containers themselves are ephemeral, it’s not advisable to patch running instances. Instead the image that the container is based on needs to be patched, that new image needs to be pushed to a container registry and then new instances of the containers deployed to the Kubernetes cluster.</p>
+<h2 id="whats-the-problem">What’s the problem?</h2>
 
-<p>The second consideration is patching Kubernetes itself. The open source project has a policy to provide patches for the current version and previous two released versions (and then provide patches for up to two months after that initial support period has ended). However, most cluster operators to not use Kubernetes directly, instead they make use of one of the many Kubernetes distributions. The support policy for these distributions will vary, although in general they don’t provide a huge amount of additional support over the base level of support provided by the Kubernetes project itself.</p>
+<p>If you’ve done much with container pentesting or offensive security, you’ll have come across the idea that access to the Docker socket effectively gives root access to the underlying host via <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">The most pointless Docker command ever</a>, and this is true even if you just have a container with that file mounted in.</p>
 
-<p>The recent <a href="https://www.datadoghq.com/container-report/">Datadog container survey</a> noted that quite a lot of clusters are not running on the latest version of Kubernetes, indeed the most deployed version at the time of the survey was 1.21, despite 1.24 being available to install.</p>
+<p>However in modern Kubernetes clusters, it’s likely that the underlying container runtime is <a href="https://containerd.io/">containerd</a> and not Docker. What can be surprising is that the containerd socket works very differently than the Docker one. It assumes that the client program and the containerd server are operating on the same host with the same environment.</p>
 
-<p>The last thing to note about patching Kubernetes environments is the importance of patching the underlying cluster nodes. This can often be overlooked as nodes tend to be a less visible part of the cluster, and often don’t go through the same CI/CD process as containers do. It is especially important that the operating system kernel and CRI components (e.g. Containerd or CRI-O) are patched regularly, as a missing patch could lead to a container breakout. On that note the Datadog survey did note that 30% of cluster nodes using Containerd were running an unsupported version, indicating that this is an area that needs to be addressed.</p>
+<h2 id="old-kubectl-debug">(old) kubectl debug</h2>
 
-<p>In terms of the PCI requirements there’s three in this section.</p>
+<p>This problem shows up when using the “legacy” profile for kubectl debug node (which is the default if you don’t specify one).  Some commands, using the <code class="language-plaintext highlighter-rouge">ctr</code> client will work just fine, so things like pulling new images, however when you try to run a new container you’ll get an error like this</p>
 
-<h2 id="section-101">Section 10.1</h2>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr: failed to unmount /tmp/containerd-mount2094132404: operation not permitted: failed to mount /tmp/containerd-mount2094132404: operation not permitted
+</code></pre></div></div>
 
-<p><strong>Threat</strong> - Outdated container orchestration tool components can be vulnerable to exploits that allow for the compromise of the installed cluster or workloads.</p>
+<h2 id="kubectl-debug-profiles-to-the-rescue">Kubectl debug profiles to the rescue!</h2>
 
-<p><strong>Best Practice</strong> - All container orchestration tools should be supported and receive regular security patches, either from the core project or back-ported by the orchestration system vendor.</p>
+<p>Fortunately Kubernetes SIG-CLI have been improving on the initial kubectl debug command by having a set of profiles that you can specify, which provide different sets of rights on the node you’re debugging. The list of available profiles is “legacy”, “general”, “baseline”, “netadmin”, “restricted” or “sysadmin”, with the default being “legacy”.</p>
 
-<p><strong>Details</strong> - For this requirement, it’s important to find out the support lifecycle of the software in use, there’s a note of some common ones for Kubernetes distributions <a href="https://www.container-security.site/general_information/support_lifecycles.html">here</a>.</p>
+<p>So I decided to try the commands from my demo, but with the <code class="language-plaintext highlighter-rouge">sysadmin</code> profile specified as an option, and it works!</p>
 
-<h2 id="section-102">Section 10.2</h2>
+<p>This is very handy if you’re a sysadmin who wants to interact with the containerd socket as part of your troubleshooting, or if you’re an attacker who’s got access to a host and wants to hide some tools in a containerd container!</p>
 
-<p><strong>Threat</strong> - Vulnerabilities present on container orchestration tool hosts (commonly Linux VMs) will allow for compromise of container orchestration tools and other components.</p>
+<p>There are some details on what each of the profiles sets in terms of security options in this <a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/1441-kubectl-debug#debugging-profiles">KEP</a></p>
 
-<p><strong>Best Practice</strong> - Host operating system of all the nodes that are part of a cluster controlled by a container orchestration tool should be patched and kept up to date. With the ability to reschedule workloads dynamically, each node can be patched one at a time, without a maintenance window.</p>
+<h2 id="conclusion">Conclusion</h2>
 
-<p><strong>Details</strong> - In addition to making sure that operating system patches are applied, it’s important that where a kernel security patch has been applied, the node(s) in question have been rebooted such that the updated kernel is in use (unless hot-patching techniques are being used).</p>
-
-<h2 id="section-103">Section 10.3</h2>
-
-<p><strong>Threat</strong> - As container orchestration tools commonly run as containers in the clusters, any container with vulnerabilities may allow compromise of container orchestration tools.</p>
-
-<p><strong>Best Practice</strong> - All container images used for applications running in the cluster should be regularly scanned for vulnerabilities, patches should be regularly applied, and the patched images redeployed to the cluster.</p>
-
-<p><strong>Details</strong> - Reviewing a cluster for this best practice can be achieved using container scanning tools like <a href="https://github.com/aquasecurity/trivy">Trivy</a> or <a href="https://github.com/anchore/grype">grype</a>.</p>
-
-<h1 id="conclusion">Conclusion</h1>
-
-<p>Like many of the sections of the PCI guidance the topic in question is fairly common good practice, however as we’ve discussed there are a couple of specific considerations when applying it to Kubernetes environments.</p>
+<p>As ever there’s loads of cool new Kubernetes features that come up all the time. I’ve been doing container security things for 9+ years now and I’m still finding interesting things to look at!</p>
 
 	  </div>
 
@@ -231,7 +220,7 @@
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 10 - Patching"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Debug Profiles"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -260,10 +249,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/11/27/PCI-Kubernetes-Section9-Runtime-Security/" title="PCI Compliance for Kubernetes in detail - Part 9 - Runtime Security">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/" title="Cap or no cap">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/12/10/PCI-Kubernetes-Section11-Resource-Management/" title="PCI Compliance for Kubernetes in detail - Part 11 - Resource Management">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

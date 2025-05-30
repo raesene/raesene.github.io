@@ -160,6 +160,33 @@
   <span class="post-date">
     
     January
+    28th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/01/28/security_blogge/">Security Bloggers Network</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Came across this handy feedburner security blog network <a href="http://networks.feedburner.com/Security-Bloggers-Network">here </a><br />
+Some of the blogs I've seen before, but there's a fair quantity of new interesting ones as well which I've been busily adding to <a href="http://www.searchinfosec.com">seachinfosec</a></p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    January
     25th,
     
     2007
@@ -422,35 +449,6 @@ I won't reiterate the arguments in the article, 'cause they do a pretty good job
     <p><a title="" href="http://www.off-by-one.net/misc/cachedump.html"></a><br />
 hmm looks like it's not quite as bad as I thought it was.  After a bit more reading on the subject, the windows cached password is not just an NTLM hash, it's actually a salted hash, with the salt being the username.<br />
 So rainbow tables aren't really a practical attack for this, although it's interesting to note that there's a John the ripper plug-in for cachedump now which enables you to do dictionary based/brute-force attacks on retrieved credentials</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    November
-    29th,
-    
-    2006
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2006/11/29/pwdumpx/">PWDumpX</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Reed Arvin # Security Tools" href="http://reedarvin.thearvins.com/tools.html">Reed Arvin # Security Tools</a><br />
-A listing of some cool looking security tools.  In particular, I think that PWDumpX could be an interesting one.<br />
-I've not had a chance to play with it yet, but it seems to me that the implication of it is that in an enterprise environment, if you have access to a local admin set of credentials (which depending on how your company manages local admin accounts may be pretty easy) or if your domain account has local admin, you could use this tool to dump the domain credentials of any user by running this against the machine that they're logged in to.  Of course, once you've got the credentials you need to decrypt them, but then, that's what rainbow tables are for!<br />
-If it works like that it's actually a pretty sneaky attack, definitely one to test.</p>
 
     
     

@@ -7,6 +7,44 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Kubernetes Debug Profiles</title>
+				<description>&lt;p&gt;I got a lesson today in the idea that it’s always worth re-visiting things you’ve used in the past to see how they’ve changed, as sometimes there will be cool new features!&lt;/p&gt;
+
+&lt;p&gt;In my &lt;a href=&quot;https://youtu.be/4L8Dg_QSx30?si=hwH6LcwvXGCOVkhg&quot;&gt;Kubernetes Post-Exploitation talk&lt;/a&gt; I make use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl debug&lt;/code&gt; as a means to get a root shell on a cluster node. It’s a very handy command but &lt;em&gt;I thought&lt;/em&gt; it wasn’t possible to use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; commands from inside the shell you get with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl debug&lt;/code&gt; and that turns out to be outdated information!&lt;/p&gt;
+
+&lt;h2 id=&quot;whats-the-problem&quot;&gt;What’s the problem?&lt;/h2&gt;
+
+&lt;p&gt;If you’ve done much with container pentesting or offensive security, you’ll have come across the idea that access to the Docker socket effectively gives root access to the underlying host via &lt;a href=&quot;https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/&quot;&gt;The most pointless Docker command ever&lt;/a&gt;, and this is true even if you just have a container with that file mounted in.&lt;/p&gt;
+
+&lt;p&gt;However in modern Kubernetes clusters, it’s likely that the underlying container runtime is &lt;a href=&quot;https://containerd.io/&quot;&gt;containerd&lt;/a&gt; and not Docker. What can be surprising is that the containerd socket works very differently than the Docker one. It assumes that the client program and the containerd server are operating on the same host with the same environment.&lt;/p&gt;
+
+&lt;h2 id=&quot;old-kubectl-debug&quot;&gt;(old) kubectl debug&lt;/h2&gt;
+
+&lt;p&gt;This problem shows up when using the “legacy” profile for kubectl debug node (which is the default if you don’t specify one).  Some commands, using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; client will work just fine, so things like pulling new images, however when you try to run a new container you’ll get an error like this&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr: failed to unmount /tmp/containerd-mount2094132404: operation not permitted: failed to mount /tmp/containerd-mount2094132404: operation not permitted
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;kubectl-debug-profiles-to-the-rescue&quot;&gt;Kubectl debug profiles to the rescue!&lt;/h2&gt;
+
+&lt;p&gt;Fortunately Kubernetes SIG-CLI have been improving on the initial kubectl debug command by having a set of profiles that you can specify, which provide different sets of rights on the node you’re debugging. The list of available profiles is “legacy”, “general”, “baseline”, “netadmin”, “restricted” or “sysadmin”, with the default being “legacy”.&lt;/p&gt;
+
+&lt;p&gt;So I decided to try the commands from my demo, but with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysadmin&lt;/code&gt; profile specified as an option, and it works!&lt;/p&gt;
+
+&lt;p&gt;This is very handy if you’re a sysadmin who wants to interact with the containerd socket as part of your troubleshooting, or if you’re an attacker who’s got access to a host and wants to hide some tools in a containerd container!&lt;/p&gt;
+
+&lt;p&gt;There are some details on what each of the profiles sets in terms of security options in this &lt;a href=&quot;https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/1441-kubectl-debug#debugging-profiles&quot;&gt;KEP&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;As ever there’s loads of cool new Kubernetes features that come up all the time. I’ve been doing container security things for 9+ years now and I’m still finding interesting things to look at!&lt;/p&gt;
+</description>
+				<pubDate>Fri, 30 May 2025 18:00:00 +0200</pubDate>
+				<link>https://raesene.github.io/blog/2025/05/30/kubernetes-debug-profiles/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2025/05/30/kubernetes-debug-profiles/</guid>
+			</item>
+		
+			<item>
 				<title>Cap or no cap</title>
 				<description>&lt;p&gt;I was looking at a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/131336&quot;&gt;Kubernetes issue&lt;/a&gt; the other day and it led me down a kind of interesting rabbit hole, so I thought it’d be worth sharing as I learned a couple of things.&lt;/p&gt;
 
@@ -68,7 +106,7 @@
 
 &lt;p&gt;Sometimes we can assume that Kubernetes clusters will work the same way, so we can freely move workloads from one to another, regardless of distribution. This case provides an illustration of one way that that assumption might not hold up, and we can see some surprising results!&lt;/p&gt;
 </description>
-				<pubDate>Wed, 23 Apr 2025 11:00:00 +0100</pubDate>
+				<pubDate>Wed, 23 Apr 2025 12:00:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</guid>
 			</item>
@@ -147,7 +185,7 @@
 
 &lt;p&gt;Whilst this is a bit of a situational vulnerability, it’s an interesting illustration of how some less well known components of Kubernetes can affect its security.&lt;/p&gt;
 </description>
-				<pubDate>Fri, 14 Mar 2025 10:00:00 +0000</pubDate>
+				<pubDate>Fri, 14 Mar 2025 11:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</guid>
 			</item>
@@ -354,7 +392,7 @@ Request Headers:
 
 &lt;p&gt;If you’re a cluster operator it’s important to be very careful with who you provide proxy rights to, and if you’re considering creating a managed Kubernetes service where you don’t want cluster owners to have access to the control plane, you’re going to need to be very careful with network firewalling and ensuring that the proxy doesn’t let them get to areas that should be restricted!&lt;/p&gt;
 </description>
-				<pubDate>Sat, 18 Jan 2025 10:00:00 +0000</pubDate>
+				<pubDate>Sat, 18 Jan 2025 11:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</guid>
 			</item>
@@ -402,7 +440,7 @@ exit
 
 &lt;p&gt;Kubernetes RBAC has some tricky areas where the behaviour you get might not be exactly what you expect, and sometimes as in this case, those unexpected behaviours are not very apparent!&lt;/p&gt;
 </description>
-				<pubDate>Mon, 11 Nov 2024 12:00:00 +0000</pubDate>
+				<pubDate>Mon, 11 Nov 2024 13:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</guid>
 			</item>
@@ -489,7 +527,7 @@ exit
 
 &lt;p&gt;This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend &lt;a href=&quot;https://www.tkng.io/&quot;&gt;The Kubernetes Networking Guide&lt;/a&gt; which has a lot of information on this topic and others.&lt;/p&gt;
 </description>
-				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
+				<pubDate>Thu, 07 Nov 2024 13:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
 			</item>
@@ -557,7 +595,7 @@ num   pkts bytes target     prot opt in     out     source               destina
 &lt;p&gt;The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.&lt;/p&gt;
 
 </description>
-				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
+				<pubDate>Fri, 01 Nov 2024 09:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
 			</item>
@@ -630,7 +668,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!&lt;/p&gt;
 </description>
-				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
+				<pubDate>Wed, 10 Jul 2024 19:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
 			</item>
@@ -688,7 +726,7 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 
 &lt;p&gt;Kubernetes profiling is another interesting part of the API which can be relevant for security. For production clusters, it’s an unusual choice to have it enabled by default, and probably something that should just be disabled, unless you explicitly need it.&lt;/p&gt;
 </description>
-				<pubDate>Tue, 18 Jun 2024 12:27:00 +0100</pubDate>
+				<pubDate>Tue, 18 Jun 2024 13:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</guid>
 			</item>
@@ -819,95 +857,9 @@ kubernetes_feature_enabled{name=&quot;CPUManagerPolicyAlphaOptions&quot;,stage=&
 
 &lt;p&gt;This was just a quick note with a look at the kube-proxy API. Of the APIs that Kubernetes presents, it’s probably not the most interesting from a security perspective, but still has some interesting information disclosure and the choice to not provide authentication does make it an interesting target for reconnaissance.&lt;/p&gt;
 </description>
-				<pubDate>Sun, 16 Jun 2024 12:27:00 +0100</pubDate>
+				<pubDate>Sun, 16 Jun 2024 13:27:00 +0200</pubDate>
 				<link>https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/</guid>
-			</item>
-		
-			<item>
-				<title>Fun with Kubernetes Authorization Auditing - multiple authz plugins</title>
-				<description>&lt;p&gt;One of the features of Kubernetes security, is its flexible model. This allows cluster operators to have multiple Authentication or Authorization modes running covering a number of use cases. This does introduce some complexity though both in terms of operation and also in terms of reviewing or auditing rights.&lt;/p&gt;
-
-&lt;p&gt;The most common case here is cloud managed Kubernetes where, in addition to the in-built RBAC authorization, you’ll often find that there’s a webhook authorization mode enabled as well to allow for integration with the cloud provider’s IAM system.&lt;/p&gt;
-
-&lt;h2 id=&quot;multiple-authorizer-process&quot;&gt;Multiple authorizer process&lt;/h2&gt;
-
-&lt;p&gt;(Updated with information from &lt;a href=&quot;https://x.com/therealpires/status/1782729861951332712&quot;&gt;@pires&lt;/a&gt;)&lt;/p&gt;
-
-&lt;p&gt;In principle the way that Kubernetes authorization works is that every configured authorizer is queried in series (with the order based on the order of the parameters provided to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;authorization-mode&lt;/code&gt; flag on the API server) to see if a given action is explicitly allowed or explicitly denied. If an authorizer doesn’t match with either an explicit allow or an explicit deny, the next configured authorizer is queried. So the effective rights will be based on the responses from one or more configured authorizers.&lt;/p&gt;
-
-&lt;p&gt;There’s a couple of fun nuances of doing this, so I thought it was worth some discussion :)&lt;/p&gt;
-
-&lt;h2 id=&quot;auditing-permissions-in-kubernetes&quot;&gt;Auditing permissions in Kubernetes&lt;/h2&gt;
-
-&lt;p&gt;I’ve covered some details of this &lt;a href=&quot;https://raesene.github.io/blog/2022/08/14/auditing-rbac-redux/&quot;&gt;before&lt;/a&gt;, so we’ll just look at the specific aspects of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i&lt;/code&gt; as a mechanism for reviewing permissions. This command has two ways of being used the first allows for specific questions to be asked like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i get pods&lt;/code&gt; and the second which lists all the permissions of the user &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt; . So knowing this lets see what happens if we use this in a cluster with multiple authorization mechanisms setup.&lt;/p&gt;
-
-&lt;h2 id=&quot;setting-up-a-webhook-authorizer&quot;&gt;Setting up a webhook authorizer&lt;/h2&gt;
-
-&lt;p&gt;For the purposes of this article I just wanted the most simplistic implementation of a webhook authorizer, so I put one together (with some help from an LLM). The code is &lt;a href=&quot;https://github.com/raesene/k8ssimpleauthzwebhook&quot;&gt;here&lt;/a&gt;, it’s basic but should help explain things.&lt;/p&gt;
-
-&lt;h2 id=&quot;auditing-permissions-with-two-authorizers&quot;&gt;Auditing permissions with two authorizers&lt;/h2&gt;
-
-&lt;p&gt;Once we have a cluster setup using this code, we can test things out. first I created a user called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt; , using &lt;a href=&quot;https://github.com/raesene/teisteanas&quot;&gt;teisteanas&lt;/a&gt;. With the user setup, I can use kubectl to get a list of all Jane’s permissions&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl --kubeconfig=jane.kubeconfig auth can-i --list
-Warning: the list may be incomplete: webhook authorizer does not support user rule resolution
-Resources                                       Non-Resource URLs   Resource Names   Verbs
-selfsubjectreviews.authentication.k8s.io        []                  []               [create]
-selfsubjectaccessreviews.authorization.k8s.io   []                  []               [create]
-selfsubjectrulesreviews.authorization.k8s.io    []                  []               [create]
-                                                [/api/*]            []               [get]
-                                                [/api]              []               [get]
-                                                [/apis/*]           []               [get]
-                                                [/apis]             []               [get]
-                                                [/healthz]          []               [get]
-                                                [/healthz]          []               [get]
-                                                [/livez]            []               [get]
-                                                [/livez]            []               [get]
-                                                [/openapi/*]        []               [get]
-                                                [/openapi]          []               [get]
-                                                [/readyz]           []               [get]
-                                                [/readyz]           []               [get]
-                                                [/version/]         []               [get]
-                                                [/version/]         []               [get]
-                                                [/version]          []               [get]
-                                                [/version]          []               [get]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;These permissions are the base ones assigned to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:authenticated&lt;/code&gt; group, as I’ve not made any specific rights assignments to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt;. Note there’s a &lt;em&gt;Warning&lt;/em&gt; at the top which lets us know that webhook authorization is not covered here. This is kind of important, because it means that if we’re auditing permissions on a cluster, we can’t rely on the output of this command to include all of a users rights.&lt;/p&gt;
-
-&lt;p&gt;Next up, let’s try something different, we’ll ask &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jane&lt;/code&gt; can get pods.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; kubectl --kubeconfig=jane.kubeconfig auth can-i get pods
-yes
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and if we look in the webhook’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rights.txt&lt;/code&gt; file we can see that’s one of the rights assigned via the webhook.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;jane:get:pods:default
-jane:list:pods:default
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;So that’s interesting, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;auth can-i&lt;/code&gt; was able to reference permissions granted via the webhook where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;auth can-i --list&lt;/code&gt; was not. Why is that? Well (after getting some more information from &lt;a href=&quot;https://kubernetes.slack.com/archives/C0EN96KUY/p1713697390343119&quot;&gt;SIG-Auth&lt;/a&gt;) I think it works like this.&lt;/p&gt;
-
-&lt;p&gt;Basically this difference comes down to whether the Authorization provider implements methods to support listing permissions. RBAC, ABAC and the AlwaysAllow modes of authorization are the only ones to support it, the WebhookAuthorizer does not, so rights granted via that mechanism won’t show up in the results of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl auth can-i --list&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Also, as mentioned in the introduction, admission control can also cause requests to be rejected if they are part of the groups of requests sent to admission control (so any requests which create, update, or delete resources), so even if all authorizers were able to tell you the available permissions that’s not a full picture.&lt;/p&gt;
-
-&lt;h2 id=&quot;so-how-do-i-audit-kubernetes-permissions&quot;&gt;So how do I audit Kubernetes permissions?&lt;/h2&gt;
-
-&lt;p&gt;All this leads to the question of how you audit permissions in Kubernetes clusters with multiple authorizers. The answer here is that the only way to effectively do it is to review each authorization system that’s in place in the cluster, and look at the permissions granted in each one.&lt;/p&gt;
-
-&lt;p&gt;This does mean you should be very careful when using automated tooling which audits Kubernetes permissions. In most cases it’s quite likely it will only support RBAC, and won’t provide any information about rights granted in other authorization systems.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;It’s fair to say that the flexibility provided in Kubernetes security model does lead to some complexity, which you need to be aware of when operating or reviewing clusters. In this case it’s important to be aware of the limitations of in-built tooling and realise when it’s necessary to carry out additional manual reviews.&lt;/p&gt;
-
-</description>
-				<pubDate>Mon, 22 Apr 2024 11:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/04/22/Fun-with-Kubernetes-Authz/</guid>
 			</item>
 		
 	</channel>
