@@ -203,6 +203,14 @@ Blocked Syscalls <span class="o">(</span>54<span class="o">)</span>:
 
 <p>After all that it looks like this largely works. As the original repository seems unmaintained, I’ve put a fork <a href="https://github.com/raesene/amicontained">here</a> with the updated code.</p>
 
+<h2 id="results">Results</h2>
+
+<p>Using the updated code in a Docker container we can see that the number of blocked syscalls has increased from 54 to 68, including the IO_URING ones that started this!</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Blocked Syscalls <span class="o">(</span>68<span class="o">)</span>:
+        SYSLOG SETSID USELIB USTAT SYSFS VHANGUP PIVOT_ROOT _SYSCTL ACCT SETTIMEOFDAY MOUNT UMOUNT2 SWAPON SWAPOFF REBOOT SETHOSTNAME SETDOMAINNAME IOPL IOPERM CREATE_MODULE INIT_MODULE DELETE_MODULE GET_KERNEL_SYMS QUERY_MODULE QUOTACTL NFSSERVCTL GETPMSG PUTPMSG AFS_SYSCALL TUXCALL SECURITY LOOKUP_DCOOKIE CLOCK_SETTIME VSERVER MBIND SET_MEMPOLICY GET_MEMPOLICY KEXEC_LOAD ADD_KEY REQUEST_KEY KEYCTL MIGRATE_PAGES UNSHARE MOVE_PAGES PERF_EVENT_OPEN FANOTIFY_INIT OPEN_BY_HANDLE_AT SETNS KCMP FINIT_MODULE KEXEC_FILE_LOAD BPF USERFAULTFD IO_URING_SETUP IO_URING_ENTER IO_URING_REGISTER OPEN_TREE MOVE_MOUNT FSOPEN FSCONFIG FSMOUNT FSPICK PIDFD_GETFD PROCESS_MADVISE MOUNT_SETATTR QUOTACTL_FD LANDLOCK_RESTRICT_SELF SET_MEMPOLICY_HOME_NODE
+</code></pre></div></div>
+
 <h2 id="conclusion">Conclusion</h2>
 
 <p>This one was interesting for a number of reasons. First up was a good reminder that you can’t rely on tools always working the way they used to, as the underlying systems change. The second one was that I learned quite a bit about the limitations of closed box testing of syscalls, and also as a side lesson, the current limitations of LLMs when dealing with relatively obscure lower level tech.</p>
