@@ -160,6 +160,34 @@
   <span class="post-date">
     
     December
+    31st,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/12/31/_and_were_back/">... And we're back</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So, we're back from a bit of an unscheduled break for my web server.  The hosting company had a bit of a problem with disks, so my VM has been out of action for a week or so.<br />
+Luckily, my backups worked pretty well so minimal content lost.  I'm using the rather unorthodox backup over SMTP, which seems to work pretty well for smaller files.  I knocked up a ruby class called <a href="http://wiki.mccune.org.uk/index.php/Ruby_Backup_Class">Rbackup</a> and just have a script running in cron nightly...<br />
+Actually had a trio of hardware failures over the festive period (2 hard disks and a graphics card), which just goes to show that checking backups (and restores!) is very important and not to be put off...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
     20th,
     
     2009
@@ -430,53 +458,6 @@ Especially note the requirements for specific versions of the dbi and oci8 gems,
     
     <p>All the Scotland on Rails videos are now online <a href="http://www.engineyard.com/community/scotland-on-rails/">here</a> courtesy of the nice folks at Engine Yard.<br />
 The video for my presentation is <a href="http://scotland-on-rails.s3.amazonaws.com/2B07_RoryMcCune-SOR.mp4">here</a> , slides are on slideshare over <a href="http://www.slideshare.net/raesene/web-appliction-security-scotland-on-rails-presentation">here</a></p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    12th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/05/12/some_metasploit_1/">Raesene's Ramblings</a>
-  </h2>
-
-  <div>
-    
-    
-    ---
-layout: post
-title: Some Metasploit and Oracle Notes - Part 2
-date: 2009-05-12 20:41:55.000000000 +01:00
-categories:
-- Metasploit
-- Penetration Testing
-tags: []
-status: publish
-type: post
-published: true
----<br />
-SCOTT                          CONNECT                     NO  YES NO<br />
-<b>SCOTT                          DBA                               NO  YES NO</b><br />
-SCOTT                          RESOURCE                   NO  YES NO<br />
-</i><br />
-It's worth noting that some of these Oracle modules (there's 9 in the current Metasploit svn versions) have required privilege levels (dbms_cdc_publish for example in a vanilla 10GR2 setup needs EXECUTE_CATALOG_ROLE to run which only SYS and users with the DBA role have...), so it's worth trying out several to fit different scenarios...<br />
-So here we are with DBA, which to be honest for a lot attackers is all that's needed.  The data in the database is likely to be the "crown jewels" which the attackers looking for, but hey we can go further with the wonders of Metasploit and execute code on the underlying operating system...</p>
-<p><b>5. Leverage Oracles functionality to get access to the underlying operating system</b><br />
-So at the moment I don't see a metasploit option for doing this in *nix (there's a win32 command execution module on <a href="http://www.metasploit.com/users/mc/oracle/win32exec.rb">mc's </a>page), however that's not a serious problem as it turns out the nice guys at Oracle provide ways to do this easily.</p>
-<p>A quick google around revealed <a href="http://www.oracle.com/technology/tech/java/jsp/pdf/calling_shell_commands_from_plsql_1.1.pdf">this paper</a> from Oracle on command execution from a database user and from my running of it, it works fine (although requires creation of new database objects so best suited to an environment that can be rolled back easily...).<br />
-So there you go, from nothing to OS access in 5 easy steps, courtesy of Metasploit...</p>
 
     
     

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Kubernetes Debug Profiles</title>
+	<title>Am I Still Contained</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Kubernetes Debug Profiles </h1>
+  <h1>Am I Still Contained </h1>
 </div>
 	
 <article>
@@ -158,42 +158,54 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   May 
-	   30th,
+	   June 
+	   9th,
 	   
 	   2025
 	 </span>
 	  <div class="article_body">
-	  <p>I got a lesson today in the idea that it’s always worth re-visiting things you’ve used in the past to see how they’ve changed, as sometimes there will be cool new features!</p>
+	  <p>This exploration started, as many do, with “huh that’s odd”. Specifically I was looking at the output of <a href="https://github.com/genuinetools/amicontained">amicontained</a> around filtered syscalls.</p>
 
-<p>In my <a href="https://youtu.be/4L8Dg_QSx30?si=hwH6LcwvXGCOVkhg">Kubernetes Post-Exploitation talk</a> I make use of <code class="language-plaintext highlighter-rouge">kubectl debug</code> as a means to get a root shell on a cluster node. It’s a very handy command but <em>I thought</em> it wasn’t possible to use <code class="language-plaintext highlighter-rouge">ctr</code> commands from inside the shell you get with <code class="language-plaintext highlighter-rouge">kubectl debug</code> and that turns out to be outdated information!</p>
-
-<h2 id="whats-the-problem">What’s the problem?</h2>
-
-<p>If you’ve done much with container pentesting or offensive security, you’ll have come across the idea that access to the Docker socket effectively gives root access to the underlying host via <a href="https://zwischenzugs.com/2015/06/24/the-most-pointless-docker-command-ever/">The most pointless Docker command ever</a>, and this is true even if you just have a container with that file mounted in.</p>
-
-<p>However in modern Kubernetes clusters, it’s likely that the underlying container runtime is <a href="https://containerd.io/">containerd</a> and not Docker. What can be surprising is that the containerd socket works very differently than the Docker one. It assumes that the client program and the containerd server are operating on the same host with the same environment.</p>
-
-<h2 id="old-kubectl-debug">(old) kubectl debug</h2>
-
-<p>This problem shows up when using the “legacy” profile for kubectl debug node (which is the default if you don’t specify one).  Some commands, using the <code class="language-plaintext highlighter-rouge">ctr</code> client will work just fine, so things like pulling new images, however when you try to run a new container you’ll get an error like this</p>
-
-<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr: failed to unmount /tmp/containerd-mount2094132404: operation not permitted: failed to mount /tmp/containerd-mount2094132404: operation not permitted
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Seccomp: filtering
+Blocked Syscalls <span class="o">(</span>54<span class="o">)</span>:
+        MSGRCV SYSLOG SETSID USELIB USTAT SYSFS VHANGUP PIVOT_ROOT _SYSCTL ACCT SETTIMEOFDAY MOUNT UMOUNT2 SWAPON SWAPOFF REBOOT SETHOSTNAME SETDOMAINNAME IOPL IOPERM CREATE_MODULE INIT_MODULE DELETE_MODULE GET_KERNEL_SYMS QUERY_MODULE QUOTACTL NFSSERVCTL GETPMSG PUTPMSG AFS_SYSCALL TUXCALL SECURITY LOOKUP_DCOOKIE CLOCK_SETTIME VSERVER MBIND SET_MEMPOLICY GET_MEMPOLICY KEXEC_LOAD ADD_KEY REQUEST_KEY KEYCTL MIGRATE_PAGES UNSHARE MOVE_PAGES PERF_EVENT_OPEN FANOTIFY_INIT OPEN_BY_HANDLE_AT SETNS KCMP FINIT_MODULE KEXEC_FILE_LOAD BPF USERFAULTFD
 </code></pre></div></div>
 
-<h2 id="kubectl-debug-profiles-to-the-rescue">Kubectl debug profiles to the rescue!</h2>
+<p>Looking at the SYSCALLS that were listed as blocked, I noticed that there wasn’t any mention of IO_URING but I know that Docker <a href="https://github.com/moby/moby/pull/46762">blocks io_uring syscalls in the default profile</a>, so what’s going on?</p>
 
-<p>Fortunately Kubernetes SIG-CLI have been improving on the initial kubectl debug command by having a set of profiles that you can specify, which provide different sets of rights on the node you’re debugging. The list of available profiles is “legacy”, “general”, “baseline”, “netadmin”, “restricted” or “sysadmin”, with the default being “legacy”.</p>
+<h2 id="looking-at-the-source-code">Looking at the source code</h2>
 
-<p>So I decided to try the commands from my demo, but with the <code class="language-plaintext highlighter-rouge">sysadmin</code> profile specified as an option, and it works!</p>
+<p>I decided to take a look at the source code to see what was going on and why it might not be working. In the <a href="https://github.com/genuinetools/amicontained/blob/568b0d35e60cb2bfc228ecade8b0ba62c49a906a/main.go#L187">seccompIter function</a> I found what looks like a relevant point. A for loop that iterates over each syscall one at a time.</p>
 
-<p>This is very handy if you’re a sysadmin who wants to interact with the containerd socket as part of your troubleshooting, or if you’re an attacker who’s got access to a host and wants to hide some tools in a containerd container!</p>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="n">id</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">id</span> <span class="o">&lt;=</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_RSEQ</span><span class="p">;</span> <span class="n">id</span><span class="o">++</span> 
+</code></pre></div></div>
 
-<p>There are some details on what each of the profiles sets in terms of security options in this <a href="https://github.com/kubernetes/enhancements/tree/master/keps/sig-cli/1441-kubectl-debug#debugging-profiles">KEP</a></p>
+<p>The end point for the loop was a syscall called <code class="language-plaintext highlighter-rouge">SYS_RSEQ</code> and thanks to a very helpful lookup table <a href="https://filippo.io/linux-syscall-table/">here</a> I could see that that’s syscall <code class="language-plaintext highlighter-rouge">334</code>, and the IO_URING syscalls are 425-427, so we can see why they’re not being flagged, the loop doesn’t go that high!</p>
+
+<h2 id="fixing-the-problem">Fixing the problem</h2>
+
+<p>Whilst I’m not a professional developer by any stretch of the imagination (&lt;GEEK REFERENCE&gt; I’d liken myself to a rogue with the use magic device skill trying to get a wand of fireballs working by hitting the end of it &lt;/GEEK REFERENCE&gt;), I decided to take a stab at fixing the code to get it to include the IO_URING syscalls (and any other ones with higher numbers).</p>
+
+<p>We could just increase the maximum number on the for loop, but that does run into a problem, which is that there’s a weird gap in the syscall numbers between 334 and 424. It appears that this was done to <a href="https://stackoverflow.com/a/63713244/537897">sync up syscall numbers in different processor architectures</a>, so we can just add a section to the code to skip those blank numbers.</p>
+
+<p>The next tricky part is, it turns out making syscalls directly can sometimes cause the process to exit or hang. The original code has a number of <a href="https://github.com/genuinetools/amicontained/blob/568b0d35e60cb2bfc228ecade8b0ba62c49a906a/main.go#L190">blocks designed to skip tricky syscalls</a></p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code>		<span class="c">// these cause a hang, so just skip</span>
+		<span class="c">// rt_sigreturn, select, pause, pselect6, ppoll</span>
+		<span class="k">if</span> <span class="n">id</span> <span class="o">==</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_RT_SIGRETURN</span> <span class="o">||</span> <span class="n">id</span> <span class="o">==</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_SELECT</span> <span class="o">||</span> <span class="n">id</span> <span class="o">==</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_PAUSE</span> <span class="o">||</span> <span class="n">id</span> <span class="o">==</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_PSELECT6</span> <span class="o">||</span> <span class="n">id</span> <span class="o">==</span> <span class="n">unix</span><span class="o">.</span><span class="n">SYS_PPOLL</span> <span class="p">{</span>
+			<span class="k">continue</span>
+		<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here the approach ended up being a bit trial and error on what syscalls caused problems. Also an interesting aside is that this shows a limitation of this approach to enumerating syscalls, it’s not possible to get a definitive list as you can’t probe for every possible syscall!</p>
+
+<p>With that largely working, it was just a question of extending the really long <a href="https://github.com/genuinetools/amicontained/blob/568b0d35e60cb2bfc228ecade8b0ba62c49a906a/main.go#L243">syscallName</a> function that has a case statement giving names for every syscall. This was also the only part of this that LLMs could help with (they got the main problem wildly wrong), and even here they only got most of it right.</p>
+
+<p>After all that it looks like this largely works. As the original repository seems unmaintained, I’ve put a fork <a href="https://github.com/raesene/amicontained">her</a> with the updated code.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>As ever there’s loads of cool new Kubernetes features that come up all the time. I’ve been doing container security things for 9+ years now and I’m still finding interesting things to look at!</p>
+<p>This one was interesting for a number of reasons. First up was a good reminder that you can’t rely on tools always working the way they used to, as the underlying systems change. The second one was that I learned quite a bit about the limitations of closed box testing of syscalls, and also as a side lesson, the current limitations of LLMs when dealing with relatively obscure lower level tech.</p>
 
 	  </div>
 
@@ -203,8 +215,8 @@
 		  
 		  
 			 
-				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(65)</span>
+				<li><a href="https://raesene.github.io/categories/index.html#seccomp-ref">
+					seccomp <span>(1)</span>
 					
 				</a></li>
 			
@@ -220,7 +232,7 @@
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Kubernetes Debug Profiles"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Am I Still Contained"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -249,10 +261,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/" title="Cap or no cap">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2025/05/30/kubernetes-debug-profiles/" title="Kubernetes Debug Profiles">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2025/06/09/am-i-still-contained/" title="Am I Still Contained">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
