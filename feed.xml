@@ -7,6 +7,39 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Bitnami Deprecation</title>
+				<description>&lt;p&gt;One constant of modern development environments is the ever increasing number of dependencies, and the problems that come when they get disrupted. Next week there could be a serious disruption in the container image ecosystem as a provider of popular images and helm charts changes their availability and tags.&lt;/p&gt;
+
+&lt;h2 id=&quot;whats-happening&quot;&gt;What’s Happening?&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/bitnami/charts/issues/35164&quot;&gt;This Github issue&lt;/a&gt; has most of the details, but it’s a little hard to work out the exact impact from it. The TL;DR. is that Bitnami are moving from freely available images under the Docker Hub Username &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bitnami&lt;/code&gt; to a split of commercially maintained images under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bitnamisecure&lt;/code&gt; and unmaintained legacy images under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bitnamilegacy&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The exact timing is unclear as the issue mentions &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gradually move existing ones&lt;/code&gt; to the legacy repository, however the impact is going to start in a week’s time starting August 28th 2025, so it’s clear that organizations using these images will need to take action sooner rather than later.&lt;/p&gt;
+
+&lt;h2 id=&quot;so-whats-the-impact&quot;&gt;So what’s the impact?&lt;/h2&gt;
+
+&lt;p&gt;Well if you’re either directly using images from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bitnami&lt;/code&gt;, Helm charts that reference those images, or images that are built off those base images, you need to start using different images pretty quickly or you might find deploys or image builds failing.&lt;/p&gt;
+
+&lt;h2 id=&quot;how-big-of-a-problem-is-this&quot;&gt;How big of a problem is this?&lt;/h2&gt;
+
+&lt;p&gt;After reading this, I thought it could be worth looking at how many pulls these images are getting. Luckily Docker Hub provides pull statistics via their API, so by looking at changes over time we can get a reasonable idea of how many people are going to be affected.&lt;/p&gt;
+
+&lt;p&gt;Looking at pull statistics for popular bitnami images over the course of 6 days we can see that the most popular image &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; got 1.86M pulls in that time period, and a large number of images have had over 100K pulls in that time, so it seems like these images are pretty heavily used.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/bitnami-stats.png&quot; alt=&quot;bitnami stats&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I’ve long said that, when using container images in production, it’s vitally important that you build and maintain all of your own images, or if you want have some kind of commercial maintenance agreement for them. Relying on freely provided externally managed images is a recipe for problems down the line.&lt;/p&gt;
+
+&lt;p&gt;For now though, the critical point is that everyone using Bitnami images, needs to go an review all their usage and make a fairly rapid plan to address the risk of them breaking in the near future.&lt;/p&gt;
+</description>
+				<pubDate>Thu, 21 Aug 2025 12:30:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2025/08/21/bitnami-deprecation/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2025/08/21/bitnami-deprecation/</guid>
+			</item>
+		
+			<item>
 				<title>Am I Still Contained?</title>
 				<description>&lt;p&gt;This exploration started, as many do, with “huh that’s odd”. Specifically I was looking at the output of &lt;a href=&quot;https://github.com/genuinetools/amicontained&quot;&gt;amicontained&lt;/a&gt; around filtered syscalls.&lt;/p&gt;
 
@@ -729,64 +762,6 @@ ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=r
 				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
-			</item>
-		
-			<item>
-				<title>Taking a look at Kubernetes Profiling</title>
-				<description>&lt;p&gt;Debugging facilities can always be interesting for attackers, and in general for security, so I decided to take a look at Kubernetes support for Profiling, and where it could be a risk to cluster security. We’ll start with a little bit of background info.&lt;/p&gt;
-
-&lt;h2 id=&quot;golang-profiling&quot;&gt;Golang profiling&lt;/h2&gt;
-
-&lt;p&gt;Google provides a library called &lt;a href=&quot;https://github.com/google/pprof&quot;&gt;pprof&lt;/a&gt; that can be embedded in Golang applications to expose profiling information for debugging applications. This allows programs to expose the profiling information via a web server and also provides tools that can visualise and analyse that information.&lt;/p&gt;
-
-&lt;p&gt;If you have a program which exposes the pprof information you can then connect to it and start a program to analyse the exposed information. For example if we want to connect to a profiling service at  &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;http://localhost:8001/debug/pprof/profile&lt;/code&gt;, we’d run&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;go tool pprof &lt;span class=&quot;nt&quot;&gt;-http&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;:8080 http://localhost:8001/debug/pprof/profile
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and it would give us something like this :-&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/pprof-web.png&quot; alt=&quot;pprof web&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;From there we can get performance flame graphs and other useful debugging information.&lt;/p&gt;
-
-&lt;h2 id=&quot;kubernetes-and-profiling&quot;&gt;Kubernetes and profiling&lt;/h2&gt;
-
-&lt;p&gt;Where this becomes interesting for Kubernetes is that, by default, Kubernetes enables profiling in the API server, scheduler, controller-manager, and Kubelet. Kube-proxy is the odd one out here, I’m not entirely sure why but one guess would be that as the kube-proxy API doesn’t support authentication (more on that &lt;a href=&quot;https://raesene.github.io/blog/2024/06/16/Taking-A-Look-At-The-Kube-Proxy-API/&quot;&gt;here&lt;/a&gt;) it wasn’t considered safe to add this functionality to it.&lt;/p&gt;
-
-&lt;p&gt;So for each of the APIs that Kubernetes presents you can access the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/debug/pprof/profile&lt;/code&gt; endpoint to get access to this profiling information (and some other functionality discussed in the next section).&lt;/p&gt;
-
-&lt;p&gt;Access to this information is not available without credentials and you’ll need access to this path via whatever authorization system(s) you’ve got configured in your clusters. For Kubernetes RBAC, access for kube-apiserver, kube-controller-manager, and kube-scheduler is managed via non-resource endpoints, so typically you’d need to explicitly grant access to that (or be a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; of course).&lt;/p&gt;
-
-&lt;p&gt;For the Kubelet, somewhat confusingly, it’s gated under the catch-all access of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node/proxy&lt;/code&gt;, so any users with rights to that resource in your cluster will be able to get access to the profiling information.&lt;/p&gt;
-
-&lt;h2 id=&quot;dynamic-log-level-changing&quot;&gt;Dynamic log level changing&lt;/h2&gt;
-
-&lt;p&gt;There’s also another piece of functionality which is associated with Kubernetes use of profiling, which is the ability to dynamically change the log level of the service remotely. Anyone with access to the profiling endpoints can issue a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PUT&lt;/code&gt; request to change the servers log level. So for example if you’ve got a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl proxy&lt;/code&gt; running to your cluster on port &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8001&lt;/code&gt;, this command would change the API server’s log level to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10&lt;/code&gt; which is the DEBUG level.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl &lt;span class=&quot;nt&quot;&gt;-X&lt;/span&gt; PUT http://127.0.0.1:8001/debug/flags/v &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;10&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;h2 id=&quot;is-this-really-a-risk&quot;&gt;Is this really a risk?&lt;/h2&gt;
-
-&lt;p&gt;So of course the question is, is any of this actually a risk from a security standpoint and, like most things in security, the answer is “it depends”. As the profiling information is gated behind authentication and authorization not just anyone can get access, however there are some scenarios where this is a specific risk.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Managed Kubernetes&lt;/strong&gt;. For managed clusters, users who have admin level access to cluster resources are still meant to be restricted from directly accessing the control plane which is managed by the provider. So any managed Kubernetes providers who haven’t disabled this on their cluster are at risk of attackers accessing the information. One of the more interesting scenarios where this is relevant, is if the cluster operators can see the Kubernetes API server logs, as it could allow them to exploit &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/104720&quot;&gt;CVE-2020-8561&lt;/a&gt;, and start using malicious webhooks to probe the providers network more effectively.&lt;/p&gt;
-
-&lt;p&gt;Additionally there’s a denial of service risk here for managed providers in that you can do things like start application traces which use control plane node resources. Also it’s &lt;em&gt;possible&lt;/em&gt; that sensitive information could be included in traces, although I’ve not seen any direct evidence of that in the looking around I’ve done so far.&lt;/p&gt;
-
-&lt;p&gt;For other clusters, there’s possibly some risk in that users with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node/proxy&lt;/code&gt; rights can increase the Kubelet’s log level and access that information, but that’s probably a bit more situational.&lt;/p&gt;
-
-&lt;h2 id=&quot;how-do-i-disable-profiling-in-kubernetes&quot;&gt;How do I disable profiling in Kubernetes?&lt;/h2&gt;
-
-&lt;p&gt;If you want to disable profiling in your clusters, and really in production clusters it shouldn’t be enabled, you can do it via command line flags or config files. The kube-apiserver, kube-controller-manager, and kube-scheduler all use a parameter called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;profiling&lt;/code&gt;, but the Kubelet manages it with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;enableDebuggingHandlers&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Kubernetes profiling is another interesting part of the API which can be relevant for security. For production clusters, it’s an unusual choice to have it enabled by default, and probably something that should just be disabled, unless you explicitly need it.&lt;/p&gt;
-</description>
-				<pubDate>Tue, 18 Jun 2024 12:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/</guid>
 			</item>
 		
 	</channel>

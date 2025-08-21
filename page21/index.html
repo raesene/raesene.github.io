@@ -160,6 +160,34 @@
   <span class="post-date">
     
     December
+    25th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/12/25/warning_googles/">Practical use of CSRF attacks in the wild</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>http://www.davidairey.co.uk/google-gmail-security-hijack/<br />
+Here's an example of bad-guys using CSRF attacks try and extort money from domain name holders.  Interestingly it's the first example of practical use of this kind of attack I've seen.<br />
+Although the vulnerability in GMail that seems to have been exploited is now fixed, I bet this won't be the last time we see this form of attack in use, and it does give an example of the kind of damage that a CSRF attack can cause...</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    December
     8th,
     
     2007
@@ -443,39 +471,6 @@ A better mitigation for this risk would be to ensure that password hashes are pr
 </li>
 </ol>
 <p>There are other elements of "classical" password policies that are just about as annoying, but I'll leave them  for next time.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    September
-    10th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/09/10/appropriate_tru/">Appropriate trust on the Internet</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There's an interesting story at <a href="http://www.theregister.co.uk/2007/09/10/misuse_of_tor_led_to_embassy_password_breach/">The Register</a> about the recent leaking of embassy credentials amongst others, by an individual in Sweden.<br />
-The story is that someone set up some <a href="http://tor.eff.org/">Tor</a> exit nodes and then sniffed the traffic that came out over them.<br />
-There's several interesting points that come out from this, I think.</p>
-<ul>
-<li><b>Understand the type of security provided by a system.</b>  Tor is not end-to-end encryption and you are trusting the exit node as you would trust an ISP router.</li>
-<li><b>What was done here can be done by any ISP employee.</b>  A Tor exit node is essentially like an ISP router.  Anything that can be gained by sniffing a TOR exit node could also be gained by any employee of an ISP for the traffic that that ISP handles.</li>
-<li><b>Embassy users are logging on to their services in the clear!?</b>  The main problem here seems to be that embassy staff are logging on to e-mail systems in the clear over an untrusted network (the Internet).  It seems odd that they'd go to the trouble of using Tor to anonymise their traffic but not go to the trouble of using SSL or an equivalent to protect their logon credentials end-to-end...</li>
-</ul>
 
     
     

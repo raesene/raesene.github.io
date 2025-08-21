@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    August
+    21st,
+    
+    2025
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2025/08/21/bitnami-deprecation/">Bitnami Deprecation</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One constant of modern development environments is the ever increasing number of dependencies, and the problems that come when they get disrupted. Next week there could be a serious disruption in the container image ecosystem as a provider of popular images and helm charts changes their availability and tags.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     June
     9th,
     
@@ -173,6 +200,7 @@
     
     
     <p>This exploration started, as many do, with “huh that’s odd”. Specifically I was looking at the output of <a href="https://github.com/genuinetools/amicontained">amicontained</a> around filtered syscalls.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>I got a lesson today in the idea that it’s always worth re-visiting things you’ve used in the past to see how they’ve changed, as sometimes there will be cool new features!</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>I was looking at a <a href="https://github.com/kubernetes/kubernetes/issues/131336">Kubernetes issue</a> the other day and it led me down a kind of interesting rabbit hole, so I thought it’d be worth sharing as I learned a couple of things.</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>There’s a new Kubernetes security vulnerability that’s just been disclosed and I thought it was worth taking a look at it, as there’s a couple of interesting aspects to it. <a href="https://github.com/kubernetes/kubernetes/issues/130786">CVE-2025-1767</a> exists in the <code class="language-plaintext highlighter-rouge">gitRepo</code> volume type and can allow users who can create pods with <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes to get access to any other git repository on the node where the pod is deployed. This is the second recent CVE related to <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes, I covered the last one <a href="https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/">here</a></p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>For my first post of the year I thought it’d be interesting to look at a lesser known feature of the Kubernetes API server which has some interesting security implications.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>Bit of a digression from the network series today, to discuss something I just saw in passing which is an interesting example of a possible sharp corner/foot gun in Kubernetes RBAC.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>In my <a href="https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/">last blog</a> I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>When getting to grips with Kubernetes one of the more complex concepts to understand is … all the IP addresses! Even looking at a simple cluster setup, you’ll get addresses in multiple different ranges. So this is a quick post to walk through where they’re coming from and what they’re used for.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>On Monday this week I noticed a new and really interesting blog from <a href="https://x.com/ImreRad">Imre Rad</a>. The <a href="https://irsl.medium.com/sneaky-write-hook-git-clone-to-root-on-k8s-node-e38236205d54">Blog Post</a> described an unpatched issue in Kubernetes, which allows any user with the ability to create <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes to execute code on the underlying host as the <code class="language-plaintext highlighter-rouge">root</code> user! For the details of how this works, please read Imre’s blog as all the cool research is his, I’m just looking at how it might be exploited :)</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    June
-    18th,
-    
-    2024
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/">Taking a look at Kubernetes Profiling</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>Debugging facilities can always be interesting for attackers, and in general for security, so I decided to take a look at Kubernetes support for Profiling, and where it could be a risk to cluster security. We’ll start with a little bit of background info.</p>
 
     
     

@@ -201,9 +201,9 @@
     <span class="na">command</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">$env:CONTAINER_SANDBOX_MOUNT_POINT</span><span class="se">\\</span><span class="s">pstools</span><span class="se">\\</span><span class="s">psexec.exe"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">-i"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">1"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">-accepteula"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">c:</span><span class="se">\\</span><span class="s">windows</span><span class="se">\\</span><span class="s">system32</span><span class="se">\\</span><span class="s">calc.exe"</span><span class="pi">]</span>
   <span class="na">securityContext</span><span class="pi">:</span>
     <span class="na">windowsOptions</span><span class="pi">:</span>
-      <span class="na">hostProcess</span><span class="pi">:</span> <span class="kc">true</span>
+      <span class="na">hostProcess</span><span class="pi">:</span> <span class="no">true</span>
       <span class="na">runAsUserName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NT</span><span class="nv"> </span><span class="s">AUTHORITY</span><span class="se">\\</span><span class="s">SYSTEM"</span>
-  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
   <span class="na">nodeSelector</span><span class="pi">:</span>
     <span class="s2">"</span><span class="s">kubernetes.io/os"</span><span class="err">:</span> <span class="s">windows</span>
 </code></pre></div></div>
@@ -234,9 +234,9 @@
     <span class="pi">-</span> <span class="s2">"</span><span class="s">start-sleep</span><span class="nv"> </span><span class="s">-seconds</span><span class="nv"> </span><span class="s">600"</span>
   <span class="na">securityContext</span><span class="pi">:</span>
     <span class="na">windowsOptions</span><span class="pi">:</span>
-      <span class="na">hostProcess</span><span class="pi">:</span> <span class="kc">true</span>
+      <span class="na">hostProcess</span><span class="pi">:</span> <span class="no">true</span>
       <span class="na">runAsUserName</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NT</span><span class="nv"> </span><span class="s">AUTHORITY</span><span class="se">\\</span><span class="s">SYSTEM"</span>
-  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="kc">true</span>
+  <span class="na">hostNetwork</span><span class="pi">:</span> <span class="no">true</span>
   <span class="na">nodeSelector</span><span class="pi">:</span>
     <span class="s2">"</span><span class="s">kubernetes.io/os"</span><span class="err">:</span> <span class="s">windows</span>
 </code></pre></div></div>

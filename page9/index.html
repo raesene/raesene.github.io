@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    March
+    4th,
+    
+    2019
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2019/03/04/kind-of-insecure-test-clusters/">Kind of Insecure Test Clusters</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     November
     11th,
     
@@ -173,6 +200,7 @@
     
     
     <p>After a little delay Docker 18.09 got it’s final release this week.  This is a release I’ve been looking forward to for a while now, as it’s got a couple of cool new features, which should help in day-to-day usage of Docker.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>I came across a very interesting post <a href="https://medium.com/@patternrecognizer/how-to-add-a-try-in-play-with-docker-button-to-your-github-project-41cb65721e94">this morning</a> on <a href="https://labs.play-with-docker.com/">using Play With Docker</a> (PWD) to let people try out applications directly from your GitHub repository.  If you’ve not tried out Play With Docker before (or it’s companion site, <a href="https://labs.play-with-k8s.com/">Play with Kubernetes</a>), they’re very useful resources which let you try things out in disposable Docker and Kubernetes environments.  Handy for training courses amongst other things.</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>Based on the Kubernetes security reviews I’ve done, one of the most problematic areas for clusters is user authentication.  Whilst Kubernetes provides a wide range of options, it lacks the “traditional” user database that you might expect to see with a multi-user networked system.  Using external OIDC or webhook providers is often complex, so many clusters make use of the in-built authentication options which are :-</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>One of the key elements of the success of Docker is the availability of Docker Hub, which provides an effective “app store” of pre-build Docker images with a huge variety of pre-installed software.  Everything from Databases, to CRM software to hacking tools is easily available at the drop of a <code class="language-plaintext highlighter-rouge">docker run</code> command.</p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>Following on from looking at <a href="https://raesene.github.io/blog/2018/07/23/exploring-kata/">katacontainers</a> and <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">gVisor</a>, I thought it might be interesting to look at the <a href="https://containerd.io/">containerd</a> project and the idea of using containerd and runc without docker to run containers.  Looking round the documentation, I couldn’t find a good look at getting containerd and runc setup together without installing Docker, so lets do that.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>This is the second part of a series, taking a brief look at some alternate container runtimes, which can be used with Docker and Kubernetes, the first part is <a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/">here</a>.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>As part of some talks I did for the recent NCC Con, I started looking at the <a href="https://github.com/google/gvisor">gVisor</a> project from Google (nothing like having to write a presentation to provide motivation!).</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>Yesterday I noticed a <a href="https://twitter.com/dabdine/status/1019410599401287680">tweet from Derek Abdine</a> about the Rapid7 OpenData collections which are free to access datasets of various types, so thought I’d have a quick look at something I’ve been meaning to for a while, information disclosed via SSL certificates in Internet facing Kubernetes clusters.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>A common task in any security review, is auditing user access control, as excessive numbers of privileged users are a common theme, and privileged access a common point of attack.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    29th,
-    
-    2018
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2018/03/29/WSL-And-Docker/">WSL and Docker for Windows</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…</p>
 
     
     

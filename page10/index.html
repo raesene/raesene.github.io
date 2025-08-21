@@ -160,6 +160,33 @@
   <span class="post-date">
     
     March
+    29th,
+    
+    2018
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2018/03/29/WSL-And-Docker/">WSL and Docker for Windows</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>There’s a number of steps needed to get all this setup properly, but at the end of it you should be able to run Linux and Windows containers on a Windows host from WSL bash…</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     25th,
     
     2018
@@ -173,6 +200,7 @@
     
     
     <p>Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/network-policies/">network policies</a> are a useful security feature which allow for traffic into and (sometimes) out of pods to be restricted.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>Somewhat following on from my <a href="https://raesene.github.io/blog/2017/07/23/network-tools-in-nonroot-docker-images/">previous post</a> about running containers in non-root environments I’ve been spending some more time reading up on Capabilities, so thought it would be worth making some notes.</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>As some environments which allow for Docker images to run (e.g. OpenShift Origin’s default setup) don’t allow containers to run as the root user, its worth knowing about other ways to get some networking and security tools run without having to have root.</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>Anyone who’s used images from Docker Hub will likely have noticed that there can be quite a few old and stale images up there.  People will post an image to help them achieve a goal but then might not remember to maintain it, which reduces the usefulness for others over time as software versions get outdated and projects that are incorporated into the image move on.  I’m guilty of this myself with quite a few images up on Hub that haven’t been updated since I initially uploaded them.</p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p><a href="https://coreos.com/etcd">etcd</a> is a key element of most Kubernetes deployments as it stores the cluster state including items like service tokens, secrets and service configurations.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>When you’re doing security testing of container environments one of the things that can be pretty useful is having a container with useful tools connected to the container network.  From there you can run network scans of the container network and also test the scenario of “malicious container”</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>The first release candidate of the new <a href="https://github.com/OWASP/Top10/blob/master/2017/OWASP%20Top%2010%20-%202017%20RC1-English.pdf">OWASP Top 10</a> got released last week and one of the changes in particular seems to be generating a lot of comment, so I thought I’d chip in too with some thoughts.</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>Whilst spending some more time looking at Kubernetes, to help out with the forthcoming CIS Security standard, I was looking at cluster component authentication and noticed something that might not be known by everyone using Kubernetes, so I thought it’d be worth a post.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>So following on from my post about the <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">kube-exploit</a>, I thought it would be interesting to look more at the attack surface of my sample Kubernetes cluster from the perspective of a Rogue container.  The setup follows the same path as the last post and I’m running from a kali linux container running on my cluster, to simulate an attacker who has compromised a single container on a cluster.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    8th,
-    
-    2016
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">Kubernetes - From Container to Cluster</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I’ve been reading up on Kubernetes a bit recently and <a href="https://twitter.com/killahertz_">Jesse Hertz</a> pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.</p>
 
     
     

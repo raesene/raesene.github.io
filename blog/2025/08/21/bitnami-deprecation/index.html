@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Exploring Public Kuberetes Certificates</title>
+	<title>Bitnami Deprecation</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Exploring Public Kuberetes Certificates </h1>
+  <h1>Bitnami Deprecation </h1>
 </div>
 	
 <article>
@@ -158,43 +158,37 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   July 
-	   19th,
-	   
-	   2018
+	   August 
+	   21st,
+	     
+	   2025
 	 </span>
 	  <div class="article_body">
-	  <p>Yesterday I noticed a <a href="https://twitter.com/dabdine/status/1019410599401287680">tweet from Derek Abdine</a> about the Rapid7 OpenData collections which are free to access datasets of various types, so thought I’d have a quick look at something I’ve been meaning to for a while, information disclosed via SSL certificates in Internet facing Kubernetes clusters.</p>
+	  <p>One constant of modern development environments is the ever increasing number of dependencies, and the problems that come when they get disrupted. Next week there could be a serious disruption in the container image ecosystem as a provider of popular images and helm charts changes their availability and tags.</p>
 
-<h2 id="background">Background</h2>
+<h2 id="whats-happening">What’s Happening?</h2>
 
-<p>The Kubernetes API server (which generally runs on 443/TCP, 6443/TCP or 8443/TCP) is used to communicate with external and internal cluster components.  As such it tends to have CN or SAN fields which include information relating to the cluster and it’s configuration.  From a security testers point of view it can be handy, as it can let you know things like valid cluster internal IP addresses.  Also the presence of certain specific IP addresses can provide information about the cluster.</p>
+<p><a href="https://github.com/bitnami/charts/issues/35164">This Github issue</a> has most of the details, but it’s a little hard to work out the exact impact from it. The TL;DR. is that Bitnami are moving from freely available images under the Docker Hub Username <code class="language-plaintext highlighter-rouge">bitnami</code> to a split of commercially maintained images under <code class="language-plaintext highlighter-rouge">bitnamisecure</code> and unmaintained legacy images under <code class="language-plaintext highlighter-rouge">bitnamilegacy</code>.</p>
 
-<h2 id="process">Process</h2>
+<p>The exact timing is unclear as the issue mentions <code class="language-plaintext highlighter-rouge">gradually move existing ones</code> to the legacy repository, however the impact is going to start in a week’s time starting August 28th 2025, so it’s clear that organizations using these images will need to take action sooner rather than later.</p>
 
-<p>After signing up for <a href="https://opendata.rapid7.com/">Open Data</a> (watch it does take a couple of hours for the approval) I was able to download a SSL certificate dataset from the 19th of June 2018 which covered port 443 available <a href="https://opendata.rapid7.com/sonar.ssl/20180622/2018-06-22-1529685461-https_get_9443_certs.gz">here</a>.</p>
+<h2 id="so-whats-the-impact">So what’s the impact?</h2>
 
-<p>The file has 1187095 certificates, so a reasonable sample.  My approach was to just parse the subjectAltName certificate field for “kubernetes” as in most cases things like kubernetes.svc will apear in every clusters API server certificate.</p>
+<p>Well if you’re either directly using images from <code class="language-plaintext highlighter-rouge">bitnami</code>, Helm charts that reference those images, or images that are built off those base images, you need to start using different images pretty quickly or you might find deploys or image builds failing.</p>
 
-<p>Then I just spat out some files with things like DNS names and IP addresses from the SAN fields to see what showed up.</p>
+<h2 id="how-big-of-a-problem-is-this">How big of a problem is this?</h2>
 
-<h2 id="results">Results</h2>
+<p>After reading this, I thought it could be worth looking at how many pulls these images are getting. Luckily Docker Hub provides pull statistics via their API, so by looking at changes over time we can get a reasonable idea of how many people are going to be affected.</p>
 
-<p>There were 13271 certificates which matched on kubernetes, so a fair number of public facing clusters exposing their API port.  This isn’t indicative of any particular security problem, however it’s interesting that people are directly exposing clusters, rather than hiding them behind a VPN or other form of security appliance/device.  The potential risk here is that a mistake in configuration on the API server could have bad consequences and as we’ve seen attackers are looking for this sort of thing.</p>
+<p>Looking at pull statistics for popular bitnami images over the course of 6 days we can see that the most popular image <code class="language-plaintext highlighter-rouge">kubectl</code> got 1.86M pulls in that time period, and a large number of images have had over 100K pulls in that time, so it seems like these images are pretty heavily used.</p>
 
-<p>One thing that was notable was the quantity of internal IP address leakage that you can get from these certificates. There were a couple of thousand with a SAN of “10.100.0.1” which seemed to be the most popular IP address assigned.  This kind of information can be useful for attackers who get an SSRF vulnerability in a cluster application.  When you’re exploiting that kind of issue, part of the problem is guessing valid Internal IP address ranges to probe for unprotected services, so having a certificate give you starting points is very useful.</p>
+<p><img src="https://raesene.github.io/assets/media/bitnami-stats.png" alt="bitnami stats" /></p>
 
-<p>Another interesting point amongst the IP address information was the prevalance of the IP address 100.64.0.1 with 1005 of our 13271 certificates having that in their SAN fields.  I’ve noticed in the past that this is indicative of the weave network plugin, so again possibly interesting information for attackers as it gives an idea of the software the cluster is running.</p>
+<h2 id="conclusion">Conclusion</h2>
 
-<p>Turning to the DNS names extracted, it was easy to see that almost every cluster noted had a SAN of “kubernetes.default” listed, not a surprise as this is a default service name in Kubernetes clusters.</p>
+<p>I’ve long said that, when using container images in production, it’s vitally important that you build and maintain all of your own images, or if you want have some kind of commercial maintenance agreement for them. Relying on freely provided externally managed images is a recipe for problems down the line.</p>
 
-<p>Past this it was interesting to note how many clusters included strings like “dev” and “test” and “internal” in DNS names, indicating that the clusters might not be intended for general use.</p>
-
-<h2 id="conclusion--data">Conclusion &amp; Data</h2>
-
-<p>It’s interesting (well for a certain value of interesting) to see what can be derived easily from public data sets, and with this kind of information it could also be interesting to look at trends over time (e.g. what the rate of growth in Kubernetes clusters is).  It’s definitely very nice of Rapid7 to have made this data available for free, a good resource to go poking around in, if you’re interested in this kind of thing.</p>
-
-<p>I’ve uploaded the script and analyzed data to <a href="https://github.com/raesene/kubernetes_cert_data">github</a>, the raw data is available on Rapid7’s site.</p>
+<p>For now though, the critical point is that everyone using Bitnami images, needs to go an review all their usage and make a fairly rapid plan to address the risk of them breaking in the near future.</p>
 
 	  </div>
 
@@ -221,7 +215,7 @@
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Exploring Public Kuberetes Certificates"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Bitnami Deprecation"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -250,10 +244,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2018/05/23/Auditing-Kubernetes-Access-Control/" title="Auditing Kubernetes Access Control">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2025/06/09/am-i-still-contained/" title="Am I Still Contained?">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2018/07/22/exploring-gvisor/" title="Exploring gVisor">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

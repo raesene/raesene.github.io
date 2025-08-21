@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    October
+    8th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2016/10/08/Kubernetes-From-Container-To-Cluster/">Kubernetes - From Container to Cluster</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I’ve been reading up on Kubernetes a bit recently and <a href="https://twitter.com/killahertz_">Jesse Hertz</a> pointed me at an interesting item around Kubernetes security that illustrates common problem of insecure defaults, so I thought it might be worth a post walking through the issue, mainly as a way for me to improve my Kubernetes knowledge but also could be useful for others who are deploying it.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     July
     23rd,
     
@@ -173,6 +200,7 @@
     
     
     <p>Another new cool facet of the 1.12 release of Docker Engine is that Macvlan and Ipvlan support is leaving experimental and is available for all users.  So now instead of the rather convoluted procedure I mentioned <a href="https://raesene.github.io/blog/2016/02/07/Exploration-in-Docker-bridging/">last time I looked at this</a> we can now simplify the setup of containers attached to the same network as the host, removing the need for NAT translation from the container network to the host network.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>It’s Dockercon time of year again, and of course you know what that means… loads of cool new features coming to the Docker ecosystem.  I’ve been (enviously) watching all the action remotely on twitter and various blogs and one of the features that jumped out at me was the new swarm mode for Docker engine. The idea of providing very easy to use clustering features for containerization is of course very attractive, but there are possible security concerns, both with encryption of traffic amongst swarm nodes and authentication/authorisation for systems joining the cluster.</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>One of the things that you get used to after using <a href="https://portswigger.net/">Burp</a> for a while is that if there’s any area that it doesn’t have native functionality for, it’s possible to use Extender to code up your own.  I had cause to do a bit of this recently and as with the previous time I looked at this (<a href="https://raesene.github.io/blog/2015/01/15/burp-passive-scanner-plugins-with-jruby/">for passive scanner checks</a>) there were some gaps in the documentation for doing this with JRuby, so I thought I’d write it up.</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>I’ve been presenting a bit recently on <a href="http://www.docker.com">docker</a> and in an attempt to keep my presentation environment relatively simple, I decided to move off from using prezi which doesn’t have a linux client to something a bit more platform agnostic.</p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>Since my <a href="https://raesene.github.io/blog/2016/04/30/Verizon-DBIR-Vulns-And-Cold-Fusion/">last post</a> on this there have been quite a few conversations had on twitter and we’ve now got <a href="http://blog.kennasecurity.com/2016/05/collaborative-data-science-inside-the-2016-verizon-dbir-vulnerability-section/">Kenna’s blog post</a> with additional details on their methodology.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>So it’s Verizon DBIR time of year again and as with last year there seems to be a little bit of debate around the Top 10 exploited CVEs.  My twitter handle got copied in via some tweets from last year, so I thought I’d take the opportunity of providing a tester’s perspective on this. A more detailed and comprehensive look at this issue is available on the <a href="https://blog.osvdb.org/2016/04/27/a-note-on-the-verizon-dbir-2016-vulnerabilities-claims/">OSVDB Blog</a>.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>One of the things about Docker is that whilst it provides you with a sane set of defaults from a security persective, it’s still pretty easy to quickly reduce the level of security/isolation provided if you deviate from those defaults without understanding the consequences.</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>Along with the new version of Docker Engine which came out recently there were some handy updates to Docker Compose.  Back when I started looking at using compose and Docker containers for <a href="https://raesene.github.io/blog/2015/08/15/set-up-a-complete-security-test-environment-with-command-and-docker-compose/">pen testing</a> one of the drawbacks was that there was no great way to define a shared area for all the containers to save their data to as part of the compose setup.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>One of the things I’ve been interested to look at with docker is the network setup. By default when you bring up a docker container you get a network interface with a private IP address which can communicate with other containers on that network and can make outbound connections to the wider world, but isn’t visible to the wider network.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    February
-    4th,
-    
-    2016
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2016/02/04/Docker-User-Namespaces/">Docker 1.10 Notes - User Namespaces</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
 
     
     

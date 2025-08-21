@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    July
+    16th,
+    
+    2023
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2023/07/16/code-server-on-EC2/">Getting a VS Code Server running on EC2</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>As part of the preparations for the <a href="https://www.steelcon.info/the-event/workshops/">workshop on container security</a>  that myself and <a href="https://twitter.com/smarticu5/">Iain Smart</a> ran at this year’s <a href="https://www.steelcon.info/">Steelcon</a>, there were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order. As a result, we were looking into how to provide a browser based terminal for students running on a host in AWS EC2.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     April
     22nd,
     
@@ -173,6 +200,7 @@
     
     
     <p>At Last week’s <a href="https://events.linuxfoundation.org/kubecon-cloudnativecon-europe/">Kubecon EU</a> I was fortunate enough to be on stage with <a href="https://twitter.com/IanColdwater">Ian Coldwater</a>, <a href="https://twitter.com/bradgeesaman">Brad Geesaman</a>, and <a href="https://twitter.com/mauilion">Duffie Cooley</a> presenting a talk called “<a href="https://sched.co/1Hybu">Malicious Compliance: Reflections on Trusting Container Scanners</a>”.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>I’ve been meaning to write a post about Kubelet authorization for a while now, and as there have been some posts this week where it got a mention, now seems like a good time!</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>This week there were some articles about the <a href="https://www.bleepingcomputer.com/news/security/first-known-dero-cryptojacking-operation-seen-targeting-kubernetes/">Dero Cryptojacking operation</a> and one of the details about what the attackers did caught my eye. It was mentioned that they were attacking clusters that allowed anonymous access to the Kubernetes API. Exactly how and why anonymous access is possible to Kubernetes is kind of an interesting topic that touches on a few different areas, so I thought I’d write a bit about it.</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>Last year I was taking a look at the OCI Image specification and I came across something kind of interesting, which is how you can get a container image to ping a URL when it’s <code class="language-plaintext highlighter-rouge">pulled</code> to a host almost like a tracking cookie. Needless to say this isn’t me dropping 0-day, I reported this to the containerd and podman security addresses back in October 2022 and the consensus appears to be that whilst this may have some security implications it’s not dreadfully serious in most cases and it’s part of the spec, so unlikely to change.</p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>Recently I’ve been looking at <a href="https://raesene.github.io/blog/2023/01/02/Fun-with-SSRF-Turning-the-Kubernetes-API-server-into-a-port-scanner/">SSRF in Kubernetes</a>. When testing for SSRF, I find it very useful to have a webserver/reverse proxy that I control and can configure to do a number of tasks. I’ve been using <a href="https://caddyserver.com/">Caddy</a> for this. In this post I’ll show you how to use Caddy to test for SSRF.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>I thought I’d start the new year with something a little fun that I’ve been looking at over the break (well for a certain definition of the word ‘fun’ :) ). Kubernetes has quite a rich API and in the various objects that you can create, some of them have URL or Service fields which, when used, cause the Kubernetes API server itself to make network requests (generally over HTTPS). Knowing this, it feels a bit like a Server-Side Request Forgery (SSRF) attack, so I wondered how possible it would be to implement something that can be used to scan for open ports on a target host from the Kubernetes API server.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>Follwing on from the <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">PCI Series</a> I thought it’d be nice to do a bit more of an attack focused piece for a change!</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>This is the sixteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Segmentation section. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>This is the fifteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Configuration Management section. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    December
-    16th,
-    
-    2022
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2022/12/16/PCI-Kubernetes-Section14-Version-Management/">PCI Compliance for Kubernetes in detail - Part 14 - Version Management</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>This is the fourteenth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at the Version Management section. An index of the posts in this series that I’ve written so far can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
 
     
     

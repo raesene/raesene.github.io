@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    February
+    4th,
+    
+    2016
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2016/02/04/Docker-User-Namespaces/">Docker 1.10 Notes - User Namespaces</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     January
     31st,
     
@@ -173,6 +200,7 @@
     
     
     <p>One of the perenial problems of being an infrequent blogger is of course, you forget exactly how you used to do things…</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>Following on from my last post on <a href="http://raesene.github.io/blog/2015/07/23/using-docker-for-security-testing/">Using Docker for Security Testing</a>, I thought it would be interesting to see if we can set-up an even more automated environment by using <a href="https://www.docker.com/docker-compose">Docker Compose</a>.  Docker Compose is a means of creating a linked set of containers, which you can configure to be started up together, so useful where you want to make use of multiple systems at the same time.</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>Following on from my <a href="http://raesene.github.io/blog/2015/07/05/some-notes-on-docker/">previous post</a> about Docker, I’ve been giving some thoughts to how I could make use of this in my day-to-day work of security testing.</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>I’ve been spending some time this weekend looking more at docker and where I think it could be useful for my workflows, and along the way I’ve learned a couple of things which I didn’t know, so I thought it would be worth recording them, in case they’re useful to others.  None of this is particularly earth shattering but hey could save someone some time :)</p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>I realised the other day that I’ve been doing public speaking for quite a while now (started with doing internal training courses back in the 90’s, and graduated on to doing external speaking at seminars and conferences about 10 years back).</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>One of the perennial problems in security is the lack of hard data, so it’s been good to see over the last couple of years a growing number of reports coming out which seek to shed a bit more light on what’s happening in InfoSec.  One of the more prominent of these reports is the <a href="http://www.verizonenterprise.com/DBIR/2015/">Verizon Data Breach Investigation report</a> and I always read it as it has some interesting insights into what’s happening in areas that I don’t get too much exposure too.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>Last week I did a presentation for the <a href="http://www.securi-tay.co.uk">Securi-Tay Conference</a>.  The title of the talk was “Security and ‘modern’ software development”, and the main theme of the talk was looking at library repositories like <a href="http://www.rubygems.org">Rubygems</a>, <a href="http://www.npmjs.org">npm</a> and <a href="http://www.nuget.org">NuGet</a> and how an attacker could try and place malicous content into those locations.</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>Like most web application testers, I’m a fan of using <a href="http://www.portswigger.net">Burp Suite</a> for automation and generally making the process of completing a test a whole lot easier.</p>
 
+
     
     
   </div>
@@ -382,47 +417,6 @@
     
     <p>I’ve had cause to work with some of the more common Vulnerability Assessment scanners recently, and I couldn’t help but notice that a lot of the findings related to incorrect configuration of, or bugs with, SSL implementations.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    November
-    2nd,
-    
-    2014
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2014/11/02/changing-times-end-of-sms-auth/">Changing Times - End of SMS Auth?</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So like most things in security, decisions are made based on a set of assumptions, and it’s when these assumptions prove to be faulty that security can go quite badly wrong.</p>
-
-<p>I was thinking about a fairly common assumption recently in light of Apple’s new <a href="http://support.apple.com/en-us/HT6337">continuity</a> feature.  Over the last couple of years as the weaknesses in password based authentication models become ever more apparent, there’s obviously been a drive to improve authentication, and one method of doing this is through the use of different channels to send authentication tokens “out of band”.</p>
-
-<p>One of the more common methods of doing this is to send authentication tokens over SMS messages.  The theory is that this is a separate channel from the PC or tablet that is the primary device being used, so it should be harder for an attacker to compromise both channels, thereby improving security.</p>
-
-<p>For example if we have an attacker who has access to a users PC (for example having placed malware on it which steals passwords and other data entered there), the idea goes, by adding in SMS, we make it harder for the attacker to compromise the whole authentication mechanism.</p>
-
-<p>You can probably see, based on the starting paragraph, where this assumption is starting to fall down… With features like Continuity or, SMS to email applications or phone carriers who provide websites which allow for viewing and sending SMS messages, the barrier between these two channels is effectively pierced and SMS becomes much less useful as a second factor for authentication.</p>
-
-<p>Now if an attacker can compromise the PC, it’s quite likely that they’ll get access to the users SMS messages at the same time, with all that entails.</p>
-
-<p>Hopefully this line of thinking will penetrate with service operators and they’ll realise that if 2-factor/channel authentication is needed for their service, they’ll need to offer something more robustly separate.</p>
-
-<p>The other thing I thought this was an interesting illustration of, is that this to me is a good example of differing incentives in the security world.  Online service provides have the incentive for SMS messaging to be a good 2nd channel for authentication data as it’s something that almost all their subscribers already have access to, and it’s very cheap to use.</p>
-
-<p>On the other hand, mobile operators and mobile ecosystem providers have no such incentive.  Instead they’re working to make it easier for users to access all their information in a single place….</p>
 
     
     

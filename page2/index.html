@@ -160,6 +160,33 @@
   <span class="post-date">
     
     June
+    18th,
+    
+    2024
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2024/06/18/Taking-A-Look-At-Kubernetes-Profiling/">Taking a look at Kubernetes Profiling</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Debugging facilities can always be interesting for attackers, and in general for security, so I decided to take a look at Kubernetes support for Profiling, and where it could be a risk to cluster security. We’ll start with a little bit of background info.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    June
     16th,
     
     2024
@@ -173,6 +200,7 @@
     
     
     <p>Kubernetes has got a number of different components, each with it’s own API. Whilst most of the time you’ll interact with the main kube-apiserver API, and sometimes the Kubelet API, the other ones can have some interesting properties. The kube-proxy API is interesting, in that it has some differences from all the others.</p>
+
 
     
     
@@ -200,6 +228,7 @@
     
     <p>One of the features of Kubernetes security, is its flexible model. This allows cluster operators to have multiple Authentication or Authorization modes running covering a number of use cases. This does introduce some complexity though both in terms of operation and also in terms of reviewing or auditing rights.</p>
 
+
     
     
   </div>
@@ -225,6 +254,7 @@
     
     
     <p>I’ve written <a href="https://raesene.github.io/blog/2022/06/11/escaping-the-nested-doll-with-tailscale/">before</a> about how there’s lots of innovative uses for <a href="https://tailscale.com/">Tailscale</a> and I was playing with another scenario for my <a href="https://cfp.cloud-native.rejekts.io/cloud-native-rejekts-eu-paris-2024/talk/ZJEVSY/">Cloud Native Rejekts talk</a> (<a href="https://www.youtube.com/watch?v=-9GN057zm_U&amp;t=19240s">Video Recording here</a> ), so I thought it’d be worth writing up as I learned some things along the way!</p>
+
 
     
     
@@ -252,6 +282,7 @@
     
     <p>Well, all good things must come to an end. Over the last couple of years I’ve been using the <a href="https://censys.io">Censys</a> API to track the number of Kubernetes clusters exposed to the internet which disclose their version number, and I’ve written about it a couple of times <a href="https://raesene.github.io/blog/2021/06/05/A-Census-of-Kubernetes-Clusters/">here</a> and <a href="https://raesene.github.io/blog/2022/07/03/lets-talk-about-kubernetes-on-the-internet/">here</a></p>
 
+
     
     
   </div>
@@ -277,6 +308,7 @@
     
     
     <p>This year, I’ve started looking at how <a href="https://www.linkedin.com/pulse/security-observability-match-made-heaven-rory-mccune-mej4e%3FtrackingId=MrZn6Pw%252FpmXQjCGKT1hxKA%253D%253D/?trackingId=MrZn6Pw%2FpmXQjCGKT1hxKA%3D%3D">observability can work well for security</a> and as part of that I’ve been investigating Open Telemetry, to understand more about how it works.</p>
+
 
     
     
@@ -304,6 +336,7 @@
     
     <p>I came across an interesting change in how Kubeadm based clusters handle initial credential setup in Kubernetes 1.29 and later, so thought it was worth a quick post. <a href="https://twitter.com/smarticu5">Smarticu5</a> had a really unusual error, which was that on a newly created Kubeadm cluster he was getting a <code class="language-plaintext highlighter-rouge">forbidden</code> error when using the default <code class="language-plaintext highlighter-rouge">admin.conf</code> credential created by Kubeadm.</p>
 
+
     
     
   </div>
@@ -329,6 +362,7 @@
     
     
     <p>Recently several new CVEs in the ingress nginx controller for Kubernetes were announced. I thought I’d take a closer look at one of them, CVE-2023-5044. Whilst there’s some details in the <a href="https://github.com/kubernetes/ingress-nginx/issues/10572">CVE announcement</a> and some hints in a post from the CVE reporter <a href="https://www.linkedin.com/posts/jkroepke_kubernetes-cve-2023-5044-code-injection-activity-7123677225765228545-93MI?trk=public_profile_share_view">here</a> there’s not any actual PoC that I could find, so I decided to see if I could write one!</p>
+
 
     
     
@@ -356,6 +390,7 @@
     
     <p>One of the truisms of container security is that when a container is run as <code class="language-plaintext highlighter-rouge">privileged</code> (in the sense of the Docker flag, not just running as the root user) it’s insecure and possible to break out. However, there aren’t always great examples of how to break out of a privileged container in practice.</p>
 
+
     
     
   </div>
@@ -382,31 +417,6 @@
     
     <p>I’ve been thinking about a project where I could travel to conferences with hardware to run a workshop that doesn’t rely on cloud resources (to avoid those concerns about network access or cloud uptime) and of course, the first part of any project like that is the fun part, buying the hardware! As I’d promised a review to a couple of people on-line, here it is.</p>
 
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    16th,
-    
-    2023
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2023/07/16/code-server-on-EC2/">Getting a VS Code Server running on EC2</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>As part of the preparations for the <a href="https://www.steelcon.info/the-event/workshops/">workshop on container security</a>  that myself and <a href="https://twitter.com/smarticu5/">Iain Smart</a> ran at this year’s <a href="https://www.steelcon.info/">Steelcon</a>, there were some concerns that our standard option of SSH access might be blocked by the venue’s Wi-Fi, so a backup plan was in order. As a result, we were looking into how to provide a browser based terminal for students running on a host in AWS EC2.</p>
 
     
     

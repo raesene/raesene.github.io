@@ -160,6 +160,42 @@
   <span class="post-date">
     
     March
+    15th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/03/15/post_21/">Pen Testing A go go</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Lots of interesting chat on the reasons to Pen Test, or not from various blogs starting over here <a href="http://informationsecurity.techtarget.com/magItem/0,291266,sid42_gci1245619_idx2,00.html"> at techtarget</a> then rapidly spreading out over the blogosphere (hate that word but it's the only one going) <a href="http://www.matasano.com/log/719/more-on-pen-testing-2/">to Matasano</a> <a href="http://mcwresearch.com/archives/438">mcwresearch</a>, <a href="http://securityincite.com/blog/mike-rothman/the-daily-incite-march-15-2007">Security Incite</a> and in a bit of a divergence from topic <a href="http://layer8.itsecuritygeek.com/index/layer8/comments/ways-to-annoy-your-pentester/"> layer 8 </a><br />
+And what does all this tell us.... Well there's a lot of confusion around what a penetration test is and at lot of divergence over the value they provide.<br />
+So anyway here's my 0.02 on the subject.  Penetration tests are not a good way to prove the security of a system, if possible and the application is under your control go for developing good secure coding standards and develop a good Security Development lifecycle including elements like threat modeling.<br />
+However in the real world, life doesn't work like that all the time, you'll get applications which are legacy and may not have been securely developed, you'll get 3rd party applications that you've no idea how they've been developed, and at times like that a penetration test is a reasonable way of getting some level of assurance that they're reasonably secure, and there probably aren't any glaring holes there.<br />
+A couple of other points that emerged from all this reading is</p>
+<ul>
+<li>I definitely agree with Marcus Ranum that the PCI in particular look like a penetration testers (and code reviewers) full employment act.  Every website that processes cardholder data (and that's a lot of sites) needs an annual penetration test and code review (unless they're using a web application firewall)</li>
+<li>I definitely don't agree with Bruce schneier's point about using penetration testing to identify items on the SANS top 20 list.  For that if I've got any access to the systems I'd much prefer a patch management and security policy compliance tool, 'cause they're way less hit and miss than a penetration test </li>
+<li> Dave G at Matasano's probably right about a lot of bad penetration tests, although I think a lot of the problem is people not understanding what they're being sold (ie running nessus on someone's site is <b>not</b> a penetration test.  Perhaps what's needed is a well accepted certification for penetration testers in different technologies like <a href="http://www.it-observer.com/articles.php?id=1308"> Nick Baskett talks about.</a>  </li>
+<li>Michael at mcwresearch's got an excellent point about using successful penetration tests as a marketing point. I'm constantly surprised at how many companies who are selling web based products, haven't had any penetration testing done</li>
+</ul>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    March
     5th,
     
     2007
@@ -410,37 +446,6 @@ Hopefully some of the other stories that have <a href="http://arstechnica.com/ne
     
     
     <p>here's an interesting <a href="http://grandstreamdreams.blogspot.com/">list of online security scanners</a>.</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    January
-    31st,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/01/31/security_assess_1/">Security Assessments vs Penetration Tests</a>
-  </h2>
-
-  <div>
-    
-    
-    <p><a title="Jeremiah Grossman: The difference between Security Assessments and Penetration Tests" href="http://jeremiahgrossman.blogspot.com/2007/01/difference-between-security-assessments.html">Jeremiah Grossman: The difference between Security Assessments and Penetration Tests</a><br />
-Interesting post from Jeremiah Grossman on the differences between security assessments  and Penetration Tests.<br />
-He's pretty much captured all the salient points and it's well worth reading as it's a pretty common point of confusion (even amongst general InfoSec people)<br />
-One thing that strikes me about it, is it leads to the question "When would I want a penetration test then?".  The answer seems to me to be "only when you're pretty confident that it won't find anything!"<br />
-The reason for this is that until everything is locked down and sorted you should be doing security assessment style reviews which try to find all the available security weaknesses and only when you're comfortable that it should all be right do you engage with a penetration testing team to try that black box "try and break in" approach.<br />
-The other point would be, if you can only afford to have one type of review done, a penetration test probably isn't a good idea, in that whilst it will prove if you can be broken into (at a given point in time by a given person), there's still the likelihood that there are other ways of breaking in that haven't been found as the penetration tester probably won't keep looking once they're in...</p>
 
     
     
