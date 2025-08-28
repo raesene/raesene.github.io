@@ -8,7 +8,9 @@
 		
 			<item>
 				<title>Bitnami Deprecation</title>
-				<description>&lt;p&gt;One constant of modern development environments is the ever increasing number of dependencies, and the problems that come when they get disrupted. Next week there could be a serious disruption in the container image ecosystem as a provider of popular images and helm charts changes their availability and tags.&lt;/p&gt;
+				<description>&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt; Looks like Bitnami decided to take some more time over this &lt;a href=&quot;https://community.broadcom.com/tanzu/blogs/beltran-rueda-borrego/2025/08/18/how-to-prepare-for-the-bitnami-changes-coming-soon&quot;&gt;details here&lt;/a&gt; and have some 1-day brown outs before removing the repos on Sept 29.&lt;/p&gt;
+
+&lt;p&gt;One constant of modern development environments is the ever increasing number of dependencies, and the problems that come when they get disrupted. Next week there could be a serious disruption in the container image ecosystem as a provider of popular images and helm charts changes their availability and tags.&lt;/p&gt;
 
 &lt;h2 id=&quot;whats-happening&quot;&gt;What’s Happening?&lt;/h2&gt;
 
