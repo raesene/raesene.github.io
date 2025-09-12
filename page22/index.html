@@ -160,6 +160,47 @@
   <span class="post-date">
     
     September
+    25th,
+    
+    2007
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2007/09/25/risk_assessed_p/">Risk Assessed Password Policies - Password Rotation</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I've been meaning to blog about some of the reading I've been doing recently on password policies, but an article in the latest <a href="http://www.net-security.org/insecuremag.php">Insecure Magazine</a> tipped me over the edge into writing..<br />
+In the article on password management on page 59 the author mentions some elements of a "best practices" password policy which include password rotation every 30 days as a good thing.<br />
+I've seen this repeated in many places but I'm not sure where it came from.  My opinion is that, in many cases, 30 day password rotation is actually a very bad thing, both from a user experience point of view and also from a security point of view.  It's one of those things that gets put in password policies without any real thought of the consequences.<br />
+The reasons I've seen stated for rotating passwords are</p>
+<ol>
+<li><b>Mitigate password sharing.</b>  This doesn't really hold any water, if a user shares their password then they can just share the next one.  A much better control is to educate the users <b>never</b> to share their password no matter who asks.  This also has the side effect of helping mitigate some social engineering attacks</li>
+<li><b>Reducing the window that someone has to crack a password hash</b>.  There may be some circumstances where this may help out but really who's to say that it'll be a specific number of days for a password crack.  From my experience of auditing windows passwords, you either get it real quick with a hybrid dictionary attack or rainbow tables(in which case the rotation doesn't really help, or you don't get it at all (if you've set password length over about 9 characters most attackers won't be able to brute force a password with a decently designed algorithm.<br />
+A better mitigation for this risk would be to ensure that password hashes are protected in transit (eg with SSL) and on hosts.</li>
+</ol>
+<p>Also password rotation has several possible side-effects which actively reduce security</p>
+<ol>
+<li><b>Sequence passwords.</b>  Most users when faced with a password rotation will choose a sequence password eg  ([password1], [password2], etc), so once an attacker knows one password for the user, they'll pretty easily guess the next one.</li>
+<li><b>Helpdesk password reset fatigue.</b>  Password rotation (along with some other aspects of password policies I'll come onto later) causes a large number of calls to a help desk.  From a security standpoint, we want a password reset request to be an alert that someone is trying to attack one of our systems, but if the people being made aware of that alert (the helpdesk) are swarmed with "false positives" in the form of users forgetting their passwords, inevitably real alerts will be lost in the morass.  In order to make password resets an effective control, we should be trying to minimize the number of times that the process is invoked (while maintaining the security of the password system obviously)
+</li>
+</ol>
+<p>There are other elements of "classical" password policies that are just about as annoying, but I'll leave them  for next time.</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
+    September
     10th,
     
     2007
@@ -416,34 +457,6 @@ Also some of the great information that is on there is not well flagged up.  An 
 Another example, where I think a permanent staff member would be useful, is administering the SPOC projects and chivying the people assigned to them for updates.<br />
 Right now it's rapidly turning into a summer/autumn of code not spring <b>;o)</b> . the status page that's gone up has all the projects at 0% complete !<br />
 All In all I think OWASP are doing some great work, a lot of which may be less appreciated 'cause it's not as discoverable as it could be....</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    10th,
-    
-    2007
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2007/07/10/comments_and_tr/">Comments and Trackbacks off...</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've had to switch comments and trackbacks off on the blog at the moment.  Turns out that my little converted NAS box that I've moved over to is great at static content but not so good a CGIs, so when comment/trackback spammers hit it a lot it overheats!<br />
-Going to look into maybe moving the blog to a hosted solution, so hopefully get all back to normal when that happens...<br />
-<b>Edit:</b> I've tried something which *may* sort the problem so comments back on for now...</p>
 
     
     

