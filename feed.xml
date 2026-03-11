@@ -7,6 +7,46 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Variance of defaults - Microk8s RBAC</title>
+				<description>&lt;p&gt;One of the points I tend to make in my talks about Kubernetes security is that it’s quite difficult to talk about what the security defaults are, as there are over 150 different Kubernetes distributions and services and each one of them has a different idea of what their security defaults should be.&lt;/p&gt;
+
+&lt;p&gt;I was recently dealing with a really good example of this so I thought it was worth writing up in a little detail, especially as I had mentioned it to a couple of other people in the Kubernetes space who were surprised to hear about it.&lt;/p&gt;
+
+&lt;h2 id=&quot;microk8s-rbac&quot;&gt;Microk8s RBAC&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://canonical.com/microk8s&quot;&gt;Microk8s&lt;/a&gt; is a Kubernetes distribution from Canonical, which is intended for use in a number of production scenarios. The unusual security default in this case is that, out of the box, it does not enable RBAC in your Kubernetes cluster! If you want to have RBAC enabled you have to enable it as an add-on after installation.&lt;/p&gt;
+
+&lt;p&gt;There are two knock-on effects here. The first is that every user defined with legitimate credentials is automatically given effective &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt; rights to the cluster.&lt;/p&gt;
+
+&lt;p&gt;The second is that, by default, every workload deployed to the cluster will get a service account token, and every one of those service account tokens will be &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cluster-admin&lt;/code&gt;. So anyone who has access to, or can compromise, a single workload in the cluster will automatically get to be an admin in the cluster!&lt;/p&gt;
+
+&lt;p&gt;One of the trickier aspects of this is that Kubernetes will happily accept (cluster)role and (cluster)rolebinding manifests and create the objects, but those objects just won’t have any effect.&lt;/p&gt;
+
+&lt;p&gt;Of course the correct resolution of this is to ensure that the first action you take after installing Microk8s is to enable RBAC.&lt;/p&gt;
+
+&lt;h2 id=&quot;canonicals-response&quot;&gt;Canonical’s response&lt;/h2&gt;
+
+&lt;p&gt;To me, this is not a good default for Kubernetes security, so before writing it up, I decided to report it to Canonical, with details on why I felt this was not a good default. They were very friendly, but ultimately responded that this was a known and accepted default value. Their exact response was&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Microk8s has RBAC disabled by default due to legacy compatibility reasons. RBAC was not initially available when Microk8s was first released, and therefore there are no plans to change this behavior.
+
+There has been a GitHub issue opened regarding this, which you can find here: https://github.com/canonical/microk8s/issues/5400
+
+If RBAC is required, users can run `microk8s enable rbac` after installation. However, the decision to do so ultimately falls on the user, which depends on that particular user&apos;s needs.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From my perspective this felt a little surprising as Kubernetes has had RBAC enabled by default since (IIRC) 1.8 in 2017. Whilst a commitment to backwards compatibility is admirable, there is a tradeoff here, which is that cluster operators expect to have RBAC working in their clusters, as it does with (AFAIK) every other Kubernetes distribution&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;This case illustrates one of the big challenges in Kubernetes security, which is the sheer variety of software we have to deal with. It’s important not to assume that just because a Kubernetes distribution is long-standing and widely used, that it will have hardened defaults.&lt;/p&gt;
+</description>
+				<pubDate>Wed, 11 Mar 2026 09:00:00 +0000</pubDate>
+				<link>https://raesene.github.io/blog/2026/03/11/microk8s-rbac-default/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2026/03/11/microk8s-rbac-default/</guid>
+			</item>
+		
+			<item>
 				<title>Beyond the surface - Exploring attacker persistence strategies in Kubernetes</title>
 				<description>&lt;p&gt;I’ve been doing a talk on Kubernetes post-exploitation for a while now and one of requests has been for a blog post to refer back to, which I’m finally getting around to doing now!&lt;/p&gt;
 
@@ -185,7 +225,7 @@
 
 &lt;p&gt;I’ve long said that, when using container images in production, it’s vitally important that you build and maintain all of your own images, or if you want have some kind of commercial maintenance agreement for them. Relying on freely provided externally managed images is a recipe for problems down the line.&lt;/p&gt;
 
-&lt;p&gt;For now though, the critical point is that everyone using Bitnami images, needs to go an review all their usage and make a fairly rapid plan to address the risk of them breaking in the near future.&lt;/p&gt;
+&lt;p&gt;For now though, the critical point is that everyone using Bitnami images, needs to go and review all their usage and make a fairly rapid plan to address the risk of them breaking in the near future.&lt;/p&gt;
 </description>
 				<pubDate>Thu, 21 Aug 2025 12:30:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2025/08/21/bitnami-deprecation/</link>
@@ -774,74 +814,6 @@ exit
 				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
-			</item>
-		
-			<item>
-				<title>The Many IP Addresses of Kubernetes</title>
-				<description>&lt;p&gt;When getting to grips with Kubernetes one of the more complex concepts to understand is … all the IP addresses! Even looking at a simple cluster setup, you’ll get addresses in multiple different ranges. So this is a quick post to walk through where they’re coming from and what they’re used for.&lt;/p&gt;
-
-&lt;p&gt;Typically you can see at least three distinct ranges of IP addresses in a Kubernetes cluster, although this can vary depending on the distribution and container networking solution in place. Firstly there is the node network where the container, virtual machines or physical servers running the Kubernetes components are, then there is an overlay network where pods are assigned IP addresses and lastly another network range where Kubernetes services are located.&lt;/p&gt;
-
-&lt;p&gt;We’ll start with a standard &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; cluster before talking about some other sources of IP address complexity. We’ll start by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster&lt;/code&gt; to get it up and running.&lt;/p&gt;
-
-&lt;p&gt;Once we’ve got the cluster started we can see what IP address the node has by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec -it kind-control-plane ip addr show dev eth0&lt;/code&gt; . The output of that command should look something like this&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;13: eth0@if14: &amp;lt;BROADCAST,MULTICAST,UP,LOWER_UP&amp;gt; mtu 1500 qdisc noqueue state UP group default 
-    &lt;span class=&quot;nb&quot;&gt;link&lt;/span&gt;/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
-    inet6 fc00:f853:ccd:e793::2/64 scope global nodad 
-       valid_lft forever preferred_lft forever
-    inet6 fe80::42:acff:fe12:2/64 scope &lt;span class=&quot;nb&quot;&gt;link 
-       &lt;/span&gt;valid_lft forever preferred_lft forever
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We can see that the address assigned is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2/16&lt;/code&gt;, which is a network controlled by Docker (as we’re running our cluster on top of Docker). If you have a Virtual machine or physical server the IP addresses will be in whatever range is assigned to the network(s) the host has.&lt;/p&gt;
-
-&lt;p&gt;So far, so simple. Now lets add a workload to our cluster and see what addresses are assigned there. Let’s start a webserver workload with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl run webserver --image=nginx&lt;/code&gt;. Once that pod starts we can run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get pods webserver -o wide&lt;/code&gt; to see what IP address has been assigned to the pod.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME        READY   STATUS    RESTARTS   AGE   IP           NODE                 NOMINATED NODE   READINESS GATES
-webserver   1/1     Running   0          42s   10.244.0.5   kind-control-plane   &amp;lt;none&amp;gt;           &amp;lt;none&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Our pod has an IP address of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.5&lt;/code&gt; which is in an entirely different subnet! This IP address is part of the overlay network that most (but not all) Kubernetes distributions use for their workloads. This subnet is generally automatically assigned by the Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/&quot;&gt;network plugin&lt;/a&gt; used in the cluster, so it’ll change based on the plugin in use and any specific configuration for that plugin. What’s happening here is that our Kubernetes node has created an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;veth&lt;/code&gt; interface for our pod and assigned that address to it. We can see the pod IP addresses from the hosts perspective by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec kind-control-plane ip route&lt;/code&gt; and we can see the IP addresses assigned to the different pods in the cluster, including the IP address we saw from our &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;get pods&lt;/code&gt; command above.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
-10.244.0.2 dev veth9ee91973 scope host 
-10.244.0.3 dev veth1b82cd96 scope host 
-10.244.0.4 dev veth38302a10 scope host 
-10.244.0.5 dev vethf915cecb scope host 
-172.18.0.0/16 dev eth0 proto kernel scope link src 172.18.0.2 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now we’ve got the node network and the pod network, let’s see what happens if we add a Kubernetes &lt;a href=&quot;https://kubernetes.io/docs/concepts/services-networking/service/&quot;&gt;service&lt;/a&gt; to the mix. We can do this by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl expose pod webserver --port 8080&lt;/code&gt; which will create a service object for our webserver pod. There are several types of service object, but by default a ClusterIP service will be created, which provides an IP address which is visible inside the cluster, but not outside it. Once our service is created we can look at the IP address by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get services webserver&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-webserver   ClusterIP   10.96.198.83   &amp;lt;none&amp;gt;        8080/TCP   97s
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We can see from the output that the IP address is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.96.198.83&lt;/code&gt; another IP address range! This range is set by a command line flag on the Kubernetes API server. In the case of our kind cluster, it looks like this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--service-cluster-ip-range=10.96.0.0/16&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;But from a host perspective, where does this IP address fit in. Well the reality of Kubernetes service objects is that, by default, they’re iptables rules created by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kube-proxy&lt;/code&gt; service on the node. We can see our webserver service by running this command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docker exec kind-control-plane iptables -t nat -L KUBE-SERVICES -v -n --line-numbers&lt;/code&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Chain KUBE-SERVICES (2 references)
-num   pkts bytes target     prot opt in     out     source               destination         
-1        1    60 KUBE-SVC-NPX46M4PTMTKRN6Y  6    --  *      *       0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
-2        0     0 KUBE-SVC-UMJOY2TYQGVV2BKY  6    --  *      *       0.0.0.0/0            10.96.198.83         /* default/webserver cluster IP */ tcp dpt:8080
-3        0     0 KUBE-SVC-TCOU7JCQXEZGVUNU  17   --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
-4        0     0 KUBE-SVC-ERIFXISQEP7F7OF4  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
-5        0     0 KUBE-SVC-JD5MR3NA4I4DYORP  6    --  *      *       0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:metrics cluster IP */ tcp dpt:9153
-6     7757  465K KUBE-NODEPORTS  0    --  *      *       0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;The goal of this post was just to explore a couple of concepts. Firstly, the variety of IP addresses you’re likely to see in a Kubernetes cluster and then how those tie to the operating system level.&lt;/p&gt;
-
-</description>
-				<pubDate>Fri, 01 Nov 2024 08:00:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/</guid>
 			</item>
 		
 	</channel>
