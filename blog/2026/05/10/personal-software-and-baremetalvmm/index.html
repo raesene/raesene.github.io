@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Variance of defaults - Microk8s RBAC</title>
+	<title>Personal Software and BaremetalVMM</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Variance of defaults - Microk8s RBAC </h1>
+  <h1>Personal Software and BaremetalVMM </h1>
 </div>
 	
 <article>
@@ -158,44 +158,51 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   March 
-	   11th,
+	   May 
+	   10th,
 	   
 	   2026
 	 </span>
 	  <div class="article_body">
-	  <p>One of the points I tend to make in my talks about Kubernetes security is that it’s quite difficult to talk about what the security defaults are, as there are over 150 different Kubernetes distributions and services and each one of them has a different idea of what their security defaults should be.</p>
+	  <p>For a long time I wanted a piece of software that used <a href="https://firecracker-microvm.github.io/">Firecracker</a> to create MicroVMs on my Linux hosts. It seemed like it would be really useful for vulnerability research and testing features that weren’t suitable to be done in Docker containers. I looked around periodically but wasn’t able to find anything that really fit the bill and would work easily.</p>
 
-<p>I was recently dealing with a really good example of this so I thought it was worth writing up in a little detail, especially as I had mentioned it to a couple of other people in the Kubernetes space who were surprised to hear about it.</p>
+<p>Back in January I was experimenting with <a href="https://code.claude.com/docs/en/overview">Claude Code</a> and I decided, pretty much on a whim, to see if it could create that software for me. Honestly I didn’t think it would work but it would be an interesting experiment to see how far it could get. Surprisingly, after a bit of churning it produced something that, for the basic use case, worked pretty well!</p>
 
-<h2 id="microk8s-rbac">Microk8s RBAC</h2>
+<p>Since then I’ve kept working on it, having Claude Code expand the features, worked on how to test things (like using <a href="https://playwright.dev/docs/getting-started-mcp">playwright</a> for browser testing) to the point where now it’s got an array of features that are very useful for me. It can start Kubernetes clusters, VMs with different kernels and there’s a Web UI and systemd service which mean I can start and stop VMs whenever.</p>
 
-<p><a href="https://canonical.com/microk8s">Microk8s</a> is a Kubernetes distribution from Canonical, which is intended for use in a number of production scenarios. The unusual security default in this case is that, out of the box, it does not enable RBAC in your Kubernetes cluster! If you want to have RBAC enabled you have to enable it as an add-on after installation.</p>
+<p>The latest addition was using <a href="https://xtermjs.org/">xterm.js</a> to give me a browser based console so I can use my VMs remotely without even needing a terminal!</p>
 
-<p>There are two knock-on effects here. The first is that every user defined with legitimate credentials is automatically given effective <code class="language-plaintext highlighter-rouge">cluster-admin</code> rights to the cluster.</p>
+<p>All of this was designed by me, for me, and it fits my use cases pretty well. However it’s not been widely tested with other systems and I make it really clear in the README that it’s likely only suitable for my use (the code is <a href="https://github.com/raesene/baremetalvmm">on GitHub</a> in case anyone else wants to try it or use as a basis for something else).</p>
 
-<p>The second is that, by default, every workload deployed to the cluster will get a service account token, and every one of those service account tokens will be <code class="language-plaintext highlighter-rouge">cluster-admin</code>. So anyone who has access to, or can compromise, a single workload in the cluster will automatically get to be an admin in the cluster!</p>
+<p>This is a good example of what gets called “personal software”</p>
 
-<p>One of the trickier aspects of this is that Kubernetes will happily accept (cluster)role and (cluster)rolebinding manifests and create the objects, but those objects just won’t have any effect.</p>
+<h2 id="the-rise-of-personal-software">The rise of personal software</h2>
 
-<p>Of course the correct resolution of this is to ensure that the first action you take after installing Microk8s is to enable RBAC.</p>
+<p>This idea, that people will write software for their own use using LLMs, is one that’s getting quite a bit of traction. Whilst given enough time and effort I possibly could have written my VM manager myself, realistically there’s no way I actually had the time to do it. From a personal usage perspective this has been great. I can get tools that do exactly what I’m looking for relatively quickly and easily.</p>
 
-<h2 id="canonicals-response">Canonical’s response</h2>
+<p>So now it’s pretty easy to turn an idea into working software, at least for basic tools like this. The barrier to creation is substantially lowered and so we’ll inevitably see more and more similar efforts. Github’s <a href="https://github.blog/news-insights/company-news/an-update-on-github-availability/">recent blog</a> shows the massive increase in activity they’re seeing as a result of heavy LLM usage. What’s kind of interesting to think about, to me, is what some of the consequences of this trend will be for software security and the general software industry.</p>
 
-<p>To me, this is not a good default for Kubernetes security, so before writing it up, I decided to report it to Canonical, with details on why I felt this was not a good default. They were very friendly, but ultimately responded that this was a known and accepted default value. Their exact response was</p>
+<p>From a security standpoint there are lots of likely challenges here :-</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Microk8s has RBAC disabled by default due to legacy compatibility reasons. RBAC was not initially available when Microk8s was first released, and therefore there are no plans to change this behavior.
+<ul>
+  <li>
+    <p>Whilst LLMs can write software pretty well, they don’t necessarily do it with security in mind, and even with code reviewing agents (if people use those) it’s likely the security architecture of personal software projects is not going to be great. As an example, while I was writing this blog I realised that the LLM had defaulted to exposing the web UI of BaremetalVMM to all interfaces, which is probably not a good idea (it does have some authentication, but that’s not been tested anything like enough to give me confidence to expose it to untrusted networks)!</p>
+  </li>
+  <li>
+    <p>Supply chain and maintenance. When you’re vibecoding software you probably never look at the libraries that the LLM chose to include, so you have really no idea of what your supply chain risks are, and for a lot of people outside the security industry, I doubt they’d think to look into that problem too much.</p>
+  </li>
+  <li>
+    <p>Anyone who’s been in IT/IT security for a while will have encountered a “load bearing spreadsheet” or similar. Some system designed by someone who’s a subject matter expert but not an IT professional, which has become crucial for a department or whole company’s operation. With LLM tools, we’re going to see a big increase in this kind of system, and I’d guess a lot of IT teams are going to be handed “personal software” projects to run in production.</p>
+  </li>
+</ul>
 
-There has been a GitHub issue opened regarding this, which you can find here: https://github.com/canonical/microk8s/issues/5400
+<p>In addition to the security concerns, there are also obvious consequences here to how open source projects will work in future. Any time you have groups of people working together, there’s inevitable friction with differing priorities and approaches, but traditionally, having sets of people working on a project allowed it to advance much more quickly than a solo project.</p>
 
-If RBAC is required, users can run `microk8s enable rbac` after installation. However, the decision to do so ultimately falls on the user, which depends on that particular user's needs.
-</code></pre></div></div>
-
-<p>From my perspective this felt a little surprising as Kubernetes has had RBAC enabled by default since (IIRC) 1.8 in 2017. Whilst a commitment to backwards compatibility is admirable, there is a tradeoff here, which is that cluster operators expect to have RBAC working in their clusters, as it does with (AFAIK) every other Kubernetes distribution</p>
+<p>That’s no longer really the case, now a solo developer with access to LLMs can create an entire project by themselves quite quickly. Their incentives to work with others are changed, and it could be that we’ll see a proliferation of projects covering the same topic, each run by a single developer or perhaps a small group. As an example, there are now plenty of projects doing similar things to BaremetalVMM.</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>This case illustrates one of the big challenges in Kubernetes security, which is the sheer variety of software we have to deal with. It’s important not to assume that just because a Kubernetes distribution is long-standing and widely used, that it will have hardened defaults.</p>
+<p>Like lots of things in the AI/LLM world, things are moving pretty quickly in the field of personal software. I definitely think this will carry on as a phenomena as it’s solving people’s problems, but I’m not entirely sure it’ll play out well from a security standpoint. Definitely a case of living in interesting times…</p>
 
 	  </div>
 
@@ -205,8 +212,8 @@ If RBAC is required, users can run `microk8s enable rbac` after installation. Ho
 		  
 		  
 			 
-				<li><a href="https://raesene.github.io/categories/index.html#Kubernetes-ref">
-					Kubernetes <span>(67)</span>
+				<li><a href="https://raesene.github.io/categories/index.html#LLMs-ref">
+					LLMs <span>(1)</span>
 					
 				</a></li>
 			
@@ -222,7 +229,7 @@ If RBAC is required, users can run `microk8s enable rbac` after installation. Ho
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Variance of defaults - Microk8s RBAC"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Personal Software and BaremetalVMM"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -251,10 +258,10 @@ If RBAC is required, users can run `microk8s enable rbac` after installation. Ho
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2025/09/12/beyond-the-surface/" title="Beyond the surface - Exploring attacker persistence strategies in Kubernetes">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2026/03/11/microk8s-rbac-default/" title="Variance of defaults - Microk8s RBAC">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2026/05/10/personal-software-and-baremetalvmm/" title="Personal Software and BaremetalVMM">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 

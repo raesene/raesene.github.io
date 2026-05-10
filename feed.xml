@@ -7,6 +7,53 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Personal Software and BaremetalVMM</title>
+				<description>&lt;p&gt;For a long time I wanted a piece of software that used &lt;a href=&quot;https://firecracker-microvm.github.io/&quot;&gt;Firecracker&lt;/a&gt; to create MicroVMs on my Linux hosts. It seemed like it would be really useful for vulnerability research and testing features that weren’t suitable to be done in Docker containers. I looked around periodically but wasn’t able to find anything that really fit the bill and would work easily.&lt;/p&gt;
+
+&lt;p&gt;Back in January I was experimenting with &lt;a href=&quot;https://code.claude.com/docs/en/overview&quot;&gt;Claude Code&lt;/a&gt; and I decided, pretty much on a whim, to see if it could create that software for me. Honestly I didn’t think it would work but it would be an interesting experiment to see how far it could get. Surprisingly, after a bit of churning it produced something that, for the basic use case, worked pretty well!&lt;/p&gt;
+
+&lt;p&gt;Since then I’ve kept working on it, having Claude Code expand the features, worked on how to test things (like using &lt;a href=&quot;https://playwright.dev/docs/getting-started-mcp&quot;&gt;playwright&lt;/a&gt; for browser testing) to the point where now it’s got an array of features that are very useful for me. It can start Kubernetes clusters, VMs with different kernels and there’s a Web UI and systemd service which mean I can start and stop VMs whenever.&lt;/p&gt;
+
+&lt;p&gt;The latest addition was using &lt;a href=&quot;https://xtermjs.org/&quot;&gt;xterm.js&lt;/a&gt; to give me a browser based console so I can use my VMs remotely without even needing a terminal!&lt;/p&gt;
+
+&lt;p&gt;All of this was designed by me, for me, and it fits my use cases pretty well. However it’s not been widely tested with other systems and I make it really clear in the README that it’s likely only suitable for my use (the code is &lt;a href=&quot;https://github.com/raesene/baremetalvmm&quot;&gt;on GitHub&lt;/a&gt; in case anyone else wants to try it or use as a basis for something else).&lt;/p&gt;
+
+&lt;p&gt;This is a good example of what gets called “personal software”&lt;/p&gt;
+
+&lt;h2 id=&quot;the-rise-of-personal-software&quot;&gt;The rise of personal software&lt;/h2&gt;
+
+&lt;p&gt;This idea, that people will write software for their own use using LLMs, is one that’s getting quite a bit of traction. Whilst given enough time and effort I possibly could have written my VM manager myself, realistically there’s no way I actually had the time to do it. From a personal usage perspective this has been great. I can get tools that do exactly what I’m looking for relatively quickly and easily.&lt;/p&gt;
+
+&lt;p&gt;So now it’s pretty easy to turn an idea into working software, at least for basic tools like this. The barrier to creation is substantially lowered and so we’ll inevitably see more and more similar efforts. Github’s &lt;a href=&quot;https://github.blog/news-insights/company-news/an-update-on-github-availability/&quot;&gt;recent blog&lt;/a&gt; shows the massive increase in activity they’re seeing as a result of heavy LLM usage. What’s kind of interesting to think about, to me, is what some of the consequences of this trend will be for software security and the general software industry.&lt;/p&gt;
+
+&lt;p&gt;From a security standpoint there are lots of likely challenges here :-&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Whilst LLMs can write software pretty well, they don’t necessarily do it with security in mind, and even with code reviewing agents (if people use those) it’s likely the security architecture of personal software projects is not going to be great. As an example, while I was writing this blog I realised that the LLM had defaulted to exposing the web UI of BaremetalVMM to all interfaces, which is probably not a good idea (it does have some authentication, but that’s not been tested anything like enough to give me confidence to expose it to untrusted networks)!&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Supply chain and maintenance. When you’re vibecoding software you probably never look at the libraries that the LLM chose to include, so you have really no idea of what your supply chain risks are, and for a lot of people outside the security industry, I doubt they’d think to look into that problem too much.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Anyone who’s been in IT/IT security for a while will have encountered a “load bearing spreadsheet” or similar. Some system designed by someone who’s a subject matter expert but not an IT professional, which has become crucial for a department or whole company’s operation. With LLM tools, we’re going to see a big increase in this kind of system, and I’d guess a lot of IT teams are going to be handed “personal software” projects to run in production.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In addition to the security concerns, there are also obvious consequences here to how open source projects will work in future. Any time you have groups of people working together, there’s inevitable friction with differing priorities and approaches, but traditionally, having sets of people working on a project allowed it to advance much more quickly than a solo project.&lt;/p&gt;
+
+&lt;p&gt;That’s no longer really the case, now a solo developer with access to LLMs can create an entire project by themselves quite quickly. Their incentives to work with others are changed, and it could be that we’ll see a proliferation of projects covering the same topic, each run by a single developer or perhaps a small group. As an example, there are now plenty of projects doing similar things to BaremetalVMM.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Like lots of things in the AI/LLM world, things are moving pretty quickly in the field of personal software. I definitely think this will carry on as a phenomena as it’s solving people’s problems, but I’m not entirely sure it’ll play out well from a security standpoint. Definitely a case of living in interesting times…&lt;/p&gt;
+</description>
+				<pubDate>Sun, 10 May 2026 08:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2026/05/10/personal-software-and-baremetalvmm/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2026/05/10/personal-software-and-baremetalvmm/</guid>
+			</item>
+		
+			<item>
 				<title>Variance of defaults - Microk8s RBAC</title>
 				<description>&lt;p&gt;One of the points I tend to make in my talks about Kubernetes security is that it’s quite difficult to talk about what the security defaults are, as there are over 150 different Kubernetes distributions and services and each one of them has a different idea of what their security defaults should be.&lt;/p&gt;
 
@@ -727,93 +774,6 @@ exit
 				<pubDate>Mon, 11 Nov 2024 12:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/11/When-Is-Read-Only-Not-Read-Only/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring A Basic Kubernetes Network Plugin</title>
-				<description>&lt;p&gt;In my &lt;a href=&quot;https://raesene.github.io/blog/2024/11/01/The-Many-IP-Addresses-Of-Kubernetes/&quot;&gt;last blog&lt;/a&gt; I took a look at some of the different IP addresses that get assigned in a standard Kubernetes cluster, but an obvious follow-on question is, how do pods get those IP addresses?, and to answer that question we need to talk about network plugins.&lt;/p&gt;
-
-&lt;p&gt;The Kubernetes project took the decision to delegate this part of container networking to external software, in order to make it a more flexible system that can be adapted to different use cases. The way this is done is that the project leverages the &lt;a href=&quot;https://www.cncf.io/projects/container-network-interface-cni/&quot;&gt;CNI&lt;/a&gt; specification and plugins which comply with that spec. can be used to provide container networking in Kubernetes clusters.&lt;/p&gt;
-
-&lt;p&gt;This means that, like many areas of Kubernetes, there’s quite a lot of possible complexity and options to consider, and over 20 different network plugins each with their own approach, so let’s start with the basics!&lt;/p&gt;
-
-&lt;h2 id=&quot;exploring-a-basic-cluster-set-up&quot;&gt;Exploring a basic cluster set-up&lt;/h2&gt;
-
-&lt;p&gt;We’ll make use of &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind&lt;/a&gt; to provide an initial demonstration cluster, which will give us their default network plugin &lt;a href=&quot;https://github.com/kubernetes-sigs/kind/tree/main/images/kindnetd&quot;&gt;kindnetd&lt;/a&gt;. Kindnetd provide a simple CNI implementation which works well for standard kind clusters. In order to demonstrate how networking works, we’ll setup a couple of worker nodes using this config file&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Cluster&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kind.x-k8s.io/v1alpha4&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;control-plane&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;worker&lt;/span&gt;
-&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;role&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;worker&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Then, with that file saved as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kindnet-multi-node.yaml&lt;/code&gt; we can start our test cluster with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster --name=kindnet-multi-node --config=kindnet-multi-node.yaml&lt;/code&gt;. Once the cluster’s up and running we can take a look at the networking.&lt;/p&gt;
-
-&lt;p&gt;One of the first questions we might have is “how are Kubernetes network plugins configured?”. The answer is that any CNI plugins in use have a configuration file in a nominated directory, which is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/etc/cni/net.d&lt;/code&gt; by default. If we look at that directory on our kind nodes we’ll see a file called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10-kindnet.conflist&lt;/code&gt; which contains the configuration for the network plugin. Looking at the files in this directory is actually the most reliable way to determine which network plugin(s) are in use as there’s no direct record of it at a Kubernetes level.&lt;/p&gt;
-
-&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;cniVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0.3.1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kindnet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;plugins&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ptp&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ipMasq&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ipam&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;host-local&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;dataDir&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/run/cni-ipam-state&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;routes&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;dst&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0.0.0.0/0&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;ranges&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;subnet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;10.244.2.0/24&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;mtu&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1500&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;type&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;portmap&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;capabilities&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                        &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;portMappings&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-                &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-        &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;From this configuration file we can see a bit of how the network plugin works. Firstly we see the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ptp&lt;/code&gt; plugin is used. This plugin is actually one of the default ones that the CNI project maintains. What it does is create a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;veth&lt;/code&gt; network interface for each container, which can then be given an IP address. We can also see an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ipam&lt;/code&gt; section which deals with how containers are allocated IP addresses. In this case we can see that a range of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.2.0/24&lt;/code&gt; is assigned to this node, and if we look at the other worker node in the cluster we see it has the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.1.0/24&lt;/code&gt; range,and the control plane node has &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;10.244.0.0/24&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;So the next question might be “how does the traffic from a pod on one node get to a pod on another node?”. This will vary depending on the network plugin you’re using but in the case of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kindnet&lt;/code&gt; it’s pretty simple. Essentially each node has the entries for the other nodes in its routing table. We can see that by running &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ip route&lt;/code&gt; on one of our nodes.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
-10.244.0.0/24 via 172.18.0.3 dev eth0 
-10.244.2.0/24 via 172.18.0.2 dev eth0 
-172.18.0.0/16 dev eth0 proto kernel scope &lt;span class=&quot;nb&quot;&gt;link &lt;/span&gt;src 172.18.0.4
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;In this file we can see that the other nodes in the cluster have IP addresses of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.3&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;172.18.0.2&lt;/code&gt; respectively, and the container subnets are routed to those nodes.&lt;/p&gt;
-
-&lt;p&gt;We can also see how traffic gets to individual pods on that node. First let’s create a deployment with 4 replicas &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl create deployment webserver --image=nginx --replicas=4&lt;/code&gt;. Once we’ve got that setup, we can run the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ip route&lt;/code&gt; command again to see what effect that has had.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;default via 172.18.0.1 dev eth0 
-10.244.0.0/24 via 172.18.0.2 dev eth0 
-10.244.1.2 dev vethc2e31815 scope host 
-10.244.1.3 dev veth2621a4f6 scope host 
-10.244.2.0/24 via 172.18.0.3 dev eth0 
-172.18.0.0/16 dev eth0 proto kernel scope &lt;span class=&quot;nb&quot;&gt;link &lt;/span&gt;src 172.18.0.4
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We can see two new entries in our routing table for the two containers that got started on this worker node, showing how traffic would be sent to the container once it reaches the node.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;This was a quick look at a very simple CNI implementation, and how it all works will vary depending on the network plugin(s) you use. If you’re looking for a more in-depth treatment of what we’ve discussed here, I’d recommend &lt;a href=&quot;https://www.tkng.io/&quot;&gt;The Kubernetes Networking Guide&lt;/a&gt; which has a lot of information on this topic and others.&lt;/p&gt;
-</description>
-				<pubDate>Thu, 07 Nov 2024 12:00:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2024/11/07/Exploring-a-basic-Kubernetes-Network-Plugin/</guid>
 			</item>
 		
 	</channel>
