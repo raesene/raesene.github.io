@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Container Testing - A small tools container with SSH</title>
+	<title>Do containers still contain?</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>Container Testing - A small tools container with SSH </h1>
+  <h1>Do containers still contain? </h1>
 </div>
 	
 <article>
@@ -158,39 +158,40 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   April 
-	   15th,
-	   
-	   2017
+	   June 
+	   3rd,
+	     
+	   2026
 	 </span>
 	  <div class="article_body">
-	  <p>When you’re doing security testing of container environments one of the things that can be pretty useful is having a container with useful tools connected to the container network.  From there you can run network scans of the container network and also test the scenario of “malicious container”</p>
+	  <p>The questions of whether containers really contain has been an active topic of debate since pretty much as long as containers have been in use and the answer, like most things in security, is it depends! Security isn’t an absolute but calculations do change with new threats and tools and I think that that kind of change is happening at the moment with regards to Docker style containers and how much you can rely on their isolation.</p>
 
-<p>There’s a couple of ways of achieving this goal. You could run a container interactively with something like</p>
+<p>It’s always been acknowledged that the larger attack surface of the Linux kernel led to a weaker level of isolation than things like dedicated security sandboxes or virtual machines, but the less quantifiable part is how much weaker is that isolation.</p>
 
-<p><code class="language-plaintext highlighter-rouge">docker run -i -t [image_name] /bin/sh</code></p>
+<p>What’s changing now is the ease with which an attacker can create container breakout exploits using LLM based tooling based on vulnerabilities found using other LLM based tooling. In the past the art of exploit creation was a fairly niche one and it took time and effort from a skilled professional to create a container breakout, which limited their use. However that’s no longer the case.</p>
 
-<p>but one of the downsides of using a container like this is if you exit from the container, it’ll stop running, so ideally you want a container that’ll keep running and that you can connect to over the network.</p>
+<h2 id="the-case-of-cifswitch-cve-2026-46243">The case of CIFSwitch (CVE-2026-46243)</h2>
 
-<p>One example of this approach is <a href="https://hub.docker.com/r/raesene/alpine-containertools/">this image</a> which has a couple of useful features.</p>
+<p>To provide a concrete example, I came across <a href="https://heyitsas.im/posts/cifswitch/">this blog post</a> on a new Linux local privilege escalation vulnerability at the end of the working day, while browsing social media feeds. It’s a great technical explanation of a new Linux LPE vulnerability which has recently been patched. Along with the technical blog they released a proof of concept which worked to escalate a normal users rights to root on a host.</p>
 
-<p>Its based on alpine linux so the image is nice and small, and it runs an SSH daemon so that it’ll stay running and you can just connect in with SSH (assuming that you have a root from the location you start from to the container)</p>
+<p>Reading the blog, it looked like the kind of thing that might be usable as a container breakout, but I wasn’t too sure if that’d work, and my C skills aren’t really up to the task of finding out! In years gone by I would likely have kept an eye out to see if anyone created a breakout PoC for this, but otherwise not paid it that much more attention.</p>
 
-<p>It also has a neat trick that I got from some <a href="https://github.com/fedora-cloud/Fedora-Dockerfiles/blob/master/ssh/entrypoint.sh">Fedora dockerfiles</a> which is that it creates a random password each time you start an instance of the image.  This is a good thing (tm) as you don’t want a static password baked in to your image.</p>
+<p>Now however, I could easily find out whether this is going to be exploitable by passing the information to an LLM and asking!</p>
 
-<p>To use this approach just do something like</p>
+<p>There’s some important nuance here of course. In order to get a good result there’s a couple of pre-requisites. Firstly you need a strong model that’s not going to object to creating proof of concept exploits. My favourite model for this is Anthropic’s Opus 4.6. Later Opus models are quite strict on security work, so are unlikely to do this, but I’ve not found any offensive security related task that 4.6 won’t happily undertake, which is nice.</p>
 
-<p><code class="language-plaintext highlighter-rouge">docker run -d raesene/alpine-containertools</code></p>
+<p>The second pre-requisite is a validation loop that the model can use to actually create and test the PoC. Without that you’re very likely to get a hallucination about whether this can be done and how, but asking for actual tested code avoids that problem. For this I use my <a href="https://github.com/raesene/baremetalvmm">baremetalvmm</a> tool which is a piece of <a href="https://raesene.github.io/blog/2026/05/10/personal-software-and-baremetalvmm/">personal software</a> that’s well adapted for the task. It creates firecracker backed VMs which can have a custom kernel and rootfs allowing for speed of creation and easy customization.</p>
 
-<p>then find out what IP address has been assigned to your container with</p>
+<p>With those two things in place, I gave Claude code a simple single prompt asking it to investigate this vulnerability using the blog post and existing PoC for reference and see if it could create a container breakout, I then went off to do other things and let the model run. 2 hours and $13 in tokens later, I had a working container breakout (available <a href="https://github.com/raesene/vuln_pocs/tree/main/CVE-2026-46243">here</a>). The techniques it uses (including the PID spray) are all just a process of the input LPE PoC and the model’s iteration.</p>
 
-<p><code class="language-plaintext highlighter-rouge">docker inspect -f "{{.NetworkSettings.IPAddress}}" [container_name]</code></p>
+<h2 id="wider-implications">Wider implications</h2>
 
-<p>and what the password that’s been generated with</p>
+<p>The combination of <a href="https://xint.io/blog/copy-fail-linux-distributions">many</a>, <a href="https://github.com/V4bel/dirtyfrag">many</a>,  <a href="https://github.com/v12-security/pocs/tree/main/fragnesia">many</a>, <a href="https://github.com/0xdeadbeefnetwork/ssh-keysign-pwn">many</a> recent LPEs and the kind of ease of exploit creation we just described means it’s sensible to re-evaluate the suitability of standard container isolation.</p>
 
-<p><code class="language-plaintext highlighter-rouge">docker logs [container_name]</code></p>
+<p>Personally my opinion is now that if you’re using untrusted container images, or there’s a risk that an attacker could execute code inside a container, you can’t rely on that container for isolation at all, it should be assumed that the attacker can break out to the underlying host.</p>
 
-<p>and you should be able to SSH in and get started with testing.  This image has some network tools like nmap and curl and also some container tools like the docker client, kubectl and etcdctl which is handy for checking whether you can get access to the ETCD database in a Kubernetes network.</p>
+<p>That doesn’t mean that no-one should use containers, just that it’s a good time to consider what uses you have for them and whether that matches up with your threat models and risk appetite.</p>
+
 
 	  </div>
 
@@ -217,7 +218,7 @@
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Container Testing - A small tools container with SSH"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Do containers still contain?"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -246,10 +247,10 @@
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2017/04/14/OWASP-Top-10-A7-Thoughts/" title="Some thoughts on the new OWASP Top 10 - A7">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2026/05/10/personal-software-and-baremetalvmm/" title="Personal Software and BaremetalVMM">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2017/05/01/Kubernetes-Security-etcd/" title="Kubernetes Attack Surface - etcd">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
