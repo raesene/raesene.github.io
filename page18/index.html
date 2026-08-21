@@ -159,6 +159,37 @@
 
   <span class="post-date">
     
+    October
+    28th,
+    
+    2009
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2009/10/28/tools_i_use_-_d/">Tools I use - Dradis</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I've been using <a href="http://dradisframework.org">Dradis</a> for a couple of months now.  It's an interesting piece of software that's designed to help teams of people share information on penetration tests.<br />
+That said I find it useful on the tests I do even when I work alone.<br />
+Essentially Dradis provides the base environment for users to work in, either from the command line or the <a href="http://rubyonrails.org/">rails</a> based web interface, and then pretty much lets them get on with it, so it can be a bit difficult to work out how you want to use it at first, but once you get used to it it's very handy!<br />
+What I've done is started to create templates for information that I need to collect during a test and areas to review, that way it reduces the number of times I get into writing the report and realised I've missed something ;o). Once you create the tree structure in Dradis, containing any information you want,  you can export it as a single file and then re-use it as a template on future tests (for example one for web application tests, one for infrastructure etc)<br />
+you can also import information from other tools (nmap, nikto, nessus and burp at the moment) into Dradis, meaning you've got a single place to view all the information relating to the test.<br />
+It's well worth a look, as it's under active development there are new features coming pretty frequently.  Also there are guides on the site for prospective developers and as it's all done in ruby it's nice and easy to start coding for!</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     September
     11th,
     
@@ -488,38 +519,6 @@ Next time I'll follow-up on using metasploit to get down the OS</p>
     <p>Been taking a look at another one of the newer Metasploit features tonight.  WMAP is looking to integrate web application scanning functionality into Metasploit.  There's a couple of good overviews <a href="http://trac.metasploit.com/browser/framework3/trunk/documentation/wmap.txt">Here</a>, <a href="http://www.vulnerabilityassessment.co.uk/wmap_meta.htm">Here</a>  and <a href="http://darkoperator.blogspot.com/2008/10/metasploit-wmap-web-attack-and.html">Here</a><br />
 Getting it up and running is a little bit finicky at the moment, as you need to used a patched copy of <a href="http://code.google.com/p/ratproxy/">ratproxy</a> to collect the base URLs for the scanner (quick note is that my fairly new Ubuntu Intrepid install was missing libssl-dev which is a pre-requisite for compiling ratproxy so worth checking for if you get make errors when setting it up).<br />
 Once you've gathered URLs and fed them in to the database getting the scanner to start running is straightforward (examples in the links at the top so I won't go into it).  From an initial look, some of the plugins seem to do some directory/file brute-forcing which can take ages to run, but if it's going on too long you can use CTRL-C to interrupt just that plug-in and Metasploit will catch the interrupt gracefully and move on to the next directory or plugin...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    May
-    5th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/05/05/more_metasploit/">More metasploit resources</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>So another night of metasploitage, and some good additional info<br />
-<b>Pivoting</b></p>
-<ul>
-<li><a href="http://www.indepthdefense.com/2009/02/reverse-pivots-with-metasploit-how-not.html">Good write-up on some of the challenges with pivoting</a></li>
-<li><a href="http://ne0matrix.blogspot.com/2009/05/demo-video-meterpreter-pivot-attack.html">Greate Demo video of using pivoting to attack a host indirectly</a></li>
-<li><a href="http://vimeo.com/3446123">Another good video demo of pivoting, but without the cool tunes :) </a></li>
-</ul>
 
     
     

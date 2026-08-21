@@ -7,6 +7,48 @@
 		<atom:link href="https://raesene.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Using the API server proxy to bypass network policies</title>
+				<description>&lt;p&gt;I’ve been doing some work for an upcoming talk on Kubernetes Multi-tenancy security, and as part of that I was thinking about one of my favourite topics in Kubernetes security, &lt;a href=&quot;https://www.container-security.site/attackers/kubernetes_ssrf.html&quot;&gt;SSRF&lt;/a&gt;. As I was doing that I realised that applying a known existing weakness in Kubernetes security could be used by attackers to get unauthorised to other tenant’s workloads in a multi-tenant cluster.&lt;/p&gt;
+
+&lt;p&gt;In 2019 Kinvolk published a blog on &lt;a href=&quot;https://kinvolk.io/blog/2019/02/abusing-kubernetes-apiserver-proxying&quot;&gt;abusing Kubernetes API server proxying&lt;/a&gt; which talked about the idea of overwriting a pod’s IP address to allow access to an external IP address with the API server’s network position, and it occurred to me that is likely to apply to internal IP addresses too. The mitigating discussed in that blog which was placing the API server in the same network position as worker nodes, made sense when the attacker was trying to access IP addresses external to the cluster, but doesn’t really apply to an attacker who’s trying to get access to an internal resource that should be blocked.&lt;/p&gt;
+
+&lt;h2 id=&quot;setup&quot;&gt;Setup&lt;/h2&gt;
+
+&lt;p&gt;So imagine we have a simple Multi-tenant cluster, where each tenant has control over the workloads in their namespace, but shouldn’t have access to any other workloads in the cluster. We use network policies to implement this restriction blocking access from each namespace, to any other namespace. We do however allow the API server itself to access every namespace for cluster management and to allow tenants to debug their own applications. It might look something like :-&lt;/p&gt;
+
+&lt;p&gt;![Multi-tenant cluster seutp]](https://raesene.github.io/assets/media/multi-tenant-cluster-network.png)&lt;/p&gt;
+
+&lt;p&gt;With this setup, we can connect to our Pod via the API server proxy allowing each tenant to work with their own applications&lt;/p&gt;
+
+&lt;p&gt;![Multi-tenant cluster access via API server proxy]](https://raesene.github.io/assets/media/multi-tenant-cluster-network-access-allowed.png)&lt;/p&gt;
+
+&lt;p&gt;However as each tenant only has permissions to its own namespace, they can’t use the API server proxy to access workloads in the other tenant’s namespace.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-attack&quot;&gt;The Attack&lt;/h2&gt;
+
+&lt;p&gt;As mentioned in the Kinvolk blog post if a user has rights to overwrite the status of a pod, they can change its IP address. When that happens the cluster will change it back, but if we loop the change it’ll be present long enough to (ab)use!&lt;/p&gt;
+
+&lt;p&gt;So assuming that one tenant can work out what IP address they want to connect to in another tenant’s namespace (this might get disclosed by a number of methods for example &lt;a href=&quot;https://github.com/jpts/coredns-enum&quot;&gt;DNS bruteforcing&lt;/a&gt;) they can set their own pod’s IP address to that one and connect via the API server!&lt;/p&gt;
+
+&lt;p&gt;This gets allowed by RBAC as the proxy request is to a pod that the user owns and is allowed by network policies as the API server has access to all tenant’s namespaces.&lt;/p&gt;
+
+&lt;p&gt;In the demonstration video below I’ve setup a cluster with two web applications and network policies blocking access from one namespace to the other. Then running the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;kubectl proxy&lt;/code&gt; command as the tenant-a-user it shows that they can get to their own application via the API server proxy but not the one from tenant-b. Then we launch the attack script that sets the IP address of the tenant-a pod to be the address of tenant-b’s pod, after which it’s possible to get access to tenant-b’s application via the proxy.&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/MMOdag1ouTA?si=Q0WGwAGv0TFsc-ym&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; allowfullscreen=&quot;&quot;&gt;&lt;/iframe&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Kubernetes network security is a kind of complex topic as things like the &lt;a href=&quot;https://securitylabs.datadoghq.com/articles/?s=unpatchable&quot;&gt;unpatchable four&lt;/a&gt; have shown and in a multi-tenant environment that gets even more complex!&lt;/p&gt;
+
+&lt;h2 id=&quot;appendix-a---reproducing-the-attack&quot;&gt;Appendix A - Reproducing the attack&lt;/h2&gt;
+
+</description>
+				<pubDate>Fri, 21 Aug 2026 10:00:00 +0100</pubDate>
+				<link>https://raesene.github.io/blog/2026/08/21/api-server-proxy-netpol-bypass/</link>
+				<guid isPermaLink="true">https://raesene.github.io/blog/2026/08/21/api-server-proxy-netpol-bypass/</guid>
+			</item>
+		
+			<item>
 				<title>Show us Zee Pages</title>
 				<description>&lt;p&gt;Full disclosure, this is one of those posts I do where there’s no dramatic pay off at the end, it’s just documenting something I found that took me a while to figure out and that I thought was interesting :)&lt;/p&gt;
 
@@ -588,85 +630,6 @@ Blocked Syscalls &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;54&lt;span class=
 				<pubDate>Wed, 23 Apr 2025 11:00:00 +0100</pubDate>
 				<link>https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</link>
 				<guid isPermaLink="true">https://raesene.github.io/blog/2025/04/23/cap-or-no-cap/</guid>
-			</item>
-		
-			<item>
-				<title>CVE-2025-1767 - Another gitrepo issue</title>
-				<description>&lt;p&gt;There’s a new Kubernetes security vulnerability that’s just been disclosed and I thought it was worth taking a look at it, as there’s a couple of interesting aspects to it. &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/130786&quot;&gt;CVE-2025-1767&lt;/a&gt; exists in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume type and can allow users who can create pods with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes to get access to any other git repository on the node where the pod is deployed. This is the second recent CVE related to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes, I covered the last one &lt;a href=&quot;https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;vulnerability-and-exploitation&quot;&gt;Vulnerability and Exploitation&lt;/h2&gt;
-
-&lt;p&gt;So setting this up is relatively straightforward. Our node OS has to have &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; installed, which is common but not the case in every distribution, and we need to be able to create pods on that node. With those two pre-requisites in place, we can show how to exploit it.&lt;/p&gt;
-
-&lt;p&gt;I’m going to use a &lt;a href=&quot;https://kind.sigs.k8s.io/&quot;&gt;kind cluster&lt;/a&gt; , so first step is to shell into the cluster and install git, as it’s not included with kind.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind create cluster
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;docker exec -it kind-control-plane bash
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;apt update &amp;amp;&amp;amp; apt install -y git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Next we need a “victim” git repository, for this I’ll just clone down &lt;a href=&quot;https://github.com/raesene/TestingScripts/&quot;&gt;one of my repositories&lt;/a&gt; into the root of the node’s filesystem.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git clone https://github.com/raesene/TestingScripts/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;With that setup done, exit the node shell, and then we can create our “exploit” pod. This is pretty straightforward, all we need is a pod with a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volume and we specify the repository to pull into the pod using a file path. As the plugin is just running git on the host, it can access that directory just fine and pull it into the pod.&lt;/p&gt;
-
-&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Pod&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-repo-pod-test&lt;/span&gt;
-&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;containers&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-repo-test-container&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;raesene/alpine-containertools&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;volumeMounts&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-volume&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;mountPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;/tmp&lt;/span&gt;
-  &lt;span class=&quot;na&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;git-volume&lt;/span&gt;
-    &lt;span class=&quot;na&quot;&gt;gitRepo&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;repository&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/TestingScripts&quot;&lt;/span&gt;
-      &lt;span class=&quot;na&quot;&gt;directory&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We can then save this as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitrepotest.yaml&lt;/code&gt; and apply it to the cluster with&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f gitrepotest.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;If all works ok, it should be possible to check that the repository has been cloned from the node into the pod&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl exec git-repo-pod-test -- ls /tmp
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;This will show the files from the cloned repository!&lt;/p&gt;
-
-&lt;h2 id=&quot;impact--exploitability&quot;&gt;Impact &amp;amp; Exploitability&lt;/h2&gt;
-
-&lt;p&gt;So that’s how it works, is it really a problem? My feeling is that this is quite a situational vulnerability. Essentially the attacker needs to know the path to a git repository on the node, and for it to contain files that they should not have access to. That’s not going to be be every cluster for sure, but there are times when you could see this causing problems&lt;/p&gt;
-
-&lt;h2 id=&quot;patching--mitigation&quot;&gt;Patching &amp;amp; Mitigation&lt;/h2&gt;
-
-&lt;p&gt;The patching situation for this vulnerability is interesting. The CVE description says that a patch will not be provided as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes are deprecated, which is true. However, this volume type is enabled by Kubernetes by default and there is no flag or switch that would allow a cluster operator to disable it.&lt;/p&gt;
-
-&lt;p&gt;There has been an &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/125983&quot;&gt;ongoing discussion&lt;/a&gt; on disabling and/or removing this volume type since the &lt;a href=&quot;https://github.com/kubernetes/kubernetes/issues/128885&quot;&gt;last CVE&lt;/a&gt; affecting this component, but a decision hasn’t currently been made on its removal.&lt;/p&gt;
-
-&lt;p&gt;In practice, if you don’t use &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gitRepo&lt;/code&gt; volumes, you can mitigate this in a couple of ways. If you don’t need &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git&lt;/code&gt; on your nodes you can just remove it there (assuming un-managed Kubernetes of course), and you can also block the use of these volumes using &lt;a href=&quot;https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/&quot;&gt;Validating Admission Policy&lt;/a&gt; or similar admission controllers. There’s some details in the CVE announcement of a policy that could be used.&lt;/p&gt;
-
-&lt;p&gt;One downside that you may encounter here is that I’d imagine that CVE scanners will pick up this vulnerability and as they can’t easily detect the mitigations, and as there are no patches available and all Kubernetes versions are affected, I’d expect this to flag a lot of Kubernetes installations as vulnerable.&lt;/p&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Whilst this is a bit of a situational vulnerability, it’s an interesting illustration of how some less well known components of Kubernetes can affect its security.&lt;/p&gt;
-</description>
-				<pubDate>Fri, 14 Mar 2025 10:00:00 +0000</pubDate>
-				<link>https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</link>
-				<guid isPermaLink="true">https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/</guid>
 			</item>
 		
 	</channel>

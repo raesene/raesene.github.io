@@ -159,6 +159,37 @@
 
   <span class="post-date">
     
+    March
+    25th,
+    
+    2012
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2012/03/25/windows-8-on-the-acer-iconia-w500-tablet/">Windows 8 on the Acer Iconia W500 Tablet</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>Not really security related but I recently aquired a Windows tablet in order to try out the touch features of Windows 8.  It was quite an interesting experience getting the new OS on to it, but now I have, I'd like to compare the W500's features and performance with the iPad I have been using for a couple of years now.</p>
+<p>First just a couple of things about the install.  I attached an external USB DVD drive to the tablet which used up both the available ports on the tablet.  This turned out to be a bad plan because I didn't consider at the time (obvious in retrospect as it is) that the drivers for the touch screen required the OS to be installed and there was therefore no way to enter the product key during the install.  So back to square one - I had to use a USB hub so that I could plug a keyboard in as well.  With hindsight I would have been better installing off a USB key (there are instructions on how to do this on the Internet).  Once this was done, everything went smoothly, but the touch screen didn't work properly (no right click, no auto-rotate).  After a bit of searching, I found that you have to go to the Acer site and reinstall the Windows 7 drivers for all the proprietory peripherals - after that everthing works fine.</p>
+<p>So first impressions of the OS is pretty good.  The Metro Interface is very attractive and (for a beta) remarkably smooth and stable.  It is slightly jarring at first moving backwards and forwards between Metro and the legacy desktop - plus the lack of the start button is rather annoying but I've actually found I've got used to it pretty quickly.  The only significant problem I have with it now is that sometimes when the tablet is left in sleep mode for a long time with Windows Explorer open, it hangs the program when you wake the tablet up.</p>
+<p>Comparing it to the iPad, first some negative features.  It weighs nearly twice as much as the iPad 3  and the battery life is not nearly as good.  After 8 hours on standby, the W500 was only on about quarter charge, whereas I can leave the iPad on standby for days without it losing any appreciable amount of charge.  The screen rotation on the W500 is good, but it doesn't have the transition affect the iPad does, so the screen goes black briefly when you rotate it.</p>
+<p>Its good features (of which there are quite a lot).  It is a proper fully fledged PC with 2G RAM and a dual core processor which runs proper Windows apps (pretty smoothly on Win 8).  I wouldn't want to use the virtual keyboard to write a pentest report with a fancy template, but for short periods of time it is perfectly usable and (I think) nicer than the Apple one.  Plugged in to its docking station, you could easily work on a Word document on it, which is pretty much essential to our jobs.  It also has two USB ports and a SD card reader which are features I really miss in the iPad.  I tested installing a couple of programs on the SD card because the internal SSD is pretty small at 33G, and they run tolerably quickly.</p>
+<p>So my verdict.  If you want a purely locked down tablet with a lovely smooth experience and a great battery life - I would go with the iPad.  However if you want to do a bit more and have a combined tablet/laptop that you can actually do work on - I think the W500 is a better bet.  Personally I am keeping both....</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     January
     13th,
     
@@ -540,40 +571,6 @@ The next step is to create the dradis plugin to hook the two together, which as 
     <p>I've just started a new role as a director at <a href="http:///www.7elements.co.uk"> 7 Elements</a>.  We're providing technical security consultancy and penetration testing services, focusing on the scottish market.<br />
 As part of that we've started up a blog <a href="http://blog.7elements.co.uk">here</a> to talk through some of the ideas we've got for approaching security and testing in a pragmatic way.<br />
 I'm planning to keep this blog running for now (not that you could tell from the level of posts!), but more of my security/testing stuff will probably pop up on the 7 Elements blog...</p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    July
-    17th,
-    
-    2010
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2010/07/17/wireless_scanni/">Wireless Scanning and a new tool</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I had some cause to do some wireless work recently, which got me interested in doing some more war-walking (and hey, the weathers actually been nice enough to make it pleasant recently).<br />
-It was interesting to see the density of wireless networks in the suburban area near where I live, a quick 30 minute walk can easily pick up several hundred APs.  Also some of the stats on encryption were interesting with about 25% of networks either using WEP or having no encryption at all, so still rich pickings there for anyone who wants free access or to attack some home networks directly.<br />
-I also did a bit of scanning with my N900 in Glasgow, near the apple store and noticed they've got an awful lot of clients connected to their unencrypted wireless networks there (~ 260 client spread over 3 APs), hope everyone is using VPNs or SSL only sites ;op<br />
-Also couldn't find something to do the analysis the way I was looking for it, so I knocked up a quick script in ruby to analyse the .netxml output files from kismet.<br />
-It's available <a href="http://www.mccune.org.uk/code/kis_analysis.rb"> here </a> .  It needs ruby, rubygems and nokogiri to work.  worth noting that on linux installs you'll need some xml parsing libraries installed before installing nokogiri (libxslt libxml2 libxml2-dev)<br />
-Basic syntax is very straightforward.<br />
-./kis_analysis.rb -f [netxml file] -r [report name]<br />
-you can add -g if you've got GPS data to add links from each network to a google maps point and -m to draw a map of all the networks seen.<br />
-Any feedback/comments welcome either on the blog or to rorym@nmrconsult.net</p>
 
     
     

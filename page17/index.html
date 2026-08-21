@@ -159,6 +159,40 @@
 
   <span class="post-date">
     
+    July
+    17th,
+    
+    2010
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2010/07/17/wireless_scanni/">Wireless Scanning and a new tool</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I had some cause to do some wireless work recently, which got me interested in doing some more war-walking (and hey, the weathers actually been nice enough to make it pleasant recently).<br />
+It was interesting to see the density of wireless networks in the suburban area near where I live, a quick 30 minute walk can easily pick up several hundred APs.  Also some of the stats on encryption were interesting with about 25% of networks either using WEP or having no encryption at all, so still rich pickings there for anyone who wants free access or to attack some home networks directly.<br />
+I also did a bit of scanning with my N900 in Glasgow, near the apple store and noticed they've got an awful lot of clients connected to their unencrypted wireless networks there (~ 260 client spread over 3 APs), hope everyone is using VPNs or SSL only sites ;op<br />
+Also couldn't find something to do the analysis the way I was looking for it, so I knocked up a quick script in ruby to analyse the .netxml output files from kismet.<br />
+It's available <a href="http://www.mccune.org.uk/code/kis_analysis.rb"> here </a> .  It needs ruby, rubygems and nokogiri to work.  worth noting that on linux installs you'll need some xml parsing libraries installed before installing nokogiri (libxslt libxml2 libxml2-dev)<br />
+Basic syntax is very straightforward.<br />
+./kis_analysis.rb -f [netxml file] -r [report name]<br />
+you can add -g if you've got GPS data to add links from each network to a google maps point and -m to draw a map of all the networks seen.<br />
+Any feedback/comments welcome either on the blog or to rorym@nmrconsult.net</p>
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     May
     19th,
     
@@ -421,37 +455,6 @@ All in all it's definitely smarter than your average smart phone!</p>
     
     <p>OWASP Scotland November meeting is next Thursday, the 26th.  We've got something a bit different lined up with the main presentation being one on physical security and lock picking (hey if you can break into the server room and take the box, who needs SQL injection ;oP )<br />
 More information <a href="http://www.owasp.org/index.php/Scotland#Local_News">here</a></p>
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    October
-    28th,
-    
-    2009
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2009/10/28/tools_i_use_-_d/">Tools I use - Dradis</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>I've been using <a href="http://dradisframework.org">Dradis</a> for a couple of months now.  It's an interesting piece of software that's designed to help teams of people share information on penetration tests.<br />
-That said I find it useful on the tests I do even when I work alone.<br />
-Essentially Dradis provides the base environment for users to work in, either from the command line or the <a href="http://rubyonrails.org/">rails</a> based web interface, and then pretty much lets them get on with it, so it can be a bit difficult to work out how you want to use it at first, but once you get used to it it's very handy!<br />
-What I've done is started to create templates for information that I need to collect during a test and areas to review, that way it reduces the number of times I get into writing the report and realised I've missed something ;o). Once you create the tree structure in Dradis, containing any information you want,  you can export it as a single file and then re-use it as a template on future tests (for example one for web application tests, one for infrastructure etc)<br />
-you can also import information from other tools (nmap, nikto, nessus and burp at the moment) into Dradis, meaning you've got a single place to view all the information relating to the test.<br />
-It's well worth a look, as it's under active development there are new features coming pretty frequently.  Also there are guides on the site for prospective developers and as it's all done in ruby it's nice and easy to start coding for!</p>
 
     
     

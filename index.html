@@ -159,6 +159,33 @@
 
   <span class="post-date">
     
+    August
+    21st,
+    
+    2026
+  </span>
+
+  <h2>
+    <a href="https://raesene.github.io/blog/2026/08/21/api-server-proxy-netpol-bypass/">Using the API server proxy to bypass network policies</a>
+  </h2>
+
+  <div>
+    
+    
+    <p>I’ve been doing some work for an upcoming talk on Kubernetes Multi-tenancy security, and as part of that I was thinking about one of my favourite topics in Kubernetes security, <a href="https://www.container-security.site/attackers/kubernetes_ssrf.html">SSRF</a>. As I was doing that I realised that applying a known existing weakness in Kubernetes security could be used by attackers to get unauthorised to other tenant’s workloads in a multi-tenant cluster.</p>
+
+
+    
+    
+  </div>
+
+</article>
+
+
+<article class="home">
+
+  <span class="post-date">
+    
     July
     20th,
     
@@ -389,33 +416,6 @@
     
     
     <p>I was looking at a <a href="https://github.com/kubernetes/kubernetes/issues/131336">Kubernetes issue</a> the other day and it led me down a kind of interesting rabbit hole, so I thought it’d be worth sharing as I learned a couple of things.</p>
-
-
-    
-    
-  </div>
-
-</article>
-
-
-<article class="home">
-
-  <span class="post-date">
-    
-    March
-    14th,
-    
-    2025
-  </span>
-
-  <h2>
-    <a href="https://raesene.github.io/blog/2025/03/14/cve-2025-1767-another-gitrepo-issue/">CVE-2025-1767 - Another gitrepo issue</a>
-  </h2>
-
-  <div>
-    
-    
-    <p>There’s a new Kubernetes security vulnerability that’s just been disclosed and I thought it was worth taking a look at it, as there’s a couple of interesting aspects to it. <a href="https://github.com/kubernetes/kubernetes/issues/130786">CVE-2025-1767</a> exists in the <code class="language-plaintext highlighter-rouge">gitRepo</code> volume type and can allow users who can create pods with <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes to get access to any other git repository on the node where the pod is deployed. This is the second recent CVE related to <code class="language-plaintext highlighter-rouge">gitRepo</code> volumes, I covered the last one <a href="https://raesene.github.io/blog/2024/07/10/Fun-With-GitRepo-Volumes/">here</a></p>
 
 
     

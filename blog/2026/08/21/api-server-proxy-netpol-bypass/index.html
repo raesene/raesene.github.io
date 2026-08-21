@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management</title>
+	<title>Using the API server proxy to bypass network policies</title>
 	
 	<meta name="author" content="raesene">
 
@@ -150,7 +150,7 @@
 
 	<div class="col-sm-9 col-sm-offset-3">
 		<div class="page-header">
-  <h1>PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management </h1>
+  <h1>Using the API server proxy to bypass network policies </h1>
 </div>
 	
 <article>
@@ -158,46 +158,46 @@
 	<div class="col-sm-10">
 	 <span class="post-date">
 	   
-	   November 
-	   6th,
-	   
-	   2022
+	   August 
+	   21st,
+	     
+	   2026
 	 </span>
 	  <div class="article_body">
-	  <p>This is the sixth part of a series of posts looking at the PCI recommendations for container security as they apply to Kubernetes environments. This time we’re looking at secrets management. An index of the posts in this series can be found <a href="https://www.container-security.site/defenders/PCI_Container_Orchestration_Guidance.html">here</a>.</p>
+	  <p>I’ve been doing some work for an upcoming talk on Kubernetes Multi-tenancy security, and as part of that I was thinking about one of my favourite topics in Kubernetes security, <a href="https://www.container-security.site/attackers/kubernetes_ssrf.html">SSRF</a>. As I was doing that I realised that applying a known existing weakness in Kubernetes security could be used by attackers to get unauthorised to other tenant’s workloads in a multi-tenant cluster.</p>
 
-<p>Secrets management is an important part of any containerized environment for a couple of reasons. The main one is that when using containers for deploying your workloads you have a dilemma about where to put any secrets that the container might need during its operation (e.g. credentials for a backend database). Secrets cannot be effectively stored with the images used to create them as those images are often stored on public or semi-public registries and also it would mean you needed to rebuild the image every time you changed a credential, which is unlikely to be practical at scale.</p>
+<p>In 2019 Kinvolk published a blog on <a href="https://kinvolk.io/blog/2019/02/abusing-kubernetes-apiserver-proxying">abusing Kubernetes API server proxying</a> which talked about the idea of overwriting a pod’s IP address to allow access to an external IP address with the API server’s network position, and it occurred to me that is likely to apply to internal IP addresses too. The mitigating discussed in that blog which was placing the API server in the same network position as worker nodes, made sense when the attacker was trying to access IP addresses external to the cluster, but doesn’t really apply to an attacker who’s trying to get access to an internal resource that should be blocked.</p>
 
-<p>Also containers are ephemeral so manually adding secrets to them at runtime won’t be effective, as the container may be rescheduled to another server at any time, where it would be re-created from the image. So we need some automated way of injecting any credentials required by the container when it starts on a given Kubernetes cluster node.</p>
+<h2 id="setup">Setup</h2>
 
-<p>The general answer to that is some form of secrets management system, which can handle providing the right secrets to the right containers, when they start-up. Kubernetes has an in-built <a href="https://kubernetes.io/docs/concepts/configuration/secret/">secrets</a> facility, which is one option. These are just items stored in the Kubernetes datastore and provided as configured to containers. Some people using Kubernetes have been known to use ConfigMaps for storing secrets, but this isn’t a great idea (for reasons I detailed <a href="https://blog.aquasec.com/kubernetes-configmap-secrets">here</a>).</p>
+<p>So imagine we have a simple Multi-tenant cluster, where each tenant has control over the workloads in their namespace, but shouldn’t have access to any other workloads in the cluster. We use network policies to implement this restriction blocking access from each namespace, to any other namespace. We do however allow the API server itself to access every namespace for cluster management and to allow tenants to debug their own applications. It might look something like :-</p>
 
-<p>A point that regularly gets raised about Kubernetes secrets is that, by default, they’re not encrypted on disk. Kubernetes provides an option to ensure that this happens, but it needs to be configured. For managed Kubernetes services (e.g. EKS, GKE, AKS) the etcd database is stored by the cloud provider so it’s arguable about how much difference it makes encrypting on disk, but generally the option is still available.</p>
+<p>![Multi-tenant cluster seutp]](https://raesene.github.io/assets/media/multi-tenant-cluster-network.png)</p>
 
-<p>In addition to Kubernetes in-built features, there are a wide range of external dedicated secrets management services which will work with Kubernetes. Either cloud provider based options or software like <a href="https://www.vaultproject.io/">Hashicorp Vault</a> can be used.</p>
+<p>With this setup, we can connect to our Pod via the API server proxy allowing each tenant to work with their own applications</p>
 
-<p>So with a general background on this topic, what does PCI specifically recommend.</p>
+<p>![Multi-tenant cluster access via API server proxy]](https://raesene.github.io/assets/media/multi-tenant-cluster-network-access-allowed.png)</p>
 
-<h2 id="section-61">Section 6.1</h2>
+<p>However as each tenant only has permissions to its own namespace, they can’t use the API server proxy to access workloads in the other tenant’s namespace.</p>
 
-<p><strong>Threat</strong> - Inappropriately stored secrets, including credentials, provided through the container orchestration tool, could be leaked to  unauthorized users or attackers with some level of access to the environment.</p>
+<h2 id="the-attack">The Attack</h2>
 
-<p><strong>Best Practice</strong> - All secrets needed for the operation of applications hosted on the orchestration platform should be held in encrypted
-dedicated secrets management systems.</p>
+<p>As mentioned in the Kinvolk blog post if a user has rights to overwrite the status of a pod, they can change its IP address. When that happens the cluster will change it back, but if we loop the change it’ll be present long enough to (ab)use!</p>
 
-<p><strong>Details</strong> - The intent of this best practice is really around the points discussed above, which is that storing secrets in images, or using general configuration management systems is not appropriate and should be avoided. Also the requirement for encryption means that , if using Kubernetes secrets, you need to enable the option that makes them encrypted on-disk.</p>
+<p>So assuming that one tenant can work out what IP address they want to connect to in another tenant’s namespace (this might get disclosed by a number of methods for example <a href="https://github.com/jpts/coredns-enum">DNS bruteforcing</a>) they can set their own pod’s IP address to that one and connect via the API server!</p>
 
-<h2 id="section-62">Section 6.2</h2>
+<p>This gets allowed by RBAC as the proxy request is to a pod that the user owns and is allowed by network policies as the API server has access to all tenant’s namespaces.</p>
 
-<p><strong>Threat</strong> - Secrets stored without version control could lead to an outage if a compromise occurs and there is a requirement to rotate them quickly.</p>
+<p>In the demonstration video below I’ve setup a cluster with two web applications and network policies blocking access from one namespace to the other. Then running the <code class="language-plaintext highlighter-rouge">kubectl proxy</code> command as the tenant-a-user it shows that they can get to their own application via the API server proxy but not the one from tenant-b. Then we launch the attack script that sets the IP address of the tenant-a pod to be the address of tenant-b’s pod, after which it’s possible to get access to tenant-b’s application via the proxy.</p>
 
-<p><strong>Best Practice</strong> - Apply version control for secrets, so it is easy to refresh or revoke it in case of a compromise.</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MMOdag1ouTA?si=Q0WGwAGv0TFsc-ym" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>
 
-<p><strong>Details</strong> - This is really an availability concern, rather than one around the confidentiality of the secrets. Applying it with base Kubernetes secrets would likely require manual work to define versions of secrets.</p>
+<h2 id="conclusion">Conclusion</h2>
 
-<h1 id="conclusion">Conclusion</h1>
+<p>Kubernetes network security is a kind of complex topic as things like the <a href="https://securitylabs.datadoghq.com/articles/?s=unpatchable">unpatchable four</a> have shown and in a multi-tenant environment that gets even more complex!</p>
 
-<p>Secrets management is an inevitable part of container based deployments, and something which needs to be carefully considered when moving to a system like Kubernetes. The PCI recommendations are as with most of them, fairly general good practice, but there are a couple of specifics which apply in Kubernetes to be considered.</p>
+<h2 id="appendix-a---reproducing-the-attack">Appendix A - Reproducing the attack</h2>
+
 
 	  </div>
 
@@ -224,7 +224,7 @@ dedicated secrets management systems.</p>
 	<!--
       <section class="share col-sm-6">
         <h4 class="section-title">Share Post</h4>
-        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=PCI Compliance for Kubernetes in detail - Part 6 - Secrets Management"
+        <a class="btn btn-default btn-sm twitter" href="https://twitter.com/share?text=Using the API server proxy to bypass network policies"
            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
           <i class="fa fa-twitter fa-lg"></i>
           Twitter
@@ -253,10 +253,10 @@ dedicated secrets management systems.</p>
 
 		<ul class="pager">
 		  
-		  <li class="previous"><a href="https://raesene.github.io/blog/2022/10/30/Project-Volterra-ARM-Desktop/" title="Project Volterra - ARM Desktop">&larr; Previous</a></li>
+		  <li class="previous"><a href="https://raesene.github.io/blog/2026/07/20/show-us-zee-pages/" title="Show us Zee Pages">&larr; Previous</a></li>
 		  
 		  
-		  <li class="next"><a href="https://raesene.github.io/blog/2022/11/12/PCI-Kubernetes-Section7-Auditing/" title="PCI Compliance for Kubernetes in detail - Part 7 - Container Orchestration Tool Auditing">Next &rarr;</a></li>
+			<li class="next disabled"><a>Next &rarr;</a>
 		  
 		</ul>
 
