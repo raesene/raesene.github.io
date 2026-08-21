@@ -172,11 +172,11 @@
 
 <p>So imagine we have a simple Multi-tenant cluster, where each tenant has control over the workloads in their namespace, but shouldn’t have access to any other workloads in the cluster. We use network policies to implement this restriction blocking access from each namespace, to any other namespace. We do however allow the API server itself to access every namespace for cluster management and to allow tenants to debug their own applications. It might look something like :-</p>
 
-<p>![Multi-tenant cluster seutp]](https://raesene.github.io/assets/media/multi-tenant-cluster-network.png)</p>
+<p><img src="https://raesene.github.io/assets/media/multi-tenant-cluster-network.png" alt="Multi-tenant cluster seutp" /></p>
 
 <p>With this setup, we can connect to our Pod via the API server proxy allowing each tenant to work with their own applications</p>
 
-<p>![Multi-tenant cluster access via API server proxy]](https://raesene.github.io/assets/media/multi-tenant-cluster-network-access-allowed.png)</p>
+<p><img src="https://raesene.github.io/assets/media/multi-tenant-cluster-network-access-allowed.png" alt="Multi-tenant cluster access via API server proxy" /></p>
 
 <p>However as each tenant only has permissions to its own namespace, they can’t use the API server proxy to access workloads in the other tenant’s namespace.</p>
 
