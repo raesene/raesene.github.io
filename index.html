@@ -3,7 +3,16 @@ layout: default
 ---
 
 {% if paginator.page == 1 or paginator.page == nil %}
-<p class="post-date" style="margin-bottom:24px">Latest writing</p>
+<section class="hero" aria-label="Site introduction">
+	<img src="{{ site.BASE_PATH }}/assets/media/hero.jpg" alt="A weathered broadsheet leaf, backlit against a dark ground">
+	<div class="hero-overlay">
+		<p class="hero-eyebrow">Security &middot; Kubernetes &middot; Containers &middot; since 2004</p>
+		<h1 class="hero-title">{{ site.description | default: "Things that occur to me" }}</h1>
+		<p class="hero-sub">{{ site.author.bio }}</p>
+	</div>
+</section>
+
+<p class="post-date section-strap">Latest writing</p>
 {% endif %}
 
 <div class="post-list">

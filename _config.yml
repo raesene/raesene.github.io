@@ -21,7 +21,6 @@ defaults:
 
 description: Things that occur to me
 include:
-  - tags.html
   - categories.html
 author:
   name: raesene

@@ -171,6 +171,47 @@ h1 small, h2 small { font-family: var(--font-mono); font-size: .5em; font-weight
 .rail-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin: 8px 0 12px; }
 .rail .social { flex-wrap: wrap; }
 
+/* ---------- Home: hero ---------- */
+.hero {
+  position: relative;
+  margin: 4px 0 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-md);
+}
+.hero img {
+  display: block; width: 100%;
+  height: clamp(260px, 36vw, 400px);
+  object-fit: cover; object-position: 72% center;
+}
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(90deg,
+    rgba(7,11,18,0.94) 0%, rgba(7,11,18,0.80) 28%,
+    rgba(7,11,18,0.35) 54%, rgba(7,11,18,0) 74%);
+}
+.hero-overlay {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center; gap: 14px;
+  padding: 0 clamp(24px, 5vw, 56px);
+  padding-right: 42%;
+}
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--accent); margin: 0;
+}
+.hero-title {
+  margin: 0;
+  font-size: clamp(2rem, 5.2vw, 3.4rem);
+  line-height: 1.02;
+}
+.hero-sub { margin: 0; color: var(--muted); font-size: clamp(14px, 1.6vw, 16px); max-width: 34ch; }
+
+.section-strap { margin-bottom: 24px; }
+
 /* ---------- Home: post list ---------- */
 .post-list { display: flex; flex-direction: column; }
 .post-list article.home {
@@ -384,6 +425,9 @@ footer.site-footer a:hover { color: var(--accent); }
   .mast-nav .links { flex-wrap: wrap; gap: 14px 18px; }
   .layout { padding-top: 32px; }
   .post-list h2 { font-size: 1.6rem; }
+  .hero img { height: clamp(300px, 62vw, 380px); }
+  .hero::before { background: linear-gradient(90deg, rgba(7,11,18,0.95) 0%, rgba(7,11,18,0.85) 45%, rgba(7,11,18,0.5) 78%, rgba(7,11,18,0.25) 100%); }
+  .hero-overlay { padding-right: 16%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
