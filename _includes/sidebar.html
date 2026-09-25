@@ -1,63 +1,38 @@
-<!-- sidebar.html -->
-<header class="sidebar-header" role="banner">
-	<a href="{{ site.BASE_PATH }}/">
-		<img src="https://www.gravatar.com/avatar/{{site.author.email_md5}}?s=150" class="img-circle" />
+<!-- sidebar.html : author rail -->
+<div class="rail-card">
+	<a href="{{ site.BASE_PATH }}/" aria-label="{{ site.author.name }}">
+		<img class="rail-avatar" src="https://www.gravatar.com/avatar/{{ site.author.email_md5 }}?s=192" alt="{{ site.author.name }}">
 	</a>
-	<h3 class="title">
-        <a href="{{ site.BASE_PATH }}/">{{ site.title }}</a>
-    </h3>
-</header>
+	<h2 class="rail-name"><a href="{{ site.BASE_PATH }}/">{{ site.author.name }}</a></h2>
+	{% if site.author.bio %}
+	<p class="rail-bio">{{ site.author.bio }}</p>
+	{% endif %}
 
-{% if site.author.bio %}
-<div id="bio" class="text-center">
-	{{ site.author.bio }}
-</div>
-{% endif %}
-
-<div id="contact-list" class="text-center">
-	<ul class="list-unstyled list-inline">
+	<p class="rail-label">Connect</p>
+	<ul class="social">
 		{% if site.author.github %}
-		<li>
-			<a class="btn btn-default btn-sm" href="https://github.com/{{ site.author.github }}">
-				<i class="fa fa-github-alt fa-lg"></i>
-			</a>
-		</li>
+		<li><a href="https://github.com/{{ site.author.github }}" aria-label="GitHub" title="GitHub">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+		</a></li>
 		{% endif %}
 		{% if site.author.bluesky %}
-		<li>
-			<a class="btn btn-default btn-sm" href="https://bsky.app/profile/{{ site.author.bluesky }}">
-				<i class="fa fa-cloud fa-lg"></i>
-			</a>
-		</li>
-		{% endif %}
-		{% if site.author.email %}
-		<li>
-			<a class="btn btn-default btn-sm" href="mailto:{{ site.author.email }}">
-				<i class="fa fa-envelope fa-lg"></i>
-			</a>
-		</li>
-		{% endif %}
-	</ul>
-	<ul id="contact-list-secondary" class="list-unstyled list-inline">
-		{% if site.author.pinterest %}
-		<li>
-			<a class="btn btn-default btn-sm" href="https://pinterest.com/{{ site.author.pinterest }}">
-				<i class="fa fa-pinterest fa-lg"></i>
-			</a>
-		</li>
+		<li><a href="https://bsky.app/profile/{{ site.author.bluesky }}" aria-label="Bluesky" title="Bluesky">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 10.8C10.9 8.6 7.9 4.6 5.1 2.6 2.4.7 1.4 1 .8 1.3.1 1.7 0 2.8 0 3.4c0 .6.3 5.1.6 5.9.8 2.4 3.4 3.2 5.8 3-3.5.5-6.6 1.8-2.5 6.3 4.5 4.7 6.2-1 7.1-3.7.9 2.7 1.9 8.2 7 3.7 3.8-3.7 1-6-2.5-6.5 2.4.2 5-.6 5.8-3 .3-.8.6-5.3.6-5.9 0-.6-.1-1.7-.8-2.1-.6-.3-1.6-.6-4.3 1.3-2.8 2-5.8 6-6.9 8.2Z"/></svg>
+		</a></li>
 		{% endif %}
 		{% if site.author.linkedin %}
-		<li>
-			<a class="btn btn-default btn-sm" href="https://linkedin.com/in/{{ site.author.linkedin }}">
-				<i class="fa fa-linkedin fa-lg"></i>
-			</a>
-		</li>
+		<li><a href="https://linkedin.com/in/{{ site.author.linkedin }}" aria-label="LinkedIn" title="LinkedIn">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>
+		</a></li>
 		{% endif %}
-		<li>
-			<a class="btn btn-default btn-sm" href="{{ site.BASE_PATH }}/{{ site.rss_path }}">
-				<i class="fa fa-rss fa-lg"></i>
-			</a>
-		</li>
+		{% if site.author.email %}
+		<li><a href="mailto:{{ site.author.email }}" aria-label="Email" title="Email">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h20a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm10 8.7L3.6 6H20.4L12 12.7ZM3 8.1V18h18V8.1l-9 7.2-9-7.2Z"/></svg>
+		</a></li>
+		{% endif %}
+		<li><a href="{{ site.BASE_PATH }}/{{ site.rss_path }}" aria-label="RSS feed" title="RSS feed">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 15.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 8.2v3.1c5.1 0 9.3 4.2 9.3 9.3h3.1C15.5 13.2 9.9 8.2 3 8.2Zm0-5.1v3.1c8 0 14.5 6.5 14.5 14.5h3.1C20.6 5.9 12.5 3.1 3 3.1Z"/></svg>
+		</a></li>
 	</ul>
 </div>
 <!-- sidebar.html end -->
