@@ -1,0 +1,16 @@
+---
+layout: post
+title: Netsparker
+date: 2009-10-29 13:28:15.000000000 +00:00
+categories: []
+tags: []
+status: draft
+type: post
+published: false
+---
+<p>I recently got the opportunity to try out a beta release of the new web application scanner from mavituna security, <a href="http://www.mavitunasecurity.com/">Netsparker</a>.<br />
+Automated web application scanning has, in my opinion, always been a bit of a tricky area.  Given the variation of sites that exist to be tested, and the every growing uses that people are coming up with for web sites, it's pretty much impossible to get a scanner which will reliably identify every vulnerabiity in a site, even in categories of flaw that lend themselves to automated detection, such as input validation flaws.<br />
+Other categories of flaw such as business logic issues are, in many cases, impossible to detect in a purely automated way as the tool cannot get visibiilty of the meaning of parameters or fields, and so can't guess at the implications of modify them.<br />
+That said there's definately a place for good automated scanners, as I know I wouldn't enjoy manually fuzzing every single combination of possible parameters on even a medium sized website!<br />
+At the moment Netsparker seems to be concentrating on the core scanning engine of the tool, and leaving some of the bells and whistles to a later stage of development.  As such, things like forms authentication support, and scanning profiles are still on the TODO list.<br />
+The core scanning engine looks pretty promising from my own limited, so far, experience.  The scanner is easy to start off and completely automated once it gets going on a site.  It seems to find a good range of vulnerabilites, including some that give other scanners I've tried problems, like a local file inclusion vulnerability it found on one of the test applications I've tried out.</p>

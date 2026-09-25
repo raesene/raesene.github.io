@@ -1,0 +1,33 @@
+---
+layout: post
+title: "Docker 18.09 - Making WSL that much easier"
+date: 2018-11-11 15:10:39 +0100
+comments: false
+categories: Docker
+---
+
+After a little delay Docker 18.09 got it's final release this week.  This is a release I've been looking forward to for a while now, as it's got a couple of cool new features, which should help in day-to-day usage of Docker.
+
+The main one is the incorporation of remote connections to Docker Engine instances via SSH.  This means that, if you want to connect to a remote Docker Engine instance, instead of having to setup TLS certificate and modifying the configuration at the server-side, you can simply make a change on the client-side configuration and get easy remote access!
+
+One of the places this is most useful is with WSL.  To take the basic case, say you've got a Linux VM on your host and you'd like to use WSL for Docker development and administration.  First up you'll need to install the Docker client in WSL.  Fortunately another change that came along with 18.09 makes this easier for you.  There's a new Client only deb file so you can just install that, rather than installing the server-side engine components.
+
+First step is to follow the [Docker-CE installation instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/) down to the point of installing Docker, then instead of the usual `sudo apt install -y docker-ce` do 
+
+```
+sudo apt install -y docker-ce-cli
+```
+
+Now we need to tell our client where to connect.  For this we just need to modify the `DOCKER_HOST` environment variable.  
+
+```
+DOCKER_HOST=ssh://YOUR_HOSTNAME_OR_IP_HERE
+```
+
+Once you've got that configured, assuming that both client and server are running 18.09 or higher, things should just work!
+
+A couple of tips to make things smoother :-
+
+* This works best if your usernames are the same on both client and host, as SSH will assume that that's the username to use.  You can also configure `.ssh/config` to specify what username to use, so as to avoid having to type it in every time.
+
+* If you're using password based login for the remote server, you're going to get prompted for the password a lot, which is kind of annoying.  The best approach here is to configure SSH key based login and run an SSH agent so you only need to enter a passphrase once.  This is in general a much nicer way to do admin for systems over SSH, so well worth setting up.

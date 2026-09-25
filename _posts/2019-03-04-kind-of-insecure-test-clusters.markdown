@@ -1,0 +1,57 @@
+---
+layout: post
+title: "Kind of Insecure Test Clusters"
+date: 2019-03-04 21:10:39 +0100
+comments: false
+categories: Kubernetes
+---
+
+One of the great things about the Kubernetes ecosystem is all the new projects that come out on a regular basis to help do various things (keeping up with them can be a challenge, of course).
+
+For a while I've been looking for a way to quickly spin up test clusters that I can use in the container security training course I deliver.  I've got some automation with Ansible and Kubeadm which works, but still involves multiple VMs per cluster, which is a bit heavy when you start wanting one per person on a 20 person course.
+
+So when I heard about [kind](https://kind.sigs.k8s.io/) on an episode of Heptio's [TGIK](https://www.youtube.com/playlist?list=PLvmPtYZtoXOENHJiAQc6HmV2jmuexKfrJ) I thought this looked like a really cool tool which might fit the bill, as it lets you spin up Kubernetes clusters inside Docker containers, making it easy for several distinct clusters to live on a single VM.
+
+Kind is in a relatively early stage of development at the moment with their 0.1 release having come out in January, but it works pretty well.  At base when you run it, it'll bring up a cluster with the kubeadm default configuration options, which are pretty good from a security perspective these days.
+
+What I wanted to do however, is modify those to add specific security weaknesses for demonstration purposes.
+
+Kind supports a `--config` option which lets you customize the cluster as you bring it up.  It took a little while for me to work out the correct syntax (thanks to [@BenTheElder](https://twitter.com/BenTheElder) and [@mauillon](https://twitter.com/mauilion) for all the help pointing me in the right direction), but once you've got the basics it's not too hard.  
+
+The customization is based on the Kubeadm API with a key difference that the customized values need placed in quotes.  
+
+To provide a concrete example, the config below will create a cluster with the insecure port running on the API server
+
+```
+kind: Config
+apiVersion: kind.sigs.k8s.io/v1alpha2
+nodes:
+# the control plane node config
+- role: control-plane
+  # patch the generated kubeadm config with some extra settings
+  kubeadmConfigPatches:
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta1
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    apiServer:
+      extraArgs:
+        # Here the values must be in quotes, unlike the Kubeadm API examples
+        insecure-bind-address: "0.0.0.0"
+        insecure-port: "8080"
+```
+
+Once you've got kind installed and this is present as a YAML file you can just run
+
+`kind --config insecure-port.yaml --name insecure create cluster`
+
+and kind will create your cluster node for you.  Once it's up it's worth noting that the insecure port won't be visible on the main interface of your VM but will be listening on the `docker0` interface.
+
+So you can get the IP address of that interface from `docker inspect insecure-control-plane`
+
+and then check to confirm that the insecure API is open with something like the below (assuming that the IP address it's using is `172.17.0.3`)
+
+`curl http://172.17.0.3:8080/`
+
+I've started creating some sample configurations for some of the common insecure configurations you can see in Kubernetes clusters and putting them up on Github [here](https://github.com/raesene/kind-of-insecure)

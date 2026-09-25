@@ -1,0 +1,18 @@
+---
+layout: post
+title: Using WMI for Security Build Reviews
+date: 2010-06-01 21:21:18.000000000 +01:00
+categories: []
+tags: []
+status: draft
+type: post
+published: false
+---
+<p>I've been spending some time looking at whether it's possible to use <a href="http://msdn.microsoft.com/en-us/library/aa394582%28VS.85%29.aspx">WMI</a> to automate build security reviews on windows systems.  Build reviews should be a relatively mechanistic area of security (check settings on a system against a company or industry list of "good" values), and a ripe area for automation.<br />
+So it would seem that WMI is the obvious choice from a windows perspective, and it is, but only for some settings.<br />
+WMI has the advantage of being available on all modern windows desktop and server OSs, usually being enabled and being accessible over standard windows ports.  You don't need to install any software on the target system, and it's easy to ensure that what you're doing won't have any impact on the target.<br />
+So far, so good.  Unfortunately it turns out that certain areas of the configuration of windows aren't exposed via WMI APIs, and this includes a lot of local security policy settings, making a pure WMI solution a bit tricky.<br />
+that said I've found a number of classes that contain useful information which are easily queried.</p>
+<ul>
+<li><a href="http://msdn.microsoft.com/en-us/library/aa375064%28v=VS.85%29.aspx">RSOP_SecuritySettingNumeric</a> and <a href="http://msdn.microsoft.com/en-us/library/aa375062%28v=VS.85%29.aspx">RSOP_SecuritySettingBoolean</a> contain information about account policies like required password length and rotation</li>
+</ul>

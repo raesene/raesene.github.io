@@ -1,0 +1,66 @@
+---
+layout: post
+title: "Docker 1.10 Notes - User Namespaces"
+date: 2016-02-04 21:30:39 +0100
+comments: false
+categories: Docker
+---
+
+So Docker 1.10 has just landed and with it a number of great new security enhancements.  One of the main ones is the enabling of User Namespaces.  This adds an extra level of protection as processes running in a container as root will not be running as root on the host Operating System, which makes it harder for a rogue process to break out of the container.
+
+When I downloaded 1.10 as an upgrade to an existing 1.9.1 install on Ubuntu, I noticed that User Namespaces don't seem to be enabled by default, so I thought it would be worth noting how I enabled it as it's a handy feature to be running.
+
+To get this working on Ubuntu 15.10, which uses systemd, I did this
+
+copy the base systemd config file to /etc/systemd/system
+
+```sudo cp /lib/systemd/system/docker.service /etc/systemd/system/```
+
+It's not likely to be a good idea to modify the one in /lib/systemd/system/ as it could be overwritten by later package downloads.
+
+Once you've done that you need to tell docker to remap the userns.  This can be done to an explicitly chosen uid:gid, but the basic default option will probably work fine for a lot of use-cases.
+
+So in /etc/systemd/system/docker you can edit 
+
+```ExecStart=/usr/bin/docker daemon -H fd://```
+
+to
+
+```ExecStart=/usr/bin/docker daemon --userns-remap=default -H fd://```
+
+and then restart docker with
+
+```sudo systemctl daemon-reload```
+
+```sudo systemctl restart docker```
+
+Once you've done that you can check to make sure that it's working by running a process in a container as root and look at what UID is being shown on the host.
+
+So something like
+
+```docker run -it ubuntu:14.04 top```
+
+should run the top process as root in the container and you can then do ps -ef or similar on the host OS and check what UID is in use.  In my example if came out looking like
+
+```165536     2347   2323  0 21:20 pts/0    00:00:00 top```
+
+So, no longer running as root , yay!
+
+One quick thing I noticed is that a side-effect of enabling userns-remap was that all my downloaded images were no longer visible, so I had to re-download the one's I had.  So it's defintely worth trying this change out on test systems before rolling out to production!
+
+You can back up your existing images with something like
+
+``` docker save```
+
+if needed and it's also worth noting that if you disable userns again, your original images will be available.
+
+**EDIT** I got a mail from [Phil Estes](https://twitter.com/estesp) who has some good additional info. about the reasons that images aren't visible when you enable userns, which I thought would be good to add here in case anyone finds this blog about it before the other ones that Phil mentions below.
+
+--
+
+"This segregation of image & layer content separated by user/group mapping is required because of file ownership within these image layers. 
+If we tried to use the same layers in a remapped range environment it would nearly operate as a read-only environment, or worse, given the UIDs/GIDs used within your user namespaced process would have no write access to most directories and probably also not have read access to many as well due to permission bits in the original content.
+
+So, instead of trying to do all kinds of funny "chown" tricks on use of the content (which would then need to be "chowned" back later in case you then run your daemon with different mappings or with user namespaces off), we basically create a new "root" cache that is empty when you start with a specific uid/gid mapping.  As you pull content it acts the same as any daemon and will be there for use when that mapping is enabled.  If you restart your daemon with user namespaces disabled, then all the prior content is there as you noted.
+
+These details are also explained in [my blog post](https://integratedcode.us/2015/10/13/user-namespaces-have-arrived-in-docker/) on the topic as well as the [official documentation on user namespaces](https://docs.docker.com/engine/reference/commandline/daemon/#daemon-user-namespace-options). "

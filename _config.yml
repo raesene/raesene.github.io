@@ -1,0 +1,43 @@
+# visit https://github.com/mojombo/jekyll/wiki/Configuration for more settings
+
+paginate: 10
+paginate_path: "page:num"
+exclude: ["README.md", "vendor", ".bundle", "Gemfile", "Gemfile.lock", "PLAN.md"] # files to exclude
+permalink: /blog/:year/:month/:day/:title/
+markdown: kramdown
+url: "https://raesene.github.io"
+baseurl: "https://raesene.github.io"
+title: Raesene's Ramblings 
+disqus: raesene 
+gems: [jekyll-paginate]
+plugins: [jekyll-paginate, jekyll-feed]
+highlighter: rouge
+defaults:
+  -
+    scope:
+      path: "" # empty string for all files
+    values:
+      title: Raesene's Ramblings 
+
+description: Things that occur to me
+include:
+  - tags.html
+  - categories.html
+author:
+  name: raesene
+  email: raesene@gmail.com 
+  github: raesene
+  bluesky: mccune.org.uk
+  linkedin: rorym 
+  bio: Security Geek, Kubernetes, Docker, Ruby, Hillwalking
+  email_md5: 8c189c784a607c4b5d52b0c7ee69b036 
+
+kramdown:
+  input: GFM
+  syntax_highligher: rouge
+
+rss_path: feed.xml
+categories_path: categories/index.html
+tags_path: tags/index.html
+
+BASE_PATH: "https://raesene.github.io"

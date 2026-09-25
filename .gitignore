@@ -1,0 +1,12 @@
+# Jekyll build output & caches
+_site/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundler
+.bundle/
+vendor/
+
+# OS / editor cruft
+.DS_Store
+*.swp

@@ -1,0 +1,40 @@
+---
+layout: post
+title: "Exploring Public Kuberetes Certificates"
+date: 2018-07-19 18:45:39 +0100
+comments: false
+categories: Containers
+---
+
+Yesterday I noticed a [tweet from Derek Abdine](https://twitter.com/dabdine/status/1019410599401287680) about the Rapid7 OpenData collections which are free to access datasets of various types, so thought I'd have a quick look at something I've been meaning to for a while, information disclosed via SSL certificates in Internet facing Kubernetes clusters.
+
+## Background
+
+The Kubernetes API server (which generally runs on 443/TCP, 6443/TCP or 8443/TCP) is used to communicate with external and internal cluster components.  As such it tends to have CN or SAN fields which include information relating to the cluster and it's configuration.  From a security testers point of view it can be handy, as it can let you know things like valid cluster internal IP addresses.  Also the presence of certain specific IP addresses can provide information about the cluster.
+
+## Process
+
+After signing up for [Open Data](https://opendata.rapid7.com/) (watch it does take a couple of hours for the approval) I was able to download a SSL certificate dataset from the 19th of June 2018 which covered port 443 available [here](https://opendata.rapid7.com/sonar.ssl/20180622/2018-06-22-1529685461-https_get_9443_certs.gz).
+
+The file has 1187095 certificates, so a reasonable sample.  My approach was to just parse the subjectAltName certificate field for "kubernetes" as in most cases things like kubernetes.svc will apear in every clusters API server certificate. 
+
+Then I just spat out some files with things like DNS names and IP addresses from the SAN fields to see what showed up.
+
+## Results
+
+There were 13271 certificates which matched on kubernetes, so a fair number of public facing clusters exposing their API port.  This isn't indicative of any particular security problem, however it's interesting that people are directly exposing clusters, rather than hiding them behind a VPN or other form of security appliance/device.  The potential risk here is that a mistake in configuration on the API server could have bad consequences and as we've seen attackers are looking for this sort of thing.
+
+One thing that was notable was the quantity of internal IP address leakage that you can get from these certificates. There were a couple of thousand with a SAN of "10.100.0.1" which seemed to be the most popular IP address assigned.  This kind of information can be useful for attackers who get an SSRF vulnerability in a cluster application.  When you're exploiting that kind of issue, part of the problem is guessing valid Internal IP address ranges to probe for unprotected services, so having a certificate give you starting points is very useful.
+
+Another interesting point amongst the IP address information was the prevalance of the IP address 100.64.0.1 with 1005 of our 13271 certificates having that in their SAN fields.  I've noticed in the past that this is indicative of the weave network plugin, so again possibly interesting information for attackers as it gives an idea of the software the cluster is running.
+
+Turning to the DNS names extracted, it was easy to see that almost every cluster noted had a SAN of "kubernetes.default" listed, not a surprise as this is a default service name in Kubernetes clusters.
+
+Past this it was interesting to note how many clusters included strings like "dev" and "test" and "internal" in DNS names, indicating that the clusters might not be intended for general use.
+
+
+## Conclusion & Data
+
+It's interesting (well for a certain value of interesting) to see what can be derived easily from public data sets, and with this kind of information it could also be interesting to look at trends over time (e.g. what the rate of growth in Kubernetes clusters is).  It's definitely very nice of Rapid7 to have made this data available for free, a good resource to go poking around in, if you're interested in this kind of thing.
+
+I've uploaded the script and analyzed data to [github](https://github.com/raesene/kubernetes_cert_data), the raw data is available on Rapid7's site.
