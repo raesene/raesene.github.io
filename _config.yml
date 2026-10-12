@@ -6,7 +6,7 @@ exclude: ["README.md", "vendor", ".bundle", "Gemfile", "Gemfile.lock", "PLAN.md"
 permalink: /blog/:year/:month/:day/:title/
 markdown: kramdown
 url: "https://raesene.github.io"
-baseurl: "https://raesene.github.io"
+baseurl: ""
 title: Raesene's Ramblings 
 disqus: raesene 
 gems: [jekyll-paginate]
